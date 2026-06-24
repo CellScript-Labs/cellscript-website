@@ -40,7 +40,7 @@
       "description": "DOB-EVO/1 production profile for CKB-backed evolving DOB state",
       "documentation": "docs/PROFILE.md",
       "edit_command": "cd proposals/evolving-dob/evolving-dob-profile-v1 && cellc registry edit",
-      "homepage": "https://github.com/CellScript-Labs/CellScript",
+      "homepage": "https://github.com/CellScript-Labs/dob-evo",
       "install_command": "cellc install dob/evolving-dob-profile-v1@1.0.0",
       "keywords": [
         "ckb",
@@ -95,8 +95,8 @@
       "publish_command": "cd proposals/evolving-dob/evolving-dob-profile-v1 && cellc publish",
       "publish_dry_run_command": "cd proposals/evolving-dob/evolving-dob-profile-v1 && cellc publish --dry-run",
       "registry_path": "proposals/evolving-dob/evolving-dob-profile-v1/registry.json",
-      "repository": "https://github.com/CellScript-Labs/CellScript",
-      "source_revision": "293c2dbea7b3822ab25b82555ae9d01a76a3ede1",
+      "repository": "https://github.com/CellScript-Labs/dob-evo",
+      "source_revision": "0419bbfb451f73ecf226fd82852adb68c646cbcd",
       "status": "active",
       "verify_command": "cd proposals/evolving-dob/evolving-dob-profile-v1 && cellc registry verify --live --json",
       "versions": [

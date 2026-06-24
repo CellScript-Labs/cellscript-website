@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import tomllib
 from pathlib import Path
@@ -11,7 +12,6 @@ from typing import Any
 
 
 WEBSITE_ROOT = Path(__file__).resolve().parents[1]
-REPO_ROOT = WEBSITE_ROOT.parent
 OUT = WEBSITE_ROOT / "src" / "data" / "registry-packages.json"
 
 SKIP_DIRS = {
@@ -22,6 +22,21 @@ SKIP_DIRS = {
     "node_modules",
     "target",
 }
+
+
+def registry_root() -> Path:
+    configured = os.environ.get("CELLSCRIPT_REGISTRY_ROOT")
+    if configured:
+        return Path(configured).expanduser().resolve()
+
+    parent = WEBSITE_ROOT.parent
+    if (parent / ".gitmodules").exists() and (parent / "Cargo.toml").exists():
+        return parent
+
+    return WEBSITE_ROOT
+
+
+REPO_ROOT = registry_root()
 
 
 def is_skipped(path: Path) -> bool:
@@ -39,8 +54,23 @@ def read_toml(path: Path) -> dict[str, Any]:
     return tomllib.loads(path.read_text(encoding="utf-8"))
 
 
-def git_log_revision(path: Path, revision: str | None = None) -> str | None:
-    rel_path = str(path.relative_to(REPO_ROOT))
+def git_repo_root(path: Path) -> Path | None:
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(path.parent), "rev-parse", "--show-toplevel"],
+            check=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+            text=True,
+        )
+    except (OSError, subprocess.CalledProcessError):
+        return None
+    value = result.stdout.strip()
+    return Path(value).resolve() if value else None
+
+
+def git_log_revision(path: Path, repo_root: Path, revision: str | None = None) -> str | None:
+    rel_path = str(path.resolve().relative_to(repo_root))
     command = ["git", "log", "-1", "--no-merges", "--format=%H"]
     if revision:
         command.append(revision)
@@ -48,7 +78,7 @@ def git_log_revision(path: Path, revision: str | None = None) -> str | None:
     try:
         result = subprocess.run(
             command,
-            cwd=REPO_ROOT,
+            cwd=repo_root,
             check=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
@@ -59,11 +89,11 @@ def git_log_revision(path: Path, revision: str | None = None) -> str | None:
     return result.stdout.strip() or None
 
 
-def merge_heads() -> list[str]:
+def merge_heads(repo_root: Path) -> list[str]:
     try:
         result = subprocess.run(
             ["git", "rev-parse", "-q", "--verify", "MERGE_HEAD"],
-            cwd=REPO_ROOT,
+            cwd=repo_root,
             check=False,
             stdout=subprocess.PIPE,
             stderr=subprocess.DEVNULL,
@@ -77,11 +107,15 @@ def merge_heads() -> list[str]:
 
 
 def git_revision(path: Path) -> str | None:
-    revision = git_log_revision(path)
+    repo_root = git_repo_root(path)
+    if repo_root is None:
+        return None
+
+    revision = git_log_revision(path, repo_root)
     if revision:
         return revision
-    for merge_head in merge_heads():
-        revision = git_log_revision(path, merge_head)
+    for merge_head in merge_heads(repo_root):
+        revision = git_log_revision(path, repo_root, merge_head)
         if revision:
             return revision
     return None
@@ -168,7 +202,19 @@ def package_record(registry_path: Path) -> dict[str, Any] | None:
 
 def main() -> None:
     records: list[dict[str, Any]] = []
-    for registry_path in sorted(REPO_ROOT.rglob("registry.json")):
+    registry_paths = [
+        registry_path
+        for registry_path in sorted(REPO_ROOT.rglob("registry.json"))
+        if not is_skipped(registry_path)
+    ]
+    if not registry_paths and OUT.exists():
+        print(
+            "no registry.json sources found under "
+            f"{REPO_ROOT}; keeping committed {OUT.relative_to(WEBSITE_ROOT)}"
+        )
+        return
+
+    for registry_path in registry_paths:
         if is_skipped(registry_path):
             continue
         record = package_record(registry_path)
