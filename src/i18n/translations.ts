@@ -105,6 +105,25 @@ export const translations = {
         compileSummary: "{types} types · {actions} actions · {effects}",
       },
     },
+    landing: {
+      valueTitle: "Why developers use it",
+      valueLead: "CellScript is for teams that want CKB contract intent to stay readable after the build, not disappear into raw verifier code.",
+      valueProps: [
+        ["State changes are explicit", "Actions say which Cells are consumed, created, replaced, burned, or relocked, so reviewers can follow transaction shape."],
+        ["Compiler checks catch drift", "Type, lifecycle, policy, and target checks run before generated code reaches a builder or deployment process."],
+        ["Build evidence is inspectable", "The compiler emits metadata for actions, types, hashes, effects, and CKB warnings that tools and reviewers can read."],
+      ],
+      workflowLead: "The homepage keeps the pipeline high level. Detailed language concepts, generated metadata, and registry policy belong in Docs and Registry flows.",
+      playgroundTitle: "Try the contract shapes",
+      playgroundLead: "The Playground opens real example sources and compiles them in the browser. Start with a small asset, then move to shared state or time-based flows.",
+      exampleSummaries: {
+        token: "Mint, transfer, burn, and merge fungible tokens while checking supply and overflow rules.",
+        nft: "Follow ownership transfer, listing receipts, offers, and royalty records in a larger asset model.",
+        amm: "Inspect shared pool state, reserve updates, LP receipts, fees, and slippage checks.",
+        vesting: "See time-based state transitions before vested tokens can be claimed.",
+      },
+      quickstartLead: "Use the local compiler when you are ready to inspect generated metadata and CKB target output from source.",
+    },
     playground: {
       pageTitle: "CellScript Playground",
       title: "Playground",
@@ -629,6 +648,25 @@ export const translations = {
         editLive: "在线编辑",
         compileSummary: "{types} 个类型 · {actions} 个动作 · {effects}",
       },
+    },
+    landing: {
+      valueTitle: "为什么开发者会用它",
+      valueLead: "CellScript 适合希望 CKB 合约意图在构建后仍然可读的团队，而不是把规则藏进底层验证器代码里。",
+      valueProps: [
+        ["状态变化显式可见", "动作会说明哪些 Cell 被消耗、创建、替换、销毁或换锁，审查者可以直接跟踪交易形状。"],
+        ["编译器先检查偏差", "类型、生命周期、策略和目标检查会在生成代码进入交易构建或部署流程之前运行。"],
+        ["构建证据可以检查", "编译器会输出动作、类型、哈希、效果和 CKB 警告等元数据，方便工具和审查者读取。"],
+      ],
+      workflowLead: "首页只保留高层管线。详细语言概念、生成元数据和注册表策略放到文档和注册表流程里。",
+      playgroundTitle: "试试合约形状",
+      playgroundLead: "试写区会打开真实示例源码，并在浏览器中编译。先看小型资产，再进入共享状态或时间相关流程。",
+      exampleSummaries: {
+        token: "铸造、转账、销毁和合并可替代代币，同时检查供应量和溢出规则。",
+        nft: "在更大的资产模型里跟踪所有权转移、挂单凭证、报价和版税记录。",
+        amm: "检查共享池状态、储备更新、LP 凭证、手续费和滑点约束。",
+        vesting: "查看时间相关状态迁移如何控制已归属代币领取。",
+      },
+      quickstartLead: "当你准备检查生成元数据和 CKB 目标输出时，可以使用本地编译器。",
     },
     playground: {
       pageTitle: "CellScript 试写区",
