@@ -4,6 +4,16 @@ This is the public CellScript website: the landing page, registry browser, learn
 
 It is built with Astro and kept deliberately static. The site should be easy to deploy, easy to audit, and useful to someone arriving from GitHub or a search result who wants to understand what CellScript does.
 
+## Product Shape
+
+The website is the public front door for three related jobs:
+
+- explain CellScript as a typed-transition language for CKB contracts;
+- let readers inspect package and provenance metadata without cloning the compiler;
+- provide a browser playground that introduces the compiler workflow before someone installs local tools.
+
+The static architecture is intentional. Most pages are generated from committed source, registry, provenance, and activity data, so the deployed site can be reviewed like an artefact. Dynamic chain or GitHub information is fetched into JSON snapshots first, then rendered by Astro, rather than becoming an opaque runtime dependency.
+
 ## What The Site Contains
 
 - A first-page overview of CellScript and its CKB contract workflow.
