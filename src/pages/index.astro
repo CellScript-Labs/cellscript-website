@@ -15,6 +15,26 @@ const heroProvenance = heroExamples.map((example) => ({
   view: provenanceForExample(example.id),
 }));
 const exampleSummaries = t.landing.exampleSummaries as Record<string, string>;
+const valueCardImages = [
+  {
+    light: "feature-cards/light-01-state-changes-explicit.png",
+    dark: "feature-cards/dark-01-state-changes-explicit.png",
+    width: 1480,
+    height: 1063,
+  },
+  {
+    light: "feature-cards/light-02-compiler-checks-catch-drift.png",
+    dark: "feature-cards/dark-02-compiler-checks-catch-drift.png",
+    width: 1971,
+    height: 798,
+  },
+  {
+    light: "feature-cards/light-03-build-evidence-inspectable.png",
+    dark: "feature-cards/dark-03-build-evidence-inspectable.png",
+    width: 1968,
+    height: 799,
+  },
+];
 ---
 
 <!doctype html>
@@ -149,10 +169,30 @@ const exampleSummaries = t.landing.exampleSummaries as Record<string, string>;
         </div>
         <div class="value-grid">
           {t.landing.valueProps.map(([title, body], index) => (
-            <article class="value-card">
-              <span class="value-index">0{index + 1}</span>
-              <h3 data-i18n={`landing.valueProps.${index}.0`}>{title}</h3>
-              <p data-i18n={`landing.valueProps.${index}.1`}>{body}</p>
+            <article class="value-card" aria-labelledby={`value-card-${index}-title`} aria-describedby={`value-card-${index}-body`}>
+              <picture class="value-card-art" aria-hidden="true">
+                <img
+                  class="value-card-image value-card-image-light"
+                  src={`${import.meta.env.BASE_URL}${valueCardImages[index].light}`}
+                  width={valueCardImages[index].width}
+                  height={valueCardImages[index].height}
+                  alt=""
+                  loading={index === 0 ? "eager" : "lazy"}
+                  decoding="async"
+                />
+                <img
+                  class="value-card-image value-card-image-dark"
+                  src={`${import.meta.env.BASE_URL}${valueCardImages[index].dark}`}
+                  width={index === 0 ? 943 : 803}
+                  height={index === 0 ? 677 : index === 1 ? 325 : 326}
+                  alt=""
+                  loading={index === 0 ? "eager" : "lazy"}
+                  decoding="async"
+                />
+              </picture>
+              <span class="value-index" aria-hidden="true">0{index + 1}</span>
+              <h3 id={`value-card-${index}-title`} data-i18n={`landing.valueProps.${index}.0`}>{title}</h3>
+              <p id={`value-card-${index}-body`} data-i18n={`landing.valueProps.${index}.1`}>{body}</p>
             </article>
           ))}
         </div>
@@ -352,6 +392,7 @@ const exampleSummaries = t.landing.exampleSummaries as Record<string, string>;
 
       const root = document.querySelector("[data-code-tabs]");
       if (root) {
+        (root as HTMLElement).dataset.homeTabsBound = "true";
         const tabs = Array.from(root.querySelectorAll("[data-tab]"));
         const panels = Array.from(root.querySelectorAll("[data-panel]"));
         const mobile = root.querySelector("[data-mobile-tabs]");
@@ -424,6 +465,7 @@ const exampleSummaries = t.landing.exampleSummaries as Record<string, string>;
         ".spotlight-card, .value-card, .landing-example-card, .step, .workflow-checks",
       );
       spotlightTargets.forEach((target) => {
+        target.dataset.homeSpotlightBound = "true";
         target.classList.add("spotlight-card");
         target.addEventListener("pointermove", (event) => {
           const rect = target.getBoundingClientRect();
@@ -448,11 +490,13 @@ const exampleSummaries = t.landing.exampleSummaries as Record<string, string>;
         }
         syncThemeToggle();
       });
+      if (themeToggle) themeToggle.dataset.homeBound = "true";
 
       const languageToggle = document.querySelector<HTMLButtonElement>("[data-language-toggle]");
       languageToggle?.addEventListener("click", () => {
         applyLocale(readLocale() === "en" ? "zh" : "en");
       });
+      if (languageToggle) languageToggle.dataset.homeBound = "true";
 
       const flashCopied = (btn: HTMLButtonElement) => {
         btn.classList.add("is-copied");
@@ -475,6 +519,7 @@ const exampleSummaries = t.landing.exampleSummaries as Record<string, string>;
       const copyButtons = Array.from(document.querySelectorAll<HTMLButtonElement>(".copy-btn"));
       const heroCodeTabs = document.querySelector("[data-code-tabs]");
       copyButtons.forEach((btn) => {
+        btn.dataset.homeCopyBound = "true";
         btn.addEventListener("click", async () => {
           let text = btn.dataset.copyText ?? "";
           if (btn.hasAttribute("data-copy-source") && heroCodeTabs) {
@@ -486,6 +531,206 @@ const exampleSummaries = t.landing.exampleSummaries as Record<string, string>;
           if (ok) flashCopied(btn);
         });
       });
+
+      const readStoredTheme = () => {
+        try {
+          const storedTheme = localStorage.getItem("cellscript-theme");
+          return storedTheme === "light" || storedTheme === "dark" ? storedTheme : "light";
+        } catch {
+          return "light";
+        }
+      };
+
+      const readStoredLocale = () => {
+        try {
+          return localStorage.getItem("cellscript-locale") === "zh" ? "zh" : "en";
+        } catch {
+          return "en";
+        }
+      };
+
+      const bindHomeThemeToggle = () => {
+        const currentThemeToggle = document.querySelector<HTMLButtonElement>("[data-theme-toggle]");
+        if (!currentThemeToggle) return;
+        const nextThemeToggle = currentThemeToggle.cloneNode(true) as HTMLButtonElement;
+        nextThemeToggle.dataset.homeBound = "true";
+        currentThemeToggle.replaceWith(nextThemeToggle);
+        nextThemeToggle.addEventListener("click", () => {
+          const nextTheme = readTheme() === "light" ? "dark" : "light";
+          document.documentElement.dataset.theme = nextTheme;
+          try {
+            localStorage.setItem("cellscript-theme", nextTheme);
+          } catch {
+            // Theme changes still work even when storage is unavailable.
+          }
+          syncThemeToggle();
+        });
+      };
+
+      const bindHomeLanguageToggle = () => {
+        const currentLanguageToggle = document.querySelector<HTMLButtonElement>("[data-language-toggle]");
+        if (!currentLanguageToggle) return;
+        const nextLanguageToggle = currentLanguageToggle.cloneNode(true) as HTMLButtonElement;
+        nextLanguageToggle.dataset.homeBound = "true";
+        currentLanguageToggle.replaceWith(nextLanguageToggle);
+        nextLanguageToggle.addEventListener("click", () => {
+          applyLocale(readLocale() === "en" ? "zh" : "en");
+        });
+      };
+
+      const toggleHomeTheme = () => {
+        const nextTheme = readTheme() === "light" ? "dark" : "light";
+        document.documentElement.dataset.theme = nextTheme;
+        try {
+          localStorage.setItem("cellscript-theme", nextTheme);
+        } catch {
+          // Theme changes still work even when storage is unavailable.
+        }
+        syncThemeToggle();
+      };
+
+      const toggleHomeLanguage = () => {
+        applyLocale(readLocale() === "en" ? "zh" : "en");
+      };
+
+      if (!(window as any).__cellscriptHomeToggleDelegationBound) {
+        document.addEventListener("click", (event) => {
+          if (!document.body.classList.contains("home-body")) return;
+          if (!(event.target instanceof Element)) return;
+          const themeButton = event.target.closest<HTMLButtonElement>("[data-theme-toggle]");
+          if (themeButton) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            toggleHomeTheme();
+            return;
+          }
+          const languageButton = event.target.closest<HTMLButtonElement>("[data-language-toggle]");
+          if (languageButton) {
+            event.preventDefault();
+            event.stopImmediatePropagation();
+            toggleHomeLanguage();
+          }
+        }, true);
+        (window as any).__cellscriptHomeToggleDelegationBound = true;
+      }
+
+      const bindHomeSpotlights = () => {
+        document.querySelectorAll<HTMLElement>(".spotlight-card, .value-card, .landing-example-card, .step, .workflow-checks").forEach((target) => {
+          if (target.dataset.homeSpotlightBound === "true") return;
+          target.dataset.homeSpotlightBound = "true";
+          target.classList.add("spotlight-card");
+          target.addEventListener("pointermove", (event) => {
+            const rect = target.getBoundingClientRect();
+            const x = ((event.clientX - rect.left) / rect.width) * 100;
+            const y = ((event.clientY - rect.top) / rect.height) * 100;
+            target.style.setProperty("--spot-x", `${x}%`);
+            target.style.setProperty("--spot-y", `${y}%`);
+          });
+        });
+      };
+
+      const bindHomeCopyButtons = () => {
+        const nextHeroCodeTabs = document.querySelector("[data-code-tabs]");
+        document.querySelectorAll<HTMLButtonElement>(".copy-btn").forEach((btn) => {
+          if (btn.dataset.homeCopyBound === "true") return;
+          btn.dataset.homeCopyBound = "true";
+          btn.addEventListener("click", async () => {
+            let text = btn.dataset.copyText ?? "";
+            if (btn.hasAttribute("data-copy-source") && nextHeroCodeTabs) {
+              const activePanel = nextHeroCodeTabs.querySelector<HTMLElement>(".code-panel.active");
+              text = activePanel?.textContent?.replace(/\n/g, "\n").trim() ?? "";
+            }
+            if (!text) return;
+            const ok = await writeClipboard(text);
+            if (ok) flashCopied(btn);
+          });
+        });
+      };
+
+      const bindHomeCodeTabs = () => {
+        const nextRoot = document.querySelector<HTMLElement>("[data-code-tabs]");
+        if (!nextRoot || nextRoot.dataset.homeTabsBound === "true") return;
+        nextRoot.dataset.homeTabsBound = "true";
+        const tabs = Array.from(nextRoot.querySelectorAll<HTMLButtonElement>("[data-tab]"));
+        const panels = Array.from(nextRoot.querySelectorAll<HTMLElement>("[data-panel]"));
+        const mobile = nextRoot.querySelector<HTMLSelectElement>("[data-mobile-tabs]");
+        const fileLabel = nextRoot.querySelector<HTMLElement>("[data-file-label]");
+        const commandLabel = nextRoot.querySelector<HTMLElement>("[data-command-label]");
+        const compileMeta = nextRoot.querySelector<HTMLElement>("[data-compile-meta]");
+        const substrateReadout = nextRoot.querySelector<HTMLElement>("[data-substrate-readout]");
+        const playgroundLink = nextRoot.querySelector<HTMLAnchorElement>("[data-playground-link]");
+        let provenanceMap: Record<string, { meta: string; readout: string }> = {};
+        const provenanceScript = nextRoot.querySelector<HTMLScriptElement>("[data-hero-provenance]");
+        if (provenanceScript?.textContent) {
+          try { provenanceMap = JSON.parse(provenanceScript.textContent); } catch { /* malformed; leave empty */ }
+        }
+        const activate = (id: string) => {
+          tabs.forEach((tab) => {
+            const active = tab.dataset.tab === id;
+            tab.setAttribute("aria-selected", String(active));
+            tab.tabIndex = active ? 0 : -1;
+          });
+          panels.forEach((panel) => {
+            const active = panel.dataset.panel === id;
+            panel.classList.toggle("active", active);
+            if (active && fileLabel && commandLabel && mobile) {
+              fileLabel.textContent = panel.dataset.file ?? "";
+              commandLabel.textContent = panel.dataset.command ?? "";
+              mobile.value = id;
+            }
+          });
+          const summary = provenanceMap[id];
+          if (summary) {
+            if (compileMeta) {
+              compileMeta.textContent = summary.meta;
+              compileMeta.removeAttribute("aria-hidden");
+            }
+            if (substrateReadout) substrateReadout.textContent = summary.readout;
+          } else if (compileMeta) {
+            compileMeta.textContent = "";
+            compileMeta.setAttribute("aria-hidden", "true");
+          }
+          if (playgroundLink) {
+            const url = new URL(playgroundLink.href);
+            url.searchParams.set("example", id);
+            playgroundLink.href = url.pathname + url.search;
+          }
+        };
+        tabs.forEach((tab, index) => {
+          tab.tabIndex = index === 0 ? 0 : -1;
+          tab.addEventListener("click", () => activate(tab.dataset.tab ?? ""));
+          tab.addEventListener("keydown", (event) => {
+            if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
+            event.preventDefault();
+            const direction = event.key === "ArrowRight" ? 1 : -1;
+            const nextIndex = (index + direction + tabs.length) % tabs.length;
+            const nextTab = tabs[nextIndex];
+            activate(nextTab?.dataset.tab ?? "");
+            nextTab?.focus();
+          });
+        });
+        mobile?.addEventListener("change", () => activate(mobile.value));
+      };
+
+      const hydrateHomePage = () => {
+        if (!document.body.classList.contains("home-body")) return;
+        document.documentElement.dataset.theme = readStoredTheme();
+        const nextLocale = readStoredLocale();
+        document.documentElement.dataset.locale = nextLocale;
+        document.documentElement.lang = nextLocale;
+        bindHomeThemeToggle();
+        bindHomeLanguageToggle();
+        bindHomeSpotlights();
+        bindHomeCopyButtons();
+        bindHomeCodeTabs();
+        applyLocale(nextLocale);
+        syncThemeToggle();
+      };
+
+      if (!(window as any).__cellscriptHomePageLoadBound) {
+        document.addEventListener("astro:page-load", hydrateHomePage);
+        (window as any).__cellscriptHomePageLoadBound = true;
+      }
     </script>
   </body>
 </html>

@@ -32,6 +32,66 @@ export function compile_metadata_json(source, target) {
 }
 
 /**
+ * Compile CellScript source and return a stable result envelope for tools.
+ *
+ * On success the response is:
+ * `{ "metadata": <CompileMetadata>, "diagnostics": [] }`
+ *
+ * On failure the response is:
+ * `{ "metadata": null, "diagnostics": [{ message, severity, code, range }, ...] }`
+ *
+ * `range` is omitted when the compiler error is not tied to a source
+ * span. Offsets are UTF-8 byte offsets from the original source; line and
+ * column are 1-based.
+ * @param {string} source
+ * @param {string | null} [target]
+ * @returns {string}
+ */
+export function compile_metadata_json_diagnostics(source, target) {
+    let deferred3_0;
+    let deferred3_1;
+    try {
+        const ptr0 = passStringToWasm0(source, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        var ptr1 = isLikeNone(target) ? 0 : passStringToWasm0(target, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        var len1 = WASM_VECTOR_LEN;
+        const ret = wasm.compile_metadata_json_diagnostics(ptr0, len0, ptr1, len1);
+        deferred3_0 = ret[0];
+        deferred3_1 = ret[1];
+        return getStringFromWasm0(ret[0], ret[1]);
+    } finally {
+        wasm.__wbindgen_free(deferred3_0, deferred3_1, 1);
+    }
+}
+
+/**
+ * Query the in-process CellScript language service for browser tooling.
+ *
+ * `line` and `character` are zero-based UTF-16 positions, matching LSP.
+ * The result contains completion, hover, definition and current document
+ * diagnostics in one JSON payload so the playground can avoid multiple
+ * WASM calls per cursor move.
+ * @param {string} source
+ * @param {number} line
+ * @param {number} character
+ * @returns {string}
+ */
+export function language_service_json(source, line, character) {
+    let deferred2_0;
+    let deferred2_1;
+    try {
+        const ptr0 = passStringToWasm0(source, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ret = wasm.language_service_json(ptr0, len0, line, character);
+        deferred2_0 = ret[0];
+        deferred2_1 = ret[1];
+        return getStringFromWasm0(ret[0], ret[1]);
+    } finally {
+        wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
+    }
+}
+
+/**
  * Return the compiler version string (e.g. "0.17.0").
  * @returns {string}
  */

@@ -16,7 +16,9 @@ OUT="$REPO/website/public/wasm"
 
 echo "Building cellscript-wasm (size-optimised release)..."
 cd "$REPO"
-RUSTFLAGS="-C opt-level=z" wasm-pack build crates/cellscript-wasm \
+RUSTFLAGS="-C opt-level=z" wasm-pack build \
+  --no-opt \
+  crates/cellscript-wasm \
   --target web \
   --no-default-features \
   --features wasm

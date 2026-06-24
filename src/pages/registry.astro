@@ -107,8 +107,11 @@ const title = `CellScript Registry — ${t.comingSoon.title}`;
         }
       };
 
-      window.addEventListener("cellscript:locale-change", () => applyLocale(readLocale()));
-      applyLocale(readLocale());
+      const reapplyRegistryLocale = () => applyLocale(readLocale());
+
+      window.addEventListener("cellscript:locale-change", reapplyRegistryLocale);
+      document.addEventListener("astro:page-load", reapplyRegistryLocale);
+      reapplyRegistryLocale();
     </script>
 
     <NavRail page="registry" />

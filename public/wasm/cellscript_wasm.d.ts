@@ -15,6 +15,31 @@
 export function compile_metadata_json(source: string, target?: string | null): string;
 
 /**
+ * Compile CellScript source and return a stable result envelope for tools.
+ *
+ * On success the response is:
+ * `{ "metadata": <CompileMetadata>, "diagnostics": [] }`
+ *
+ * On failure the response is:
+ * `{ "metadata": null, "diagnostics": [{ message, severity, code, range }, ...] }`
+ *
+ * `range` is omitted when the compiler error is not tied to a source
+ * span. Offsets are UTF-8 byte offsets from the original source; line and
+ * column are 1-based.
+ */
+export function compile_metadata_json_diagnostics(source: string, target?: string | null): string;
+
+/**
+ * Query the in-process CellScript language service for browser tooling.
+ *
+ * `line` and `character` are zero-based UTF-16 positions, matching LSP.
+ * The result contains completion, hover, definition and current document
+ * diagnostics in one JSON payload so the playground can avoid multiple
+ * WASM calls per cursor move.
+ */
+export function language_service_json(source: string, line: number, character: number): string;
+
+/**
  * Return the compiler version string (e.g. "0.17.0").
  */
 export function version(): string;
@@ -24,6 +49,8 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
     readonly compile_metadata_json: (a: number, b: number, c: number, d: number) => [number, number];
+    readonly compile_metadata_json_diagnostics: (a: number, b: number, c: number, d: number) => [number, number];
+    readonly language_service_json: (a: number, b: number, c: number, d: number) => [number, number];
     readonly version: () => [number, number];
     readonly __wbindgen_externrefs: WebAssembly.Table;
     readonly __wbindgen_malloc: (a: number, b: number) => number;

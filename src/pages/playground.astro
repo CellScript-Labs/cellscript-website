@@ -1,19 +1,19 @@
 ---
 /**
- * Playground page — the real CellScript IDE.
+ * Playground page — a focused CellScript compiler workbench.
  *
  * Loads the prebuilt WASM compiler bundle and live-compiles the user's
  * source to typed-transition metadata. Three-column layout:
  *   - Left: editable source (textarea + highlight overlay)
- *   - Middle: compile output (Metadata / Actions / Types / Errors tabs)
- *   - Right: provenance rail (live module/actions/types summary)
+ *   - Middle: compile output (Actions / Types / Metadata tabs)
+ *   - Right: provenance rail with live diagnostics
  *
  * The hero pseudo-console links here with ?example=<id> to preload an
- * example. Users can edit freely; compile fires 300ms after the last
- * keystroke (debounced).
+ * example. Users can edit freely; compile runs in a Web Worker 300ms
+ * after the last keystroke (debounced).
  *
- * Design constraints (RFC): no Monaco/CodeMirror dependency (textarea
- * + overlay only), WASM <= 600KB gzip, no new keyframe animations.
+ * Design constraints: no Monaco/CodeMirror dependency (textarea +
+ * overlay only), WASM <= 600KB gzip, no new keyframe animations.
  */
 import "../styles/global.css";
 import { playgroundExamples, exampleFullSources, exampleGroups } from "../data/site";
@@ -78,7 +78,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
   <body class="playground-body">
     <a class="skip-link" href="#playground-editor" data-i18n="playground.skipToEditor">{t.playground.skipToEditor}</a>
     <div class="pg-toolbar">
-      <h1 class="pg-toolbar-title">{t.playground.title}</h1>
+      <h1 class="pg-toolbar-title" data-i18n="playground.title">{t.playground.title}</h1>
       <div class="pg-toolbar-actions">
         <label class="pg-example-select">
           <span data-i18n="playground.exampleLabel">{t.playground.exampleLabel}</span>
@@ -94,27 +94,11 @@ if (ungroupedPlaygroundExamples.length > 0) {
             ))}
           </select>
         </label>
-        <label class="pg-format-select">
-          <span data-i18n="playground.format">{t.playground.format}</span>
-          <select data-target-select>
-            <option value="" data-i18n="playground.formatDefault">{t.playground.formatDefault}</option>
-            <option value="riscv64-asm" data-i18n="playground.formatAsm">{t.playground.formatAsm}</option>
-            <option value="riscv64-elf" data-i18n="playground.formatElf">{t.playground.formatElf}</option>
-          </select>
-        </label>
         <button class="pg-action-btn pg-compile-btn" type="button" data-compile data-i18n-aria-label="playground.compileAria" aria-label={t.playground.compileAria}>
           <span class="pg-compile-icon" aria-hidden="true">▶</span>
           <span class="pg-compile-label" data-compile-label data-i18n="playground.compile">{t.playground.compile}</span>
         </button>
-        <button class="pg-action-btn" type="button" data-export-cell data-i18n="playground.exportCell" data-i18n-aria-label="playground.exportAria" aria-label={t.playground.exportAria}>{t.playground.exportCell}</button>
-        <button class="pg-action-btn" type="button" data-share data-i18n="playground.share" data-i18n-aria-label="a11y.copyAria" aria-label={t.a11y.copyAria}>{t.playground.share}</button>
-        <span class="pg-shortcut-hint" data-i18n="playground.shortcutHint">{t.playground.shortcutHint}</span>
       </div>
-    </div>
-
-    <div class="pg-notice" data-restored-notice hidden>
-      <span data-i18n="playground.restoredNotice">{t.playground.restoredNotice}</span>
-      <button class="pg-notice-dismiss" type="button" data-restored-dismiss data-i18n="playground.restoredDismiss">{t.playground.restoredDismiss}</button>
     </div>
 
     <aside class="pg-example-lesson" data-example-lesson aria-live="polite">
@@ -140,7 +124,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
           <span data-i18n="playground.source">{t.playground.source}</span>
         </div>
         <div class="pg-editor" data-editor>
-          <div class="pg-gutter" aria-hidden="true" data-gutter></div>
+          <div class="pg-gutter" data-gutter></div>
           <pre class="pg-highlight" aria-hidden="true" data-highlight></pre>
           <textarea
             class="pg-textarea"
@@ -152,31 +136,28 @@ if (ungroupedPlaygroundExamples.length > 0) {
             aria-label={t.playground.source}
             data-i18n-aria-label="playground.source"
           >{initialSource}</textarea>
+          <div class="pg-completions" data-completions role="listbox" hidden></div>
+          <div class="pg-hover-card" data-hover-card hidden></div>
         </div>
       </section>
 
       <!-- Middle: compile output -->
       <section class="pg-col pg-output" aria-label={t.playground.output} data-i18n-aria-label="playground.output">
         <div class="pg-col-head pg-tabs" role="tablist">
-          <button class="pg-tab active" role="tab" id="pg-tab-metadata" aria-selected="true" aria-controls="pg-panel-metadata" data-output-tab="metadata" tabindex="0">
-            <span data-i18n="playground.tabMetadata">{t.playground.tabMetadata}</span>
-          </button>
-          <button class="pg-tab" role="tab" id="pg-tab-actions" aria-selected="false" aria-controls="pg-panel-actions" data-output-tab="actions" tabindex="-1">
+          <button class="pg-tab active" role="tab" id="pg-tab-actions" aria-selected="true" aria-controls="pg-panel-actions" data-output-tab="actions" tabindex="0">
             <span data-i18n="playground.tabActions">{t.playground.tabActions}</span>
           </button>
           <button class="pg-tab" role="tab" id="pg-tab-types" aria-selected="false" aria-controls="pg-panel-types" data-output-tab="types" tabindex="-1">
             <span data-i18n="playground.tabTypes">{t.playground.tabTypes}</span>
           </button>
-          <button class="pg-tab" role="tab" id="pg-tab-errors" aria-selected="false" aria-controls="pg-panel-errors" data-output-tab="errors" tabindex="-1">
-            <span data-i18n="playground.tabErrors">{t.playground.tabErrors}</span>
-            <span class="pg-tab-badge" data-error-badge aria-label={t.playground.noErrorsBadge} hidden>0</span>
+          <button class="pg-tab" role="tab" id="pg-tab-metadata" aria-selected="false" aria-controls="pg-panel-metadata" data-output-tab="metadata" tabindex="-1">
+            <span data-i18n="playground.tabMetadata">{t.playground.tabMetadata}</span>
           </button>
         </div>
         <div class="pg-output-body">
-          <div class="pg-output-panel active" id="pg-panel-metadata" role="tabpanel" aria-labelledby="pg-tab-metadata" data-output-panel="metadata"></div>
-          <div class="pg-output-panel" id="pg-panel-actions" role="tabpanel" aria-labelledby="pg-tab-actions" data-output-panel="actions" hidden></div>
+          <div class="pg-output-panel active" id="pg-panel-actions" role="tabpanel" aria-labelledby="pg-tab-actions" data-output-panel="actions"></div>
           <div class="pg-output-panel" id="pg-panel-types" role="tabpanel" aria-labelledby="pg-tab-types" data-output-panel="types" hidden></div>
-          <div class="pg-output-panel" id="pg-panel-errors" role="tabpanel" aria-labelledby="pg-tab-errors" data-output-panel="errors" hidden></div>
+          <div class="pg-output-panel" id="pg-panel-metadata" role="tabpanel" aria-labelledby="pg-tab-metadata" data-output-panel="metadata" hidden></div>
           <div class="pg-loading" data-loading>
             <span class="pg-loading-dot"></span>
             <span data-i18n="playground.loading">{t.playground.loading}</span>
@@ -190,6 +171,15 @@ if (ungroupedPlaygroundExamples.length > 0) {
           <span data-i18n="playground.provenance">{t.playground.provenance}</span>
         </div>
         <div class="pg-rail-body" data-rail-body>
+          <section class="pg-rail-diagnostics" data-rail-diagnostics aria-live="polite">
+            <div class="pg-rail-diagnostics-head">
+              <h2 class="pg-rail-group-label" data-i18n="playground.tabDiagnostics">{t.playground.tabDiagnostics}</h2>
+              <span class="pg-rail-diagnostic-count" data-error-badge aria-label={t.playground.noErrorsBadge}>0</span>
+            </div>
+            <div data-rail-diagnostics-body>
+              <p class="pg-no-errors">{t.playground.noErrors}</p>
+            </div>
+          </section>
           <div class="pg-rail-section" data-rail-view="loading">
             <span class="pg-loading-dot"></span>
             <span data-i18n="playground.loading">{t.playground.loading}</span>
@@ -245,13 +235,68 @@ if (ungroupedPlaygroundExamples.length > 0) {
     <script>
       import { renderSource } from "../lib/highlight";
 
-      // Dynamic import of the WASM bundle. The module lives in public/wasm/
-      // (served as a static asset), so we use a runtime URL import rather
-      // than a static import that Rollup would try to bundle.
-      const wasmUrl = new URL("/wasm/cellscript_wasm.js", import.meta.url);
-      let compileMetadataJson: (source: string, target: string | null) => string;
-      let wasmVersion: () => string;
-      let wasmInit: () => Promise<unknown>;
+      type CompileDiagnosticPosition = {
+        line: number;
+        column: number;
+        offset: number;
+      };
+
+      type CompileDiagnostic = {
+        message: string;
+        severity?: string | number;
+        code?: string | null;
+        range?: {
+          start: CompileDiagnosticPosition;
+          end: CompileDiagnosticPosition;
+        } | null;
+      };
+
+      type WorkerCompileResult = {
+        metadata?: any;
+        diagnostics?: CompileDiagnostic[];
+      };
+
+      type LanguageCompletion = {
+        label: string;
+        kind?: number | string;
+        detail?: string | null;
+        documentation?: string | null;
+        insert_text?: string | null;
+      };
+
+      type LanguageServicePayload = {
+        completions?: LanguageCompletion[];
+        hover?: {
+          contents: string;
+          range?: {
+            start: { line: number; character: number };
+            end: { line: number; character: number };
+          } | null;
+        } | null;
+        definition?: {
+          uri: string;
+          range: {
+            start: { line: number; character: number };
+            end: { line: number; character: number };
+          };
+        } | null;
+        diagnostics?: unknown[];
+      };
+
+      type LanguageIntent = "hover" | "completion" | "definition";
+
+      const workerUrl = new URL("/playground-worker.js", window.location.href);
+      const compileWorker = new Worker(workerUrl, { type: "module" });
+      let compileRequestId = 0;
+      let latestAppliedRequestId = 0;
+      let languageRequestId = 0;
+      const languageIntents = new Map<number, LanguageIntent>();
+      const latestLanguageRequestByIntent: Record<LanguageIntent, number> = {
+        hover: 0,
+        completion: 0,
+        definition: 0,
+      };
+      let workerReady = true;
 
       // ---- Example sources (inline so no extra fetch needed) ----
       const exampleSources: Record<string, string> = JSON.parse(
@@ -260,7 +305,6 @@ if (ungroupedPlaygroundExamples.length > 0) {
       const exampleMeta: Array<{ id: string; label: string; file: string }> = JSON.parse(
         document.querySelector<HTMLScriptElement>("[data-example-meta]")?.textContent ?? "[]",
       );
-      const exampleFiles = new Map(exampleMeta.map((example) => [example.id, example.file]));
       const exampleIds = new Set(exampleMeta.map((example) => example.id));
       const i18nTable = (window as any).__CELLSCRIPT_I18N__ as any;
       const defaultLocaleName = (window as any).__CELLSCRIPT_DEFAULT_LOCALE__ ?? "en";
@@ -281,8 +325,11 @@ if (ungroupedPlaygroundExamples.length > 0) {
 
       // ---- Elements ----
       const textarea = document.querySelector<HTMLTextAreaElement>("[data-textarea]");
+      const editor = document.querySelector<HTMLElement>("[data-editor]");
       const highlight = document.querySelector<HTMLElement>("[data-highlight]");
       const gutter = document.querySelector<HTMLElement>("[data-gutter]");
+      const completionsEl = document.querySelector<HTMLElement>("[data-completions]");
+      const hoverCard = document.querySelector<HTMLElement>("[data-hover-card]");
       const loading = document.querySelector<HTMLElement>("[data-loading]");
       const status = document.querySelector<HTMLElement>("[data-status]");
       const versionEl = document.querySelector<HTMLElement>("[data-version]");
@@ -291,13 +338,8 @@ if (ungroupedPlaygroundExamples.length > 0) {
       const exampleSummary = document.querySelector<HTMLElement>("[data-example-summary]");
       const pgMain = document.querySelector<HTMLElement>("[data-pg-main]");
       const mobileViewBtns = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-mobile-view-btn]"));
-      const targetSelect = document.querySelector<HTMLSelectElement>("[data-target-select]");
-      const shareBtn = document.querySelector<HTMLButtonElement>("[data-share]");
-      const exportBtn = document.querySelector<HTMLButtonElement>("[data-export-cell]");
       const compileBtn = document.querySelector<HTMLButtonElement>("[data-compile]");
       const compileLabel = document.querySelector<HTMLElement>("[data-compile-label]");
-      const restoredNotice = document.querySelector<HTMLElement>("[data-restored-notice]");
-      const restoredDismiss = document.querySelector<HTMLButtonElement>("[data-restored-dismiss]");
       const railBody = document.querySelector<HTMLElement>("[data-rail-body]");
       const railLoading = railBody?.querySelector<HTMLElement>('[data-rail-view="loading"]');
       const railReady = railBody?.querySelector<HTMLElement>('[data-rail-view="ready"]');
@@ -309,6 +351,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
       const railMode = railBody?.querySelector<HTMLElement>("[data-rail-mode]");
       const railActions = railBody?.querySelector<HTMLElement>("[data-rail-actions]");
       const railTypes = railBody?.querySelector<HTMLElement>("[data-rail-types]");
+      const railDiagnosticsBody = railBody?.querySelector<HTMLElement>("[data-rail-diagnostics-body]");
       const errorBadge = document.querySelector<HTMLElement>("[data-error-badge]");
       let currentExampleId: string | null = exampleSelect?.value ?? null;
 
@@ -319,6 +362,11 @@ if (ungroupedPlaygroundExamples.length > 0) {
         ]),
       );
       const outputTabs = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-output-tab]"));
+      let compileTimer: number | undefined;
+      let currentDiagnostics: CompileDiagnostic[] = [];
+      let highlightFrame: number | undefined;
+      let repositionFloatingTools = () => {};
+      const LARGE_SOURCE_HIGHLIGHT_LIMIT = 80_000;
 
       const updateExampleLesson = (id: string | null) => {
         currentExampleId = id && exampleIds.has(id) ? id : null;
@@ -339,20 +387,86 @@ if (ungroupedPlaygroundExamples.length > 0) {
       };
 
       // ---- Highlight overlay + line-number gutter sync ----
+      const diagnosticSeverity = (diagnostic: CompileDiagnostic) => {
+        if (diagnostic.severity === 2) return "warning";
+        if (diagnostic.severity === 3) return "information";
+        if (diagnostic.severity === 4) return "hint";
+        return String(diagnostic.severity || "error").toLowerCase();
+      };
+
+      const isBlockingDiagnostic = (diagnostic: CompileDiagnostic) =>
+        !["warning", "information", "hint"].includes(diagnosticSeverity(diagnostic));
+
+      const diagnosticCounts = (diagnostics: CompileDiagnostic[]) => ({
+        errors: diagnostics.filter(isBlockingDiagnostic).length,
+        warnings: diagnostics.filter((diagnostic) => diagnosticSeverity(diagnostic) === "warning").length,
+      });
+
+      const currentLineNumber = () => {
+        if (!textarea) return 1;
+        return textarea.value.slice(0, textarea.selectionStart).split("\n").length;
+      };
+
+      const lineStartOffset = (source: string, lineNumber: number) => {
+        const targetLine = Math.max(1, lineNumber);
+        let offset = 0;
+        for (let line = 1; line < targetLine && offset < source.length; line++) {
+          const next = source.indexOf("\n", offset);
+          if (next === -1) return source.length;
+          offset = next + 1;
+        }
+        return offset;
+      };
+
+      const focusLine = (lineNumber: number) => {
+        if (!textarea) return;
+        const offset = lineStartOffset(textarea.value, lineNumber);
+        textarea.focus();
+        textarea.setSelectionRange(offset, offset);
+        scheduleHighlight();
+        syncScroll();
+      };
+
       const updateHighlight = () => {
         if (!textarea) return;
+        const source = textarea.value;
         // Pad so the last line's highlight extends to the textarea height.
-        if (highlight) highlight.innerHTML = renderSource(textarea.value) + "\n";
-        if (gutter) {
-          const lineCount = textarea.value.split("\n").length;
-          // Rebuild only when the line count changes; cheap and avoids
-          // resetting the gutter's scroll every keystroke.
-          if (gutter.childElementCount !== lineCount) {
-            let nums = "";
-            for (let i = 1; i <= lineCount; i++) nums += `<span>${i}</span>`;
-            gutter.innerHTML = nums;
-          }
+        if (highlight) {
+          highlight.innerHTML =
+            (source.length > LARGE_SOURCE_HIGHLIGHT_LIMIT ? escapeHtml(source) : renderSource(source)) + "\n";
         }
+        if (gutter) {
+          const lineCount = source.split("\n").length;
+          const activeLine = currentLineNumber();
+          const diagnosticLines = new Map<number, "error" | "warning">();
+          currentDiagnostics.forEach((diagnostic) => {
+            const line = diagnostic.range?.start.line;
+            if (typeof line !== "number" || line <= 0) return;
+            const previous = diagnosticLines.get(line);
+            if (previous === "error") return;
+            diagnosticLines.set(line, isBlockingDiagnostic(diagnostic) ? "error" : "warning");
+          });
+          let nums = "";
+          for (let i = 1; i <= lineCount; i++) {
+            const classes = [
+              diagnosticLines.get(i) === "error" ? "has-diagnostic" : "",
+              diagnosticLines.get(i) === "warning" ? "has-warning" : "",
+              i === activeLine ? "current-line" : "",
+            ].filter(Boolean).join(" ");
+            const label = escapeHtml(fmt(pg("lineAria"), { n: String(i) }) || `${pg("line")} ${i}`);
+            nums += `<span${classes ? ` class="${classes}"` : ""} data-gutter-line="${i}" title="${label}">${i}</span>`;
+          }
+          if (gutter.innerHTML !== nums) gutter.innerHTML = nums;
+        }
+      };
+
+      const scheduleHighlight = () => {
+        if (highlightFrame !== undefined) return;
+        highlightFrame = window.requestAnimationFrame(() => {
+          highlightFrame = undefined;
+          updateHighlight();
+          syncScroll();
+        });
       };
 
       const syncScroll = () => {
@@ -362,11 +476,8 @@ if (ungroupedPlaygroundExamples.length > 0) {
           highlight.scrollLeft = textarea.scrollLeft;
         }
         if (gutter) gutter.scrollTop = textarea.scrollTop;
+        repositionFloatingTools();
       };
-
-      // ---- Compile (debounced auto + manual) ----
-      let compileTimer: number | undefined;
-      let wasmReady = false;
 
       const formatBytes = (bytes: number): string => {
         if (bytes >= 1024) return `${(bytes / 1024).toFixed(1)} KB`;
@@ -375,9 +486,6 @@ if (ungroupedPlaygroundExamples.length > 0) {
 
       const escapeHtml = (s: string): string =>
         s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-
-      const formatUnknownError = (e: unknown): string =>
-        e instanceof Error && e.message ? e.message : String(e);
 
       const renderJson = (json: string): string =>
         escapeHtml(json).replace(
@@ -466,32 +574,265 @@ if (ungroupedPlaygroundExamples.length > 0) {
         return paramsByBinding;
       };
 
-      // ---- Share-link source encoding (UTF-8 safe base64) ----
-      // The URL fragment must be ASCII-safe and survive any transport,
-      // so we encode the UTF-8 bytes of the source via TextEncoder and
-      // then base64. Decoding is guarded because a tampered #src= must
-      // never crash the page.
-      const encodeSource = (src: string): string => {
-        const bytes = new TextEncoder().encode(src);
-        let binary = "";
-        for (const b of bytes) binary += String.fromCharCode(b);
-        return btoa(binary);
+      const byteOffsetToJsOffset = (source: string, byteOffset: number): number => {
+        const capped = Math.max(0, Math.min(byteOffset, new TextEncoder().encode(source).length));
+        let byteCount = 0;
+        for (let i = 0; i < source.length; i++) {
+          const bytes = new TextEncoder().encode(source[i]).length;
+          if (byteCount + bytes > capped) return i;
+          byteCount += bytes;
+        }
+        return source.length;
       };
-      const decodeSource = (b64: string): string => {
-        try {
-          const binary = atob(b64);
-          const bytes = new Uint8Array(binary.length);
-          for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-          return new TextDecoder().decode(bytes);
-        } catch {
-          return "";
+
+      const focusDiagnostic = (diagnostic: CompileDiagnostic) => {
+        if (!textarea || !diagnostic.range) return;
+        const start = byteOffsetToJsOffset(textarea.value, diagnostic.range.start.offset);
+        const end = Math.max(start, byteOffsetToJsOffset(textarea.value, diagnostic.range.end.offset));
+        textarea.focus();
+        textarea.setSelectionRange(start, end || start);
+        const lineHeight = Number.parseFloat(getComputedStyle(textarea).lineHeight) || 20;
+        textarea.scrollTop = Math.max(0, (diagnostic.range.start.line - 3) * lineHeight);
+        syncScroll();
+        scheduleHighlight();
+        window.setTimeout(() => textarea.focus({ preventScroll: true }), 0);
+      };
+
+      const offsetToLspPosition = (source: string, offset: number) => {
+        const before = source.slice(0, Math.max(0, Math.min(offset, source.length)));
+        const lines = before.split("\n");
+        return {
+          line: lines.length - 1,
+          character: lines.at(-1)?.length ?? 0,
+        };
+      };
+
+      const lspPositionToOffset = (source: string, position: { line: number; character: number }) => {
+        const lines = source.split("\n");
+        let offset = 0;
+        for (let i = 0; i < Math.min(position.line, lines.length); i++) {
+          offset += lines[i].length + 1;
+        }
+        return Math.min(source.length, offset + Math.min(position.character, lines[position.line]?.length ?? 0));
+      };
+
+      const wordRangeAtCursor = () => {
+        if (!textarea) return { start: 0, end: 0, prefix: "" };
+        const value = textarea.value;
+        const cursor = textarea.selectionStart;
+        let start = cursor;
+        let end = cursor;
+        while (start > 0 && /[A-Za-z0-9_]/.test(value[start - 1])) start--;
+        while (end < value.length && /[A-Za-z0-9_]/.test(value[end])) end++;
+        return { start, end, prefix: value.slice(start, cursor) };
+      };
+
+      const clamp = (value: number, min: number, max: number) =>
+        Math.max(min, Math.min(max, value));
+
+      const textMeasureCanvas = document.createElement("canvas");
+      const textMeasureContext = textMeasureCanvas.getContext("2d");
+
+      const expandTabs = (text: string, tabSize: number) => {
+        let column = 0;
+        let output = "";
+        for (const char of text) {
+          if (char === "\t") {
+            const spacesToNextStop = tabSize - (column % tabSize);
+            const count = spacesToNextStop || tabSize;
+            output += " ".repeat(count);
+            column += count;
+          } else {
+            output += char;
+            column += 1;
+          }
+        }
+        return output;
+      };
+
+      const cursorOverlayCoordinates = () => {
+        if (!textarea || !editor) return null;
+        const value = textarea.value;
+        const cursor = clamp(textarea.selectionStart, 0, value.length);
+        const before = value.slice(0, cursor);
+        const lineStart = before.lastIndexOf("\n") + 1;
+        const lineIndex = before.split("\n").length - 1;
+        const linePrefix = before.slice(lineStart);
+        const style = getComputedStyle(textarea);
+        const lineHeight = Number.parseFloat(style.lineHeight) || 20;
+        const paddingLeft = Number.parseFloat(style.paddingLeft) || 60;
+        const paddingTop = Number.parseFloat(style.paddingTop) || 14;
+        const tabSize = Number.parseInt(style.tabSize || "2", 10) || 2;
+        const font = [style.fontStyle, style.fontVariant, style.fontWeight, style.fontSize, style.fontFamily].join(" ");
+        let textWidth = linePrefix.length * 8;
+        if (textMeasureContext) {
+          textMeasureContext.font = font;
+          textWidth = textMeasureContext.measureText(expandTabs(linePrefix, tabSize)).width;
+        }
+        return {
+          x: paddingLeft + textWidth - textarea.scrollLeft,
+          y: paddingTop + lineIndex * lineHeight - textarea.scrollTop,
+          lineHeight,
+        };
+      };
+
+      const positionOverlayAtCursor = (el: HTMLElement, kind: "completion" | "hover") => {
+        if (!editor) return;
+        const coords = cursorOverlayCoordinates();
+        if (!coords) return;
+        const preferredWidth = kind === "completion" ? 520 : 620;
+        const minWidth = kind === "completion" ? 260 : 300;
+        const overlayWidth = Math.max(minWidth, Math.min(preferredWidth, editor.clientWidth - 76));
+        const left = clamp(coords.x, 52, Math.max(52, editor.clientWidth - overlayWidth - 16));
+        const estimatedHeight = kind === "completion"
+          ? Math.min(260, editor.clientHeight * 0.46)
+          : Math.min(190, editor.clientHeight * 0.42);
+        const belowTop = coords.y + coords.lineHeight + 8;
+        const aboveTop = Math.max(12, coords.y - estimatedHeight - 8);
+        const openAbove = belowTop + estimatedHeight > editor.clientHeight - 12 && aboveTop < belowTop;
+        const top = openAbove ? aboveTop : clamp(belowTop, 12, Math.max(12, editor.clientHeight - 64));
+
+        el.style.setProperty("--overlay-left", `${Math.round(left)}px`);
+        el.style.setProperty("--overlay-top", `${Math.round(top)}px`);
+        el.style.setProperty("--overlay-width", `${Math.round(overlayWidth)}px`);
+        el.style.setProperty("--overlay-max-height", `${Math.round(estimatedHeight)}px`);
+      };
+
+      repositionFloatingTools = () => {
+        if (completionsEl && !completionsEl.hidden) positionOverlayAtCursor(completionsEl, "completion");
+        if (hoverCard && !hoverCard.hidden) positionOverlayAtCursor(hoverCard, "hover");
+      };
+
+      const hideCompletions = () => {
+        if (completionsEl) {
+          completionsEl.hidden = true;
+          (completionsEl as any).__items = [];
+          (completionsEl as any).__activeIndex = 0;
         }
       };
 
-      // Counts non-empty lines of a compiler diagnostic message as a
-      // rough "how many things are wrong" signal for the Errors badge.
-      const countErrorLines = (message: string): number =>
-        message.split("\n").filter((l) => l.trim().length > 0).length;
+      const hideHover = () => {
+        if (hoverCard) hoverCard.hidden = true;
+      };
+
+      const markdownToText = (value: string) =>
+        value
+          .replace(/```[a-zA-Z0-9_-]*\n?/g, "")
+          .replace(/```/g, "")
+          .trim();
+
+      const normalizeSnippetInsert = (value: string) =>
+        value
+          .replace(/\$\{\d+:([^}]+)\}/g, "$1")
+          .replace(/\$\d+/g, "");
+
+      const applyCompletion = (completion: LanguageCompletion) => {
+        if (!textarea) return;
+        const { start, end } = wordRangeAtCursor();
+        const insert = normalizeSnippetInsert(completion.insert_text || completion.label);
+        textarea.value = textarea.value.slice(0, start) + insert + textarea.value.slice(end);
+        textarea.selectionStart = textarea.selectionEnd = start + insert.length;
+        hideCompletions();
+        markEditorChanged();
+        textarea.focus();
+      };
+
+      const setActiveCompletion = (index: number) => {
+        if (!completionsEl) return;
+        const items = (completionsEl as any).__items as LanguageCompletion[] | undefined;
+        if (!items?.length) return;
+        const next = (index + items.length) % items.length;
+        (completionsEl as any).__activeIndex = next;
+        completionsEl.querySelectorAll<HTMLButtonElement>("[data-completion-index]").forEach((btn) => {
+          const active = Number(btn.dataset.completionIndex) === next;
+          btn.classList.toggle("is-active", active);
+          btn.setAttribute("aria-selected", String(active));
+          if (active) btn.scrollIntoView({ block: "nearest" });
+        });
+      };
+
+      const moveActiveCompletion = (delta: number) => {
+        const current = Number((completionsEl as any)?.__activeIndex ?? 0);
+        setActiveCompletion(current + delta);
+      };
+
+      const applyActiveCompletion = () => {
+        const items = (completionsEl as any)?.__items as LanguageCompletion[] | undefined;
+        if (!items?.length) return false;
+        const active = Number((completionsEl as any)?.__activeIndex ?? 0);
+        const item = items[clamp(active, 0, items.length - 1)];
+        if (!item) return false;
+        applyCompletion(item);
+        return true;
+      };
+
+      const renderCompletions = (items: LanguageCompletion[] = []) => {
+        if (!completionsEl || !textarea) return;
+        const { prefix } = wordRangeAtCursor();
+        const filtered = items
+          .filter((item) => !prefix || item.label.toLowerCase().startsWith(prefix.toLowerCase()))
+          .slice(0, 8);
+        if (!filtered.length) {
+          hideCompletions();
+          return;
+        }
+        completionsEl.innerHTML = filtered.map((item, index) => `
+          <button type="button" role="option" aria-selected="${index === 0 ? "true" : "false"}" class="${index === 0 ? "is-active" : ""}" data-completion-index="${index}">
+            <strong>${escapeHtml(item.label)}</strong>
+            ${item.detail ? `<span>${escapeHtml(item.detail)}</span>` : ""}
+          </button>
+        `).join("");
+        (completionsEl as any).__items = filtered;
+        (completionsEl as any).__activeIndex = 0;
+        positionOverlayAtCursor(completionsEl, "completion");
+        completionsEl.hidden = false;
+      };
+
+      const renderHover = (hover: LanguageServicePayload["hover"]) => {
+        if (!hoverCard || !hover?.contents) {
+          hideHover();
+          return;
+        }
+        hoverCard.innerHTML = `<pre>${escapeHtml(markdownToText(hover.contents))}</pre>`;
+        positionOverlayAtCursor(hoverCard, "hover");
+        hoverCard.hidden = false;
+      };
+
+      const jumpToDefinition = (definition: LanguageServicePayload["definition"]) => {
+        if (!textarea || !definition?.range) return false;
+        const start = lspPositionToOffset(textarea.value, definition.range.start);
+        const end = Math.max(start, lspPositionToOffset(textarea.value, definition.range.end));
+        textarea.focus();
+        textarea.setSelectionRange(start, end || start);
+        const lineHeight = Number.parseFloat(getComputedStyle(textarea).lineHeight) || 20;
+        textarea.scrollTop = Math.max(0, (definition.range.start.line - 3) * lineHeight);
+        syncScroll();
+        scheduleHighlight();
+        if (status) status.textContent = pg("definitionReady");
+        return true;
+      };
+
+      let hoverTimer: number | undefined;
+      const requestLanguage = (intent: LanguageIntent) => {
+        if (!workerReady || !textarea) return;
+        const position = offsetToLspPosition(textarea.value, textarea.selectionStart);
+        const id = ++languageRequestId;
+        languageIntents.set(id, intent);
+        latestLanguageRequestByIntent[intent] = id;
+        if (intent === "definition" && status) status.textContent = pg("definitionLooking");
+        compileWorker.postMessage({
+          id,
+          type: "language",
+          source: textarea.value,
+          line: position.line,
+          character: position.character,
+        });
+      };
+
+      const scheduleHover = () => {
+        window.clearTimeout(hoverTimer);
+        hoverTimer = window.setTimeout(() => requestLanguage("hover"), 260);
+      };
 
       // ---- Compile button state ----
       type CompileState = "idle" | "compiling" | "ready" | "error";
@@ -596,34 +937,50 @@ if (ungroupedPlaygroundExamples.length > 0) {
         }).join("")}</ul>`;
       };
 
-      // Keep the Errors-tab badge in sync with the latest result.
-      // null/empty error hides it; otherwise it shows the non-empty line
-      // count of the diagnostic as a rough "how many things are wrong".
-      const updateErrorBadge = (error: string | null) => {
+      const updateErrorBadge = (diagnostics: CompileDiagnostic[]) => {
         if (!errorBadge) return;
-        if (!error) {
-          errorBadge.hidden = true;
+        if (!diagnostics.length) {
           errorBadge.classList.remove("is-visible");
+          errorBadge.classList.remove("has-errors", "has-warnings");
           errorBadge.textContent = "0";
           errorBadge.setAttribute("aria-label", pg("noErrorsBadge"));
           return;
         }
-        const count = countErrorLines(error);
-        errorBadge.textContent = String(count);
-        errorBadge.setAttribute("aria-label", fmt(pg("errorsBadge"), { n: String(count) }));
+        const counts = diagnosticCounts(diagnostics);
+        errorBadge.textContent = String(counts.errors || counts.warnings || diagnostics.length);
+        errorBadge.setAttribute(
+          "aria-label",
+          fmt(pg("diagnosticsBadge"), { errors: String(counts.errors), warnings: String(counts.warnings) }),
+        );
         errorBadge.hidden = false;
         errorBadge.classList.add("is-visible");
+        errorBadge.classList.toggle("has-errors", counts.errors > 0);
+        errorBadge.classList.toggle("has-warnings", counts.errors === 0 && counts.warnings > 0);
       };
 
-      const renderErrors = (error: string | null) => {
-        const panel = outputPanels.get("errors");
-        if (!panel) return;
-        updateErrorBadge(error);
-        if (!error) {
-          panel.innerHTML = `<p class="pg-no-errors">${escapeHtml(pg("noErrors"))}</p>`;
+      const renderErrors = (diagnostics: CompileDiagnostic[]) => {
+        currentDiagnostics = diagnostics;
+        updateErrorBadge(diagnostics);
+        scheduleHighlight();
+        if (!railDiagnosticsBody) return;
+        if (!diagnostics.length) {
+          railDiagnosticsBody.innerHTML = `<p class="pg-no-errors">${escapeHtml(pg("noErrors"))}</p>`;
           return;
         }
-        panel.innerHTML = `<div class="pg-error"><pre>${escapeHtml(error)}</pre></div>`;
+        railDiagnosticsBody.innerHTML = `<ul class="pg-diagnostic-list">${diagnostics.map((diagnostic, index) => {
+          const range = diagnostic.range;
+          const location = range
+            ? `${escapeHtml(pg("line"))} ${range.start.line}:${range.start.column}`
+            : escapeHtml(pg("sourceLevel"));
+          const severity = diagnosticSeverity(diagnostic);
+          const severityText = severity === "warning" ? pg("warningLabel") : pg("errorLabel");
+          return `<li>
+            <button class="pg-diagnostic pg-diagnostic-${escapeHtml(severity)}" type="button" data-diagnostic-index="${index}">
+              <span class="pg-diagnostic-location">${escapeHtml(severityText)} · ${location}</span>
+              <span class="pg-diagnostic-message">${escapeHtml(diagnostic.message)}</span>
+            </button>
+          </li>`;
+        }).join("")}</ul>`;
       };
 
       const renderRail = (data: any) => {
@@ -643,7 +1000,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
             : (data.artifact_format || "—");
         }
         if (railSizeLabel) {
-          const labelKey = hasSize ? "playground.size" : "playground.format";
+          const labelKey = hasSize ? "playground.size" : "playground.artifactFormat";
           railSizeLabel.dataset.i18n = labelKey;
           railSizeLabel.textContent = getMessage(labelKey, readLocale()) ?? "";
         }
@@ -697,64 +1054,106 @@ if (ungroupedPlaygroundExamples.length > 0) {
         if (railTypes) railTypes.replaceChildren();
       };
 
-      const renderRailError = (message: string) => {
+      const renderRailError = () => {
         if (!railReady || !railLoading) return;
         clearRailReady();
         railReady.hidden = true;
-        railLoading.hidden = false;
-        railLoading.innerHTML = `<span class="pg-error-inline">${escapeHtml(message)}</span>`;
+        railLoading.hidden = true;
+      };
+
+      const applyCompileResult = (requestId: number, result: WorkerCompileResult, elapsed: number, versionText = "") => {
+        if (requestId < latestAppliedRequestId) return;
+        latestAppliedRequestId = requestId;
+        lastElapsed = elapsed;
+        if (versionEl && versionText) versionEl.textContent = `cellc v${versionText}`;
+        if (loading) loading.hidden = true;
+
+        const diagnostics = Array.isArray(result.diagnostics) ? result.diagnostics : [];
+        const data = result.metadata;
+        const blockingDiagnostics = diagnostics.filter(isBlockingDiagnostic);
+
+        if (blockingDiagnostics.length || !data) {
+          const message = blockingDiagnostics[0]?.message || diagnostics[0]?.message || pg("invalidOutput");
+          renderErrors(diagnostics.length ? diagnostics : [{ message, severity: "error" }]);
+          renderMetadata({ __empty: true });
+          renderActions({ actions: [] });
+          renderTypes({ types: [] });
+          selectTab("actions");
+          selectMobileView("rail");
+          if (status) {
+            status.textContent = summariseError(message);
+            status.title = diagnostics.map((diagnostic) => diagnostic.message).join("\n");
+          }
+          setCompileState("error");
+          renderRailError();
+          return;
+        }
+
+        renderMetadata(data);
+        renderActions(data);
+        renderTypes(data);
+        renderErrors(diagnostics);
+        renderRail(data);
+        if (status) {
+          status.textContent = diagnostics.length
+            ? fmt(pg("compiledWithWarnings"), { ms: String(lastElapsed), n: String(diagnostics.length) })
+            : fmt(pg("ready"), { ms: String(lastElapsed) });
+          if (diagnostics.length) status.title = diagnostics.map((diagnostic) => diagnostic.message).join("\n");
+          else status.removeAttribute("title");
+        }
+        setCompileState("ready");
       };
 
       const doCompile = () => {
-        if (!wasmReady || !textarea || !compileMetadataJson) return;
+        if (!workerReady || !textarea) return;
         setCompileState("compiling");
-        // Synchronous compile: we set "compiling" for one frame so the
-        // user sees the state flip even on tiny files. Use rAF instead
-        // of a fixed timeout so it never delays the actual result.
-        requestAnimationFrame(() => {
-          const t0 = performance.now();
-          // compile_metadata takes an artifact target (riscv64-asm,
-          // riscv64-elf), not a profile name (ckb). null = default.
-          const result = compileMetadataJson(textarea.value, targetSelect?.value || null);
-          lastElapsed = Math.round(performance.now() - t0);
-          let data: any;
-          try {
-            data = JSON.parse(result);
-          } catch {
-            data = { error: pg("invalidOutput") };
-          }
-          if (data.error) {
-            // Surface errors immediately: switch to the Errors tab so the
-            // diagnostic is never hidden behind stale successful output,
-            // and clear the now-invalid metadata/actions/types panels.
-            renderErrors(data.error);
-            renderMetadata({ __empty: true });
-            renderActions({ actions: [] });
-            renderTypes({ types: [] });
-            selectTab("errors");
-            selectMobileView("output");
-            if (status) {
-              status.textContent = summariseError(data.error);
-              status.title = data.error;
-            }
-            setCompileState("error");
-            renderRailError(data.error);
-            return;
-          }
-          renderMetadata(data);
-          renderActions(data);
-          renderTypes(data);
-          renderErrors(null);
-          renderRail(data);
-          if (status) {
-            status.textContent = fmt(pg("ready"), { ms: String(lastElapsed) });
-            status.removeAttribute("title");
-          }
-          setCompileState("ready");
-          const activeTab = outputTabs.find((tab) => tab.getAttribute("aria-selected") === "true")?.dataset.outputTab;
-          if (activeTab === "errors") selectTab("metadata");
+        const id = ++compileRequestId;
+        compileWorker.postMessage({
+          id,
+          type: "compile",
+          source: textarea.value,
+          target: null,
         });
       };
+
+      compileWorker.addEventListener("message", (event) => {
+        const { id, type, payload, elapsed, version } = event.data || {};
+        if (type === "language-result" && typeof id === "number") {
+          const intent = languageIntents.get(id);
+          languageIntents.delete(id);
+          if (!intent || id !== latestLanguageRequestByIntent[intent]) return;
+          const result = (payload || {}) as LanguageServicePayload;
+          if (intent === "completion") {
+            hideHover();
+            renderCompletions(result.completions ?? []);
+          } else if (intent === "definition") {
+            hideCompletions();
+            hideHover();
+            if (!jumpToDefinition(result.definition ?? null) && status) {
+              status.textContent = pg("definitionMissing");
+            }
+          } else {
+            hideCompletions();
+            renderHover(result.hover ?? null);
+          }
+          return;
+        }
+        if (type !== "result" || typeof id !== "number") return;
+        applyCompileResult(id, payload || { metadata: null, diagnostics: [{ message: pg("invalidOutput"), severity: "error" }] }, elapsed || 0, version || "");
+      });
+
+      compileWorker.addEventListener("error", (event) => {
+        workerReady = false;
+        const message = fmt(pg("loadFailed"), { error: event.message || "worker error" });
+        if (status) status.textContent = message;
+        if (loading) {
+          loading.hidden = false;
+          loading.innerHTML = `<span class="pg-error-inline">${escapeHtml(message)}</span>`;
+        }
+        renderRailError();
+        renderErrors([{ message, severity: "error" }]);
+        setCompileState("error");
+      });
 
       const scheduleCompile = () => {
         setCompileState("idle");
@@ -762,10 +1161,65 @@ if (ungroupedPlaygroundExamples.length > 0) {
         compileTimer = window.setTimeout(doCompile, 300);
       };
 
+      const markEditorChanged = () => {
+        scheduleHighlight();
+        updateExampleLesson(sourceMatchesExample(exampleSelect?.value) ? (exampleSelect?.value ?? null) : null);
+        scheduleCompile();
+      };
+
+      const autoPairs = new Map<string, string>([
+        ["(", ")"],
+        ["[", "]"],
+        ["{", "}"],
+        ['"', '"'],
+        ["'", "'"],
+      ]);
+      const autoPairClosers = new Set(Array.from(autoPairs.values()));
+
+      const handleAutoPairKey = (e: KeyboardEvent) => {
+        if (!textarea || e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return false;
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const value = textarea.value;
+
+        if (e.key === "Backspace" && start === end) {
+          const previous = value[start - 1];
+          const next = value[start];
+          if (autoPairs.get(previous) === next) {
+            e.preventDefault();
+            textarea.value = value.slice(0, start - 1) + value.slice(start + 1);
+            textarea.selectionStart = textarea.selectionEnd = start - 1;
+            markEditorChanged();
+            return true;
+          }
+          return false;
+        }
+
+        if (start === end && autoPairClosers.has(e.key) && value[start] === e.key) {
+          e.preventDefault();
+          textarea.selectionStart = textarea.selectionEnd = start + 1;
+          scheduleHighlight();
+          return true;
+        }
+
+        const close = autoPairs.get(e.key);
+        if (!close) return false;
+        e.preventDefault();
+        const selected = value.slice(start, end);
+        textarea.value = value.slice(0, start) + e.key + selected + close + value.slice(end);
+        if (start === end) {
+          textarea.selectionStart = textarea.selectionEnd = start + e.key.length;
+        } else {
+          textarea.selectionStart = start + e.key.length;
+          textarea.selectionEnd = end + e.key.length;
+        }
+        markEditorChanged();
+        return true;
+      };
+
       // ---- Tab switching ----
-      // Extracted so doCompile can surface the Errors tab automatically
-      // when a compile fails, instead of leaving stale successful
-      // output on screen.
+      // Extracted so compile success/failure can keep output panels in a
+      // consistent state while diagnostics live in the rail.
       const selectTab = (target: string) => {
         if (!target) return;
         outputTabs.forEach((tab) => {
@@ -798,47 +1252,51 @@ if (ungroupedPlaygroundExamples.length > 0) {
         });
       });
 
-      // ---- Source persistence (localStorage) ----
-      // The last edited source is auto-saved so a refresh doesn't lose
-      // work. We DO NOT clobber a deep link (#src= / ?example=): if the
-      // URL carries one, we honour it and skip restore (see below).
-      const STORAGE_KEY = "cellscript-playground-source";
-
-      const saveSource = () => {
-        if (!textarea) return;
-        try {
-          localStorage.setItem(STORAGE_KEY, textarea.value);
-        } catch {
-          // Storage unavailable (private mode / quota); auto-save is best-effort.
-        }
-      };
-
-      const restoreSource = (): boolean => {
-        if (!textarea) return false;
-        try {
-          const saved = localStorage.getItem(STORAGE_KEY);
-          if (saved !== null && saved !== "") {
-            textarea.value = saved;
-            return true;
-          }
-        } catch {
-          // Storage unavailable; skip restore.
-        }
-        return false;
-      };
-
       // ---- Editor events ----
       if (textarea) {
         textarea.addEventListener("input", () => {
-          updateHighlight();
-          updateExampleLesson(sourceMatchesExample(exampleSelect?.value) ? (exampleSelect?.value ?? null) : null);
-          scheduleCompile();
-          saveSource();
+          hideCompletions();
+          hideHover();
+          markEditorChanged();
         });
         textarea.addEventListener("scroll", syncScroll);
         // Tab indents with two spaces; Shift+Tab outdents the current line or
         // selected block.
         textarea.addEventListener("keydown", (e) => {
+          const completionItems = (completionsEl as any)?.__items as LanguageCompletion[] | undefined;
+          if (!completionsEl?.hidden && completionItems?.length) {
+            if (e.key === "ArrowDown") {
+              e.preventDefault();
+              moveActiveCompletion(1);
+              return;
+            }
+            if (e.key === "ArrowUp") {
+              e.preventDefault();
+              moveActiveCompletion(-1);
+              return;
+            }
+            if (e.key === "Enter" || e.key === "Tab") {
+              e.preventDefault();
+              applyActiveCompletion();
+              return;
+            }
+          }
+          if (e.key === "Escape") {
+            hideCompletions();
+            hideHover();
+            return;
+          }
+          if ((e.ctrlKey || e.metaKey) && (e.key === " " || e.code === "Space")) {
+            e.preventDefault();
+            requestLanguage("completion");
+            return;
+          }
+          if (e.key === "F12") {
+            e.preventDefault();
+            requestLanguage("definition");
+            return;
+          }
+          if (handleAutoPairKey(e)) return;
           if (e.key === "Enter") {
             e.preventDefault();
             const start = textarea.selectionStart;
@@ -851,9 +1309,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
             const insert = `\n${indent}${extraIndent}`;
             textarea.value = value.slice(0, start) + insert + value.slice(end);
             textarea.selectionStart = textarea.selectionEnd = start + insert.length;
-            updateHighlight();
-            scheduleCompile();
-            saveSource();
+            markEditorChanged();
           } else if (e.key === "Tab") {
             e.preventDefault();
             const start = textarea.selectionStart;
@@ -881,11 +1337,22 @@ if (ungroupedPlaygroundExamples.length > 0) {
               textarea.value = textarea.value.slice(0, start) + "  " + textarea.value.slice(end);
               textarea.selectionStart = textarea.selectionEnd = start + 2;
             }
-            updateHighlight();
-            scheduleCompile();
-            saveSource();
+            markEditorChanged();
+          } else if (e.key === "." || e.key === ":") {
+            window.setTimeout(() => requestLanguage("completion"), 0);
           }
         });
+        textarea.addEventListener("keyup", (e) => {
+          scheduleHighlight();
+          if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(e.key)) {
+            scheduleHover();
+          }
+        });
+        textarea.addEventListener("click", () => {
+          scheduleHighlight();
+          scheduleHover();
+        });
+        textarea.addEventListener("select", scheduleHighlight);
       }
 
       // ---- Compile button: manual trigger + keyboard shortcut ----
@@ -901,43 +1368,6 @@ if (ungroupedPlaygroundExamples.length > 0) {
           window.clearTimeout(compileTimer);
           doCompile();
         }
-      });
-
-      restoredDismiss?.addEventListener("click", () => {
-        if (restoredNotice) restoredNotice.hidden = true;
-      });
-
-      // ---- Export current source as .cell ----
-      const exportFileName = (): string => {
-        const selectedFile = exampleSelect ? exampleFiles.get(exampleSelect.value) : undefined;
-        const fallback = sourceMatchesExample(exampleSelect?.value) ? selectedFile?.split("/").pop() : undefined;
-        if (fallback) return fallback;
-        const moduleName = textarea?.value.match(/^module\s+([A-Za-z0-9_:]+)/m)?.[1];
-        const slug = moduleName?.split("::").filter(Boolean).pop()?.replace(/[^A-Za-z0-9_-]+/g, "-").toLowerCase();
-        return `${slug || "cellscript-playground"}.cell`;
-      };
-
-      const flashExportBtn = (message: string) => {
-        if (!exportBtn) return;
-        exportBtn.textContent = message;
-        window.setTimeout(() => {
-          if (exportBtn) exportBtn.textContent = pg("exportCell");
-        }, 1600);
-      };
-
-      exportBtn?.addEventListener("click", () => {
-        const src = textarea?.value ?? "";
-        const blob = new Blob([src.endsWith("\n") ? src : `${src}\n`], { type: "text/plain;charset=utf-8" });
-        const href = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = href;
-        a.download = exportFileName();
-        a.rel = "noopener";
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-        window.setTimeout(() => URL.revokeObjectURL(href), 0);
-        flashExportBtn(pg("exported"));
       });
 
       // ---- Copy buttons (.copy-btn) ----
@@ -970,6 +1400,48 @@ if (ungroupedPlaygroundExamples.length > 0) {
         if (text) flashCopyBtn(btn, text);
       });
 
+      document.addEventListener("click", (e: MouseEvent) => {
+        const completionBtn = (e.target as HTMLElement)?.closest<HTMLButtonElement>("[data-completion-index]");
+        if (!completionBtn) return;
+        e.preventDefault();
+        const index = Number(completionBtn.dataset.completionIndex);
+        const items = (completionsEl as any)?.__items as LanguageCompletion[] | undefined;
+        const item = Number.isFinite(index) ? items?.[index] : undefined;
+        if (item) applyCompletion(item);
+      });
+
+      document.addEventListener("mouseover", (e: MouseEvent) => {
+        const completionBtn = (e.target as HTMLElement)?.closest<HTMLButtonElement>("[data-completion-index]");
+        if (!completionBtn || completionsEl?.hidden) return;
+        const index = Number(completionBtn.dataset.completionIndex);
+        if (Number.isFinite(index)) setActiveCompletion(index);
+      });
+
+      gutter?.addEventListener("click", (e: MouseEvent) => {
+        const lineEl = (e.target as HTMLElement)?.closest<HTMLElement>("[data-gutter-line]");
+        if (!lineEl) return;
+        e.preventDefault();
+        const line = Number(lineEl.dataset.gutterLine);
+        if (Number.isFinite(line)) focusLine(line);
+      });
+
+      document.addEventListener("pointerdown", (e: PointerEvent) => {
+        const target = e.target as HTMLElement | null;
+        if (target?.closest("[data-completions], [data-hover-card], [data-textarea]")) return;
+        hideCompletions();
+        hideHover();
+      });
+
+      document.addEventListener("click", (e: MouseEvent) => {
+        const btn = (e.target as HTMLElement)?.closest<HTMLButtonElement>("[data-diagnostic-index]");
+        if (!btn) return;
+        e.preventDefault();
+        btn.blur();
+        const index = Number(btn.dataset.diagnosticIndex);
+        const diagnostic = Number.isFinite(index) ? currentDiagnostics[index] : undefined;
+        if (diagnostic) focusDiagnostic(diagnostic);
+      });
+
       // ---- Example switcher ----
       if (exampleSelect) {
         exampleSelect.addEventListener("change", () => {
@@ -977,94 +1449,23 @@ if (ungroupedPlaygroundExamples.length > 0) {
           const src = exampleSources[id];
           if (src !== undefined && textarea) {
             textarea.value = src;
+            hideCompletions();
+            hideHover();
             updateExampleLesson(id);
-            updateHighlight();
+            scheduleHighlight();
             scheduleCompile();
-            saveSource();
           }
         });
       }
 
-      targetSelect?.addEventListener("change", () => {
-        scheduleCompile();
-      });
-
-      // ---- URL deep-link params + share ----
-      // Precedence for the initial source: a shared source fragment
-      // (#src=<base64>) wins, then an explicit example (?example=<id>),
-      // then the auto-saved edit in localStorage. A deep link of either
-      // kind suppresses the localStorage-restore banner.
+      // ---- URL example preload ----
       const params = new URLSearchParams(window.location.search);
       const paramExample = params.get("example");
-      const sharedSource = (() => {
-        const hash = window.location.hash;
-        const match = /(?:^|#)src=([A-Za-z0-9+/=]+)/.exec(hash);
-        return match ? decodeSource(match[1]) : "";
-      })();
-      let deepLinked = false;
-
-      if (sharedSource && textarea) {
-        textarea.value = sharedSource;
-        if (paramExample && exampleSources[paramExample] !== undefined && exampleSelect) exampleSelect.value = paramExample;
-        updateExampleLesson(paramExample && exampleSources[paramExample] !== undefined ? paramExample : null);
-        deepLinked = true;
-      } else if (paramExample && exampleSources[paramExample] !== undefined && textarea) {
+      if (paramExample && exampleSources[paramExample] !== undefined && textarea) {
         textarea.value = exampleSources[paramExample];
         if (exampleSelect) exampleSelect.value = paramExample;
         updateExampleLesson(paramExample);
-        deepLinked = true;
       }
-
-      // Restore the previously edited source unless a deep link was
-      // opened. Show a small dismissable notice when we do.
-      if (!deepLinked) {
-        const restored = restoreSource();
-        if (restored && restoredNotice) {
-          updateExampleLesson(null);
-          restoredNotice.hidden = false;
-          window.setTimeout(() => {
-            if (restoredNotice && !restoredNotice.hidden) restoredNotice.hidden = true;
-          }, 6000);
-        }
-      }
-
-      const flashShareBtn = (message: string) => {
-        if (!shareBtn) return;
-        shareBtn.textContent = message;
-        window.setTimeout(() => {
-          if (shareBtn) shareBtn.textContent = pg("share");
-        }, 1600);
-      };
-
-      shareBtn?.addEventListener("click", async () => {
-        const url = new URL(window.location.href);
-        const src = textarea?.value ?? "";
-        const exampleId = exampleSelect?.value ?? "token";
-        // Encode the actual edited source into the URL fragment so the
-        // recipient opens exactly what was on screen, not the stock
-        // example. We also keep ?example= as a fallback hint and for
-        // the selector highlight. Guard against absurd URLs: if the
-        // encoded source would blow past a sane length, fall back to a
-        // plain example link and tell the user honestly.
-        const encoded = encodeSource(src);
-        url.hash = `src=${encoded}`;
-        if (sourceMatchesExample(exampleId, src)) {
-          url.searchParams.set("example", exampleId);
-        } else {
-          url.searchParams.delete("example");
-        }
-        const tooLong = url.toString().length > 8000;
-        if (tooLong) {
-          url.hash = "";
-          if (exampleIds.has(exampleId)) url.searchParams.set("example", exampleId);
-        }
-        try {
-          await navigator.clipboard.writeText(url.toString());
-          flashShareBtn(tooLong ? pg("shareTooLong") : pg("copied"));
-        } catch {
-          // Clipboard unavailable; ignore.
-        }
-      });
 
       // ---- Runtime i18n: re-apply localized strings when the locale
       //      changes (the NavRail toggle updates <html data-locale>
@@ -1092,37 +1493,13 @@ if (ungroupedPlaygroundExamples.length > 0) {
         const state = (compileBtn?.dataset.state ?? "idle") as CompileState;
         if (state === "ready") compileLabel && (compileLabel.textContent = fmt(pg("compiledIn"), { ms: String(lastElapsed) }));
         else setCompileState(state);
-        if (wasmReady) doCompile();
+        if (workerReady) doCompile();
       };
       window.addEventListener("cellscript:locale-change", applyLocaleStrings);
       applyLocaleStrings();
 
-      // ---- Init WASM ----
-      // Dynamic import so Rollup doesn't try to bundle the static asset.
-      // The `/* @vite-ignore */` comment prevents Vite from warning.
-      import(/* @vite-ignore */ wasmUrl.href).then((mod: any) => {
-        wasmInit = mod.default;
-        compileMetadataJson = mod.compile_metadata_json;
-        wasmVersion = mod.version;
-        return wasmInit();
-      }).then(() => {
-        wasmReady = true;
-        if (versionEl) versionEl.textContent = `cellc v${wasmVersion()}`;
-        if (loading) loading.hidden = true;
-        updateHighlight();
-        doCompile();
-      }).catch((e: unknown) => {
-        const message = fmt(pg("loadFailed"), { error: formatUnknownError(e) });
-        if (status) status.textContent = message;
-        if (loading) {
-          loading.hidden = false;
-          loading.innerHTML = `<span class="pg-error-inline">${escapeHtml(message)}</span>`;
-        }
-        renderRailError(message);
-        renderErrors(message);
-      });
-
       updateHighlight();
+      doCompile();
     </script>
     <NavRail page="playground" />
   </body>

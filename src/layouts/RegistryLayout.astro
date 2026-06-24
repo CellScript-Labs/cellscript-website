@@ -156,11 +156,14 @@ const activeHref =
         }
       };
 
+      const reapplyRegistryLocale = () => applyLocale(readLocale());
+
       // React to the NavRail's locale-change event (it dispatches after
-      // updating <html data-locale>).
-      window.addEventListener("cellscript:locale-change", () => applyLocale(readLocale()));
+      // updating <html data-locale>) and after Astro swaps page content.
+      window.addEventListener("cellscript:locale-change", reapplyRegistryLocale);
+      document.addEventListener("astro:page-load", reapplyRegistryLocale);
       // Apply the stored locale once on load so a refresh honours it.
-      applyLocale(readLocale());
+      reapplyRegistryLocale();
     </script>
 
     <script is:inline>
