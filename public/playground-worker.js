@@ -1,10 +1,11 @@
 let wasmModulePromise;
 let wasmModule;
+const COMPILER_ASSET_VERSION = "20260625-multi-diagnostics";
 
 const loadCompiler = async () => {
   if (!wasmModulePromise) {
-    wasmModulePromise = import("/wasm/cellscript_wasm.js").then(async (mod) => {
-      await mod.default();
+    wasmModulePromise = import(`/wasm/cellscript_wasm.js?v=${COMPILER_ASSET_VERSION}`).then(async (mod) => {
+      await mod.default({ module_or_path: `/wasm/cellscript_wasm_bg.wasm?v=${COMPILER_ASSET_VERSION}` });
       wasmModule = mod;
       return mod;
     });

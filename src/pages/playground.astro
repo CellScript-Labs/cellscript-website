@@ -285,7 +285,8 @@ if (ungroupedPlaygroundExamples.length > 0) {
 
       type LanguageIntent = "hover" | "completion" | "definition";
 
-      const workerUrl = new URL("/playground-worker.js", window.location.href);
+      const compilerAssetVersion = "20260625-multi-diagnostics";
+      const workerUrl = new URL(`/playground-worker.js?v=${compilerAssetVersion}`, window.location.href);
       const compileWorker = new Worker(workerUrl, { type: "module" });
       let compileRequestId = 0;
       let latestAppliedRequestId = 0;
