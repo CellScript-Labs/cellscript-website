@@ -22,36 +22,45 @@ const tokenGroups = {
   cellKind: new Set(["resource", "shared", "receipt", "flow"]),
   cellEffect: new Set([
     "consume", "create", "destroy", "preserve", "create_unique",
-    "destroy_unique", "destroy_singleton_type", "claim", "settle",
+    "replace_unique", "destroy_unique", "destroy_instance",
+    "destroy_singleton_type", "claim", "settle",
     "launch", "read_ref",
   ]),
   assertion: new Set([
-    "assert", "assert_invariant", "assert_sum", "assert_delta",
-    "assert_unique", "require",
+    "assert_invariant", "assert_sum", "assert_conserved", "assert_delta",
+    "assert_distinct", "assert_singleton", "require",
   ]),
   control: new Set([
     "if", "else", "for", "in", "while", "match", "return", "let",
     "mut", "ref", "transition", "read", "protected", "witness",
-    "lock_args",
+    "lock_args", "as", "from",
   ]),
   builtin: new Set([
-    "u8", "u16", "u32", "u64", "u128", "bool", "Address", "Hash",
-    "String", "Vec", "env", "witness",
+    "u8", "u16", "u32", "i32", "u64", "u128", "bool", "Address", "Hash",
+    "String", "Vec", "env", "std", "self", "true", "false", "source",
+    "witness", "ckb", "identity", "field", "script_args", "ckb_type_id",
+    "singleton_type", "type_id", "identity_field", "with_lock",
+    "with_capacity", "with_capacity_floor", "with_default_hash_type",
   ]),
   capability: new Set([
     "store", "create", "consume", "replace", "burn", "relock",
-    "read_ref", "transfer", "destroy", "retarget_type",
+    "read_ref", "destroy", "retarget_type",
   ]),
+  standardModuleRoot: new Set(["std", "env", "witness", "source", "ckb", "Vec"]),
 };
 
 export const classifyCellToken = (token: string): string => {
-  if (token.startsWith("//")) return "comment";
-  if (token.startsWith("\"")) return "string";
-  if (/^\d+$/.test(token)) return "number";
+  if (token.startsWith("//") || token.startsWith("/*")) return "comment";
+  if (token.startsWith("\"") || token.startsWith("'") || token.startsWith("b\"")) return "string";
+  if (/^(?:0x[0-9a-fA-F]+|\d+)$/.test(token)) return "number";
   if (token === "->" || token === "=>") return "arrow";
-  if (/^[{}()[\];:,.<>+\-*/=&|!]$/.test(token) || ["==", "!=", "<=", ">=", "&&", "||"].includes(token))
+  if (/^[{}()[\]#;:,.<>+\-*/%=&|!]$/.test(token) || ["==", "!=", "<=", ">=", "&&", "||"].includes(token))
     return "operator";
-  const base = token.includes("::") ? (token.split("::").at(-1) ?? token) : token;
+  if (token.includes("::")) {
+    const root = token.split("::")[0] ?? "";
+    return tokenGroups.standardModuleRoot.has(root) ? "builtin-type" : "";
+  }
+  const base = token;
   if (tokenGroups.cellKind.has(base)) return "cell-kind";
   if (tokenGroups.cellEffect.has(base)) return "cell-effect";
   if (tokenGroups.assertion.has(base)) return "assert";
@@ -62,27 +71,108 @@ export const classifyCellToken = (token: string): string => {
   return "";
 };
 
-/** Highlight a single source line into HTML with token spans. */
+const isIdentifierStart = (char: string | undefined): boolean =>
+  !!char && /[A-Za-z_]/.test(char);
+
+const isIdentifierPart = (char: string | undefined): boolean =>
+  !!char && /[A-Za-z0-9_]/.test(char);
+
+const isHexDigit = (char: string | undefined): boolean =>
+  !!char && /[0-9a-fA-F]/.test(char);
+
+const readQuotedToken = (source: string, start: number, quoteIndex: number): string => {
+  const quote = source[quoteIndex];
+  let cursor = quoteIndex + 1;
+  while (cursor < source.length) {
+    const char = source[cursor];
+    if (char === "\\") {
+      cursor += 2;
+      continue;
+    }
+    cursor += 1;
+    if (char === quote) break;
+  }
+  return source.slice(start, cursor);
+};
+
+const readBlockComment = (source: string, start: number): string => {
+  let depth = 1;
+  let cursor = start + 2;
+  while (cursor < source.length && depth > 0) {
+    if (source.startsWith("/*", cursor)) {
+      depth += 1;
+      cursor += 2;
+    } else if (source.startsWith("*/", cursor)) {
+      depth -= 1;
+      cursor += 2;
+    } else {
+      cursor += 1;
+    }
+  }
+  return source.slice(start, cursor);
+};
+
+const readIdentifierToken = (source: string, start: number): string => {
+  let cursor = start;
+  while (isIdentifierPart(source[cursor])) cursor += 1;
+  while (source.startsWith("::", cursor) && isIdentifierStart(source[cursor + 2])) {
+    cursor += 2;
+    while (isIdentifierPart(source[cursor])) cursor += 1;
+  }
+  return source.slice(start, cursor);
+};
+
+const readToken = (source: string, start: number): string | undefined => {
+  const char = source[start];
+  if (source.startsWith("//", start)) {
+    const lineEnd = source.indexOf("\n", start);
+    return source.slice(start, lineEnd === -1 ? source.length : lineEnd);
+  }
+  if (source.startsWith("/*", start)) return readBlockComment(source, start);
+  if (source.startsWith("b\"", start)) return readQuotedToken(source, start, start + 1);
+  if (char === "\"" || char === "'") return readQuotedToken(source, start, start);
+
+  for (const operator of ["->", "=>", "==", "!=", "<=", ">=", "&&", "||"]) {
+    if (source.startsWith(operator, start)) return operator;
+  }
+
+  if (source.startsWith("0x", start) && isHexDigit(source[start + 2])) {
+    let cursor = start + 2;
+    while (isHexDigit(source[cursor])) cursor += 1;
+    return source.slice(start, cursor);
+  }
+  if (/[0-9]/.test(char ?? "")) {
+    let cursor = start;
+    while (/[0-9]/.test(source[cursor] ?? "")) cursor += 1;
+    return source.slice(start, cursor);
+  }
+  if (isIdentifierStart(char)) return readIdentifierToken(source, start);
+  if ("{}()[]#;:,.<>+-*/%=&|!".includes(char ?? "")) return char;
+  return undefined;
+};
+
+/** Highlight CellScript source into HTML with token spans. */
 export const renderLine = (line: string): string => {
-  const tokenPattern =
-    /\/\/.*$|"(?:[^"\\]|\\.)*"|->|=>|==|!=|<=|>=|&&|\|\||[A-Za-z_][A-Za-z0-9_:]*|\d+|[{}()[\];:,.<>+\-*/=&|!]/g;
   let rendered = "";
   let cursor = 0;
 
-  for (const match of line.matchAll(tokenPattern)) {
-    const token = match[0];
-    const index = match.index ?? 0;
-    rendered += escapeHtml(line.slice(cursor, index));
+  while (cursor < line.length) {
+    const token = readToken(line, cursor);
+    if (!token) {
+      rendered += escapeHtml(line[cursor] ?? "");
+      cursor += 1;
+      continue;
+    }
     const tokenClass = classifyCellToken(token);
     rendered += tokenClass
       ? `<span class="token-${tokenClass}">${escapeHtml(token)}</span>`
       : escapeHtml(token);
-    cursor = index + token.length;
+    cursor += token.length;
   }
 
-  return rendered + escapeHtml(line.slice(cursor));
+  return rendered;
 };
 
 /** Highlight a full source string (multiple lines) into HTML. */
 export const renderSource = (source: string): string =>
-  source.split("\n").map(renderLine).join("\n");
+  renderLine(source);
