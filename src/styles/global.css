@@ -21,6 +21,7 @@
   --panel: oklch(0.145 0.004 180);
   --panel-2: oklch(0.18 0.004 180 / 0.72);
   --panel-strong: oklch(0.12 0.004 180 / 0.86);
+  --panel-popover: oklch(0.095 0.004 180);
   --panel-soft: oklch(0.15 0.004 180 / 0.68);
   --panel-chip: oklch(0.12 0.004 180 / 0.72);
   --surface-header: oklch(0.105 0 0 / 0.82);
@@ -149,6 +150,7 @@
   --panel: oklch(0.985 0.004 175);
   --panel-2: oklch(0.96 0.006 175 / 0.78);
   --panel-strong: oklch(0.988 0.004 175 / 0.93);
+  --panel-popover: oklch(0.995 0.003 175);
   --panel-soft: oklch(0.985 0.004 175 / 0.72);
   --panel-chip: oklch(0.94 0.008 175 / 0.82);
   --surface-header: oklch(0.985 0.004 175 / 0.86);
@@ -3788,6 +3790,8 @@ tr:last-child td {
 }
 
 .pg-toolbar {
+  position: relative;
+  z-index: 40;
   flex-shrink: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -3842,6 +3846,7 @@ tr:last-child td {
 
 .pg-example-menu {
   position: relative;
+  z-index: 45;
   flex: 0 0 auto;
 }
 
@@ -3879,18 +3884,19 @@ tr:last-child td {
 
 .pg-example-menu-panel {
   position: absolute;
-  z-index: 20;
+  z-index: 120;
   top: calc(100% + 10px);
   right: 0;
-  width: min(360px, calc(100vw - 32px));
-  max-height: min(620px, calc(100dvh - 104px));
+  width: min(390px, calc(100vw - 32px));
+  max-height: min(560px, calc(100dvh - 116px));
   overflow: auto;
   padding: 10px;
   border: 1px solid var(--line);
   border-radius: 8px;
-  background: var(--panel-strong);
-  box-shadow: 0 22px 66px var(--shadow-elevated);
-  backdrop-filter: blur(16px);
+  background: var(--panel-popover);
+  box-shadow: 0 26px 78px var(--shadow-strong);
+  opacity: 1;
+  isolation: isolate;
 }
 
 /* ---- Compile button ---- */
@@ -5401,6 +5407,17 @@ tr:last-child td {
     flex-wrap: wrap;
     justify-content: flex-start;
     gap: 8px;
+  }
+
+  .pg-example-menu {
+    position: static;
+  }
+
+  .pg-example-menu-panel {
+    left: 16px;
+    right: 16px;
+    width: auto;
+    max-height: min(520px, calc(100dvh - 132px));
   }
 
   .pg-action-btn,
