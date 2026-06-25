@@ -16,7 +16,7 @@ const escapeHtml = (value: string) =>
 
 const tokenGroups = {
   keyword: new Set([
-    "module", "use", "has", "action", "lock", "fn", "where", "const",
+    "module", "use", "has", "action", "lock", "fn", "verification", "const",
     "struct", "enum", "invariant",
   ]),
   cellKind: new Set(["resource", "shared", "receipt", "flow"]),

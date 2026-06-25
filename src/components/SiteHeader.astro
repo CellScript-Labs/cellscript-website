@@ -2,7 +2,13 @@
 import { defaultLocale, translations } from "../i18n/translations";
 import { links } from "../data/site";
 import BrandMark from "./BrandMark.astro";
+import { BookOpen, Github, House, PackageCheck, SquareCode } from "lucide-astro";
 
+interface Props {
+  page?: "home" | "docs" | "playground" | "registry";
+}
+
+const { page = "home" } = Astro.props;
 const t = translations[defaultLocale];
 ---
 
@@ -13,24 +19,24 @@ const t = translations[defaultLocale];
       <span>CellScript</span>
     </a>
     <div class="nav-links">
-      <a class="nav-link active" href="/" aria-current="page">
-        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 5h12M4 10h12M4 15h7" /></svg>
+      <a class:list={["nav-link", page === "home" && "active"]} href="/" aria-current={page === "home" ? "page" : undefined}>
+        <House aria-hidden="true" />
         <span data-i18n="nav.overview">{t.nav.overview}</span>
       </a>
-      <a class="nav-link" href={links.docs} target="_blank" rel="noopener noreferrer">
-        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 4.5h5.5c1.2 0 2.1.4 2.5 1.1.4-.7 1.3-1.1 2.5-1.1H16v11h-1.5c-1.2 0-2.1.3-2.5 1-.4-.7-1.3-1-2.5-1H5z" /><path d="M10 5.4v10.8" /></svg>
+      <a class:list={["nav-link", page === "docs" && "active"]} href={links.docs} aria-current={page === "docs" ? "page" : undefined}>
+        <BookOpen aria-hidden="true" />
         <span data-i18n="nav.docs">{t.nav.docs}</span>
       </a>
-      <a class="nav-link" href="/playground">
-        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3 5.5h14v9H3z" /><path d="M7 8.5 5 10l2 1.5M13 8.5l2 1.5-2 1.5" /></svg>
+      <a class:list={["nav-link", page === "playground" && "active"]} href="/playground" aria-current={page === "playground" ? "page" : undefined}>
+        <SquareCode aria-hidden="true" />
         <span data-i18n="nav.playground">{t.nav.playground}</span>
       </a>
-      <a class="nav-link" href="/registry">
-        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M4 6.5 10 3l6 3.5v7L10 17l-6-3.5z" /><path d="M4 6.5 10 10l6-3.5M10 10v7" /></svg>
+      <a class:list={["nav-link", page === "registry" && "active"]} href="/registry" aria-current={page === "registry" ? "page" : undefined}>
+        <PackageCheck aria-hidden="true" />
         <span data-i18n="nav.registryBrowse">{t.nav.registryBrowse}</span>
       </a>
       <a class="nav-link nav-source" href={links.source} target="_blank" rel="noopener noreferrer">
-        <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M7.5 14.5 3 10l4.5-4.5M12.5 5.5 17 10l-4.5 4.5" /></svg>
+        <Github aria-hidden="true" />
         <span data-i18n="nav.source">{t.nav.source}</span>
       </a>
       <button class="language-toggle" type="button" data-language-toggle aria-label={t.language.aria}>
@@ -43,3 +49,102 @@ const t = translations[defaultLocale];
     </div>
   </nav>
 </header>
+
+<script is:inline define:vars={{ i18n: translations, initialLocale: defaultLocale }}>
+  (() => {
+    window.__CELLSCRIPT_I18N__ = window.__CELLSCRIPT_I18N__ || i18n;
+    window.__CELLSCRIPT_DEFAULT_LOCALE__ = window.__CELLSCRIPT_DEFAULT_LOCALE__ || initialLocale;
+
+    const getMessages = () => window.__CELLSCRIPT_I18N__ || i18n;
+    const readLocale = () => document.documentElement.dataset.locale === "zh" ? "zh" : "en";
+    const readTheme = () => document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+    const getMessage = (path, locale = readLocale()) =>
+      path.split(".").reduce((value, segment) => value == null ? value : value[segment], getMessages()?.[locale]);
+
+    const syncThemeToggles = () => {
+      const theme = readTheme();
+      const switchKey = theme === "light" ? "theme.switchToDark" : "theme.switchToLight";
+      document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
+        button.setAttribute("aria-pressed", String(theme === "light"));
+        button.setAttribute("aria-label", getMessage(switchKey) || "");
+      });
+    };
+
+    const syncLanguageToggles = () => {
+      const locale = readLocale();
+      document.querySelectorAll("[data-language-toggle]").forEach((button) => {
+        button.setAttribute("aria-label", getMessage("language.aria", locale) || "");
+      });
+      document.querySelectorAll("[data-language-label]").forEach((label) => {
+        label.textContent = getMessage("language.switchTo", locale) || "";
+      });
+      document.querySelectorAll(".language-short").forEach((label) => {
+        label.textContent = getMessage("language.shortSwitch", locale) || "";
+      });
+    };
+
+    const syncLocalizedStrings = (locale = readLocale()) => {
+      document.querySelectorAll("[data-i18n]").forEach((element) => {
+        const value = getMessage(element.dataset.i18n || "", locale);
+        if (typeof value === "string") element.textContent = value;
+      });
+      document.querySelectorAll("[data-i18n-aria-label]").forEach((element) => {
+        const value = getMessage(element.dataset.i18nAriaLabel || "", locale);
+        if (typeof value === "string") element.setAttribute("aria-label", value);
+      });
+      document.querySelectorAll("[data-i18n-placeholder]").forEach((element) => {
+        const value = getMessage(element.dataset.i18nPlaceholder || "", locale);
+        if (typeof value === "string") element.setAttribute("placeholder", value);
+      });
+      syncLanguageToggles();
+      syncThemeToggles();
+    };
+
+    const setLocale = (locale) => {
+      const nextLocale = locale === "zh" ? "zh" : "en";
+      document.documentElement.dataset.locale = nextLocale;
+      document.documentElement.lang = nextLocale;
+      try {
+        localStorage.setItem("cellscript-locale", nextLocale);
+      } catch {
+        /* Locale switching still works without storage. */
+      }
+      syncLocalizedStrings(nextLocale);
+      window.dispatchEvent(new CustomEvent("cellscript:locale-change"));
+    };
+
+    const setTheme = (theme) => {
+      const nextTheme = theme === "dark" ? "dark" : "light";
+      document.documentElement.dataset.theme = nextTheme;
+      try {
+        localStorage.setItem("cellscript-theme", nextTheme);
+      } catch {
+        /* Theme switching still works without storage. */
+      }
+      syncThemeToggles();
+    };
+
+    const syncTopbar = () => syncLocalizedStrings(readLocale());
+
+    if (!window.__cellscriptTopbarDelegationBound) {
+      document.addEventListener("click", (event) => {
+        if (!(event.target instanceof Element)) return;
+        const themeButton = event.target.closest("[data-theme-toggle]");
+        if (themeButton) {
+          event.preventDefault();
+          setTheme(readTheme() === "light" ? "dark" : "light");
+          return;
+        }
+        const languageButton = event.target.closest("[data-language-toggle]");
+        if (languageButton) {
+          event.preventDefault();
+          setLocale(readLocale() === "en" ? "zh" : "en");
+        }
+      });
+      document.addEventListener("astro:page-load", syncTopbar);
+      window.__cellscriptTopbarDelegationBound = true;
+    }
+
+    syncTopbar();
+  })();
+</script>

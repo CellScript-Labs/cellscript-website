@@ -18,8 +18,9 @@
 import "../styles/global.css";
 import { playgroundExamples, exampleFullSources, exampleGroups } from "../data/site";
 import { translations } from "../i18n/translations";
-import NavRail from "../components/NavRail.astro";
+import SiteHeader from "../components/SiteHeader.astro";
 import { ClientRouter } from "astro:transitions";
+import { Check, Copy, Play } from "lucide-astro";
 
 // The locale is resolved client-side from localStorage (see the inline
 // init script below), so the server renders the English fallback and
@@ -67,9 +68,6 @@ if (ungroupedPlaygroundExamples.length > 0) {
           var storedLocale = localStorage.getItem("cellscript-locale");
           document.documentElement.dataset.locale = storedLocale === "zh" ? "zh" : "en";
           document.documentElement.lang = document.documentElement.dataset.locale;
-          if (localStorage.getItem("cellscript-rail-collapsed") === "true") {
-            document.documentElement.dataset.railCollapsed = "true";
-          }
         } catch (e) {}
       })();
     </script>
@@ -77,6 +75,13 @@ if (ungroupedPlaygroundExamples.length > 0) {
   </head>
   <body class="playground-body">
     <a class="skip-link" href="#playground-editor" data-i18n="playground.skipToEditor">{t.playground.skipToEditor}</a>
+    <SiteHeader page="playground" />
+    <template data-metadata-copy-template>
+      <button class="copy-btn metadata-copy" type="button" aria-live="polite">
+        <Copy class="copy-icon" aria-hidden="true" />
+        <Check class="check-icon" aria-hidden="true" />
+      </button>
+    </template>
     <div class="pg-toolbar">
       <h1 class="pg-toolbar-title" data-i18n="playground.title">{t.playground.title}</h1>
       <div class="pg-toolbar-actions">
@@ -95,7 +100,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
           </select>
         </label>
         <button class="pg-action-btn pg-compile-btn" type="button" data-compile data-i18n-aria-label="playground.compileAria" aria-label={t.playground.compileAria}>
-          <span class="pg-compile-icon" aria-hidden="true">▶</span>
+          <Play class="pg-compile-icon" aria-hidden="true" />
           <span class="pg-compile-label" data-compile-label data-i18n="playground.compile">{t.playground.compile}</span>
         </button>
       </div>
@@ -141,6 +146,16 @@ if (ungroupedPlaygroundExamples.length > 0) {
         </div>
       </section>
 
+      <div
+        class="pg-resizer"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label={t.playground.resizeSourceOutput}
+        data-i18n-aria-label="playground.resizeSourceOutput"
+        tabindex="0"
+        data-column-resizer="source-output"
+      ></div>
+
       <!-- Middle: compile output -->
       <section class="pg-col pg-output" aria-label={t.playground.output} data-i18n-aria-label="playground.output">
         <div class="pg-col-head pg-tabs" role="tablist">
@@ -164,6 +179,16 @@ if (ungroupedPlaygroundExamples.length > 0) {
           </div>
         </div>
       </section>
+
+      <div
+        class="pg-resizer"
+        role="separator"
+        aria-orientation="vertical"
+        aria-label={t.playground.resizeOutputProvenance}
+        data-i18n-aria-label="playground.resizeOutputProvenance"
+        tabindex="0"
+        data-column-resizer="output-rail"
+      ></div>
 
       <!-- Right: provenance rail -->
       <aside class="pg-col pg-rail" aria-label={t.playground.provenance} data-i18n-aria-label="playground.provenance">
@@ -226,7 +251,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
 
     <!-- Full i18n message table, embedded so the language toggle can
          swap every playground string at runtime without a reload. The
-         NavRail's language toggle reads window.__CELLSCRIPT_I18N__. -->
+         SiteHeader's language toggle reads window.__CELLSCRIPT_I18N__. -->
     <script is:inline define:vars={{ i18n: translations }}>
       window.__CELLSCRIPT_I18N__ = i18n;
       window.__CELLSCRIPT_DEFAULT_LOCALE__ = "en";
@@ -235,6 +260,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
     <script>
       import { renderSource } from "../lib/highlight";
 
+      (window as any).__cellscriptInitPlayground = () => {
       type CompileDiagnosticPosition = {
         line: number;
         column: number;
@@ -287,6 +313,11 @@ if (ungroupedPlaygroundExamples.length > 0) {
 
       const compilerAssetVersion = "20260625-multi-diagnostics";
       const workerUrl = new URL(`/playground-worker.js?v=${compilerAssetVersion}`, window.location.href);
+      const previousPlaygroundAbort = (window as any).__cellscriptPlaygroundAbort as AbortController | undefined;
+      previousPlaygroundAbort?.abort();
+      const playgroundAbort = new AbortController();
+      (window as any).__cellscriptPlaygroundAbort = playgroundAbort;
+      const { signal } = playgroundAbort;
       const compileWorker = new Worker(workerUrl, { type: "module" });
       let compileRequestId = 0;
       let latestAppliedRequestId = 0;
@@ -310,7 +341,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
       const i18nTable = (window as any).__CELLSCRIPT_I18N__ as any;
       const defaultLocaleName = (window as any).__CELLSCRIPT_DEFAULT_LOCALE__ ?? "en";
 
-      // ---- i18n runtime layer (mirrors index.astro so the NavRail's
+      // ---- i18n runtime layer (mirrors index.astro so the topbar's
       //      language toggle works live instead of forcing a reload) ----
       const readLocale = () =>
         document.documentElement.dataset.locale === "zh" ? "zh" : defaultLocaleName;
@@ -367,6 +398,157 @@ if (ungroupedPlaygroundExamples.length > 0) {
       let currentDiagnostics: CompileDiagnostic[] = [];
       let highlightFrame: number | undefined;
       let repositionFloatingTools = () => {};
+      const columnResizers = Array.from(document.querySelectorAll<HTMLElement>("[data-column-resizer]"));
+      const panelColumnStorageKey = "cellscript-playground-columns";
+      const columnMinimums = { source: 220, output: 250, rail: 210 };
+
+      const readPanelWidths = () => {
+        const source = document.querySelector<HTMLElement>(".pg-source");
+        const output = document.querySelector<HTMLElement>(".pg-output");
+        const rail = document.querySelector<HTMLElement>(".pg-rail");
+        if (!source || !output || !rail) return null;
+        return {
+          source: source.getBoundingClientRect().width,
+          output: output.getBoundingClientRect().width,
+          rail: rail.getBoundingClientRect().width,
+        };
+      };
+
+      const visibleResizerWidth = () => {
+        if (!pgMain || window.innerWidth < 820) return 0;
+        return columnResizers.reduce((sum, resizer) => sum + resizer.getBoundingClientRect().width, 0);
+      };
+
+      const availablePanelWidth = () => Math.max(0, (pgMain?.clientWidth ?? 0) - visibleResizerWidth());
+
+      const fitPanelWidths = (widths: { source: number; output: number; rail: number }) => {
+        const available = availablePanelWidth();
+        if (!available) return widths;
+        const minimumTotal = columnMinimums.source + columnMinimums.output + columnMinimums.rail;
+        if (available <= minimumTotal) {
+          return {
+            source: Math.max(columnMinimums.source, available * 0.32),
+            output: Math.max(columnMinimums.output, available * 0.42),
+            rail: Math.max(columnMinimums.rail, available * 0.26),
+          };
+        }
+        const total = Math.max(1, widths.source + widths.output + widths.rail);
+        let source = Math.max(columnMinimums.source, widths.source * available / total);
+        let output = Math.max(columnMinimums.output, widths.output * available / total);
+        let rail = Math.max(columnMinimums.rail, widths.rail * available / total);
+        const fittedTotal = source + output + rail;
+        if (fittedTotal > available) {
+          const overflow = fittedTotal - available;
+          const flexible = Math.max(1, (source - columnMinimums.source) + (output - columnMinimums.output) + (rail - columnMinimums.rail));
+          source -= overflow * Math.max(0, source - columnMinimums.source) / flexible;
+          output -= overflow * Math.max(0, output - columnMinimums.output) / flexible;
+          rail -= overflow * Math.max(0, rail - columnMinimums.rail) / flexible;
+        }
+        return { source, output, rail };
+      };
+
+      const applyPanelWidths = (widths: { source: number; output: number; rail: number }, persist = true) => {
+        if (!pgMain || window.innerWidth < 820) return;
+        const fitted = fitPanelWidths(widths);
+        pgMain.style.setProperty("--pg-source-col", `${Math.round(fitted.source)}px`);
+        pgMain.style.setProperty("--pg-output-col", `${Math.round(fitted.output)}px`);
+        pgMain.style.setProperty("--pg-rail-col", `${Math.round(fitted.rail)}px`);
+        if (persist) {
+          try {
+            localStorage.setItem(panelColumnStorageKey, JSON.stringify(fitted));
+          } catch {
+            // Resizing still works when storage is unavailable.
+          }
+        }
+      };
+
+      const restorePanelWidths = () => {
+        if (!pgMain || window.innerWidth < 820) return;
+        try {
+          const stored = JSON.parse(localStorage.getItem(panelColumnStorageKey) ?? "null");
+          if (
+            stored &&
+            Number.isFinite(stored.source) &&
+            Number.isFinite(stored.output) &&
+            Number.isFinite(stored.rail)
+          ) {
+            applyPanelWidths(stored, false);
+          }
+        } catch {
+          // Ignore malformed persisted layout.
+        }
+      };
+
+      const resizePanelPair = (
+        kind: string,
+        delta: number,
+        widths: { source: number; output: number; rail: number },
+      ) => {
+        if (kind === "source-output") {
+          const pairTotal = widths.source + widths.output;
+          const source = Math.min(
+            pairTotal - columnMinimums.output,
+            Math.max(columnMinimums.source, widths.source + delta),
+          );
+          return { source, output: pairTotal - source, rail: widths.rail };
+        }
+        const pairTotal = widths.output + widths.rail;
+        const output = Math.min(
+          pairTotal - columnMinimums.rail,
+          Math.max(columnMinimums.output, widths.output + delta),
+        );
+        return { source: widths.source, output, rail: pairTotal - output };
+      };
+
+      restorePanelWidths();
+      if (typeof ResizeObserver !== "undefined" && pgMain) {
+        const observer = new ResizeObserver(() => {
+          const widths = readPanelWidths();
+          if (widths && window.innerWidth >= 820) applyPanelWidths(widths, false);
+        });
+        observer.observe(pgMain);
+        signal.addEventListener("abort", () => observer.disconnect(), { once: true });
+      }
+
+      columnResizers.forEach((resizer) => {
+        resizer.addEventListener("pointerdown", (event) => {
+          if (!pgMain || window.innerWidth < 820) return;
+          const kind = resizer.dataset.columnResizer ?? "";
+          const start = readPanelWidths();
+          if (!start) return;
+          event.preventDefault();
+          event.stopPropagation();
+          resizer.setPointerCapture(event.pointerId);
+          pgMain.dataset.resizing = "true";
+          const startX = event.clientX;
+
+          const onPointerMove = (moveEvent: PointerEvent) => {
+            moveEvent.preventDefault();
+            applyPanelWidths(resizePanelPair(kind, moveEvent.clientX - startX, start));
+          };
+          const onPointerUp = (upEvent: PointerEvent) => {
+            resizer.releasePointerCapture(upEvent.pointerId);
+            delete pgMain.dataset.resizing;
+            resizer.removeEventListener("pointermove", onPointerMove);
+            resizer.removeEventListener("pointerup", onPointerUp);
+            resizer.removeEventListener("pointercancel", onPointerUp);
+          };
+
+          resizer.addEventListener("pointermove", onPointerMove);
+          resizer.addEventListener("pointerup", onPointerUp);
+          resizer.addEventListener("pointercancel", onPointerUp);
+        }, { signal });
+
+        resizer.addEventListener("keydown", (event) => {
+          if (!pgMain || window.innerWidth < 820 || (event.key !== "ArrowLeft" && event.key !== "ArrowRight")) return;
+          const widths = readPanelWidths();
+          if (!widths) return;
+          event.preventDefault();
+          const amount = event.shiftKey ? 48 : 18;
+          const direction = event.key === "ArrowRight" ? 1 : -1;
+          applyPanelWidths(resizePanelPair(resizer.dataset.columnResizer ?? "", amount * direction, widths));
+        }, { signal });
+      });
       const LARGE_SOURCE_HIGHLIGHT_LIMIT = 80_000;
 
       const updateExampleLesson = (id: string | null) => {
@@ -518,7 +700,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
       };
 
       mobileViewBtns.forEach((btn) => {
-        btn.addEventListener("click", () => selectMobileView(btn.dataset.mobileViewBtn ?? "source"));
+        btn.addEventListener("click", () => selectMobileView(btn.dataset.mobileViewBtn ?? "source"), { signal });
       });
 
       // Effect class -> localized label. Falls back to the raw class
@@ -814,6 +996,21 @@ if (ungroupedPlaygroundExamples.length > 0) {
       };
 
       let hoverTimer: number | undefined;
+      const cleanupPlayground = () => {
+        window.clearTimeout(compileTimer);
+        window.clearTimeout(hoverTimer);
+        if (highlightFrame !== undefined) {
+          window.cancelAnimationFrame(highlightFrame);
+          highlightFrame = undefined;
+        }
+        compileWorker.terminate();
+        if ((window as any).__cellscriptPlaygroundAbort === playgroundAbort) {
+          delete (window as any).__cellscriptPlaygroundAbort;
+        }
+        playgroundAbort.abort();
+      };
+      document.addEventListener("astro:before-swap", cleanupPlayground, { once: true, signal });
+
       const requestLanguage = (intent: LanguageIntent) => {
         if (!workerReady || !textarea) return;
         const position = offsetToLspPosition(textarea.value, textarea.selectionStart);
@@ -859,17 +1056,19 @@ if (ungroupedPlaygroundExamples.length > 0) {
         const json = JSON.stringify(data, null, 2);
         // Wrap in .metadata-block so the existing .copy-btn.metadata-copy
         // absolute positioning (global.css) pins the button to the
-        // top-right corner. The delegated copy handler reads the adjacent
-        // <pre> text at click-time so JSON quotes cannot corrupt an HTML
-        // attribute.
+        // top-right corner. The button itself is cloned from an Astro
+        // template so icon markup stays in the shared component system.
         const copyAria = getMessage("a11y.copyAria", readLocale()) ?? "Copy";
         panel.innerHTML = `<div class="metadata-block pg-metadata-block">
-          <button class="copy-btn metadata-copy" type="button" aria-label="${escapeHtml(copyAria)}" aria-live="polite">
-            <svg class="copy-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 4h8v10H6z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4 6v10h8" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
-            <svg class="check-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-          </button>
           <pre class="pg-json">${renderJson(json)}</pre>
         </div>`;
+        const copyTemplate = document.querySelector<HTMLTemplateElement>("[data-metadata-copy-template]");
+        const copyButton = copyTemplate?.content.firstElementChild?.cloneNode(true) as HTMLButtonElement | undefined;
+        const block = panel.querySelector<HTMLElement>(".pg-metadata-block");
+        if (copyButton && block) {
+          copyButton.setAttribute("aria-label", copyAria);
+          block.prepend(copyButton);
+        }
       };
 
       const renderActions = (data: any) => {
@@ -1141,7 +1340,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
         }
         if (type !== "result" || typeof id !== "number") return;
         applyCompileResult(id, payload || { metadata: null, diagnostics: [{ message: pg("invalidOutput"), severity: "error" }] }, elapsed || 0, version || "");
-      });
+      }, { signal });
 
       compileWorker.addEventListener("error", (event) => {
         workerReady = false;
@@ -1154,7 +1353,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
         renderRailError();
         renderErrors([{ message, severity: "error" }]);
         setCompileState("error");
-      });
+      }, { signal });
 
       const scheduleCompile = () => {
         setCompileState("idle");
@@ -1236,7 +1435,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
       };
 
       outputTabs.forEach((tab) => {
-        tab.addEventListener("click", () => selectTab(tab.dataset.outputTab ?? ""));
+        tab.addEventListener("click", () => selectTab(tab.dataset.outputTab ?? ""), { signal });
         tab.addEventListener("keydown", (e) => {
           const current = outputTabs.indexOf(tab);
           if (current < 0) return;
@@ -1250,7 +1449,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
           const nextTab = outputTabs[next];
           nextTab.focus();
           selectTab(nextTab.dataset.outputTab ?? "");
-        });
+        }, { signal });
       });
 
       // ---- Editor events ----
@@ -1259,8 +1458,8 @@ if (ungroupedPlaygroundExamples.length > 0) {
           hideCompletions();
           hideHover();
           markEditorChanged();
-        });
-        textarea.addEventListener("scroll", syncScroll);
+        }, { signal });
+        textarea.addEventListener("scroll", syncScroll, { signal });
         // Tab indents with two spaces; Shift+Tab outdents the current line or
         // selected block.
         textarea.addEventListener("keydown", (e) => {
@@ -1342,25 +1541,25 @@ if (ungroupedPlaygroundExamples.length > 0) {
           } else if (e.key === "." || e.key === ":") {
             window.setTimeout(() => requestLanguage("completion"), 0);
           }
-        });
+        }, { signal });
         textarea.addEventListener("keyup", (e) => {
           scheduleHighlight();
           if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "Home", "End"].includes(e.key)) {
             scheduleHover();
           }
-        });
+        }, { signal });
         textarea.addEventListener("click", () => {
           scheduleHighlight();
           scheduleHover();
-        });
-        textarea.addEventListener("select", scheduleHighlight);
+        }, { signal });
+        textarea.addEventListener("select", scheduleHighlight, { signal });
       }
 
       // ---- Compile button: manual trigger + keyboard shortcut ----
       compileBtn?.addEventListener("click", () => {
         window.clearTimeout(compileTimer);
         doCompile();
-      });
+      }, { signal });
 
       // Ctrl/Cmd+Enter forces a compile from anywhere on the page.
       window.addEventListener("keydown", (e) => {
@@ -1369,13 +1568,13 @@ if (ungroupedPlaygroundExamples.length > 0) {
           window.clearTimeout(compileTimer);
           doCompile();
         }
-      });
+      }, { signal });
 
       // ---- Copy buttons (.copy-btn) ----
       // Delegated so it covers the metadata panel's copy button even
       // though that DOM is rebuilt on every successful compile. Mirrors
       // the landing page's flashCopied: write to clipboard, toggle the
-      // is-copied class for the ✓ glyph, then revert after 1.6s.
+      // is-copied class for the copied-state icon, then revert after 1.6s.
       const flashCopyBtn = (btn: HTMLButtonElement, text: string) => {
         navigator.clipboard.writeText(text).then(
           () => {
@@ -1399,7 +1598,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
         if (!btn) return;
         const text = btn.dataset.copyText ?? btn.closest(".metadata-block")?.querySelector<HTMLElement>(".pg-json")?.textContent ?? "";
         if (text) flashCopyBtn(btn, text);
-      });
+      }, { signal });
 
       document.addEventListener("click", (e: MouseEvent) => {
         const completionBtn = (e.target as HTMLElement)?.closest<HTMLButtonElement>("[data-completion-index]");
@@ -1409,14 +1608,14 @@ if (ungroupedPlaygroundExamples.length > 0) {
         const items = (completionsEl as any)?.__items as LanguageCompletion[] | undefined;
         const item = Number.isFinite(index) ? items?.[index] : undefined;
         if (item) applyCompletion(item);
-      });
+      }, { signal });
 
       document.addEventListener("mouseover", (e: MouseEvent) => {
         const completionBtn = (e.target as HTMLElement)?.closest<HTMLButtonElement>("[data-completion-index]");
         if (!completionBtn || completionsEl?.hidden) return;
         const index = Number(completionBtn.dataset.completionIndex);
         if (Number.isFinite(index)) setActiveCompletion(index);
-      });
+      }, { signal });
 
       gutter?.addEventListener("click", (e: MouseEvent) => {
         const lineEl = (e.target as HTMLElement)?.closest<HTMLElement>("[data-gutter-line]");
@@ -1424,14 +1623,14 @@ if (ungroupedPlaygroundExamples.length > 0) {
         e.preventDefault();
         const line = Number(lineEl.dataset.gutterLine);
         if (Number.isFinite(line)) focusLine(line);
-      });
+      }, { signal });
 
       document.addEventListener("pointerdown", (e: PointerEvent) => {
         const target = e.target as HTMLElement | null;
         if (target?.closest("[data-completions], [data-hover-card], [data-textarea]")) return;
         hideCompletions();
         hideHover();
-      });
+      }, { signal });
 
       document.addEventListener("click", (e: MouseEvent) => {
         const btn = (e.target as HTMLElement)?.closest<HTMLButtonElement>("[data-diagnostic-index]");
@@ -1441,7 +1640,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
         const index = Number(btn.dataset.diagnosticIndex);
         const diagnostic = Number.isFinite(index) ? currentDiagnostics[index] : undefined;
         if (diagnostic) focusDiagnostic(diagnostic);
-      });
+      }, { signal });
 
       // ---- Example switcher ----
       if (exampleSelect) {
@@ -1456,7 +1655,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
             scheduleHighlight();
             scheduleCompile();
           }
-        });
+        }, { signal });
       }
 
       // ---- URL example preload ----
@@ -1469,7 +1668,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
       }
 
       // ---- Runtime i18n: re-apply localized strings when the locale
-      //      changes (the NavRail toggle updates <html data-locale>
+      //      changes (the topbar toggle updates <html data-locale>
       //      then dispatches this event). Re-render the parts of the
       //      output that embed localized labels (effect/cycle text). ----
       const applyLocaleStrings = () => {
@@ -1496,12 +1695,24 @@ if (ungroupedPlaygroundExamples.length > 0) {
         else setCompileState(state);
         if (workerReady) doCompile();
       };
-      window.addEventListener("cellscript:locale-change", applyLocaleStrings);
+      window.addEventListener("cellscript:locale-change", applyLocaleStrings, { signal });
       applyLocaleStrings();
 
       updateHighlight();
       doCompile();
+      };
     </script>
-    <NavRail page="playground" />
+    <script is:inline type="module" data-astro-rerun>
+      let attempts = 0;
+      const runPlaygroundInit = () => {
+        if (typeof window.__cellscriptInitPlayground === "function") {
+          window.__cellscriptInitPlayground();
+          return;
+        }
+        attempts += 1;
+        if (attempts < 60) window.setTimeout(runPlaygroundInit, 0);
+      };
+      runPlaygroundInit();
+    </script>
   </body>
 </html>

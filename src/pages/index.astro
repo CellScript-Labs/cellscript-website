@@ -4,9 +4,11 @@ import { heroExamples, links, workflowSteps } from "../data/site";
 import { defaultLocale, translations } from "../i18n/translations";
 import { renderLine } from "../lib/highlight";
 import { provenanceForExample, effectsSummary, formatBytes, shortHash } from "../lib/provenance";
+import HeroStatus from "../components/HeroStatus.astro";
 import SiteHeader from "../components/SiteHeader.astro";
 import BrandMark from "../components/BrandMark.astro";
 import { ClientRouter } from "astro:transitions";
+import { ArrowRight, Box, Check, ClipboardList, Copy, Cpu, FileArchive, FileCode2 } from "lucide-astro";
 
 const locale = defaultLocale;
 const t = translations[locale];
@@ -14,7 +16,7 @@ const heroProvenance = heroExamples.map((example) => ({
   id: example.id,
   view: provenanceForExample(example.id),
 }));
-const exampleSummaries = t.landing.exampleSummaries as Record<string, string>;
+const exampleCardSummaries = t.landing.exampleCardSummaries as Record<string, string>;
 const valueCardImages = [
   {
     light: "feature-cards/light-01-state-changes-explicit.png",
@@ -35,6 +37,39 @@ const valueCardImages = [
     height: 799,
   },
 ];
+const exampleCardImages = {
+  token: {
+    light: "contract-cards/light-token.webp",
+    dark: "contract-cards/dark-token.webp",
+    width: 1254,
+    height: 1254,
+  },
+  nft: {
+    light: "contract-cards/light-nft.webp",
+    dark: "contract-cards/dark-nft.webp",
+    width: 1254,
+    height: 1254,
+  },
+  amm: {
+    light: "contract-cards/light-amm.webp",
+    dark: "contract-cards/dark-amm.webp",
+    width: 1254,
+    height: 1254,
+  },
+  vesting: {
+    light: "contract-cards/light-vesting.webp",
+    dark: "contract-cards/dark-vesting.webp",
+    width: 1254,
+    height: 1254,
+  },
+} as const;
+const workflowIconComponents = {
+  source: FileCode2,
+  parse: Box,
+  metadata: ClipboardList,
+  riscv: Cpu,
+  elf: FileArchive,
+} as const;
 ---
 
 <!doctype html>
@@ -69,7 +104,7 @@ const valueCardImages = [
   </head>
   <body class="home-body">
     <a class="skip-link" href="#top" data-i18n="a11y.skipToContent">{t.a11y.skipToContent}</a>
-    <SiteHeader />
+    <SiteHeader page="home" />
 
     <main id="top" class="page landing-page">
       <section class="hero landing-hero" aria-labelledby="hero-title">
@@ -99,8 +134,9 @@ const valueCardImages = [
           <p data-i18n="hero.subtitle">{t.hero.subtitle}</p>
           <div class="hero-actions">
             <a class="button primary" href={`/playground?example=${heroExamples[0].id}`} data-i18n="hero.playground.cta">{t.hero.playground.cta}</a>
-            <a class="button" href="#getting-started" data-i18n="hero.getStarted">{t.hero.getStarted}</a>
+            <a class="button" href={links.docs} target="_blank" rel="noopener noreferrer" data-i18n="nav.docs">{t.nav.docs}</a>
           </div>
+          <HeroStatus compact />
         </div>
 
         <div class="code-shell spotlight-card" data-code-tabs>
@@ -123,8 +159,8 @@ const valueCardImages = [
               })()}
             </span>
             <button class="copy-btn code-copy" type="button" data-copy-source data-i18n-aria-label="a11y.copyAria" aria-label={t.a11y.copyAria} aria-live="polite">
-              <svg class="copy-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 4h8v10H6z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4 6v10h8" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
-              <svg class="check-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+              <Copy class="copy-icon" aria-hidden="true" />
+              <Check class="check-icon" aria-hidden="true" />
             </button>
           </div>
           <div class="tabbar" role="tablist" aria-label={t.hero.examplesLabel} data-i18n-aria-label="hero.examplesLabel">
@@ -156,7 +192,7 @@ const valueCardImages = [
             </span>
             <a class="playground-link" href={`/playground?example=${heroExamples[0].id}`} data-playground-link>
               <span data-i18n="hero.playground.editLive">{t.hero.playground.editLive}</span>
-              <svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 10h10M11 6l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+              <ArrowRight aria-hidden="true" />
             </a>
           </div>
         </div>
@@ -205,67 +241,32 @@ const valueCardImages = [
         </div>
         <div class="workflow-board">
           <div class="workflow-flow" aria-label={t.workflow.aria} data-i18n-aria-label="workflow.aria">
-            {workflowSteps.map(({ id, icon }, index) => (
-              <>
-                <article class="workflow-step">
-                  <div class:list={["workflow-icon", `workflow-icon-${icon}`]} aria-hidden="true">
-                    {icon === "source" && (
-                      <svg viewBox="0 0 88 88" role="img">
-                        <path d="M9 22h50l19 17v43H9z" />
-                        <path d="M59 22v18h19" />
-                        <text x="22" y="57">.cell</text>
-                      </svg>
-                    )}
-                    {icon === "parse" && (
-                      <svg viewBox="0 0 88 88" role="img">
-                        <rect x="14" y="14" width="60" height="60" rx="8" />
-                        <path d="M44 25 61 35v19L44 64 27 54V35z" />
-                        <path d="M44 25v19l17-9M44 44 27 35M44 44v20" />
-                      </svg>
-                    )}
-                    {icon === "metadata" && (
-                      <svg viewBox="0 0 88 88" role="img">
-                        <rect x="17" y="10" width="54" height="68" rx="7" />
-                        <rect x="29" y="25" width="9" height="9" rx="1.5" />
-                        <path d="M45 29h18M45 44h18M45 59h18" />
-                        <rect x="29" y="40" width="9" height="9" rx="1.5" />
-                        <rect x="29" y="55" width="9" height="9" rx="1.5" />
-                      </svg>
-                    )}
-                    {icon === "riscv" && (
-                      <svg viewBox="0 0 88 88" role="img">
-                        <rect x="27" y="27" width="34" height="34" rx="4" />
-                        <rect x="35" y="35" width="18" height="18" rx="3" />
-                        <path d="M18 32h9M18 44h9M18 56h9M61 32h9M61 44h9M61 56h9M32 18v9M44 18v9M56 18v9M32 61v9M44 61v9M56 61v9" />
-                      </svg>
-                    )}
-                    {icon === "elf" && (
-                      <svg viewBox="0 0 88 88" role="img">
-                        <path d="M9 22h50l19 17v43H9z" />
-                        <path d="M59 22v18h19" />
-                        <text x="29" y="57">.elf</text>
-                      </svg>
-                    )}
-                  </div>
-                  <h3 data-i18n={`workflow.steps.${id}.0`}>{t.workflow.steps[id][0]}</h3>
-                  {t.workflow.steps[id][1] && <p data-i18n={`workflow.steps.${id}.1`}>{t.workflow.steps[id][1]}</p>}
-                </article>
-                {index < workflowSteps.length - 1 && (
-                  <span class="workflow-arrow" aria-hidden="true">
-                    <svg viewBox="0 0 36 16">
-                      <path d="M2 8h29M24 2l7 6-7 6" />
-                    </svg>
-                  </span>
-                )}
-              </>
-            ))}
+            {workflowSteps.map(({ id, icon }, index) => {
+              const StepIcon = workflowIconComponents[icon as keyof typeof workflowIconComponents];
+              return (
+                <>
+                  <article class="workflow-step">
+                    <div class:list={["workflow-icon", `workflow-icon-${icon}`]} aria-hidden="true">
+                      <StepIcon />
+                    </div>
+                    <h3 data-i18n={`workflow.steps.${id}.0`}>{t.workflow.steps[id][0]}</h3>
+                    {t.workflow.steps[id][1] && <p data-i18n={`workflow.steps.${id}.1`}>{t.workflow.steps[id][1]}</p>}
+                  </article>
+                  {index < workflowSteps.length - 1 && (
+                    <span class="workflow-arrow" aria-hidden="true">
+                      <ArrowRight />
+                    </span>
+                  )}
+                </>
+              );
+            })}
           </div>
           <aside class="workflow-checks" aria-label={t.workflow.buildAria} data-i18n-aria-label="workflow.buildAria">
             <h3 data-i18n="workflow.buildForCkb">{t.workflow.buildForCkb}</h3>
             <ul>
               {t.workflow.checks.map((check, index) => (
                 <li>
-                  <svg viewBox="0 0 18 18" aria-hidden="true"><path d="m3 9.5 4 4L15 4" /></svg>
+                  <Check aria-hidden="true" />
                   <span data-i18n={`workflow.checks.${index}`}>{check}</span>
                 </li>
               ))}
@@ -280,14 +281,35 @@ const valueCardImages = [
           <p class="lead" data-i18n="landing.playgroundLead">{t.landing.playgroundLead}</p>
         </div>
         <div class="landing-example-grid">
-          {heroExamples.map((example) => (
-            <a class="landing-example-card" href={`/playground?example=${example.id}`}>
-              <span class="landing-example-file">{example.file}</span>
-              <h3 data-i18n={`hero.exampleLabels.${example.id}`}>{t.hero.exampleLabels[example.id]}</h3>
-              <p data-i18n={`landing.exampleSummaries.${example.id}`}>{exampleSummaries[example.id]}</p>
-              <code>{example.command}</code>
-            </a>
-          ))}
+          {heroExamples.map((example) => {
+            const cardImage = exampleCardImages[example.id as keyof typeof exampleCardImages];
+            return (
+              <a class="landing-example-card" href={`/playground?example=${example.id}`}>
+                <picture class="landing-example-art" aria-hidden="true">
+                  <img
+                    class="landing-example-image landing-example-image-light"
+                    src={`${import.meta.env.BASE_URL}${cardImage.light}`}
+                    width={cardImage.width}
+                    height={cardImage.height}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <img
+                    class="landing-example-image landing-example-image-dark"
+                    src={`${import.meta.env.BASE_URL}${cardImage.dark}`}
+                    width={cardImage.width}
+                    height={cardImage.height}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                  />
+                </picture>
+                <h3 data-i18n={`hero.exampleLabels.${example.id}`}>{t.hero.exampleLabels[example.id]}</h3>
+                <p data-i18n={`landing.exampleCardSummaries.${example.id}`}>{exampleCardSummaries[example.id]}</p>
+              </a>
+            );
+          })}
         </div>
       </section>
 
@@ -304,8 +326,8 @@ const valueCardImages = [
               <p>
                 <code data-i18n={`start.steps.${index}.1`}>{command}</code>
                 <button class="copy-btn" type="button" data-copy-text={command} data-i18n-aria-label="a11y.copyAria" aria-label={t.a11y.copyAria} aria-live="polite">
-                  <svg class="copy-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 4h8v10H6z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4 6v10h8" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
-                  <svg class="check-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+                  <Copy class="copy-icon" aria-hidden="true" />
+                  <Check class="check-icon" aria-hidden="true" />
                 </button>
               </p>
             </article>

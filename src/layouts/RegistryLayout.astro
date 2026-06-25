@@ -1,7 +1,7 @@
 ---
 import "../styles/global.css";
 import "../styles/registry.css";
-import NavRail from "../components/NavRail.astro";
+import SiteHeader from "../components/SiteHeader.astro";
 import { ClientRouter } from "astro:transitions";
 import { defaultLocale, translations } from "../i18n/translations";
 import { registrySections } from "../lib/registry";
@@ -59,9 +59,6 @@ const activeHref =
           document.documentElement.dataset.theme = storedTheme === "light" || storedTheme === "dark" ? storedTheme : "light";
           document.documentElement.dataset.locale = storedLocale === "zh" ? "zh" : "en";
           document.documentElement.lang = document.documentElement.dataset.locale;
-          if (localStorage.getItem("cellscript-rail-collapsed") === "true") {
-            document.documentElement.dataset.railCollapsed = "true";
-          }
         } catch {
           document.documentElement.dataset.theme = "light";
           document.documentElement.dataset.locale = "en";
@@ -73,6 +70,7 @@ const activeHref =
   </head>
   <body>
     <a class="skip-link" href="#registry-main" data-i18n="a11y.skipToContent">{t.a11y.skipToContent}</a>
+    <SiteHeader page="registry" />
     <main id="registry-main" class="registry-app">
       <header class="registry-topbar" aria-label={t.registry.appLabel} data-i18n-aria-label="registry.appLabel">
         <div>
@@ -104,7 +102,7 @@ const activeHref =
       <slot />
     </main>
 
-    <!-- Full i18n message table, embedded so the NavRail's language
+    <!-- Full i18n message table, embedded so the topbar's language
          toggle can swap every registry string live without a reload. -->
     <script is:inline define:vars={{ i18n: translations }}>
       window.__CELLSCRIPT_I18N__ = i18n;
@@ -113,7 +111,7 @@ const activeHref =
 
     <script>
       // Registry i18n runtime: mirrors the index/playground layer so the
-      // NavRail language toggle hot-swaps every [data-i18n] string here.
+      // topbar language toggle hot-swaps every [data-i18n] string here.
       const i18nMessages = (window as any).__CELLSCRIPT_I18N__ as any;
       const defaultLocaleName = (window as any).__CELLSCRIPT_DEFAULT_LOCALE__ ?? "en";
 
@@ -156,12 +154,18 @@ const activeHref =
         }
       };
 
-      const reapplyRegistryLocale = () => applyLocale(readLocale());
+      const reapplyRegistryLocale = () => {
+        if (!document.querySelector("#registry-main.registry-app")) return;
+        applyLocale(readLocale());
+      };
 
-      // React to the NavRail's locale-change event (it dispatches after
+      // React to the topbar's locale-change event (it dispatches after
       // updating <html data-locale>) and after Astro swaps page content.
-      window.addEventListener("cellscript:locale-change", reapplyRegistryLocale);
-      document.addEventListener("astro:page-load", reapplyRegistryLocale);
+      if (!(window as any).__cellscriptRegistryLayoutLocaleBound) {
+        window.addEventListener("cellscript:locale-change", reapplyRegistryLocale);
+        document.addEventListener("astro:page-load", reapplyRegistryLocale);
+        (window as any).__cellscriptRegistryLayoutLocaleBound = true;
+      }
       // Apply the stored locale once on load so a refresh honours it.
       reapplyRegistryLocale();
     </script>
@@ -197,15 +201,17 @@ const activeHref =
         }
       };
 
-      document.addEventListener("click", async (event) => {
-        const button = event.target instanceof Element ? event.target.closest("[data-copy-text]") : null;
-        if (!button) return;
-        const text = button.getAttribute("data-copy-text");
-        if (!text) return;
-        const ok = await writeClipboard(text);
-        flashCopyResult(button, ok);
-      });
+      if (!window["__cellscriptRegistryCopyDelegationBound"]) {
+        document.addEventListener("click", async (event) => {
+          const button = event.target instanceof Element ? event.target.closest("[data-copy-text]") : null;
+          if (!button) return;
+          const text = button.getAttribute("data-copy-text");
+          if (!text) return;
+          const ok = await writeClipboard(text);
+          flashCopyResult(button, ok);
+        });
+        window["__cellscriptRegistryCopyDelegationBound"] = true;
+      }
     </script>
-    <NavRail page="registry" />
   </body>
 </html>

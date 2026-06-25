@@ -2,6 +2,7 @@
 import RegistryLayout from "../../../../layouts/RegistryLayout.astro";
 import { registryPackages, shortHash, type RegistryPackage } from "../../../../lib/registry";
 import { defaultLocale, translations } from "../../../../i18n/translations";
+import { Check, Copy } from "lucide-astro";
 
 export function getStaticPaths() {
   return registryPackages.map((pkg) => ({
@@ -35,8 +36,8 @@ const sourceHash = pkg.latest?.source_hash;
           <span aria-hidden="true">·</span>
           <code>{shortHash(sourceHash)}</code>
           <button class="copy-btn registry-pkg-hash-copy" type="button" data-copy-text={sourceHash || ""} aria-label={t.registry.package.copySourceHashAria} data-i18n-aria-label="registry.package.copySourceHashAria" aria-live="polite">
-            <svg class="copy-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 4h8v10H6z" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M4 6v10h8" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
-            <svg class="check-icon" viewBox="0 0 20 20" aria-hidden="true"><path d="M4 10.5l4 4 8-9" fill="none" stroke="currentColor" stroke-width="2"/></svg>
+            <Copy class="copy-icon" aria-hidden="true" />
+            <Check class="check-icon" aria-hidden="true" />
           </button>
         </p>
         <p class="registry-pkg-desc">{description}</p>

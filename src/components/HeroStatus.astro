@@ -1,0 +1,43 @@
+---
+import githubActivity from "../data/github-activity.json";
+import { defaultLocale, translations } from "../i18n/translations";
+import { MessageCircle, Radio } from "lucide-astro";
+
+interface Props {
+  compact?: boolean;
+}
+
+const { compact = false } = Astro.props;
+const t = translations[defaultLocale];
+const releases = (githubActivity as { releases: any[] }).releases;
+const release = releases[0];
+const community = "https://talk.nervos.org/t/cellscript-a-dsl-for-cell-based-contracts/10193/9";
+const feedback = "https://talk.nervos.org/t/cellscript-website-v0-is-live/10403/2";
+---
+
+<aside class:list={["hero-status", compact && "hero-status-compact"]} aria-label={t.heroStatus.activity}>
+  {release && (
+    <a class="hero-status-item" href={release.url} target="_blank" rel="noopener noreferrer">
+      <Radio aria-hidden="true" />
+      <span>
+        <small data-i18n="heroStatus.release">{t.heroStatus.release}</small>
+        <strong>{release.tag}</strong>
+      </span>
+      <time>{release.date}</time>
+    </a>
+  )}
+  <a class="hero-status-item" href={community} target="_blank" rel="noopener noreferrer">
+    <MessageCircle aria-hidden="true" />
+    <span>
+      <small data-i18n="heroStatus.community">{t.heroStatus.community}</small>
+      <strong data-i18n="heroStatus.discussion">{t.heroStatus.discussion}</strong>
+    </span>
+  </a>
+  <a class="hero-status-item hero-status-feedback" href={feedback} target="_blank" rel="noopener noreferrer">
+    <MessageCircle aria-hidden="true" />
+    <span>
+      <small data-i18n="heroStatus.feedback">{t.heroStatus.feedback}</small>
+      <strong data-i18n="heroStatus.websiteFeedback">{t.heroStatus.websiteFeedback}</strong>
+    </span>
+  </a>
+</aside>

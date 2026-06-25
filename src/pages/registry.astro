@@ -1,8 +1,9 @@
 ---
 import "../styles/global.css";
 import "../styles/registry.css";
-import NavRail from "../components/NavRail.astro";
+import SiteHeader from "../components/SiteHeader.astro";
 import { ClientRouter } from "astro:transitions";
+import { links } from "../data/site";
 import { defaultLocale, translations } from "../i18n/translations";
 
 const locale = defaultLocale;
@@ -31,9 +32,6 @@ const title = `CellScript Registry — ${t.comingSoon.title}`;
           document.documentElement.dataset.theme = storedTheme === "light" || storedTheme === "dark" ? storedTheme : "light";
           document.documentElement.dataset.locale = storedLocale === "zh" ? "zh" : "en";
           document.documentElement.lang = document.documentElement.dataset.locale;
-          if (localStorage.getItem("cellscript-rail-collapsed") === "true") {
-            document.documentElement.dataset.railCollapsed = "true";
-          }
         } catch {
           document.documentElement.dataset.theme = "light";
           document.documentElement.dataset.locale = "en";
@@ -45,6 +43,7 @@ const title = `CellScript Registry — ${t.comingSoon.title}`;
   </head>
   <body>
     <a class="skip-link" href="#registry-coming-soon" data-i18n="a11y.skipToContent">{t.a11y.skipToContent}</a>
+    <SiteHeader page="registry" />
 
     <main id="registry-coming-soon" class="registry-coming-soon-page">
       <section class="registry-coming-soon" aria-label={t.comingSoon.title} data-i18n-aria-label="comingSoon.title">
@@ -52,15 +51,9 @@ const title = `CellScript Registry — ${t.comingSoon.title}`;
           <p class="registry-eyebrow" data-i18n="comingSoon.eyebrow">{t.comingSoon.eyebrow}</p>
           <h1 class="registry-coming-soon-title" data-i18n="comingSoon.title">{t.comingSoon.title}</h1>
           <p class="registry-coming-soon-lead" data-i18n="comingSoon.lead">{t.comingSoon.lead}</p>
-
-          <div class="registry-coming-soon-phases" aria-label={t.comingSoon.phaseCaption} data-i18n-aria-label="comingSoon.phaseCaption">
-            {t.comingSoon.phases.map((phase, index) => (
-              <article class:list={["registry-coming-soon-phase", index === 1 && "active"]}>
-                <span data-i18n={`comingSoon.phases.${index}.label`}>{phase.label}</span>
-                <h2 data-i18n={`comingSoon.phases.${index}.title`}>{phase.title}</h2>
-                <p data-i18n={`comingSoon.phases.${index}.caption`}>{phase.caption}</p>
-              </article>
-            ))}
+          <div class="registry-coming-soon-actions">
+            <a class="registry-button primary" href={links.docs} data-i18n="comingSoon.ctaWiki">{t.comingSoon.ctaWiki}</a>
+            <a class="registry-button" href={links.source} target="_blank" rel="noopener noreferrer" data-i18n="comingSoon.ctaSource">{t.comingSoon.ctaSource}</a>
           </div>
         </div>
       </section>
@@ -107,13 +100,18 @@ const title = `CellScript Registry — ${t.comingSoon.title}`;
         }
       };
 
-      const reapplyRegistryLocale = () => applyLocale(readLocale());
+      const reapplyRegistryLocale = () => {
+        if (!document.querySelector("#registry-coming-soon.registry-coming-soon-page")) return;
+        applyLocale(readLocale());
+      };
 
-      window.addEventListener("cellscript:locale-change", reapplyRegistryLocale);
-      document.addEventListener("astro:page-load", reapplyRegistryLocale);
+      if (!(window as any).__cellscriptRegistryIndexLocaleBound) {
+        window.addEventListener("cellscript:locale-change", reapplyRegistryLocale);
+        document.addEventListener("astro:page-load", reapplyRegistryLocale);
+        (window as any).__cellscriptRegistryIndexLocaleBound = true;
+      }
       reapplyRegistryLocale();
     </script>
 
-    <NavRail page="registry" />
   </body>
 </html>

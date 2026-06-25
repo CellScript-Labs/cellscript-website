@@ -90,6 +90,18 @@ const first = registryPackages[0];
   )}
 
   <script is:inline define:vars={{ packages: registryPackages }}>
+    const previousManageAbort = window.__cellscriptRegistryManageAbort;
+    previousManageAbort?.abort();
+    const manageAbort = new AbortController();
+    window.__cellscriptRegistryManageAbort = manageAbort;
+    const { signal } = manageAbort;
+    document.addEventListener("astro:before-swap", () => {
+      if (window.__cellscriptRegistryManageAbort === manageAbort) {
+        delete window.__cellscriptRegistryManageAbort;
+      }
+      manageAbort.abort();
+    }, { once: true, signal });
+
     const app = document.querySelector("[data-manage-app]");
     const items = Array.from(app?.querySelectorAll("[data-manage-item]") ?? []);
     const form = document.querySelector("[data-manage-form]");
@@ -168,13 +180,15 @@ const first = registryPackages[0];
         activeCoordinate = item.getAttribute("data-manage-item");
         items.forEach((i) => i.classList.toggle("active", i === item));
         update();
-      });
+      }, { signal });
     });
 
-    form?.addEventListener("input", update);
+    form?.addEventListener("input", update, { signal });
     update();
 
     // Re-render dynamic strings when the locale changes.
-    window.addEventListener("cellscript:locale-change", update);
+    window.addEventListener("cellscript:locale-change", () => {
+      if (document.querySelector("[data-manage-app]")) update();
+    }, { signal });
   </script>
 </RegistryLayout>

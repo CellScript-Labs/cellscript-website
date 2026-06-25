@@ -274,7 +274,7 @@ input -> debounce 300ms -> wasm.compile_metadata_json(source) ->
 | Tab      | Content                                                       | Source                          |
 |----------|---------------------------------------------------------------|---------------------------------|
 | Metadata | `CompileMetadata` JSON, syntax-highlighted                    | `compile_metadata_json`         |
-| AST      | Indented tree: `module / resource / action / where` nodes     | `CompileResult.ast` (path B) or JSON `lowering` |
+| AST      | Indented tree: `module / resource / action / verification` nodes | `CompileResult.ast` (path B) or JSON `lowering` |
 | Types    | Per-type `kind / capabilities / encoded_size / flow_states`   | `CompileMetadata.types`         |
 | Errors   | Compile diagnostics with line numbers and messages            | parsed error JSON               |
 
