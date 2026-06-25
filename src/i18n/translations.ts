@@ -88,7 +88,6 @@ export const translations = {
     },
     hero: {
       title: "CellScript",
-      eyebrow: "CellScript for CKB",
       headline: "Write the transaction you expect. Ship the cell you can prove.",
       subtitle: "Describe CKB contracts as readable state changes. The compiler checks them, lowers them to on-chain artifacts, and keeps the metadata reviewers need — all from one source.",
       getStarted: "Get started",
@@ -682,7 +681,6 @@ export const translations = {
     },
     hero: {
       title: "CellScript",
-      eyebrow: "面向 CKB 的 CellScript",
       headline: "写下你预期的交易。交付你能证明的 cell。",
       subtitle: "把 CKB 合约写成可读的状态变更。编译器负责校验、降低为链上产物，并保留审查者所需的元数据 —— 全部来自同一份源码。",
       getStarted: "开始使用",

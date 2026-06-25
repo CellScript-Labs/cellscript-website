@@ -42,17 +42,24 @@
   --line-inner: oklch(1 0 0 / 0.04);
   --line-inner-soft: oklch(1 0 0 / 0.03);
   --line-inner-table: oklch(1 0 0 / 0.035);
-  --shadow-strong: oklch(0 0 0 / 0.42);
-  --shadow-elevated: oklch(0 0 0 / 0.25);
-  --shadow-soft: oklch(0 0 0 / 0.22);
+  --shadow-strong: oklch(0.18 0.04 180 / 0.45);
+  --shadow-elevated: oklch(0.16 0.035 180 / 0.30);
+  --shadow-soft: oklch(0.14 0.03 180 / 0.24);
+  /* Two-layer elevation: soft ambient drop + key-light lift.
+     Tinted with the teal base hue (not achromatic black) so
+     shadows read as depth, not smudge. Apply via the tokens,
+     e.g. box-shadow: var(--elev-2). */
+  --elev-1: 0 1px 2px var(--shadow-soft);
+  --elev-2: 0 6px 18px var(--shadow-soft), 0 2px 6px oklch(0.1 0.02 180 / 0.5);
+  --elev-3: 0 22px 80px var(--shadow-strong), 0 8px 24px var(--shadow-elevated);
   --text: oklch(0.94 0 0);
   --text-strong: oklch(0.88 0 0);
   --text-section: oklch(0.85 0 0);
   --text-soft: oklch(0.78 0 0);
   --text-chip: oklch(0.74 0 0);
   --muted: oklch(0.72 0 0);
-  --dim: oklch(0.62 0.01 0);
-  --line-number: oklch(0.58 0.005 0);
+  --dim: oklch(0.7 0.01 0);
+  --line-number: oklch(0.66 0.005 0);
   --accent: oklch(0.78 0.11 158);
   --accent-strong: oklch(0.82 0.12 158);
   --accent-quiet: oklch(0.61 0.09 158);
@@ -104,7 +111,7 @@
   --token-builtin-type: oklch(0.8 0.06 250);
   --token-string: oklch(0.75 0.04 140);
   --token-number: oklch(0.8 0.06 80);
-  --token-comment: oklch(0.62 0.012 0);
+  --token-comment: oklch(0.7 0.012 0);
   --token-operator: oklch(0.68 0.006 0);
   --token-punctuation: oklch(0.66 0.006 0);
   --token-arrow: oklch(0.75 0.04 30);
@@ -120,7 +127,7 @@
      semantics stay stable: green = "you can act", orange = "machine value". */
   --substrate-bg: oklch(0.105 0.006 180 / 0.86);
   --substrate-text: oklch(0.66 0.012 180);
-  --substrate-dim: oklch(0.55 0.014 180);
+  --substrate-dim: oklch(0.64 0.014 180);
   --substrate-accent: oklch(0.74 0.14 58);
   --substrate-accent-dim: oklch(0.62 0.11 58);
   --substrate-rule: oklch(0.26 0.012 180 / 0.6);
@@ -128,12 +135,36 @@
   --bar-fill: var(--accent);
 
   --radius: 8px;
+  --radius-sm: 5px;
   --max: 1180px;
   --narrow: 900px;
   --site-gutter: 40px;
   --layout-gap: 18px;
   --rail-width: 260px;
   --panel-pad: 22px;
+  /* Modular type scale (1.125 ratio). Use these for new copy;
+     --text-body is applied to <body> as the site default. */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-body: 1.0625rem;
+  --text-lg: 1.25rem;
+  --text-xl: 1.5rem;
+  /* 4px-base spacing scale for consistent rhythm. */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 20px;
+  --sp-6: 24px;
+  --sp-7: 32px;
+  --sp-8: 40px;
+  /* z-index scale: prefer these over magic numbers. */
+  --z-base: 1;
+  --z-elevated: 4;
+  --z-sticky: 10;
+  --z-header: 70;
+  --z-overlay: 120;
+  --z-modal: 1000;
 }
 
 :root[data-theme="light"] {
@@ -283,6 +314,7 @@ body {
     var(--bg);
   color: var(--text);
   font-family: var(--font-sans);
+  font-size: var(--text-body);
   letter-spacing: 0;
   transition:
     background-color var(--duration-med) var(--ease-standard),
@@ -1030,22 +1062,6 @@ body.home-body {
   font-weight: 700;
   color: var(--text);
   text-shadow: 0 0 28px var(--hero-title-shadow-a);
-}
-
-.hero-eyebrow {
-  display: inline-flex;
-  align-items: center;
-  margin: 2px 0 14px;
-  padding: 4px 10px;
-  border: 1px solid var(--accent-line);
-  border-radius: 999px;
-  background: var(--accent-surface);
-  color: var(--accent-strong);
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
 }
 
 .shiny-text {
