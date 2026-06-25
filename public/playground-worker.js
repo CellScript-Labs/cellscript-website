@@ -1,6 +1,6 @@
 let wasmModulePromise;
 let wasmModule;
-const COMPILER_ASSET_VERSION = "20260625-multi-diagnostics";
+const COMPILER_ASSET_VERSION = "20260625-multi-workspace";
 
 const loadCompiler = async () => {
   if (!wasmModulePromise) {
@@ -14,7 +14,7 @@ const loadCompiler = async () => {
 };
 
 self.addEventListener("message", async (event) => {
-  const { id, type, source, target, line, character } = event.data || {};
+  const { id, type, source, sources, entryPath, target, line, character } = event.data || {};
   if (type !== "compile" && type !== "language") return;
 
   try {
@@ -38,14 +38,19 @@ self.addEventListener("message", async (event) => {
     }
 
     const start = performance.now();
-    const compile =
-      mod.compile_metadata_json_diagnostics ||
-      ((src, artifactTarget) => {
-        const raw = mod.compile_metadata_json(src, artifactTarget);
-        const parsed = JSON.parse(raw);
-        return JSON.stringify(parsed.error ? { metadata: null, diagnostics: [{ message: parsed.error, severity: "error" }] } : { metadata: parsed, diagnostics: [] });
-      });
-    const raw = compile(source || "", target || null);
+    let raw;
+    if (Array.isArray(sources) && sources.length && entryPath && mod.compile_metadata_json_sources) {
+      raw = mod.compile_metadata_json_sources(JSON.stringify(sources), entryPath, target || null);
+    } else {
+      const compile =
+        mod.compile_metadata_json_diagnostics ||
+        ((src, artifactTarget) => {
+          const fallbackRaw = mod.compile_metadata_json(src, artifactTarget);
+          const parsed = JSON.parse(fallbackRaw);
+          return JSON.stringify(parsed.error ? { metadata: null, diagnostics: [{ message: parsed.error, severity: "error" }] } : { metadata: parsed, diagnostics: [] });
+        });
+      raw = compile(source || "", target || null);
+    }
     const payload = JSON.parse(raw);
     self.postMessage({
       id,

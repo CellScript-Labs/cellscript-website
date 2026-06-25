@@ -65,6 +65,36 @@ export function compile_metadata_json_diagnostics(source, target) {
 }
 
 /**
+ * Compile a virtual multi-file source set and return metadata diagnostics.
+ *
+ * `sources_json` must be a JSON array of `{ path, source, role? }` objects.
+ * `entry_path` selects the source that should produce metadata. This is an
+ * additive API; the single-source functions remain stable.
+ * @param {string} sources_json
+ * @param {string} entry_path
+ * @param {string | null} [target]
+ * @returns {string}
+ */
+export function compile_metadata_json_sources(sources_json, entry_path, target) {
+    let deferred4_0;
+    let deferred4_1;
+    try {
+        const ptr0 = passStringToWasm0(sources_json, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passStringToWasm0(entry_path, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        const len1 = WASM_VECTOR_LEN;
+        var ptr2 = isLikeNone(target) ? 0 : passStringToWasm0(target, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
+        var len2 = WASM_VECTOR_LEN;
+        const ret = wasm.compile_metadata_json_sources(ptr0, len0, ptr1, len1, ptr2, len2);
+        deferred4_0 = ret[0];
+        deferred4_1 = ret[1];
+        return getStringFromWasm0(ret[0], ret[1]);
+    } finally {
+        wasm.__wbindgen_free(deferred4_0, deferred4_1, 1);
+    }
+}
+
+/**
  * Query the in-process CellScript language service for browser tooling.
  *
  * `line` and `character` are zero-based UTF-16 positions, matching LSP.

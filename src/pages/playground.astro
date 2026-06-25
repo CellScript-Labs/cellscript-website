@@ -12,15 +12,16 @@
  * example. Users can edit freely; compile runs in a Web Worker 300ms
  * after the last keystroke (debounced).
  *
- * Design constraints: no Monaco/CodeMirror dependency (textarea +
- * overlay only), WASM <= 600KB gzip, no new keyframe animations.
+ * Design constraints: keep the workbench size-conscious and browser-only.
+ * The editor stays textarea + highlight overlay for now; native import/export
+ * uses .cell and Cell.toml-backed .zip packages instead of playground JSON.
  */
 import "../styles/global.css";
 import { playgroundExamples, exampleFullSources, exampleGroups } from "../data/site";
 import { translations } from "../i18n/translations";
 import SiteHeader from "../components/SiteHeader.astro";
 import { ClientRouter } from "astro:transitions";
-import { Check, Copy, Play } from "lucide-astro";
+import { BookOpen, Check, ChevronDown, Copy, Download, FilePlus, Play, Trash2, Upload } from "lucide-astro";
 
 // The locale is resolved client-side from localStorage (see the inline
 // init script below), so the server renders the English fallback and
@@ -36,17 +37,18 @@ const playgroundExampleMeta = playgroundExamples.map(({ id, label, file }) => ({
 type PlaygroundExample = (typeof playgroundExamples)[number];
 const playgroundExampleById = new Map<string, PlaygroundExample>(playgroundExamples.map((example) => [example.id, example]));
 const normaliseGroupExampleId = (id: string) => id === "ammPool" ? "amm" : id;
+const playgroundExampleGroupLabels = t.playground.exampleGroups as Record<string, string>;
 const groupedPlaygroundExampleIds = new Set<string>();
-const playgroundSelectGroups: Array<{ id: string; items: PlaygroundExample[] }> = exampleGroups.map((group) => {
+const playgroundSelectGroups: Array<{ id: string; label: string; items: PlaygroundExample[] }> = exampleGroups.map((group) => {
   const items = group.items
     .map((item) => playgroundExampleById.get(normaliseGroupExampleId(item.id)))
     .filter(Boolean) as PlaygroundExample[];
   items.forEach((item) => groupedPlaygroundExampleIds.add(item.id));
-  return { id: group.id, items };
+  return { id: group.id, label: playgroundExampleGroupLabels[group.id] ?? group.id, items };
 }).filter((group) => group.items.length > 0);
 const ungroupedPlaygroundExamples = playgroundExamples.filter((example) => !groupedPlaygroundExampleIds.has(example.id));
 if (ungroupedPlaygroundExamples.length > 0) {
-  playgroundSelectGroups.push({ id: "advanced", items: ungroupedPlaygroundExamples });
+  playgroundSelectGroups.push({ id: "advanced", label: playgroundExampleGroupLabels.advanced ?? "advanced", items: ungroupedPlaygroundExamples });
 }
 ---
 
@@ -82,39 +84,50 @@ if (ungroupedPlaygroundExamples.length > 0) {
         <Check class="check-icon" aria-hidden="true" />
       </button>
     </template>
+    <template data-file-delete-icon>
+      <Trash2 class="pg-file-delete-icon" aria-hidden="true" />
+    </template>
     <div class="pg-toolbar">
       <h1 class="pg-toolbar-title" data-i18n="playground.title">{t.playground.title}</h1>
       <div class="pg-toolbar-actions">
-        <label class="pg-example-select">
-          <span data-i18n="playground.exampleLabel">{t.playground.exampleLabel}</span>
-          <select data-example-select>
-            {playgroundSelectGroups.map((group) => (
-              <optgroup label={(t.playground.exampleGroups as Record<string, string>)[group.id] ?? group.id} data-i18n-label={`playground.exampleGroups.${group.id}`}>
-                {group.items.map((ex) => (
-                  <option value={ex.id} data-i18n={`playground.examples.${ex.id}.title`}>
-                    {getPlaygroundExampleCopy(ex.id)?.title ?? ex.label}
-                  </option>
-                ))}
-              </optgroup>
-            ))}
-          </select>
-        </label>
+        <details class="pg-example-menu" data-example-menu>
+          <summary class="pg-action-btn pg-example-menu-trigger" data-i18n-aria-label="playground.examplesDrawer" aria-label={t.playground.examplesDrawer}>
+            <BookOpen aria-hidden="true" />
+            <span data-i18n="playground.examplesDrawer">{t.playground.examplesDrawer}</span>
+            <ChevronDown class="pg-example-menu-chevron" aria-hidden="true" />
+          </summary>
+          <div class="pg-example-menu-panel">
+            <aside class="pg-example-lesson" data-example-lesson aria-live="polite">
+              <span data-i18n="playground.lessonLabel">{t.playground.lessonLabel}</span>
+              <strong data-example-title data-i18n={`playground.examples.${initialExample.id}.title`}>
+                {getPlaygroundExampleCopy(initialExample.id)?.title ?? initialExample.label}
+              </strong>
+              <p data-example-summary data-i18n={`playground.examples.${initialExample.id}.summary`}>
+                {getPlaygroundExampleCopy(initialExample.id)?.summary}
+              </p>
+            </aside>
+            <div class="pg-example-list">
+              {playgroundSelectGroups.map((group) => (
+                <section class="pg-example-group">
+                  <h2 data-i18n={`playground.exampleGroups.${group.id}`}>{group.label}</h2>
+                  <div class="pg-example-buttons">
+                    {group.items.map((ex) => (
+                      <button class="pg-example-item" type="button" data-example-button data-example-id={ex.id} data-i18n-aria-label="playground.loadExample" aria-label={t.playground.loadExample.replace("{name}", getPlaygroundExampleCopy(ex.id)?.title ?? ex.label)}>
+                        <span data-i18n={`playground.examples.${ex.id}.title`}>{getPlaygroundExampleCopy(ex.id)?.title ?? ex.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
+          </div>
+        </details>
         <button class="pg-action-btn pg-compile-btn" type="button" data-compile data-i18n-aria-label="playground.compileAria" aria-label={t.playground.compileAria}>
           <Play class="pg-compile-icon" aria-hidden="true" />
           <span class="pg-compile-label" data-compile-label data-i18n="playground.compile">{t.playground.compile}</span>
         </button>
       </div>
     </div>
-
-    <aside class="pg-example-lesson" data-example-lesson aria-live="polite">
-      <span data-i18n="playground.lessonLabel">{t.playground.lessonLabel}</span>
-      <strong data-example-title data-i18n={`playground.examples.${initialExample.id}.title`}>
-        {getPlaygroundExampleCopy(initialExample.id)?.title ?? initialExample.label}
-      </strong>
-      <p data-example-summary data-i18n={`playground.examples.${initialExample.id}.summary`}>
-        {getPlaygroundExampleCopy(initialExample.id)?.summary}
-      </p>
-    </aside>
 
     <nav class="pg-mobile-switch" aria-label={t.playground.mobileSwitchAria}>
       <button class="active" type="button" data-mobile-view-btn="source" aria-pressed="true" data-i18n="playground.source">{t.playground.source}</button>
@@ -125,24 +138,53 @@ if (ungroupedPlaygroundExamples.length > 0) {
     <main class="pg-main" data-pg-main data-mobile-view="source">
       <!-- Left: source editor -->
       <section class="pg-col pg-source" id="playground-editor" aria-label={t.playground.source} data-i18n-aria-label="playground.source" tabindex="-1">
-        <div class="pg-col-head">
+        <div class="pg-col-head pg-source-head">
           <span data-i18n="playground.source">{t.playground.source}</span>
+          <div class="pg-source-head-actions">
+            <code class="pg-active-file-chip" data-active-file-chip></code>
+            <button class="pg-entry-action" type="button" data-set-entry data-i18n-aria-label="playground.setEntry" data-i18n-title="playground.setEntry" aria-label={t.playground.setEntry} title={t.playground.setEntry}>
+              <Check aria-hidden="true" />
+              <span data-set-entry-label data-i18n="playground.setEntry">{t.playground.setEntry}</span>
+            </button>
+          </div>
         </div>
-        <div class="pg-editor" data-editor>
-          <div class="pg-gutter" data-gutter></div>
-          <pre class="pg-highlight" aria-hidden="true" data-highlight></pre>
-          <textarea
-            class="pg-textarea"
-            data-textarea
-            spellcheck="false"
-            autocapitalize="off"
-            autocomplete="off"
-            autocorrect="off"
-            aria-label={t.playground.source}
-            data-i18n-aria-label="playground.source"
-          >{initialSource}</textarea>
-          <div class="pg-completions" data-completions role="listbox" hidden></div>
-          <div class="pg-hover-card" data-hover-card hidden></div>
+        <div class="pg-source-body">
+          <aside class="pg-workspace" data-workspace aria-label={t.playground.workspace} data-i18n-aria-label="playground.workspace">
+            <div class="pg-workspace-head">
+              <span data-i18n="playground.workspace">{t.playground.workspace}</span>
+              <span data-workspace-count></span>
+            </div>
+            <div class="pg-workspace-actions">
+              <button class="pg-icon-btn" type="button" data-new-file data-i18n-aria-label="playground.newFile" data-i18n-title="playground.newFile" aria-label={t.playground.newFile} title={t.playground.newFile}>
+                <FilePlus aria-hidden="true" />
+              </button>
+              <button class="pg-icon-btn" type="button" data-import-workspace data-i18n-aria-label="playground.importWorkspace" data-i18n-title="playground.importWorkspace" aria-label={t.playground.importWorkspace} title={t.playground.importWorkspace}>
+                <Upload aria-hidden="true" />
+              </button>
+              <button class="pg-icon-btn" type="button" data-export-workspace data-i18n-aria-label="playground.exportWorkspace" data-i18n-title="playground.exportWorkspace" aria-label={t.playground.exportWorkspace} title={t.playground.exportWorkspace}>
+                <Download aria-hidden="true" />
+              </button>
+              <input data-import-input type="file" accept=".cell,.zip,.json,.toml,text/plain,application/json,application/zip,application/x-zip-compressed" multiple hidden />
+            </div>
+            <div class="pg-file-tree" data-file-tree role="listbox" aria-label={t.playground.workspace} data-i18n-aria-label="playground.workspace"></div>
+          </aside>
+          <div class="pg-editor" data-editor>
+            <div class="pg-gutter" data-gutter></div>
+            <pre class="pg-highlight" aria-hidden="true" data-highlight></pre>
+            <div class="pg-diagnostic-layer" aria-hidden="true" data-diagnostic-layer></div>
+            <textarea
+              class="pg-textarea"
+              data-textarea
+              spellcheck="false"
+              autocapitalize="off"
+              autocomplete="off"
+              autocorrect="off"
+              aria-label={t.playground.source}
+              data-i18n-aria-label="playground.source"
+            >{initialSource}</textarea>
+            <div class="pg-completions" data-completions role="listbox" hidden></div>
+            <div class="pg-hover-card" data-hover-card hidden></div>
+          </div>
         </div>
       </section>
 
@@ -258,6 +300,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
     </script>
 
     <script>
+      import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
       import { renderSource } from "../lib/highlight";
 
       (window as any).__cellscriptInitPlayground = () => {
@@ -271,6 +314,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
         message: string;
         severity?: string | number;
         code?: string | null;
+        file?: string | null;
         range?: {
           start: CompileDiagnosticPosition;
           end: CompileDiagnosticPosition;
@@ -311,7 +355,13 @@ if (ungroupedPlaygroundExamples.length > 0) {
 
       type LanguageIntent = "hover" | "completion" | "definition";
 
-      const compilerAssetVersion = "20260625-multi-diagnostics";
+      type WorkspaceFile = {
+        path: string;
+        source: string;
+        role?: string;
+      };
+
+      const compilerAssetVersion = "20260625-multi-workspace";
       const workerUrl = new URL(`/playground-worker.js?v=${compilerAssetVersion}`, window.location.href);
       const previousPlaygroundAbort = (window as any).__cellscriptPlaygroundAbort as AbortController | undefined;
       previousPlaygroundAbort?.abort();
@@ -338,6 +388,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
         document.querySelector<HTMLScriptElement>("[data-example-meta]")?.textContent ?? "[]",
       );
       const exampleIds = new Set(exampleMeta.map((example) => example.id));
+      const exampleFileById = new Map(exampleMeta.map((example) => [example.id, example.file]));
       const i18nTable = (window as any).__CELLSCRIPT_I18N__ as any;
       const defaultLocaleName = (window as any).__CELLSCRIPT_DEFAULT_LOCALE__ ?? "en";
 
@@ -359,15 +410,27 @@ if (ungroupedPlaygroundExamples.length > 0) {
       const textarea = document.querySelector<HTMLTextAreaElement>("[data-textarea]");
       const editor = document.querySelector<HTMLElement>("[data-editor]");
       const highlight = document.querySelector<HTMLElement>("[data-highlight]");
+      const diagnosticLayer = document.querySelector<HTMLElement>("[data-diagnostic-layer]");
       const gutter = document.querySelector<HTMLElement>("[data-gutter]");
       const completionsEl = document.querySelector<HTMLElement>("[data-completions]");
       const hoverCard = document.querySelector<HTMLElement>("[data-hover-card]");
       const loading = document.querySelector<HTMLElement>("[data-loading]");
       const status = document.querySelector<HTMLElement>("[data-status]");
       const versionEl = document.querySelector<HTMLElement>("[data-version]");
-      const exampleSelect = document.querySelector<HTMLSelectElement>("[data-example-select]");
       const exampleTitle = document.querySelector<HTMLElement>("[data-example-title]");
       const exampleSummary = document.querySelector<HTMLElement>("[data-example-summary]");
+      const exampleMenu = document.querySelector<HTMLDetailsElement>("[data-example-menu]");
+      const exampleButtons = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-example-button]"));
+      const fileTree = document.querySelector<HTMLElement>("[data-file-tree]");
+      const deleteFileIconTemplate = document.querySelector<HTMLTemplateElement>("[data-file-delete-icon]");
+      const workspaceCount = document.querySelector<HTMLElement>("[data-workspace-count]");
+      const activeFileChip = document.querySelector<HTMLElement>("[data-active-file-chip]");
+      const setEntryBtn = document.querySelector<HTMLButtonElement>("[data-set-entry]");
+      const setEntryLabel = document.querySelector<HTMLElement>("[data-set-entry-label]");
+      const newFileBtn = document.querySelector<HTMLButtonElement>("[data-new-file]");
+      const importWorkspaceBtn = document.querySelector<HTMLButtonElement>("[data-import-workspace]");
+      const exportWorkspaceBtn = document.querySelector<HTMLButtonElement>("[data-export-workspace]");
+      const importInput = document.querySelector<HTMLInputElement>("[data-import-input]");
       const pgMain = document.querySelector<HTMLElement>("[data-pg-main]");
       const mobileViewBtns = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-mobile-view-btn]"));
       const compileBtn = document.querySelector<HTMLButtonElement>("[data-compile]");
@@ -385,7 +448,12 @@ if (ungroupedPlaygroundExamples.length > 0) {
       const railTypes = railBody?.querySelector<HTMLElement>("[data-rail-types]");
       const railDiagnosticsBody = railBody?.querySelector<HTMLElement>("[data-rail-diagnostics-body]");
       const errorBadge = document.querySelector<HTMLElement>("[data-error-badge]");
-      let currentExampleId: string | null = exampleSelect?.value ?? null;
+      let currentExampleId: string | null = exampleMeta[0]?.id ?? null;
+      const MAX_WORKSPACE_FILES = 16;
+      const MAX_WORKSPACE_BYTES = 300_000;
+      let workspaceFiles: WorkspaceFile[] = [];
+      let activePath = "";
+      let entryPath = "";
 
       const outputPanels = new Map(
         Array.from(document.querySelectorAll<HTMLElement>("[data-output-panel]")).map((p) => [
@@ -400,7 +468,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
       let repositionFloatingTools = () => {};
       const columnResizers = Array.from(document.querySelectorAll<HTMLElement>("[data-column-resizer]"));
       const panelColumnStorageKey = "cellscript-playground-columns";
-      const columnMinimums = { source: 220, output: 250, rail: 210 };
+      const columnMinimums = { source: 420, output: 250, rail: 210 };
 
       const readPanelWidths = () => {
         const source = document.querySelector<HTMLElement>(".pg-source");
@@ -567,6 +635,14 @@ if (ungroupedPlaygroundExamples.length > 0) {
           exampleSummary.dataset.i18n = summaryKey;
           exampleSummary.textContent = getMessage(summaryKey, readLocale()) ?? "";
         }
+        exampleButtons.forEach((btn) => {
+          const id = btn.dataset.exampleId ?? "";
+          const active = !!currentExampleId && id === currentExampleId;
+          const title = getMessage(`playground.examples.${id}.title`, readLocale()) ?? id;
+          btn.classList.toggle("active", active);
+          btn.setAttribute("aria-pressed", String(active));
+          btn.setAttribute("aria-label", fmt(pg("loadExample"), { name: title }));
+        });
       };
 
       // ---- Highlight overlay + line-number gutter sync ----
@@ -601,6 +677,49 @@ if (ungroupedPlaygroundExamples.length > 0) {
         return offset;
       };
 
+      const diagnosticBelongsToActiveFile = (diagnostic: CompileDiagnostic) =>
+        !diagnostic.file || diagnostic.file === activePath;
+
+      const measureTextareaCharWidth = () => {
+        if (!textarea) return 8;
+        const style = getComputedStyle(textarea);
+        if (!textMeasureContext) return Number.parseFloat(style.fontSize) * 0.6 || 8;
+        textMeasureContext.font = `${style.fontStyle} ${style.fontVariant} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+        return textMeasureContext.measureText("M").width || Number.parseFloat(style.fontSize) * 0.6 || 8;
+      };
+
+      const renderDiagnosticLayer = () => {
+        if (!diagnosticLayer || !textarea) return;
+        const diagnostics = currentDiagnostics
+          .filter(diagnosticBelongsToActiveFile)
+          .filter((diagnostic) => !!diagnostic.range);
+        if (!diagnostics.length) {
+          diagnosticLayer.innerHTML = "";
+          return;
+        }
+        const style = getComputedStyle(textarea);
+        const lineHeight = Number.parseFloat(style.lineHeight) || 20;
+        const paddingTop = Number.parseFloat(style.paddingTop) || 0;
+        const paddingLeft = Number.parseFloat(style.paddingLeft) || 0;
+        const charWidth = measureTextareaCharWidth();
+        const lines = textarea.value.split("\n");
+        diagnosticLayer.innerHTML = diagnostics.map((diagnostic) => {
+          const range = diagnostic.range!;
+          const line = Math.max(1, range.start.line);
+          const lineText = lines[line - 1] ?? "";
+          const startColumn = Math.max(1, range.start.column || 1);
+          const fallbackEndColumn = Math.max(startColumn + 1, lineText.length + 1);
+          const endColumn = range.end.line === range.start.line
+            ? Math.max(startColumn + 1, range.end.column || fallbackEndColumn)
+            : fallbackEndColumn;
+          const left = paddingLeft + (startColumn - 1) * charWidth - textarea.scrollLeft;
+          const top = paddingTop + (line - 1) * lineHeight + Math.max(0, lineHeight - 5) - textarea.scrollTop;
+          const width = Math.max(charWidth * 2, (endColumn - startColumn) * charWidth);
+          const severity = isBlockingDiagnostic(diagnostic) ? "error" : "warning";
+          return `<span class="pg-squiggle pg-squiggle-${severity}" style="left:${left.toFixed(2)}px;top:${top.toFixed(2)}px;width:${width.toFixed(2)}px"></span>`;
+        }).join("");
+      };
+
       const focusLine = (lineNumber: number) => {
         if (!textarea) return;
         const offset = lineStartOffset(textarea.value, lineNumber);
@@ -622,7 +741,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
           const lineCount = source.split("\n").length;
           const activeLine = currentLineNumber();
           const diagnosticLines = new Map<number, "error" | "warning">();
-          currentDiagnostics.forEach((diagnostic) => {
+          currentDiagnostics.filter(diagnosticBelongsToActiveFile).forEach((diagnostic) => {
             const line = diagnostic.range?.start.line;
             if (typeof line !== "number" || line <= 0) return;
             const previous = diagnosticLines.get(line);
@@ -641,6 +760,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
           }
           if (gutter.innerHTML !== nums) gutter.innerHTML = nums;
         }
+        renderDiagnosticLayer();
       };
 
       const scheduleHighlight = () => {
@@ -659,6 +779,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
           highlight.scrollLeft = textarea.scrollLeft;
         }
         if (gutter) gutter.scrollTop = textarea.scrollTop;
+        renderDiagnosticLayer();
         repositionFloatingTools();
       };
 
@@ -667,8 +788,384 @@ if (ungroupedPlaygroundExamples.length > 0) {
         return `${bytes} B`;
       };
 
+      const totalWorkspaceBytes = (files = workspaceFiles) =>
+        files.reduce((sum, file) => sum + new TextEncoder().encode(file.source).length, 0);
+
+      const normalizePortablePath = (raw: string, fallback = "main.cell") => {
+        const cleaned = (raw || fallback)
+          .replace(/\\/g, "/")
+          .replace(/^\/+/, "")
+          .split("/")
+          .map((part) => part.replace(/[<>"'`]/g, "").trim())
+          .filter((part) => part && part !== "." && part !== "..")
+          .join("/");
+        return cleaned || fallback;
+      };
+
+      const normalizeWorkspacePath = (raw: string, fallback = "main.cell") => {
+        const path = normalizePortablePath(raw, fallback);
+        return path.toLowerCase().endsWith(".cell") ? path : `${path}.cell`;
+      };
+
+      const uniqueWorkspacePath = (path: string, used: Set<string>) => {
+        if (!used.has(path)) {
+          used.add(path);
+          return path;
+        }
+        const base = path.replace(/\.cell$/i, "");
+        let index = 2;
+        let nextPath = `${base}_${index}.cell`;
+        while (used.has(nextPath)) {
+          index += 1;
+          nextPath = `${base}_${index}.cell`;
+        }
+        used.add(nextPath);
+        return nextPath;
+      };
+
+      const ensureWorkspaceLimits = (files: WorkspaceFile[]) => {
+        if (!files.length) throw new Error(pg("workspaceJsonInvalid"));
+        if (files.length > MAX_WORKSPACE_FILES) {
+          throw new Error(fmt(pg("workspaceFileLimit"), { n: String(MAX_WORKSPACE_FILES) }));
+        }
+        if (totalWorkspaceBytes(files) > MAX_WORKSPACE_BYTES) {
+          throw new Error(fmt(pg("workspaceByteLimit"), { size: formatBytes(MAX_WORKSPACE_BYTES) }));
+        }
+      };
+
+      const makeExampleWorkspace = (id: string): WorkspaceFile[] => [{
+        path: normalizeWorkspacePath(exampleFileById.get(id) ?? `${id}.cell`),
+        source: exampleSources[id] ?? "",
+        role: "entry",
+      }];
+
+      const currentFile = () => workspaceFiles.find((file) => file.path === activePath) ?? workspaceFiles[0];
+
+      const syncActiveFileFromEditor = () => {
+        if (!textarea || !activePath) return;
+        const file = workspaceFiles.find((item) => item.path === activePath);
+        if (file) file.source = textarea.value;
+      };
+
+      const updateWorkspaceChrome = () => {
+        if (workspaceCount) {
+          workspaceCount.textContent = fmt(pg("workspaceCount"), {
+            files: String(workspaceFiles.length),
+            size: formatBytes(totalWorkspaceBytes()),
+          });
+        }
+        if (activeFileChip) {
+          activeFileChip.textContent = activePath || "";
+          activeFileChip.title = activePath ? fmt(pg("activeFile"), { file: activePath }) : "";
+        }
+        if (setEntryBtn && setEntryLabel) {
+          const isEntry = !!activePath && activePath === entryPath;
+          setEntryBtn.disabled = isEntry;
+          const label = isEntry ? pg("entryReady") : pg("setEntry");
+          setEntryBtn.setAttribute("aria-label", label);
+          setEntryBtn.title = label;
+          setEntryLabel.textContent = label;
+        }
+      };
+
+      const renderFileTree = () => {
+        if (!fileTree) return;
+        const deleteIcon = deleteFileIconTemplate?.innerHTML.trim() ?? "";
+        fileTree.innerHTML = workspaceFiles.map((file) => {
+          const active = file.path === activePath;
+          const entry = file.path === entryPath;
+          const deleteLabel = fmt(pg("deleteFile"), { file: file.path });
+          return `<div class="pg-file-row${active ? " active" : ""}${entry ? " is-entry" : ""}">
+            <button type="button" role="option" class="pg-file-item" aria-selected="${active}" data-file-path="${escapeAttr(file.path)}">
+              <span class="pg-file-name">${escapeHtml(file.path)}</span>
+              ${entry ? `<span class="pg-file-entry">${escapeHtml(pg("entry"))}</span>` : ""}
+            </button>
+            <button type="button" class="pg-file-delete" data-delete-file="${escapeAttr(file.path)}" aria-label="${escapeAttr(deleteLabel)}" title="${escapeAttr(deleteLabel)}"${workspaceFiles.length <= 1 ? " disabled" : ""}>
+              ${deleteIcon}
+            </button>
+          </div>`;
+        }).join("");
+        updateWorkspaceChrome();
+      };
+
+      const setWorkspace = (files: WorkspaceFile[], nextActivePath?: string, nextEntryPath?: string) => {
+        const usedPaths = new Set<string>();
+        workspaceFiles = files.map((file, index) => ({
+          path: uniqueWorkspacePath(normalizeWorkspacePath(file.path, `source_${index + 1}.cell`), usedPaths),
+          source: file.source ?? "",
+          role: file.role,
+        }));
+        ensureWorkspaceLimits(workspaceFiles);
+        const firstPath = workspaceFiles[0]?.path ?? "main.cell";
+        const requestedActivePath = nextActivePath ? normalizeWorkspacePath(nextActivePath) : "";
+        const requestedEntryPath = nextEntryPath ? normalizeWorkspacePath(nextEntryPath) : "";
+        const roleEntryPath = workspaceFiles.find((file) => file.role === "entry")?.path ?? "";
+        activePath = requestedActivePath && workspaceFiles.some((file) => file.path === requestedActivePath) ? requestedActivePath : firstPath;
+        entryPath = requestedEntryPath && workspaceFiles.some((file) => file.path === requestedEntryPath)
+          ? requestedEntryPath
+          : (roleEntryPath || activePath);
+        workspaceFiles.forEach((file) => {
+          file.role = file.path === entryPath ? "entry" : "memory";
+        });
+        if (textarea) textarea.value = currentFile()?.source ?? "";
+        renderFileTree();
+        hideCompletions();
+        hideHover();
+        scheduleHighlight();
+        scheduleCompile();
+      };
+
+      const markWorkspaceEntry = (path = activePath) => {
+        if (!workspaceFiles.some((file) => file.path === path)) return;
+        syncActiveFileFromEditor();
+        entryPath = path;
+        workspaceFiles.forEach((file) => {
+          file.role = file.path === entryPath ? "entry" : "memory";
+        });
+        renderFileTree();
+        updateExampleLesson(null);
+        scheduleCompile();
+      };
+
+      const deleteWorkspaceFile = (path: string) => {
+        if (!workspaceFiles.some((file) => file.path === path)) return;
+        if (workspaceFiles.length <= 1) {
+          if (status) status.textContent = pg("deleteLastFile");
+          return;
+        }
+        syncActiveFileFromEditor();
+        const deleteIndex = workspaceFiles.findIndex((file) => file.path === path);
+        workspaceFiles = workspaceFiles.filter((file) => file.path !== path);
+        if (activePath === path) {
+          activePath = workspaceFiles[Math.min(deleteIndex, workspaceFiles.length - 1)]?.path ?? workspaceFiles[0]?.path ?? "";
+          if (textarea) textarea.value = currentFile()?.source ?? "";
+        }
+        if (entryPath === path) entryPath = activePath || workspaceFiles[0]?.path || "";
+        workspaceFiles.forEach((file) => {
+          file.role = file.path === entryPath ? "entry" : "memory";
+        });
+        renderFileTree();
+        updateExampleLesson(null);
+        scheduleHighlight();
+        scheduleCompile();
+        if (status) status.textContent = fmt(pg("fileDeleted"), { file: path });
+      };
+
+      const switchWorkspaceFile = (path: string, setEntry = false) => {
+        if (!workspaceFiles.some((file) => file.path === path)) return;
+        syncActiveFileFromEditor();
+        activePath = path;
+        if (setEntry) entryPath = path;
+        workspaceFiles.forEach((file) => {
+          file.role = file.path === entryPath ? "entry" : "memory";
+        });
+        if (textarea) textarea.value = currentFile()?.source ?? "";
+        renderFileTree();
+        updateExampleLesson(null);
+        scheduleHighlight();
+        scheduleCompile();
+      };
+
+      const makeScratchSource = (index: number) => `module playground::scratch_${index}
+
+action inspect() -> u64 {
+    verification
+        ${index}
+}
+`;
+
+      const addScratchFile = () => {
+        syncActiveFileFromEditor();
+        let index = workspaceFiles.length + 1;
+        let path = `scratch_${index}.cell`;
+        while (workspaceFiles.some((file) => file.path === path)) {
+          index += 1;
+          path = `scratch_${index}.cell`;
+        }
+        setWorkspace([...workspaceFiles, { path, source: makeScratchSource(index) }], path, entryPath || path);
+        updateExampleLesson(null);
+      };
+
+      const downloadBlob = (blob: Blob, filename: string) => {
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = filename;
+        link.click();
+        URL.revokeObjectURL(url);
+      };
+
+      const basename = (path: string, fallback = "main.cell") =>
+        normalizePortablePath(path, fallback).split("/").filter(Boolean).pop() || fallback;
+
+      const toZipSourcePath = (path: string, usedPaths: Set<string>) => {
+        const workspacePath = normalizeWorkspacePath(path);
+        const sourcePath = workspacePath.startsWith("src/") ? workspacePath : `src/${workspacePath}`;
+        return uniqueWorkspacePath(sourcePath, usedPaths);
+      };
+
+      const buildCellToml = (entry: string) => `[package]
+name = "playground"
+version = "0.1.0"
+cellscript_version = "0.20.0-rc.1"
+entry = "${entry.replace(/"/g, "")}"
+source_roots = ["src"]
+`;
+
+      const parseCellTomlEntry = (text: string) => {
+        const match = text.match(/^\s*entry\s*=\s*["']([^"']+)["']/m);
+        return match?.[1] ? normalizeWorkspacePath(match[1]) : "";
+      };
+
+      const resolveImportedEntry = (files: WorkspaceFile[], requestedEntry?: string) => {
+        if (!files.length) return "";
+        const normalized = requestedEntry ? normalizeWorkspacePath(requestedEntry) : "";
+        if (normalized && files.some((file) => file.path === normalized)) return normalized;
+        const withoutSrc = normalized.replace(/^src\//, "");
+        if (withoutSrc && files.some((file) => file.path === withoutSrc)) return withoutSrc;
+        const requestedBasename = normalized ? basename(normalized) : "";
+        const basenameMatches = requestedBasename
+          ? files.filter((file) => basename(file.path) === requestedBasename)
+          : [];
+        if (basenameMatches.length === 1) return basenameMatches[0].path;
+        return files.find((file) => file.role === "entry")?.path ?? files[0].path;
+      };
+
+      const workspaceExportPayload = () => {
+        syncActiveFileFromEditor();
+        return {
+          format: "cellscript-playground-workspace-v1",
+          version: 1,
+          entryPath,
+          files: workspaceFiles.map((file) => ({
+            path: file.path,
+            source: file.source,
+            role: file.path === entryPath ? "entry" : "memory",
+          })),
+        };
+      };
+
+      const exportWorkspace = () => {
+        const payload = workspaceExportPayload();
+        if (payload.files.length <= 1) {
+          const file = payload.files[0] ?? { path: "main.cell", source: "" };
+          downloadBlob(new Blob([file.source], { type: "text/plain;charset=utf-8" }), basename(file.path));
+          if (status) status.textContent = pg("workspaceExported");
+          return;
+        }
+        const usedZipPaths = new Set<string>();
+        const zipEntries: Record<string, Uint8Array> = {};
+        const exportedFiles = payload.files.map((file) => {
+          const zipPath = toZipSourcePath(file.path, usedZipPaths);
+          zipEntries[zipPath] = strToU8(file.source);
+          return { originalPath: file.path, zipPath };
+        });
+        const entryZipPath =
+          exportedFiles.find((file) => file.originalPath === payload.entryPath)?.zipPath ??
+          exportedFiles[0]?.zipPath ??
+          "src/main.cell";
+        zipEntries["Cell.toml"] = strToU8(buildCellToml(entryZipPath));
+        const zipBytes = zipSync(zipEntries, { level: 9 });
+        downloadBlob(new Blob([zipBytes], { type: "application/zip" }), "cellscript-playground-project.zip");
+        if (status) status.textContent = pg("workspaceExported");
+      };
+
+      const parseWorkspaceJson = (text: string) => {
+        const parsed = JSON.parse(text);
+        const rawFiles = Array.isArray(parsed) ? parsed : parsed.files;
+        if (!Array.isArray(rawFiles)) throw new Error(pg("workspaceJsonInvalid"));
+        const files = rawFiles.map((file: any, index: number) => ({
+          path: normalizeWorkspacePath(String(file.path || file.name || `source_${index + 1}.cell`)),
+          source: String(file.source ?? file.content ?? ""),
+          role: file.role,
+        }));
+        const entry = resolveImportedEntry(files, String(parsed.entryPath || files.find((file: WorkspaceFile) => file.role === "entry")?.path || files[0]?.path || ""));
+        return { files, entry };
+      };
+
+      const importZipWorkspace = async (file: File) => {
+        const unzipped = unzipSync(new Uint8Array(await file.arrayBuffer()));
+        const zipPaths = Object.keys(unzipped)
+          .map((path) => normalizePortablePath(path, ""))
+          .filter((path) => path && !path.split("/").some((part) => part.startsWith(".") || part === "__MACOSX"));
+        const firstSegments = zipPaths.map((path) => path.split("/")[0]).filter(Boolean);
+        const commonRoot =
+          firstSegments.length > 0 &&
+          firstSegments.every((segment) => segment === firstSegments[0]) &&
+          zipPaths.some((path) => path.toLowerCase().endsWith("/cell.toml"))
+            ? `${firstSegments[0]}/`
+            : "";
+        let manifestEntry = "";
+        const imported: WorkspaceFile[] = [];
+        Object.entries(unzipped).forEach(([rawPath, bytes]) => {
+          const normalizedPath = normalizePortablePath(rawPath, "");
+          const path = commonRoot && normalizedPath.startsWith(commonRoot)
+            ? normalizedPath.slice(commonRoot.length)
+            : normalizedPath;
+          if (!path || path.endsWith("/")) return;
+          if (path.split("/").some((part) => part.startsWith(".") || part === "__MACOSX")) return;
+          if (path.toLowerCase() === "cell.toml" || path.toLowerCase().endsWith("/cell.toml")) {
+            manifestEntry = parseCellTomlEntry(strFromU8(bytes));
+            return;
+          }
+          if (!path.toLowerCase().endsWith(".cell")) return;
+          imported.push({
+            path: normalizeWorkspacePath(path),
+            source: strFromU8(bytes),
+          });
+        });
+        if (!imported.length) throw new Error(pg("workspaceNoCellFiles"));
+        const entry = resolveImportedEntry(imported, manifestEntry);
+        return { files: imported, entry };
+      };
+
+      const importNativeWorkspaceFiles = async (files: File[]) => {
+        const manifest = files.find((file) => {
+          const path = normalizePortablePath((file as any).webkitRelativePath || file.name, "");
+          return path.toLowerCase() === "cell.toml" || path.toLowerCase().endsWith("/cell.toml");
+        });
+        const manifestEntry = manifest ? parseCellTomlEntry(await manifest.text()) : "";
+        const cellFiles = files.filter((file) => {
+          const path = normalizePortablePath((file as any).webkitRelativePath || file.name, "");
+          return path.toLowerCase().endsWith(".cell");
+        });
+        if (!cellFiles.length) throw new Error(pg("workspaceNoCellFiles"));
+        const imported = await Promise.all(cellFiles.map(async (file) => ({
+          path: normalizeWorkspacePath((file as any).webkitRelativePath || file.name),
+          source: await file.text(),
+        })));
+        const entry = resolveImportedEntry(imported, manifestEntry || imported[0]?.path);
+        return { files: imported, entry };
+      };
+
+      const importWorkspaceFiles = async (fileList: FileList | null) => {
+        if (!fileList?.length) return;
+        try {
+          const files = Array.from(fileList);
+          const zipFiles = files.filter((file) => file.name.toLowerCase().endsWith(".zip"));
+          if (zipFiles.length > 1 || (zipFiles.length === 1 && files.length > 1)) throw new Error(pg("workspaceOneZipOnly"));
+          const imported = zipFiles.length === 1
+            ? await importZipWorkspace(zipFiles[0])
+            : files.length === 1 && files[0].name.toLowerCase().endsWith(".json")
+              ? parseWorkspaceJson(await files[0].text())
+              : await importNativeWorkspaceFiles(files);
+          setWorkspace(imported.files, imported.entry, imported.entry);
+          updateExampleLesson(null);
+          if (status) status.textContent = pg("workspaceImported");
+        } catch (error) {
+          const message = fmt(pg("workspaceImportFailed"), { error: error instanceof Error ? error.message : String(error) });
+          if (status) status.textContent = message;
+          renderErrors([{ message, severity: "error" }]);
+        } finally {
+          if (importInput) importInput.value = "";
+        }
+      };
+
       const escapeHtml = (s: string): string =>
         s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
+      const escapeAttr = (s: string): string =>
+        escapeHtml(s).replace(/"/g, "&quot;").replace(/'/g, "&#39;");
 
       const renderJson = (json: string): string =>
         escapeHtml(json).replace(
@@ -687,7 +1184,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
         message.length > 80 ? `${message.slice(0, 77)}...` : message;
 
       const sourceMatchesExample = (id: string | null | undefined, src = textarea?.value ?? ""): boolean =>
-        !!id && exampleSources[id] !== undefined && exampleSources[id] === src;
+        workspaceFiles.length === 1 && !!id && exampleSources[id] !== undefined && exampleSources[id] === src;
 
       const selectMobileView = (target: string) => {
         if (!pgMain || !["source", "output", "rail"].includes(target)) return;
@@ -702,6 +1199,27 @@ if (ungroupedPlaygroundExamples.length > 0) {
       mobileViewBtns.forEach((btn) => {
         btn.addEventListener("click", () => selectMobileView(btn.dataset.mobileViewBtn ?? "source"), { signal });
       });
+
+      fileTree?.addEventListener("click", (event) => {
+        const deleteBtn = (event.target as HTMLElement)?.closest<HTMLButtonElement>("[data-delete-file]");
+        if (deleteBtn) {
+          event.preventDefault();
+          deleteWorkspaceFile(deleteBtn.dataset.deleteFile ?? "");
+          return;
+        }
+        const btn = (event.target as HTMLElement)?.closest<HTMLButtonElement>("[data-file-path]");
+        if (!btn) return;
+        event.preventDefault();
+        switchWorkspaceFile(btn.dataset.filePath ?? "");
+      }, { signal });
+
+      setEntryBtn?.addEventListener("click", () => markWorkspaceEntry(activePath), { signal });
+      newFileBtn?.addEventListener("click", addScratchFile, { signal });
+      importWorkspaceBtn?.addEventListener("click", () => importInput?.click(), { signal });
+      exportWorkspaceBtn?.addEventListener("click", exportWorkspace, { signal });
+      importInput?.addEventListener("change", () => {
+        void importWorkspaceFiles(importInput.files);
+      }, { signal });
 
       // Effect class -> localized label. Falls back to the raw class
       // name lowercased if it isn't one of the known classes.
@@ -770,8 +1288,10 @@ if (ungroupedPlaygroundExamples.length > 0) {
 
       const focusDiagnostic = (diagnostic: CompileDiagnostic) => {
         if (!textarea || !diagnostic.range) return;
-        const start = byteOffsetToJsOffset(textarea.value, diagnostic.range.start.offset);
-        const end = Math.max(start, byteOffsetToJsOffset(textarea.value, diagnostic.range.end.offset));
+        if (diagnostic.file && diagnostic.file !== activePath) switchWorkspaceFile(diagnostic.file, false);
+        const source = currentFile()?.source ?? textarea.value;
+        const start = byteOffsetToJsOffset(source, diagnostic.range.start.offset);
+        const end = Math.max(start, byteOffsetToJsOffset(source, diagnostic.range.end.offset));
         textarea.focus();
         textarea.setSelectionRange(start, end || start);
         const lineHeight = Number.parseFloat(getComputedStyle(textarea).lineHeight) || 20;
@@ -1013,6 +1533,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
 
       const requestLanguage = (intent: LanguageIntent) => {
         if (!workerReady || !textarea) return;
+        syncActiveFileFromEditor();
         const position = offsetToLspPosition(textarea.value, textarea.selectionStart);
         const id = ++languageRequestId;
         languageIntents.set(id, intent);
@@ -1169,8 +1690,9 @@ if (ungroupedPlaygroundExamples.length > 0) {
         }
         railDiagnosticsBody.innerHTML = `<ul class="pg-diagnostic-list">${diagnostics.map((diagnostic, index) => {
           const range = diagnostic.range;
+          const fileLabel = diagnostic.file && diagnostic.file !== activePath ? `${diagnostic.file} · ` : "";
           const location = range
-            ? `${escapeHtml(pg("line"))} ${range.start.line}:${range.start.column}`
+            ? `${escapeHtml(fileLabel)}${escapeHtml(pg("line"))} ${range.start.line}:${range.start.column}`
             : escapeHtml(pg("sourceLevel"));
           const severity = diagnosticSeverity(diagnostic);
           const severityText = severity === "warning" ? pg("warningLabel") : pg("errorLabel");
@@ -1306,12 +1828,20 @@ if (ungroupedPlaygroundExamples.length > 0) {
 
       const doCompile = () => {
         if (!workerReady || !textarea) return;
+        syncActiveFileFromEditor();
         setCompileState("compiling");
         const id = ++compileRequestId;
+        const sources = workspaceFiles.map((file) => ({
+          path: file.path,
+          source: file.source,
+          role: file.path === entryPath ? "entry" : "memory",
+        }));
         compileWorker.postMessage({
           id,
           type: "compile",
-          source: textarea.value,
+          source: currentFile()?.source ?? textarea.value,
+          sources,
+          entryPath,
           target: null,
         });
       };
@@ -1362,8 +1892,10 @@ if (ungroupedPlaygroundExamples.length > 0) {
       };
 
       const markEditorChanged = () => {
+        syncActiveFileFromEditor();
+        renderFileTree();
         scheduleHighlight();
-        updateExampleLesson(sourceMatchesExample(exampleSelect?.value) ? (exampleSelect?.value ?? null) : null);
+        updateExampleLesson(sourceMatchesExample(currentExampleId) ? currentExampleId : null);
         scheduleCompile();
       };
 
@@ -1627,6 +2159,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
 
       document.addEventListener("pointerdown", (e: PointerEvent) => {
         const target = e.target as HTMLElement | null;
+        if (exampleMenu?.open && !target?.closest("[data-example-menu]")) exampleMenu.removeAttribute("open");
         if (target?.closest("[data-completions], [data-hover-card], [data-textarea]")) return;
         hideCompletions();
         hideHover();
@@ -1642,30 +2175,30 @@ if (ungroupedPlaygroundExamples.length > 0) {
         if (diagnostic) focusDiagnostic(diagnostic);
       }, { signal });
 
-      // ---- Example switcher ----
-      if (exampleSelect) {
-        exampleSelect.addEventListener("change", () => {
-          const id = exampleSelect.value;
+      // ---- Example drawer ----
+      exampleButtons.forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const id = btn.dataset.exampleId ?? "";
           const src = exampleSources[id];
-          if (src !== undefined && textarea) {
-            textarea.value = src;
-            hideCompletions();
-            hideHover();
+          if (src !== undefined) {
+            const path = normalizeWorkspacePath(exampleFileById.get(id) ?? `${id}.cell`);
+            setWorkspace(makeExampleWorkspace(id), path, path);
             updateExampleLesson(id);
-            scheduleHighlight();
-            scheduleCompile();
+            exampleMenu?.removeAttribute("open");
           }
         }, { signal });
-      }
+      });
 
       // ---- URL example preload ----
       const params = new URLSearchParams(window.location.search);
       const paramExample = params.get("example");
-      if (paramExample && exampleSources[paramExample] !== undefined && textarea) {
-        textarea.value = exampleSources[paramExample];
-        if (exampleSelect) exampleSelect.value = paramExample;
-        updateExampleLesson(paramExample);
-      }
+      const initialWorkspaceExample =
+        paramExample && exampleSources[paramExample] !== undefined
+          ? paramExample
+          : (exampleMeta[0]?.id ?? Object.keys(exampleSources)[0] ?? "token");
+      const initialWorkspacePath = normalizeWorkspacePath(exampleFileById.get(initialWorkspaceExample) ?? `${initialWorkspaceExample}.cell`);
+      setWorkspace(makeExampleWorkspace(initialWorkspaceExample), initialWorkspacePath, initialWorkspacePath);
+      updateExampleLesson(initialWorkspaceExample);
 
       // ---- Runtime i18n: re-apply localized strings when the locale
       //      changes (the topbar toggle updates <html data-locale>
@@ -1681,12 +2214,18 @@ if (ungroupedPlaygroundExamples.length > 0) {
           const v = getMessage(el.dataset.i18nAriaLabel ?? "", readLocale());
           if (typeof v === "string") el.setAttribute("aria-label", v);
         });
+        document.querySelectorAll<HTMLElement>("[data-i18n-title]").forEach((el) => {
+          const v = getMessage(el.dataset.i18nTitle ?? "", readLocale());
+          if (typeof v === "string") el.setAttribute("title", v);
+        });
         document.querySelectorAll<HTMLElement>("[data-i18n-label]").forEach((el) => {
           const v = getMessage(el.dataset.i18nLabel ?? "", readLocale());
           if (typeof v === "string") el.setAttribute("label", v);
         });
         const pageTitle = pg("pageTitle");
         if (pageTitle) document.title = pageTitle;
+        renderFileTree();
+        updateWorkspaceChrome();
         updateExampleLesson(currentExampleId);
         // Refresh compile-button label for the current state, and the
         // status bar text (re-render the last result if any).

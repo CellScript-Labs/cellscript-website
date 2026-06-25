@@ -30,6 +30,15 @@ export function compile_metadata_json(source: string, target?: string | null): s
 export function compile_metadata_json_diagnostics(source: string, target?: string | null): string;
 
 /**
+ * Compile a virtual multi-file source set and return metadata diagnostics.
+ *
+ * `sources_json` must be a JSON array of `{ path, source, role? }` objects.
+ * `entry_path` selects the source that should produce metadata. This is an
+ * additive API; the single-source functions remain stable.
+ */
+export function compile_metadata_json_sources(sources_json: string, entry_path: string, target?: string | null): string;
+
+/**
  * Query the in-process CellScript language service for browser tooling.
  *
  * `line` and `character` are zero-based UTF-16 positions, matching LSP.
@@ -50,6 +59,7 @@ export interface InitOutput {
     readonly memory: WebAssembly.Memory;
     readonly compile_metadata_json: (a: number, b: number, c: number, d: number) => [number, number];
     readonly compile_metadata_json_diagnostics: (a: number, b: number, c: number, d: number) => [number, number];
+    readonly compile_metadata_json_sources: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
     readonly language_service_json: (a: number, b: number, c: number, d: number) => [number, number];
     readonly version: () => [number, number];
     readonly __wbindgen_externrefs: WebAssembly.Table;

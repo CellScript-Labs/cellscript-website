@@ -16,9 +16,9 @@ export const links = {
 };
 
 /**
- * Minimal type definitions used as inline replacements for cross-file
- * imports. The browser playground compiles one source string, so package
- * imports from examples/ need to become local declarations there.
+ * Minimal type definitions used to keep quick-start examples self-contained.
+ * The browser playground can compile multi-source workspaces, but home cards
+ * and one-click examples still open a single standalone entry file.
  */
 const TOKEN_TYPE_INLINE = `resource Token has store, create, consume, replace, burn, relock {
     amount: u64,
