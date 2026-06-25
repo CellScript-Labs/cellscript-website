@@ -1432,8 +1432,12 @@ source_roots = ["src"]
       const applyCompletion = (completion: LanguageCompletion) => {
         if (!textarea) return;
         const { start, end } = wordRangeAtCursor();
-        const insert = normalizeSnippetInsert(completion.insert_text || completion.label);
-        textarea.value = textarea.value.slice(0, start) + insert + textarea.value.slice(end);
+        const value = textarea.value;
+        const lineStart = value.lastIndexOf("\n", start > 0 ? start - 1 : -1) + 1;
+        const indent = value.slice(lineStart, start).match(/^[ \t]*/)?.[0] ?? "";
+        const insert = normalizeSnippetInsert(completion.insert_text || completion.label)
+          .replace(/\n(?!$)/g, `\n${indent}`);
+        textarea.value = value.slice(0, start) + insert + value.slice(end);
         textarea.selectionStart = textarea.selectionEnd = start + insert.length;
         hideCompletions();
         markEditorChanged();
@@ -1907,6 +1911,148 @@ source_roots = ["src"]
         ["'", "'"],
       ]);
       const autoPairClosers = new Set(Array.from(autoPairs.values()));
+      const indentUnit = "  ";
+
+      const leadingWhitespace = (value: string) =>
+        value.match(/^[ \t]*/)?.[0] ?? "";
+
+      const outdentWidth = (line: string) => {
+        if (line.startsWith(indentUnit)) return indentUnit.length;
+        if (line.startsWith("\t")) return 1;
+        if (line.startsWith(" ")) return 1;
+        return 0;
+      };
+
+      const selectedLineBounds = (value: string, start: number, end: number) => {
+        const from = Math.min(start, end);
+        const to = Math.max(start, end);
+        const adjustedTo = to > from && value[to - 1] === "\n" ? to - 1 : to;
+        const lineStart = value.lastIndexOf("\n", from > 0 ? from - 1 : -1) + 1;
+        const nextLineBreak = value.indexOf("\n", adjustedTo);
+        const lineEnd = nextLineBreak === -1 ? value.length : nextLineBreak;
+        return { lineStart, lineEnd };
+      };
+
+      const insertedLinePrefixesBefore = (lineStarts: number[], position: number) =>
+        lineStarts.filter((lineStart) => lineStart < position).length * indentUnit.length;
+
+      const removedIndentBefore = (
+        removals: Array<{ lineStart: number; remove: number }>,
+        position: number,
+      ) =>
+        removals.reduce((total, item) => {
+          if (position <= item.lineStart) return total;
+          return total + Math.min(item.remove, position - item.lineStart);
+        }, 0);
+
+      const indentSelection = () => {
+        if (!textarea) return;
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const direction = textarea.selectionDirection || "none";
+        const value = textarea.value;
+
+        if (start === end) {
+          textarea.value = value.slice(0, start) + indentUnit + value.slice(end);
+          textarea.setSelectionRange(start + indentUnit.length, start + indentUnit.length, direction);
+          markEditorChanged();
+          return;
+        }
+
+        const { lineStart, lineEnd } = selectedLineBounds(value, start, end);
+        const block = value.slice(lineStart, lineEnd);
+        const lines = block.split("\n");
+        let offset = lineStart;
+        const lineStarts = lines.map((line) => {
+          const current = offset;
+          offset += line.length + 1;
+          return current;
+        });
+        const indented = lines.map((line) => `${indentUnit}${line}`).join("\n");
+        textarea.value = value.slice(0, lineStart) + indented + value.slice(lineEnd);
+        const nextStart = start + insertedLinePrefixesBefore(lineStarts, start);
+        const nextEnd = end + insertedLinePrefixesBefore(lineStarts, end);
+        textarea.setSelectionRange(nextStart, Math.max(nextStart, nextEnd), direction);
+        markEditorChanged();
+      };
+
+      const outdentSelection = () => {
+        if (!textarea) return;
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const direction = textarea.selectionDirection || "none";
+        const value = textarea.value;
+        const { lineStart, lineEnd } = selectedLineBounds(value, start, end);
+        const block = value.slice(lineStart, lineEnd);
+        const lines = block.split("\n");
+        let offset = lineStart;
+        const removals: Array<{ lineStart: number; remove: number }> = [];
+        const outdented = lines.map((line) => {
+          const current = offset;
+          offset += line.length + 1;
+          const remove = outdentWidth(line);
+          if (remove) removals.push({ lineStart: current, remove });
+          return line.slice(remove);
+        }).join("\n");
+        if (!removals.length) return;
+        textarea.value = value.slice(0, lineStart) + outdented + value.slice(lineEnd);
+        const nextStart = Math.max(lineStart, start - removedIndentBefore(removals, start));
+        const nextEnd = Math.max(nextStart, end - removedIndentBefore(removals, end));
+        textarea.setSelectionRange(nextStart, nextEnd, direction);
+        markEditorChanged();
+      };
+
+      const handleEnterKey = () => {
+        if (!textarea) return;
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const value = textarea.value;
+        const lineStart = value.lastIndexOf("\n", start > 0 ? start - 1 : -1) + 1;
+        const lineEnd = value.indexOf("\n", end);
+        const currentLineEnd = lineEnd === -1 ? value.length : lineEnd;
+        const beforeCursor = value.slice(lineStart, start);
+        const afterCursor = value.slice(end, currentLineEnd);
+        const indent = leadingWhitespace(beforeCursor);
+        const trimmedBefore = beforeCursor.trimEnd();
+        const trimmedAfter = afterCursor.trimStart();
+        const open = trimmedBefore.at(-1) ?? "";
+        const close = ["{", "[", "("].includes(open) ? autoPairs.get(open) : undefined;
+        const extraIndent = close ? indentUnit : "";
+        const splitPair = !!close && trimmedAfter.startsWith(close);
+        const insert = splitPair
+          ? `\n${indent}${extraIndent}\n${indent}`
+          : `\n${indent}${extraIndent}`;
+        textarea.value = value.slice(0, start) + insert + value.slice(end);
+        const cursor = splitPair
+          ? start + 1 + indent.length + extraIndent.length
+          : start + insert.length;
+        textarea.setSelectionRange(cursor, cursor);
+        markEditorChanged();
+      };
+
+      const handleClosingOutdentKey = (e: KeyboardEvent) => {
+        if (!textarea || e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return false;
+        if (!["}", "]", ")"].includes(e.key)) return false;
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        if (start !== end) return false;
+        const value = textarea.value;
+        const lineStart = value.lastIndexOf("\n", start > 0 ? start - 1 : -1) + 1;
+        const beforeCursor = value.slice(lineStart, start);
+        if (!/^[ \t]+$/.test(beforeCursor)) return false;
+        const remove = beforeCursor.endsWith(indentUnit)
+          ? indentUnit.length
+          : beforeCursor.endsWith("\t") || beforeCursor.endsWith(" ")
+            ? 1
+            : 0;
+        if (!remove) return false;
+        e.preventDefault();
+        const insertAt = start - remove;
+        textarea.value = value.slice(0, insertAt) + e.key + value.slice(start);
+        textarea.setSelectionRange(insertAt + 1, insertAt + 1);
+        markEditorChanged();
+        return true;
+      };
 
       const handleAutoPairKey = (e: KeyboardEvent) => {
         if (!textarea || e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return false;
@@ -2029,47 +2175,14 @@ source_roots = ["src"]
             return;
           }
           if (handleAutoPairKey(e)) return;
+          if (handleClosingOutdentKey(e)) return;
           if (e.key === "Enter") {
             e.preventDefault();
-            const start = textarea.selectionStart;
-            const end = textarea.selectionEnd;
-            const value = textarea.value;
-            const lineStart = value.lastIndexOf("\n", start - 1) + 1;
-            const beforeCursor = value.slice(lineStart, start);
-            const indent = beforeCursor.match(/^\s*/)?.[0] ?? "";
-            const extraIndent = beforeCursor.trimEnd().endsWith("{") ? "  " : "";
-            const insert = `\n${indent}${extraIndent}`;
-            textarea.value = value.slice(0, start) + insert + value.slice(end);
-            textarea.selectionStart = textarea.selectionEnd = start + insert.length;
-            markEditorChanged();
+            handleEnterKey();
           } else if (e.key === "Tab") {
             e.preventDefault();
-            const start = textarea.selectionStart;
-            const end = textarea.selectionEnd;
-            if (e.shiftKey) {
-              const value = textarea.value;
-              const lineStart = value.lastIndexOf("\n", start - 1) + 1;
-              const lineEnd = end > start ? value.indexOf("\n", Math.max(start, end - 1)) : -1;
-              const selectionEnd = lineEnd === -1 ? value.length : lineEnd;
-              const block = value.slice(lineStart, selectionEnd);
-              let offset = lineStart;
-              let removedBeforeStart = 0;
-              let removedTotal = 0;
-              const outdented = block.split("\n").map((line) => {
-                const remove = line.startsWith("  ") ? 2 : line.startsWith(" ") ? 1 : 0;
-                if (remove && offset < start) removedBeforeStart += remove;
-                removedTotal += remove;
-                offset += line.length + 1;
-                return line.slice(remove);
-              }).join("\n");
-              textarea.value = value.slice(0, lineStart) + outdented + value.slice(selectionEnd);
-              textarea.selectionStart = Math.max(lineStart, start - removedBeforeStart);
-              textarea.selectionEnd = Math.max(textarea.selectionStart, end - removedTotal);
-            } else {
-              textarea.value = textarea.value.slice(0, start) + "  " + textarea.value.slice(end);
-              textarea.selectionStart = textarea.selectionEnd = start + 2;
-            }
-            markEditorChanged();
+            if (e.shiftKey) outdentSelection();
+            else indentSelection();
           } else if (e.key === "." || e.key === ":") {
             window.setTimeout(() => requestLanguage("completion"), 0);
           }
