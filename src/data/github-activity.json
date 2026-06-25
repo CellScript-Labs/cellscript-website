@@ -24,6 +24,27 @@
   ],
   "commits": [
     {
+      "sha": "4e241da",
+      "message": "Update website editor indentation",
+      "author": "Arthur",
+      "date": "2026-06-25",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/4e241da70916085cff7b1c7921162a31845bc4fd"
+    },
+    {
+      "sha": "658fbd3",
+      "message": "Update website playground menu fix",
+      "author": "Arthur",
+      "date": "2026-06-25",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/658fbd3a317c19880d9ff97d6c5c417eeb90a927"
+    },
+    {
+      "sha": "a368b68",
+      "message": "Complete multi-file workspace support",
+      "author": "Arthur",
+      "date": "2026-06-25",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/a368b6829dd5a1baf2db6fc6de182b01defe43a1"
+    },
+    {
       "sha": "35f691e",
       "message": "Update website navigation polish",
       "author": "Arthur",
@@ -36,27 +57,6 @@
       "author": "Arthur",
       "date": "2026-06-25",
       "url": "https://github.com/CellScript-Labs/CellScript/commit/69efa771b332a14e13b86125d0a38b0ad7a4eb6d"
-    },
-    {
-      "sha": "d76cd73",
-      "message": "Report multiple diagnostics from cellc commands",
-      "author": "Arthur",
-      "date": "2026-06-25",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/d76cd73e6e3bb2756af8db96ad6639b80c881a00"
-    },
-    {
-      "sha": "74a314d",
-      "message": "Improve compiler diagnostics for playground",
-      "author": "Arthur",
-      "date": "2026-06-24",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/74a314d70b0061ff25b5a707ab656704e351c243"
-    },
-    {
-      "sha": "e37d47d",
-      "message": "Update website landing page redesign",
-      "author": "Tawan",
-      "date": "2026-06-24",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/e37d47d643f2807154b51d26f43d30da55638d46"
     }
   ]
 }
