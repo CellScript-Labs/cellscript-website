@@ -24,39 +24,39 @@
   ],
   "commits": [
     {
+      "sha": "35f691e",
+      "message": "Update website navigation polish",
+      "author": "Arthur",
+      "date": "2026-06-25",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/35f691e49457bbee35a510af253e7b4e2e3b2636"
+    },
+    {
+      "sha": "69efa77",
+      "message": "Fix entry cache and add artifact size evidence",
+      "author": "Arthur",
+      "date": "2026-06-25",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/69efa771b332a14e13b86125d0a38b0ad7a4eb6d"
+    },
+    {
+      "sha": "d76cd73",
+      "message": "Report multiple diagnostics from cellc commands",
+      "author": "Arthur",
+      "date": "2026-06-25",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/d76cd73e6e3bb2756af8db96ad6639b80c881a00"
+    },
+    {
+      "sha": "74a314d",
+      "message": "Improve compiler diagnostics for playground",
+      "author": "Arthur",
+      "date": "2026-06-24",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/74a314d70b0061ff25b5a707ab656704e351c243"
+    },
+    {
       "sha": "e37d47d",
       "message": "Update website landing page redesign",
       "author": "Tawan",
       "date": "2026-06-24",
       "url": "https://github.com/CellScript-Labs/CellScript/commit/e37d47d643f2807154b51d26f43d30da55638d46"
-    },
-    {
-      "sha": "5629084",
-      "message": "Merge remote-tracking branch 'public/main'",
-      "author": "Tawan",
-      "date": "2026-06-24",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/56290841d2c9485d1caf46a8c452494f258cc4d4"
-    },
-    {
-      "sha": "2308980",
-      "message": "Update iCKB audit flow pointer",
-      "author": "Tawan",
-      "date": "2026-06-24",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/2308980465822436f9e6fb472952e996fe469d73"
-    },
-    {
-      "sha": "8602e3e",
-      "message": "Prepare 0.20.0 rc1 release",
-      "author": "Tawan",
-      "date": "2026-06-24",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/8602e3ea41f8a946b4e17f74edb2c9eaa774aaaa"
-    },
-    {
-      "sha": "b59a15b",
-      "message": "Update README model section pointers",
-      "author": "Tawan",
-      "date": "2026-06-24",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/b59a15b24092e73b8505aefd3de2d6286c7174bb"
     }
   ]
 }
