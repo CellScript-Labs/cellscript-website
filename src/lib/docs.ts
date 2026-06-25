@@ -2,6 +2,7 @@ import { existsSync, readdirSync, readFileSync } from "node:fs";
 import { basename, dirname, extname, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { Marked, Renderer } from "marked";
+import { renderSource } from "./highlight";
 
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(here, "..", "..", "..");
@@ -92,6 +93,13 @@ const buildFileHrefMap = (files: readonly string[]): Map<string, string> => {
   return map;
 };
 
+const cellScriptCodeLanguages = new Set(["cellscript", "cell", ".cell", "cells"]);
+
+const codeLanguageName = (lang?: string): string => (lang ?? "").trim().split(/\s+/)[0]?.toLowerCase() ?? "";
+
+const isCellScriptCodeLanguage = (lang?: string): boolean =>
+  cellScriptCodeLanguages.has(codeLanguageName(lang));
+
 /*
  * Markdown sources remain GitHub-Wiki friendly. The website renderer rewrites:
  * - relative wiki links: Tutorial-02-Language-Basics.md -> /docs/tutorial-02-language-basics/
@@ -151,10 +159,14 @@ const makeMarked = (fileHrefMap: Map<string, string>, headings: DocsHeading[]): 
   };
 
   renderer.code = ({ text, lang }) => {
-    if ((lang ?? "").trim().toLowerCase() === "mermaid") {
+    const languageName = codeLanguageName(lang);
+    if (languageName === "mermaid") {
       return `<pre class="mermaid">${escapeHtml(text)}</pre>`;
     }
     const language = lang ? ` data-language="${escapeHtml(lang)}"` : "";
+    if (isCellScriptCodeLanguage(lang)) {
+      return `<pre class="docs-code docs-code-cellscript"${language}><code>${renderSource(text)}</code></pre>`;
+    }
     return `<pre class="docs-code"${language}><code>${escapeHtml(text)}</code></pre>`;
   };
 

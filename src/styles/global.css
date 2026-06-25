@@ -1729,6 +1729,15 @@ body.home-body {
   line-height: 1.65;
 }
 
+.docs-code-cellscript code {
+  color: var(--text);
+  tab-size: 2;
+}
+
+.docs-code-cellscript .token-comment {
+  font-style: italic;
+}
+
 .docs-content pre.mermaid {
   color: var(--text);
   text-align: center;
