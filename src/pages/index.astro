@@ -134,7 +134,8 @@ const workflowIconComponents = {
           <p data-i18n="hero.subtitle">{t.hero.subtitle}</p>
           <div class="hero-actions">
             <a class="button primary" href={`/playground?example=${heroExamples[0].id}`} data-i18n="hero.playground.cta">{t.hero.playground.cta}</a>
-            <a class="button" href={links.docs} target="_blank" rel="noopener noreferrer" data-i18n="nav.docs">{t.nav.docs}</a>
+            <a class="button" href={links.docs} data-i18n="nav.docs">{t.nav.docs}</a>
+            <a class="button" href={links.discussion} target="_blank" rel="noopener noreferrer" data-i18n="heroStatus.discussion">{t.heroStatus.discussion}</a>
           </div>
           <HeroStatus compact />
         </div>

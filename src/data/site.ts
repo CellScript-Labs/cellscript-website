@@ -9,6 +9,7 @@ const repoRoot = resolve(here, "..", "..", "..");
 
 export const links = {
   docs: "/docs/",
+  discussion: "https://talk.nervos.org/t/cellscript-a-dsl-for-cell-based-contracts/10193/9",
   examples: "https://github.com/CellScript-Labs/CellScript/tree/main/examples",
   source: "https://github.com/CellScript-Labs/CellScript",
   wiki: "https://github.com/CellScript-Labs/CellScript/wiki",

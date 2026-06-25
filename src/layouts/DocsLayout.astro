@@ -4,7 +4,7 @@ import SiteHeader from "../components/SiteHeader.astro";
 import { ClientRouter } from "astro:transitions";
 import { defaultLocale, translations } from "../i18n/translations";
 import type { DocsNeighbor, DocsPage } from "../lib/docs";
-import { ArrowLeft, ArrowRight, Github, ListTree } from "lucide-astro";
+import { ArrowLeft, ArrowRight, ListTree } from "lucide-astro";
 
 interface Props {
   page: DocsPage;
@@ -72,10 +72,6 @@ const title = `${page.title} — CellScript Docs`;
         <header class="docs-hero">
           <p class="docs-eyebrow">CellScript Wiki</p>
           <h1>{page.title}</h1>
-          <a class="docs-github-link" href={`https://github.com/CellScript-Labs/CellScript/wiki/${page.file.replace(/\.md$/, "")}`} target="_blank" rel="noopener noreferrer">
-            <Github aria-hidden="true" />
-            <span>Open mirror</span>
-          </a>
         </header>
 
         <div class="docs-content" set:html={page.html} />

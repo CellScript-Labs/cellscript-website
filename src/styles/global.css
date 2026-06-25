@@ -670,102 +670,67 @@ body.home-body {
 }
 
 .hero-status {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
   width: 100%;
-  margin: 18px 0 0;
+  margin: 16px 0 0;
 }
 
-.hero-status-item {
+.hero-release-tag {
   min-width: 0;
-  min-height: 78px;
-  display: grid;
-  grid-template-columns: 22px minmax(0, 1fr);
+  min-height: 34px;
+  display: inline-flex;
   align-items: center;
-  gap: 10px;
-  padding: 12px;
+  gap: 8px;
+  padding: 0 11px;
   border: 1px solid var(--line-soft);
-  border-radius: 8px;
-  color: var(--text);
-  text-decoration: none;
+  border-radius: 999px;
+  color: var(--muted);
   background:
     linear-gradient(180deg, var(--line-inner-soft), var(--color-transparent)),
     var(--panel-soft);
-  box-shadow: 0 12px 38px var(--shadow-soft);
-  transition:
-    border-color var(--duration-fast) var(--ease-standard),
-    background-color var(--duration-fast) var(--ease-standard),
-    transform var(--duration-fast) var(--ease-quick);
+  box-shadow: 0 10px 30px var(--shadow-soft);
 }
 
-.hero-status-item:hover,
-.hero-status-item:focus-visible {
-  border-color: var(--accent-line);
-  background: var(--accent-surface);
-  transform: translateY(-2px);
-}
-
-.hero-status-item svg {
-  width: 20px;
-  height: 20px;
+.hero-release-tag svg {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
   color: var(--accent);
 }
 
-.hero-status-item span {
-  min-width: 0;
-  display: grid;
-  gap: 3px;
-}
-
-.hero-status-item small {
+.hero-release-tag small {
   color: var(--dim);
   font-size: 0.68rem;
-  font-weight: 700;
+  font-weight: 750;
   line-height: 1;
   text-transform: uppercase;
 }
 
-.hero-status-item strong {
+.hero-release-tag strong {
   min-width: 0;
   overflow: hidden;
   color: var(--text);
   font-size: 0.82rem;
-  font-weight: 650;
-  line-height: 1.25;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.hero-status-item time,
-.hero-status-item code {
-  grid-column: 2;
-  overflow: hidden;
-  color: var(--dim);
-  font-family: var(--font-mono);
-  font-size: 0.68rem;
+  font-weight: 700;
   line-height: 1;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.hero-status-compact {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.hero-status-compact .hero-status-item {
-  min-height: 66px;
-  padding: 10px 11px;
-}
-
-.hero-status-compact .hero-status-feedback {
-  display: none;
+.hero-release-tag time {
+  color: var(--dim);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  line-height: 1;
+  white-space: nowrap;
 }
 
 .hero-copy .hero-status {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
   max-width: 680px;
-  margin-top: 22px;
+  margin-top: 18px;
 }
 
 
@@ -1484,34 +1449,6 @@ body.home-body {
   color: var(--text-soft);
   font-size: 1.08rem;
   line-height: 1.62;
-}
-
-.docs-github-link {
-  width: fit-content;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 24px;
-  padding: 9px 12px;
-  border: 1px solid var(--line-soft);
-  border-radius: 7px;
-  color: var(--text-soft);
-  background: var(--surface-button);
-  text-decoration: none;
-  font-size: 0.88rem;
-  font-weight: 600;
-}
-
-.docs-github-link:hover {
-  color: var(--text);
-  border-color: var(--accent-line);
-  background: var(--accent-surface);
-}
-
-.docs-github-link svg {
-  width: 17px;
-  height: 17px;
-  color: var(--accent);
 }
 
 .docs-content {
@@ -3247,7 +3184,7 @@ tr:last-child td {
 @media (max-width: 1100px) {
   .hero-status,
   .hero-status-compact {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    justify-content: flex-start;
   }
 
   .docs-shell {
@@ -3484,7 +3421,7 @@ tr:last-child td {
 
   .hero-status,
   .hero-status-compact {
-    grid-template-columns: 1fr;
+    justify-content: flex-start;
   }
 
   .theme-toggle {
