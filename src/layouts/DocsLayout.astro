@@ -4,7 +4,7 @@ import SiteHeader from "../components/SiteHeader.astro";
 import { ClientRouter } from "astro:transitions";
 import { defaultLocale, translations } from "../i18n/translations";
 import type { DocsNeighbor, DocsPage } from "../lib/docs";
-import { ArrowLeft, ArrowRight, ListTree } from "lucide-astro";
+import { ArrowLeft, ArrowRight, ListTree, Search } from "lucide-astro";
 
 interface Props {
   page: DocsPage;
@@ -59,9 +59,20 @@ const title = `${page.title} — CellScript Docs`;
           <ListTree aria-hidden="true" />
           <span>Docs</span>
         </div>
-        <nav class="docs-nav">
+        <div class="docs-search-box">
+          <Search class="docs-search-icon" aria-hidden="true" />
+          <input
+            type="search"
+            class="docs-search-input"
+            placeholder="Search docs…"
+            aria-label="Search docs"
+            data-docs-search
+            autocomplete="off"
+          />
+        </div>
+        <nav class="docs-nav" data-docs-nav>
           {pages.map((item) => (
-            <a href={item.href} class:list={["docs-nav-link", item.slug === page.slug && "active"]}>
+            <a href={item.href} class:list={["docs-nav-link", item.slug === page.slug && "active"]} data-docs-title={item.title.toLowerCase()}>
               <span>{item.title}</span>
             </a>
           ))}
@@ -96,6 +107,15 @@ const title = `${page.title} — CellScript Docs`;
             </a>
           )}
         </nav>
+
+        <details class="docs-toc-mobile" data-docs-toc-mobile>
+          <summary>On this page</summary>
+          <nav>
+            {page.headings.filter((heading) => heading.depth > 1).map((heading) => (
+              <a href={`#${heading.id}`} class={`depth-${heading.depth}`}>{heading.text}</a>
+            ))}
+          </nav>
+        </details>
       </article>
 
       <aside class="docs-toc" aria-label="On this page">
@@ -107,6 +127,20 @@ const title = `${page.title} — CellScript Docs`;
         </nav>
       </aside>
     </main>
+
+    <script>
+      // ---- Docs sidebar search ----
+      const searchInput = document.querySelector<HTMLInputElement>("[data-docs-search]");
+      const navLinks = Array.from(document.querySelectorAll<HTMLAnchorElement>(".docs-nav-link"));
+      searchInput?.addEventListener("input", () => {
+        const query = (searchInput.value || "").toLowerCase().trim();
+        navLinks.forEach((link) => {
+          const title = link.dataset.docsTitle ?? "";
+          const visible = !query || title.includes(query);
+          link.style.display = visible ? "" : "none";
+        });
+      });
+    </script>
 
     <script>
       let mermaidModule: typeof import("mermaid") | undefined;

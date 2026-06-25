@@ -779,6 +779,13 @@ if (ungroupedPlaygroundExamples.length > 0) {
           highlight.scrollLeft = textarea.scrollLeft;
         }
         if (gutter) gutter.scrollTop = textarea.scrollTop;
+        if (editor) {
+          if (textarea.scrollWidth > textarea.clientWidth + 2) {
+            editor.dataset.overflowX = "";
+          } else {
+            delete editor.dataset.overflowX;
+          }
+        }
         renderDiagnosticLayer();
         repositionFloatingTools();
       };

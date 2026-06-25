@@ -158,6 +158,27 @@ const makeMarked = (fileHrefMap: Map<string, string>, headings: DocsHeading[]): 
     return `<pre class="docs-code"${language}><code>${escapeHtml(text)}</code></pre>`;
   };
 
+  // GitHub-style admonitions: > [!NOTE], > [!TIP], > [!WARNING], > [!IMPORTANT]
+  (renderer as any).blockquote = function ({ tokens }: any) {
+    const first = tokens[0];
+    if (first?.type === "paragraph") {
+      const raw = (first.tokens ?? []).map((t: any) => t.raw).join("");
+      const m = raw.match(/^\s*\[!(NOTE|TIP|WARNING|IMPORTANT|CAUTION)\]\s*/i);
+      if (m) {
+        const type = m[1].toLowerCase();
+        const rest = raw.slice(m[0].length);
+        if (rest) {
+          first.tokens = [{ type: "text", raw: rest }];
+        } else {
+          tokens.shift();
+        }
+        const inner = this.parser.parse(tokens);
+        return `<div class="docs-callout docs-callout-${type}">${inner}</div>`;
+      }
+    }
+    return `<blockquote>${this.parser.parse(tokens)}</blockquote>`;
+  };
+
   return new Marked({ gfm: true, breaks: false, renderer });
 };
 

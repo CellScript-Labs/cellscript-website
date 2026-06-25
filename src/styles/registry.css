@@ -483,7 +483,7 @@
 .registry-tabs {
   position: sticky;
   top: 0;
-  z-index: 10;
+  z-index: var(--z-sticky);
   display: flex;
   gap: 6px;
   padding: 12px 0;
@@ -1652,5 +1652,177 @@
     width: min(100% - 40px, 760px);
     align-content: start;
     padding-top: 94px;
+  }
+}
+
+/* ---- Registry phase track ---- */
+.registry-phase-track {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin: 28px 0;
+  padding: 20px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.registry-phase {
+  display: grid;
+  gap: 4px;
+}
+
+.registry-phase-dot {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 1px solid var(--line-soft);
+  background: var(--panel-soft);
+  margin-bottom: 4px;
+}
+
+.registry-phase-dot svg {
+  width: 14px;
+  height: 14px;
+}
+
+.registry-phase-done .registry-phase-dot {
+  border-color: var(--accent-line);
+  background: var(--accent-surface);
+  color: var(--accent);
+}
+
+.registry-phase-active .registry-phase-dot {
+  border-color: var(--accent-warm-line);
+  background: var(--accent-warm-surface);
+  color: var(--accent-warm);
+  animation: phase-pulse 2.4s var(--ease-standard) infinite alternate;
+}
+
+.registry-phase-pending .registry-phase-dot {
+  opacity: 0.4;
+}
+
+@keyframes phase-pulse {
+  from { box-shadow: 0 0 0 0 var(--accent-warm-line); }
+  to { box-shadow: 0 0 0 6px transparent; }
+}
+
+.registry-phase-label {
+  font-family: var(--font-mono);
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.registry-phase-active .registry-phase-label {
+  color: var(--accent-warm);
+}
+
+.registry-phase-title {
+  font-size: 0.82rem;
+  line-height: 1.2;
+  color: var(--text);
+}
+
+.registry-phase-pending .registry-phase-title {
+  color: var(--muted);
+}
+
+.registry-phase-caption {
+  margin: 0;
+  font-size: 0.74rem;
+  line-height: 1.4;
+  color: var(--muted);
+}
+
+/* ---- Registry notify card ---- */
+.registry-notify-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  margin-top: 20px;
+  padding: 20px 24px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  background: var(--panel);
+}
+
+.registry-notify-icon {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--accent-line);
+  background: var(--accent-surface);
+  color: var(--accent);
+}
+
+.registry-notify-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+.registry-notify-body {
+  flex: 1;
+  min-width: 0;
+}
+
+.registry-notify-label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--text-soft);
+}
+
+.registry-notify-form {
+  display: flex;
+  gap: 8px;
+}
+
+.registry-notify-input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-sm);
+  background: var(--panel-soft);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-size: 0.84rem;
+}
+
+.registry-notify-input:focus {
+  outline: none;
+  border-color: var(--accent-line);
+}
+
+.registry-notify-input::placeholder {
+  color: var(--dim);
+}
+
+.registry-notify-done {
+  margin: 8px 0 0;
+  color: var(--accent);
+  font-size: 0.84rem;
+}
+
+@media (max-width: 768px) {
+  .registry-phase-track {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .registry-notify-form {
+    flex-direction: column;
   }
 }
