@@ -88,7 +88,9 @@ export const translations = {
     },
     hero: {
       title: "CellScript",
-      subtitle: "Write the transaction shape you expect, compile it to CKB VM artifacts in a tight loop, and keep the metadata reviewers need after the build.",
+      eyebrow: "CellScript for CKB",
+      headline: "Write the transaction you expect. Ship the cell you can prove.",
+      subtitle: "Describe CKB contracts as readable state changes. The compiler checks them, lowers them to on-chain artifacts, and keeps the metadata reviewers need — all from one source.",
       getStarted: "Get started",
       coreModel: "Core model",
       examplesLabel: "CellScript examples",
@@ -465,6 +467,15 @@ export const translations = {
       spec: "Spec",
       examples: "Examples",
       source: "Source",
+      discussion: "Discussion",
+    },
+    notFound: {
+      eyebrow: "Error 404",
+      title: "This cell got spent.",
+      lead: "The page you're looking for doesn't exist — or was consumed by a transaction. Let's get you back to a live cell.",
+      ctaHome: "Back to home",
+      ctaPlayground: "Open the playground",
+      ctaDocs: "Read the docs",
     },
     registry: {
       appLabel: "Registry application",
@@ -671,7 +682,9 @@ export const translations = {
     },
     hero: {
       title: "CellScript",
-      subtitle: "把预期交易形状写清楚，在紧凑循环里编译成 CKB VM 产物，并保留构建后审查者需要的元数据。",
+      eyebrow: "面向 CKB 的 CellScript",
+      headline: "写下你预期的交易。交付你能证明的 cell。",
+      subtitle: "把 CKB 合约写成可读的状态变更。编译器负责校验、降低为链上产物，并保留审查者所需的元数据 —— 全部来自同一份源码。",
       getStarted: "开始使用",
       coreModel: "核心模型",
       examplesLabel: "CellScript 示例",
@@ -1048,6 +1061,15 @@ export const translations = {
       spec: "规范",
       examples: "示例",
       source: "源码",
+      discussion: "讨论区",
+    },
+    notFound: {
+      eyebrow: "错误 404",
+      title: "这个 cell 已被消费。",
+      lead: "你要找的页面不存在——或者已被一笔交易消费掉了。带你回到一个活着的 cell。",
+      ctaHome: "返回首页",
+      ctaPlayground: "打开试写区",
+      ctaDocs: "阅读文档",
     },
     registry: {
       appLabel: "包注册表应用",
