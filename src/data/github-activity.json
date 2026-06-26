@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "tag": "v0.20.0-rc.2",
+      "name": "CellScript 0.20.0-rc.2",
+      "date": "2026-06-25",
+      "body": "## Installation\r\n\r\n### One-line install (Global)\r\n\r\n```bash\r\ncurl -fsSL https://raw.githubusercontent.com/CellScript-Labs/CellScript/main/s\u2026",
+      "url": "https://github.com/CellScript-Labs/CellScript/releases/tag/v0.20.0-rc.2"
+    },
+    {
       "tag": "v0.20.0-rc.1",
       "name": "CellScript 0.20.0-rc.1",
       "date": "2026-06-24",
@@ -13,50 +20,43 @@
       "date": "2026-06-21",
       "body": "CellScript 0.16.2 is a builder-ergonomics patch for CKB resource identity\r\nhandoff. It keeps the 0.16 compiler/runtime scope, while making\u2026",
       "url": "https://github.com/CellScript-Labs/CellScript/releases/tag/v0.16.2"
-    },
-    {
-      "tag": "v0.16.1",
-      "name": "CellScript 0.16.1",
-      "date": "2026-06-15",
-      "body": "CellScript 0.16.1 is a patch release for bundled example lifecycle clarity and\r\nbuilder handoff. It keeps the 0.16 assurance/tooling scope,\u2026",
-      "url": "https://github.com/CellScript-Labs/CellScript/releases/tag/v0.16.1"
     }
   ],
   "commits": [
     {
-      "sha": "4e241da",
-      "message": "Update website editor indentation",
+      "sha": "875436f",
+      "message": "Improve cellc multi-diagnostic CLI output",
       "author": "Arthur",
       "date": "2026-06-25",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/4e241da70916085cff7b1c7921162a31845bc4fd"
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/875436ffc1e2468072fb30c52ccfa287d645a697"
     },
     {
-      "sha": "658fbd3",
-      "message": "Update website playground menu fix",
+      "sha": "2a35070",
+      "message": "Improve cellc CLI diagnostics",
       "author": "Arthur",
       "date": "2026-06-25",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/658fbd3a317c19880d9ff97d6c5c417eeb90a927"
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/2a3507055af7a6a2de19671d528b4bf234f654e4"
     },
     {
-      "sha": "a368b68",
-      "message": "Complete multi-file workspace support",
+      "sha": "32a967c",
+      "message": "Fix wiki tutorial accuracy",
       "author": "Arthur",
       "date": "2026-06-25",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/a368b6829dd5a1baf2db6fc6de182b01defe43a1"
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/32a967cc3218a273d5236bb2d93c828960e733d2"
     },
     {
-      "sha": "35f691e",
-      "message": "Update website navigation polish",
+      "sha": "0bca9ab",
+      "message": "Update website highlighting audit",
       "author": "Arthur",
       "date": "2026-06-25",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/35f691e49457bbee35a510af253e7b4e2e3b2636"
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/0bca9ab2f8d22a2c19f8d53b4efec50807a00cfe"
     },
     {
-      "sha": "69efa77",
-      "message": "Fix entry cache and add artifact size evidence",
+      "sha": "b7a4d99",
+      "message": "Update website syntax highlighting",
       "author": "Arthur",
       "date": "2026-06-25",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/69efa771b332a14e13b86125d0a38b0ad7a4eb6d"
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/b7a4d993d2eebd4921f7c1d73021f0016b4c0a83"
     }
   ]
 }
