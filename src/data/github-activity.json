@@ -24,6 +24,13 @@
   ],
   "commits": [
     {
+      "sha": "535cbc1",
+      "message": "Improve multi-diagnostic recovery and reporting",
+      "author": "Arthur",
+      "date": "2026-06-26",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/535cbc1d4de307a5e25e72b41cfdc46f9baeb358"
+    },
+    {
       "sha": "875436f",
       "message": "Improve cellc multi-diagnostic CLI output",
       "author": "Arthur",
@@ -50,13 +57,6 @@
       "author": "Arthur",
       "date": "2026-06-25",
       "url": "https://github.com/CellScript-Labs/CellScript/commit/0bca9ab2f8d22a2c19f8d53b4efec50807a00cfe"
-    },
-    {
-      "sha": "b7a4d99",
-      "message": "Update website syntax highlighting",
-      "author": "Arthur",
-      "date": "2026-06-25",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/b7a4d993d2eebd4921f7c1d73021f0016b4c0a83"
     }
   ]
 }
