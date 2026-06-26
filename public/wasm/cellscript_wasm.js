@@ -35,10 +35,10 @@ export function compile_metadata_json(source, target) {
  * Compile CellScript source and return a stable result envelope for tools.
  *
  * On success the response is:
- * `{ "metadata": <CompileMetadata>, "diagnostics": [] }`
+ * `{ "metadata": <CompileMetadata>, "diagnostic_count": 0, "error_count": 0, "warning_count": 0, "diagnostics": [] }`
  *
  * On failure the response is:
- * `{ "metadata": null, "diagnostics": [{ message, severity, code, range }, ...] }`
+ * `{ "metadata": null, "diagnostic_count": N, "error_count": E, "warning_count": W, "diagnostics": [{ message, severity, code, range }, ...] }`
  *
  * `range` is omitted when the compiler error is not tied to a source
  * span. Offsets are UTF-8 byte offsets from the original source; line and
@@ -238,10 +238,11 @@ if (!('encodeInto' in cachedTextEncoder)) {
 
 let WASM_VECTOR_LEN = 0;
 
-let wasm;
+let wasmModule, wasmInstance, wasm;
 function __wbg_finalize_init(instance, module) {
-    void module;
+    wasmInstance = instance;
     wasm = instance.exports;
+    wasmModule = module;
     cachedUint8ArrayMemory0 = null;
     wasm.__wbindgen_start();
     return wasm;
