@@ -136,6 +136,24 @@ const workflowIconComponents = {
             <a class="button primary" href={`/playground?example=${heroExamples[0].id}`} data-i18n="hero.playground.cta">{t.hero.playground.cta}</a>
             <a class="button ghost" href={links.docs} data-i18n="hero.getStarted">{t.hero.getStarted}</a>
           </div>
+          <div class="hero-registry" aria-label="CellScript Registry">
+            <div class="hero-registry-head">
+              <a class="hero-registry-title" href="/registry" data-i18n="registry.eyebrow">CellScript Registry</a>
+              <div class="hero-registry-links">
+                <a href="/registry/submit" data-i18n="registry.submitPackage">{t.registry.submitPackage}</a>
+                <a href="/learn" data-i18n="nav.learn">{t.nav.learn}</a>
+              </div>
+            </div>
+            <form class="home-search" action="/registry" role="search">
+              <input
+                data-home-search
+                type="search"
+                name="q"
+                placeholder={t.registry.browse.searchPlaceholder}
+                aria-label={t.registry.browse.searchAria}
+              />
+            </form>
+          </div>
           <HeroStatus compact />
         </div>
 
