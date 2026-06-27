@@ -24,39 +24,39 @@
   ],
   "commits": [
     {
-      "sha": "535cbc1",
-      "message": "Improve multi-diagnostic recovery and reporting",
-      "author": "Arthur",
+      "sha": "915bdc9",
+      "message": "Update website submodule for unified playground handle",
+      "author": "Tawan",
+      "date": "2026-06-27",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/915bdc9a5b8165306eb45b2afe9bd54873bf5cd7"
+    },
+    {
+      "sha": "e03e41c",
+      "message": "Update website submodule for playground editor polish",
+      "author": "Tawan",
+      "date": "2026-06-27",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/e03e41cdecb333c13348b20c64b27781c4b0bc10"
+    },
+    {
+      "sha": "cebdd05",
+      "message": "Update website submodule for audit fixes",
+      "author": "Tawan",
+      "date": "2026-06-27",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/cebdd059e28002cb1ce47f6d0760c188f00e3dfe"
+    },
+    {
+      "sha": "7e0e68b",
+      "message": "Update website submodule for UI polish",
+      "author": "Tawan",
+      "date": "2026-06-27",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/7e0e68b4ec11195907186826793ab7ae76f65c34"
+    },
+    {
+      "sha": "b55e8ab",
+      "message": "Fix large compile error gate regression",
+      "author": "Tawan",
       "date": "2026-06-26",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/535cbc1d4de307a5e25e72b41cfdc46f9baeb358"
-    },
-    {
-      "sha": "875436f",
-      "message": "Improve cellc multi-diagnostic CLI output",
-      "author": "Arthur",
-      "date": "2026-06-25",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/875436ffc1e2468072fb30c52ccfa287d645a697"
-    },
-    {
-      "sha": "2a35070",
-      "message": "Improve cellc CLI diagnostics",
-      "author": "Arthur",
-      "date": "2026-06-25",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/2a3507055af7a6a2de19671d528b4bf234f654e4"
-    },
-    {
-      "sha": "32a967c",
-      "message": "Fix wiki tutorial accuracy",
-      "author": "Arthur",
-      "date": "2026-06-25",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/32a967cc3218a273d5236bb2d93c828960e733d2"
-    },
-    {
-      "sha": "0bca9ab",
-      "message": "Update website highlighting audit",
-      "author": "Arthur",
-      "date": "2026-06-25",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/0bca9ab2f8d22a2c19f8d53b4efec50807a00cfe"
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/b55e8ab66fa40848af606a5d56d4a43cbaa7acb4"
     }
   ]
 }
