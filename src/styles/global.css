@@ -4362,7 +4362,6 @@ tr:last-child td {
   display: grid;
   grid-template-columns:
     minmax(420px, var(--pg-source-col, 1.28fr))
-    var(--pg-resizer-width)
     minmax(300px, var(--pg-output-col, 1.02fr))
     var(--pg-resizer-width)
     minmax(220px, var(--pg-rail-col, 260px));
@@ -4381,11 +4380,11 @@ tr:last-child td {
 }
 
 .pg-output {
-  grid-column: 3;
+  grid-column: 2;
 }
 
 .pg-rail {
-  grid-column: 5;
+  grid-column: 4;
 }
 
 .pg-resizer {
@@ -4449,6 +4448,76 @@ tr:last-child td {
 .pg-resizer:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: -2px;
+}
+
+.pg-scroll-resizer {
+  position: absolute;
+  top: 50%;
+  right: 3px;
+  z-index: var(--z-elevated);
+  width: 12px;
+  min-width: 12px;
+  height: 72px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: var(--color-transparent);
+  cursor: col-resize;
+  touch-action: none;
+  transform: translateY(-50%);
+}
+
+.pg-scroll-resizer::before {
+  content: "";
+  position: absolute;
+  top: 8px;
+  right: 4px;
+  bottom: 8px;
+  width: 4px;
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, var(--color-transparent), var(--accent-line), var(--color-transparent)),
+    var(--scrollbar-thumb);
+  opacity: 0.72;
+  transition:
+    opacity var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
+}
+
+.pg-scroll-resizer::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  right: 3px;
+  width: 6px;
+  height: 18px;
+  border-radius: 999px;
+  background:
+    linear-gradient(180deg, var(--line-inner), var(--color-transparent) 42%, var(--line-inner) 58%, var(--color-transparent)),
+    var(--accent);
+  opacity: 0.5;
+  transform: translateY(-50%);
+  transition:
+    opacity var(--duration-fast) var(--ease-standard),
+    height var(--duration-fast) var(--ease-standard);
+}
+
+.pg-scroll-resizer:hover::before,
+.pg-scroll-resizer:focus-visible::before,
+.pg-main[data-resizing="true"] .pg-scroll-resizer::before {
+  opacity: 0.96;
+}
+
+.pg-scroll-resizer:hover::after,
+.pg-scroll-resizer:focus-visible::after,
+.pg-main[data-resizing="true"] .pg-scroll-resizer::after {
+  height: 28px;
+  opacity: 0.82;
+}
+
+.pg-scroll-resizer:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
 }
 
 .pg-main[data-resizing="true"],
@@ -4834,7 +4903,6 @@ tr:last-child td {
 /* ---- Editor ---- */
 
 .pg-editor {
-  --pg-editor-control-lane: 18px;
   position: relative;
   flex: 1 1 auto;
   overflow: hidden;
@@ -4847,7 +4915,7 @@ tr:last-child td {
   top: 0;
   right: 0;
   bottom: 0;
-  width: var(--pg-editor-control-lane);
+  width: 12px;
   pointer-events: none;
   z-index: var(--z-base);
   border-left: 1px solid var(--line-inner);
@@ -4861,7 +4929,7 @@ tr:last-child td {
   content: "";
   position: absolute;
   top: 0;
-  right: var(--pg-editor-control-lane);
+  right: 12px;
   bottom: 0;
   z-index: var(--z-elevated);
   width: 22px;
@@ -4952,10 +5020,10 @@ tr:last-child td {
 .pg-highlight,
 .pg-textarea {
   position: absolute;
-  inset: 0 var(--pg-editor-control-lane) 0 0;
+  inset: 0;
   margin: 0;
   /* Leave room on the left for the line-number gutter. */
-  padding: 14px 22px 18px 60px;
+  padding: 14px 30px 18px 60px;
   border: 0;
   font-family: var(--font-mono);
   font-size: 0.82rem;
@@ -4976,7 +5044,7 @@ tr:last-child td {
 
 .pg-diagnostic-layer {
   position: absolute;
-  inset: 0 var(--pg-editor-control-lane) 0 0;
+  inset: 0;
   z-index: var(--z-base);
   overflow: hidden;
   pointer-events: none;
@@ -5753,7 +5821,6 @@ tr:last-child td {
   .pg-main {
     grid-template-columns:
       minmax(360px, var(--pg-source-col, 1fr))
-      var(--pg-resizer-width)
       minmax(250px, var(--pg-output-col, 1fr))
       var(--pg-resizer-width)
       minmax(210px, var(--pg-rail-col, 240px));
@@ -5766,12 +5833,12 @@ tr:last-child td {
   }
 
   .pg-output {
-    grid-column: 3;
+    grid-column: 2;
     grid-row: 1;
   }
 
   .pg-rail {
-    grid-column: 5;
+    grid-column: 4;
     grid-row: 1;
     max-height: none;
   }
@@ -5836,7 +5903,8 @@ tr:last-child td {
     grid-template-rows: none;
   }
 
-  .pg-resizer {
+  .pg-resizer,
+  .pg-scroll-resizer {
     display: none;
   }
 
