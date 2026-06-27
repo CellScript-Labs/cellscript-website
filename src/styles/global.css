@@ -4357,13 +4357,13 @@ tr:last-child td {
 }
 
 .pg-main {
-  --pg-resizer-width: 8px;
+  --pg-resizer-width: 14px;
   flex: 1 1 auto;
   display: grid;
   grid-template-columns:
-    minmax(420px, var(--pg-source-col, 1fr))
+    minmax(420px, var(--pg-source-col, 1.28fr))
     var(--pg-resizer-width)
-    minmax(300px, var(--pg-output-col, 1.25fr))
+    minmax(300px, var(--pg-output-col, 1.02fr))
     var(--pg-resizer-width)
     minmax(220px, var(--pg-rail-col, 260px));
   min-height: 0;
@@ -4395,10 +4395,7 @@ tr:last-child td {
   width: var(--pg-resizer-width);
   min-height: 0;
   border: 0;
-  border-inline: 1px solid var(--line-soft);
-  background:
-    linear-gradient(180deg, var(--color-transparent), var(--line-inner-soft), var(--color-transparent)),
-    var(--surface-subtle);
+  background: linear-gradient(90deg, var(--color-transparent), var(--line-inner-soft), var(--color-transparent));
   cursor: col-resize;
   touch-action: none;
 }
@@ -4406,20 +4403,47 @@ tr:last-child td {
 .pg-resizer::before {
   content: "";
   position: absolute;
-  inset: 40% 2px;
+  top: 0;
+  bottom: 0;
+  left: 50%;
+  width: 1px;
   border-radius: 999px;
-  background: var(--muted);
-  opacity: 0.28;
+  background: var(--line-soft);
+  opacity: 0.72;
+  transform: translateX(-50%);
   transition:
     opacity var(--duration-fast) var(--ease-standard),
     background-color var(--duration-fast) var(--ease-standard);
 }
 
+.pg-resizer::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 3px;
+  height: 34px;
+  border-radius: 999px;
+  background: var(--accent);
+  opacity: 0;
+  transform: translate(-50%, -50%);
+  transition:
+    opacity var(--duration-fast) var(--ease-standard),
+    height var(--duration-fast) var(--ease-standard);
+}
+
 .pg-resizer:hover::before,
 .pg-resizer:focus-visible::before,
 .pg-main[data-resizing="true"] .pg-resizer::before {
-  background: var(--accent);
-  opacity: 0.82;
+  background: var(--accent-line);
+  opacity: 1;
+}
+
+.pg-resizer:hover::after,
+.pg-resizer:focus-visible::after,
+.pg-main[data-resizing="true"] .pg-resizer::after {
+  height: 46px;
+  opacity: 0.72;
 }
 
 .pg-resizer:focus-visible {
@@ -4810,51 +4834,53 @@ tr:last-child td {
 /* ---- Editor ---- */
 
 .pg-editor {
+  --pg-editor-control-lane: 18px;
   position: relative;
   flex: 1 1 auto;
   overflow: hidden;
+  background: var(--surface-code-end);
 }
 
-/* Right-edge fade cue: signals that long lines extend beyond the
-   visible area. The mask fades the last ~28px of code so users
-   know they can scroll right. */
-.pg-editor::after {
+.pg-editor::before {
   content: "";
   position: absolute;
   top: 0;
   right: 0;
   bottom: 0;
-  width: 28px;
+  width: var(--pg-editor-control-lane);
   pointer-events: none;
+  z-index: var(--z-base);
+  border-left: 1px solid var(--line-inner);
+  background: linear-gradient(90deg, var(--color-transparent), var(--panel-strong));
+  opacity: 0.64;
+}
+
+/* Right-edge fade cue: ends before the scrollbar lane, so syntax
+   highlight, scrollbar, and column resizer do not visually stack. */
+.pg-editor::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  right: var(--pg-editor-control-lane);
+  bottom: 0;
   z-index: var(--z-elevated);
-  background: linear-gradient(to right, transparent, var(--surface-code-end));
+  width: 22px;
+  pointer-events: none;
+  background: linear-gradient(90deg, var(--color-transparent), var(--surface-code-end));
   opacity: 0;
   transition: opacity var(--duration-fast) var(--ease-standard);
 }
 
 .pg-editor[data-overflow-x]::after {
-  opacity: 0.8;
-}
-
-.pg-editor::after {
-  content: "";
-  position: absolute;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  z-index: var(--z-elevated);
-  width: 28px;
-  pointer-events: none;
-  background: linear-gradient(90deg, var(--color-transparent), var(--panel-strong));
-  opacity: 0.76;
+  opacity: 0.72;
 }
 
 .pg-editor:focus-within {
-  box-shadow: inset 0 0 0 2px var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent-line);
 }
 
 .pg-editor:focus-within::after {
-  opacity: 0.48;
+  opacity: 0.42;
 }
 
 .pg-gutter {
@@ -4926,10 +4952,10 @@ tr:last-child td {
 .pg-highlight,
 .pg-textarea {
   position: absolute;
-  inset: 0;
+  inset: 0 var(--pg-editor-control-lane) 0 0;
   margin: 0;
   /* Leave room on the left for the line-number gutter. */
-  padding: 14px 16px 14px 60px;
+  padding: 14px 22px 18px 60px;
   border: 0;
   font-family: var(--font-mono);
   font-size: 0.82rem;
@@ -4950,7 +4976,7 @@ tr:last-child td {
 
 .pg-diagnostic-layer {
   position: absolute;
-  inset: 0;
+  inset: 0 var(--pg-editor-control-lane) 0 0;
   z-index: var(--z-base);
   overflow: hidden;
   pointer-events: none;
@@ -4978,7 +5004,17 @@ tr:last-child td {
   resize: none;
   outline: none;
   z-index: var(--z-elevated);
+  scrollbar-gutter: stable;
   -webkit-text-fill-color: transparent;
+}
+
+.pg-textarea::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.pg-textarea::-webkit-scrollbar-thumb {
+  border-width: 2px;
 }
 
 .pg-textarea::selection {

@@ -464,7 +464,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
       let highlightFrame: number | undefined;
       let repositionFloatingTools = () => {};
       const columnResizers = Array.from(document.querySelectorAll<HTMLElement>("[data-column-resizer]"));
-      const panelColumnStorageKey = "cellscript-playground-columns";
+      const panelColumnStorageKey = "cellscript-playground-columns-v2";
       const columnMinimums = { source: 420, output: 250, rail: 210 };
 
       const readPanelWidths = () => {
