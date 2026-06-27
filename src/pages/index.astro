@@ -16,7 +16,6 @@ const heroProvenance = heroExamples.map((example) => ({
   id: example.id,
   view: provenanceForExample(example.id),
 }));
-const exampleCardSummaries = t.landing.exampleCardSummaries as Record<string, string>;
 const valueCardImages = [
   {
     light: "feature-cards/light-01-state-changes-explicit.png",
@@ -132,29 +131,11 @@ const workflowIconComponents = {
           </div>
           <h1 id="hero-title" data-i18n="hero.headline" aria-label={t.hero.headline}>{t.hero.headline}</h1>
           <p data-i18n="hero.subtitle">{t.hero.subtitle}</p>
+          <HeroStatus compact />
           <div class="hero-actions">
             <a class="button primary" href={`/playground?example=${heroExamples[0].id}`} data-i18n="hero.playground.cta">{t.hero.playground.cta}</a>
             <a class="button ghost" href={links.docs} data-i18n="hero.getStarted">{t.hero.getStarted}</a>
           </div>
-          <div class="hero-registry" aria-label="CellScript Registry">
-            <div class="hero-registry-head">
-              <a class="hero-registry-title" href="/registry" data-i18n="registry.eyebrow">CellScript Registry</a>
-              <div class="hero-registry-links">
-                <a href="/registry/submit" data-i18n="registry.submitPackage">{t.registry.submitPackage}</a>
-                <a href="/learn" data-i18n="nav.learn">{t.nav.learn}</a>
-              </div>
-            </div>
-            <form class="home-search" action="/registry" role="search">
-              <input
-                data-home-search
-                type="search"
-                name="q"
-                placeholder={t.registry.browse.searchPlaceholder}
-                aria-label={t.registry.browse.searchAria}
-              />
-            </form>
-          </div>
-          <HeroStatus compact />
         </div>
 
         <div class="code-shell spotlight-card" data-code-tabs>
@@ -244,9 +225,10 @@ const workflowIconComponents = {
                   decoding="async"
                 />
               </picture>
-              <span class="value-index" aria-hidden="true">0{index + 1}</span>
-              <h3 id={`value-card-${index}-title`} data-i18n={`landing.valueProps.${index}.0`}>{title}</h3>
-              <p id={`value-card-${index}-body`} data-i18n={`landing.valueProps.${index}.1`}>{body}</p>
+              <div class="value-card-copy">
+                <h3 id={`value-card-${index}-title`} data-i18n={`landing.valueProps.${index}.0`}>{title}</h3>
+                <p id={`value-card-${index}-body`} data-i18n={`landing.valueProps.${index}.1`}>{body}</p>
+              </div>
             </article>
           ))}
         </div>
@@ -323,8 +305,9 @@ const workflowIconComponents = {
                     decoding="async"
                   />
                 </picture>
-                <h3 data-i18n={`hero.exampleLabels.${example.id}`}>{t.hero.exampleLabels[example.id]}</h3>
-                <p data-i18n={`landing.exampleCardSummaries.${example.id}`}>{exampleCardSummaries[example.id]}</p>
+                <div class="landing-example-copy">
+                  <h3 data-i18n={`hero.exampleLabels.${example.id}`}>{t.hero.exampleLabels[example.id]}</h3>
+                </div>
               </a>
             );
           })}
