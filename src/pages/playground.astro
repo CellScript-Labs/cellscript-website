@@ -20,6 +20,7 @@ import "../styles/global.css";
 import { playgroundExamples, exampleFullSources, exampleGroups } from "../data/site";
 import { translations } from "../i18n/translations";
 import SiteHeader from "../components/SiteHeader.astro";
+import ThemeBootstrap from "../components/ThemeBootstrap.astro";
 import { ClientRouter } from "astro:transitions";
 import { BookOpen, Check, ChevronDown, Copy, Download, FilePlus, RefreshCw, Trash2, Upload } from "lucide-astro";
 
@@ -61,18 +62,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
     <link rel="icon" type="image/png" href={`${import.meta.env.BASE_URL}cellscript-logo.png`} />
     <link rel="icon" type="image/png" media="(prefers-color-scheme: light)" href={`${import.meta.env.BASE_URL}cellscript-logo-light.png`} />
     <link rel="icon" type="image/png" media="(prefers-color-scheme: dark)" href={`${import.meta.env.BASE_URL}cellscript-logo-dark.png`} />
-    <script is:inline>
-      (function () {
-        try {
-          var stored = localStorage.getItem("cellscript-theme");
-          var theme = stored || (window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark");
-          document.documentElement.dataset.theme = theme;
-          var storedLocale = localStorage.getItem("cellscript-locale");
-          document.documentElement.dataset.locale = storedLocale === "zh" ? "zh" : "en";
-          document.documentElement.lang = document.documentElement.dataset.locale;
-        } catch (e) {}
-      })();
-    </script>
+    <ThemeBootstrap />
     <ClientRouter />
   </head>
   <body class="playground-body">

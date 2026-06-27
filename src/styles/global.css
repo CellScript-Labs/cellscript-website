@@ -288,8 +288,8 @@
   box-sizing: border-box;
 }
 
-/* Hide all scrollbars site-wide. Elements still scroll (wheel, touch,
-   trackpad, keyboard) — the scrollbar gutter is just not rendered. */
+/* Hide decorative page scrollbars by default. Code and editor panes opt
+   back in below, where scrollbar position is useful navigation. */
 * {
   scrollbar-width: none;  /* Firefox */
 }
@@ -298,6 +298,69 @@
   width: 0;
   height: 0;
   display: none;  /* Chrome, Safari, Edge */
+}
+
+.docs-sidebar,
+.docs-toc,
+.docs-code,
+.docs-content pre.mermaid,
+.pg-file-tree,
+.pg-example-menu-panel,
+.pg-textarea,
+.pg-completions,
+.pg-hover-card,
+.pg-output-panel,
+.pg-rail-body {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) transparent;
+}
+
+.docs-sidebar::-webkit-scrollbar,
+.docs-toc::-webkit-scrollbar,
+.docs-code::-webkit-scrollbar,
+.docs-content pre.mermaid::-webkit-scrollbar,
+.pg-file-tree::-webkit-scrollbar,
+.pg-example-menu-panel::-webkit-scrollbar,
+.pg-textarea::-webkit-scrollbar,
+.pg-completions::-webkit-scrollbar,
+.pg-hover-card::-webkit-scrollbar,
+.pg-output-panel::-webkit-scrollbar,
+.pg-rail-body::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+  display: block;
+}
+
+.docs-sidebar::-webkit-scrollbar-track,
+.docs-toc::-webkit-scrollbar-track,
+.docs-code::-webkit-scrollbar-track,
+.docs-content pre.mermaid::-webkit-scrollbar-track,
+.pg-file-tree::-webkit-scrollbar-track,
+.pg-example-menu-panel::-webkit-scrollbar-track,
+.pg-textarea::-webkit-scrollbar-track,
+.pg-completions::-webkit-scrollbar-track,
+.pg-hover-card::-webkit-scrollbar-track,
+.pg-output-panel::-webkit-scrollbar-track,
+.pg-rail-body::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.docs-sidebar::-webkit-scrollbar-thumb,
+.docs-toc::-webkit-scrollbar-thumb,
+.docs-code::-webkit-scrollbar-thumb,
+.docs-content pre.mermaid::-webkit-scrollbar-thumb,
+.pg-file-tree::-webkit-scrollbar-thumb,
+.pg-example-menu-panel::-webkit-scrollbar-thumb,
+.pg-textarea::-webkit-scrollbar-thumb,
+.pg-completions::-webkit-scrollbar-thumb,
+.pg-hover-card::-webkit-scrollbar-thumb,
+.pg-output-panel::-webkit-scrollbar-thumb,
+.pg-rail-body::-webkit-scrollbar-thumb {
+  min-height: 36px;
+  border: 3px solid transparent;
+  border-radius: 999px;
+  background: var(--scrollbar-thumb);
+  background-clip: content-box;
 }
 
 html {
@@ -1077,9 +1140,9 @@ body.home-body {
 
 .hero h1 {
   margin: 0;
-  font-size: clamp(2.2rem, 4.6vw, 3.6rem);
+  font-size: 3.6rem;
   line-height: 1.08;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
   font-weight: 700;
   color: var(--text);
   text-shadow: 0 0 28px var(--hero-title-shadow-a);
@@ -3498,7 +3561,7 @@ tr:last-child td {
   }
 
   .hero h1 {
-    font-size: 5.4rem;
+    font-size: 3.6rem;
   }
 
   .hero p {
@@ -3685,17 +3748,19 @@ tr:last-child td {
   }
 
   .hero {
-    gap: 34px;
-    padding-top: 78px;
+    gap: 28px;
+    padding-top: 64px;
   }
 
   .home-body .hero {
-    padding-top: 48px;
-    padding-bottom: 16px;
+    padding-top: 42px;
+    padding-bottom: 44px;
   }
 
   .home-body .hero > .code-shell {
-    display: none;
+    display: block;
+    width: 100%;
+    max-width: 100%;
   }
 
   .button,
@@ -3751,7 +3816,7 @@ tr:last-child td {
   }
 
   .hero h1 {
-    font-size: 4rem;
+    font-size: 3rem;
   }
 
   .hero-brand-lockup {
@@ -3945,7 +4010,7 @@ tr:last-child td {
   }
 
   .hero h1 {
-    font-size: 3.35rem;
+    font-size: 2.35rem;
   }
 
   .hero-field {

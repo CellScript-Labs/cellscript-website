@@ -7,6 +7,7 @@ import { provenanceForExample, effectsSummary, formatBytes, shortHash } from "..
 import HeroStatus from "../components/HeroStatus.astro";
 import SiteHeader from "../components/SiteHeader.astro";
 import BrandMark from "../components/BrandMark.astro";
+import ThemeBootstrap from "../components/ThemeBootstrap.astro";
 import { ClientRouter } from "astro:transitions";
 import { ArrowRight, Box, Check, ClipboardList, Copy, Cpu, FileArchive, FileCode2 } from "lucide-astro";
 
@@ -84,21 +85,7 @@ const workflowIconComponents = {
     <link rel="icon" type="image/png" media="(prefers-color-scheme: light)" href={`${import.meta.env.BASE_URL}cellscript-logo-light.png`} />
     <link rel="icon" type="image/png" media="(prefers-color-scheme: dark)" href={`${import.meta.env.BASE_URL}cellscript-logo-dark.png`} />
     <title data-i18n-meta="meta.titleLong">{t.meta.titleLong}</title>
-    <script is:inline>
-      (() => {
-        try {
-          const storedTheme = localStorage.getItem("cellscript-theme");
-          const storedLocale = localStorage.getItem("cellscript-locale");
-          document.documentElement.dataset.theme = storedTheme === "light" || storedTheme === "dark" ? storedTheme : "light";
-          document.documentElement.dataset.locale = storedLocale === "zh" ? "zh" : "en";
-          document.documentElement.lang = document.documentElement.dataset.locale;
-        } catch {
-          document.documentElement.dataset.theme = "light";
-          document.documentElement.dataset.locale = "en";
-          document.documentElement.lang = "en";
-        }
-      })();
-    </script>
+    <ThemeBootstrap />
     <ClientRouter />
   </head>
   <body class="home-body">
@@ -559,9 +546,12 @@ const workflowIconComponents = {
       const readStoredTheme = () => {
         try {
           const storedTheme = localStorage.getItem("cellscript-theme");
-          return storedTheme === "light" || storedTheme === "dark" ? storedTheme : "light";
+          if (storedTheme === "light" || storedTheme === "dark") return storedTheme;
+          if (window.matchMedia("(prefers-color-scheme: light)").matches) return "light";
+          if (window.matchMedia("(prefers-color-scheme: dark)").matches) return "dark";
+          return "dark";
         } catch {
-          return "light";
+          return "dark";
         }
       };
 

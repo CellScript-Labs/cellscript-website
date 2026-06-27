@@ -1,0 +1,24 @@
+<script is:inline>
+  (() => {
+    const resolveInitialTheme = () => {
+      const storedTheme = localStorage.getItem("cellscript-theme");
+      if (storedTheme === "light" || storedTheme === "dark") return storedTheme;
+      if (typeof window.matchMedia === "function") {
+        if (window.matchMedia("(prefers-color-scheme: light)").matches) return "light";
+        if (window.matchMedia("(prefers-color-scheme: dark)").matches) return "dark";
+      }
+      return "dark";
+    };
+
+    try {
+      const storedLocale = localStorage.getItem("cellscript-locale");
+      document.documentElement.dataset.theme = resolveInitialTheme();
+      document.documentElement.dataset.locale = storedLocale === "zh" ? "zh" : "en";
+      document.documentElement.lang = document.documentElement.dataset.locale;
+    } catch {
+      document.documentElement.dataset.theme = "dark";
+      document.documentElement.dataset.locale = "en";
+      document.documentElement.lang = "en";
+    }
+  })();
+</script>

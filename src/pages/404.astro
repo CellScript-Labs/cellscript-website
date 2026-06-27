@@ -2,6 +2,7 @@
 import "../styles/global.css";
 import SiteHeader from "../components/SiteHeader.astro";
 import BrandMark from "../components/BrandMark.astro";
+import ThemeBootstrap from "../components/ThemeBootstrap.astro";
 import { ClientRouter } from "astro:transitions";
 import { links } from "../data/site";
 import { defaultLocale, translations } from "../i18n/translations";
@@ -22,21 +23,7 @@ const title = `CellScript — ${t.notFound.eyebrow}`;
     <link rel="icon" type="image/png" media="(prefers-color-scheme: light)" href={`${import.meta.env.BASE_URL}cellscript-logo-light.png`} />
     <link rel="icon" type="image/png" media="(prefers-color-scheme: dark)" href={`${import.meta.env.BASE_URL}cellscript-logo-dark.png`} />
     <title>{title}</title>
-    <script is:inline>
-      (() => {
-        try {
-          const storedTheme = localStorage.getItem("cellscript-theme");
-          const storedLocale = localStorage.getItem("cellscript-locale");
-          document.documentElement.dataset.theme = storedTheme === "light" || storedTheme === "dark" ? storedTheme : "light";
-          document.documentElement.dataset.locale = storedLocale === "zh" ? "zh" : "en";
-          document.documentElement.lang = document.documentElement.dataset.locale;
-        } catch {
-          document.documentElement.dataset.theme = "light";
-          document.documentElement.dataset.locale = "en";
-          document.documentElement.lang = "en";
-        }
-      })();
-    </script>
+    <ThemeBootstrap />
     <ClientRouter />
   </head>
   <body class="not-found-body">
