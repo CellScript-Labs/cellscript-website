@@ -24,6 +24,13 @@
   ],
   "commits": [
     {
+      "sha": "cf710f9",
+      "message": "Fix documentation audit drift",
+      "author": "Tawan",
+      "date": "2026-06-28",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/cf710f91616f7d7dd096f1e5ea7af936330916db"
+    },
+    {
       "sha": "915bdc9",
       "message": "Update website submodule for unified playground handle",
       "author": "Tawan",
@@ -50,13 +57,6 @@
       "author": "Tawan",
       "date": "2026-06-27",
       "url": "https://github.com/CellScript-Labs/CellScript/commit/7e0e68b4ec11195907186826793ab7ae76f65c34"
-    },
-    {
-      "sha": "b55e8ab",
-      "message": "Fix large compile error gate regression",
-      "author": "Tawan",
-      "date": "2026-06-26",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/b55e8ab66fa40848af606a5d56d4a43cbaa7acb4"
     }
   ]
 }
