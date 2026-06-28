@@ -1,18 +1,11 @@
 {
   "releases": [
     {
-      "tag": "v0.20.0-rc.2",
-      "name": "CellScript 0.20.0-rc.2",
-      "date": "2026-06-25",
-      "body": "## Installation\r\n\r\n### One-line install (Global)\r\n\r\n```bash\r\ncurl -fsSL https://raw.githubusercontent.com/CellScript-Labs/CellScript/main/s\u2026",
-      "url": "https://github.com/CellScript-Labs/CellScript/releases/tag/v0.20.0-rc.2"
-    },
-    {
-      "tag": "v0.20.0-rc.1",
-      "name": "CellScript 0.20.0-rc.1",
-      "date": "2026-06-24",
-      "body": "## Installation\r\n\r\n### One-line install (Global)\r\n\r\n```bash\r\ncurl -fsSL https://raw.githubusercontent.com/CellScript-Labs/CellScript/main/s\u2026",
-      "url": "https://github.com/CellScript-Labs/CellScript/releases/tag/v0.20.0-rc.1"
+      "tag": "v0.20.0",
+      "name": "CellScript 0.20.0",
+      "date": "2026-06-28",
+      "body": "## Installation\n\n### One-line install (Global)\n\n```bash\ncurl -fsSL https://raw.githubusercontent.com/CellScript-Labs/CellScript/main/script\u2026",
+      "url": "https://github.com/CellScript-Labs/CellScript/releases/tag/v0.20.0"
     },
     {
       "tag": "v0.16.2",
@@ -20,9 +13,37 @@
       "date": "2026-06-21",
       "body": "CellScript 0.16.2 is a builder-ergonomics patch for CKB resource identity\r\nhandoff. It keeps the 0.16 compiler/runtime scope, while making\u2026",
       "url": "https://github.com/CellScript-Labs/CellScript/releases/tag/v0.16.2"
+    },
+    {
+      "tag": "v0.16.1",
+      "name": "CellScript 0.16.1",
+      "date": "2026-06-15",
+      "body": "CellScript 0.16.1 is a patch release for bundled example lifecycle clarity and\r\nbuilder handoff. It keeps the 0.16 assurance/tooling scope,\u2026",
+      "url": "https://github.com/CellScript-Labs/CellScript/releases/tag/v0.16.1"
     }
   ],
   "commits": [
+    {
+      "sha": "5b83b68",
+      "message": "Merge pull request #2 from toastmanAu/docs/wiki-agentic-loops",
+      "author": "Tawan",
+      "date": "2026-06-28",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/5b83b68a36531252563db354c67a9f1dcf76ccab"
+    },
+    {
+      "sha": "0d8126a",
+      "message": "Add agentic loop tutorial",
+      "author": "Tawan",
+      "date": "2026-06-28",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/0d8126a557cabafd752f931c2f1b1ca78628c10e"
+    },
+    {
+      "sha": "7f53292",
+      "message": "Prepare 0.20.0 release",
+      "author": "Tawan",
+      "date": "2026-06-28",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/7f532920c98bb4566fec289665a416dbdda95b4d"
+    },
     {
       "sha": "cf710f9",
       "message": "Fix documentation audit drift",
@@ -36,27 +57,6 @@
       "author": "Tawan",
       "date": "2026-06-27",
       "url": "https://github.com/CellScript-Labs/CellScript/commit/915bdc9a5b8165306eb45b2afe9bd54873bf5cd7"
-    },
-    {
-      "sha": "e03e41c",
-      "message": "Update website submodule for playground editor polish",
-      "author": "Tawan",
-      "date": "2026-06-27",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/e03e41cdecb333c13348b20c64b27781c4b0bc10"
-    },
-    {
-      "sha": "cebdd05",
-      "message": "Update website submodule for audit fixes",
-      "author": "Tawan",
-      "date": "2026-06-27",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/cebdd059e28002cb1ce47f6d0760c188f00e3dfe"
-    },
-    {
-      "sha": "7e0e68b",
-      "message": "Update website submodule for UI polish",
-      "author": "Tawan",
-      "date": "2026-06-27",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/7e0e68b4ec11195907186826793ab7ae76f65c34"
     }
   ]
 }
