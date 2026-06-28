@@ -1,18 +1,18 @@
 {
   "releases": [
     {
+      "tag": "v0.20.0",
+      "name": "CellScript 0.20.0",
+      "date": "2026-06-28",
+      "body": "## Installation\r\n\r\n### One-line install (Global)\r\n\r\n```bash\r\ncurl -fsSL https://raw.githubusercontent.com/CellScript-Labs/CellScript/main/s\u2026",
+      "url": "https://github.com/CellScript-Labs/CellScript/releases/tag/v0.20.0"
+    },
+    {
       "tag": "v0.20.0-rc.2",
       "name": "CellScript 0.20.0-rc.2",
       "date": "2026-06-25",
       "body": "## Installation\r\n\r\n### One-line install (Global)\r\n\r\n```bash\r\ncurl -fsSL https://raw.githubusercontent.com/CellScript-Labs/CellScript/main/s\u2026",
       "url": "https://github.com/CellScript-Labs/CellScript/releases/tag/v0.20.0-rc.2"
-    },
-    {
-      "tag": "v0.20.0-rc.1",
-      "name": "CellScript 0.20.0-rc.1",
-      "date": "2026-06-24",
-      "body": "## Installation\r\n\r\n### One-line install (Global)\r\n\r\n```bash\r\ncurl -fsSL https://raw.githubusercontent.com/CellScript-Labs/CellScript/main/s\u2026",
-      "url": "https://github.com/CellScript-Labs/CellScript/releases/tag/v0.20.0-rc.1"
     },
     {
       "tag": "v0.16.2",
