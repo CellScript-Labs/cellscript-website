@@ -21,8 +21,9 @@ const docsOrder = [
   "Tutorial-09-Action-Model-and-0-13-Syntax.md",
   "Tutorial-10-Standard-Library.md",
   "Tutorial-11-Scoped-Invariants-and-ProofPlan.md",
-  "Cookbook-Recipes.md",
   "Tutorial-12-Phase1-Registry-End-to-End.md",
+  "Tutorial-13-Agentic-Loops-and-cellc-mcp.md",
+  "Cookbook-Recipes.md",
   "CKB-Glossary.md",
 ] as const;
 
