@@ -41,7 +41,9 @@ jobs:
         with:
           repository: CellScript-Labs/CellScript
           path: cellscript-source
-          sparse-checkout: examples
+          sparse-checkout: |
+            docs/wiki
+            examples
 
       - name: Generate registry website data
         run: npm run prepare:registry

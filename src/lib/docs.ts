@@ -5,7 +5,13 @@ import { Marked, Renderer } from "marked";
 import { renderSource } from "./highlight";
 
 const here = dirname(fileURLToPath(import.meta.url));
-const repoRoot = resolve(here, "..", "..", "..");
+const repoRootCandidates = [
+  process.env.CELLSCRIPT_REPO_ROOT,
+  resolve(here, "..", "..", ".."),
+].filter((candidate): candidate is string => Boolean(candidate));
+const repoRoot =
+  repoRootCandidates.find((candidate) => existsSync(resolve(candidate, "docs", "wiki"))) ??
+  repoRootCandidates[0];
 const wikiRoot = resolve(repoRoot, "docs", "wiki");
 
 const docsOrder = [

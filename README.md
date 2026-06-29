@@ -39,8 +39,8 @@ npm run build
 
 The build runs registry data generation, Astro type checking, and static site generation. Output is written to `dist/`.
 When building the website repository outside the main CellScript checkout, set
-`CELLSCRIPT_REPO_ROOT` to a CellScript checkout so the playground examples can
-be embedded:
+`CELLSCRIPT_REPO_ROOT` to a CellScript checkout so the playground examples and
+docs can be embedded:
 
 ```bash
 CELLSCRIPT_REPO_ROOT=/path/to/CellScript npm run build
