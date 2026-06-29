@@ -29,6 +29,7 @@ const docsOrder = [
   "Tutorial-07-LSP-and-Tooling.md",
   "Tutorial-08-Bundled-Example-Contracts.md",
   "Tutorial-12-Phase1-Registry-End-to-End.md",
+  "Tutorial-13-Agentic-Loops-and-cellc-mcp.md",
   "CKB-Glossary.md",
 ] as const;
 
