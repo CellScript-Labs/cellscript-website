@@ -76,6 +76,10 @@ python3 scripts/fetch-github-data.py
 ```
 
 The GitHub Actions workflow in this repo runs the same refresh on a schedule.
+When that workflow commits changed activity data, it also dispatches the
+website build workflow explicitly. This is required because commits made by a
+workflow token do not reliably trigger a second workflow through the normal
+push event.
 
 ## Design Notes
 
