@@ -15,11 +15,11 @@ const release = releases[0];
 
 <aside class:list={["hero-status", compact && "hero-status-compact"]} aria-label={t.heroStatus.activity}>
   {release && (
-    <div class="hero-release-tag">
+    <a class="hero-release-tag" href={release.url} target="_blank" rel="noopener noreferrer" aria-label={`${t.heroStatus.release} ${release.tag}`}>
       <Radio aria-hidden="true" />
       <small data-i18n="heroStatus.release">{t.heroStatus.release}</small>
       <strong>{release.tag}</strong>
       <time>{release.date}</time>
-    </div>
+    </a>
   )}
 </aside>

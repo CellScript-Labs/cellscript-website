@@ -24,6 +24,7 @@
   --panel-popover: oklch(0.095 0.004 180);
   --panel-soft: oklch(0.15 0.004 180 / 0.68);
   --panel-chip: oklch(0.12 0.004 180 / 0.72);
+  --image-caption-bg: oklch(0.105 0.006 180 / 0.5);
   --surface-header: oklch(0.105 0 0 / 0.82);
   --surface-footer: oklch(0.08 0 0);
   --surface-hover: oklch(0.18 0 0 / 0.5);
@@ -184,6 +185,7 @@
   --panel-popover: oklch(0.995 0.003 175);
   --panel-soft: oklch(0.985 0.004 175 / 0.72);
   --panel-chip: oklch(0.94 0.008 175 / 0.82);
+  --image-caption-bg: oklch(0.985 0.004 175 / 0.58);
   --surface-header: oklch(0.985 0.004 175 / 0.86);
   --surface-footer: oklch(0.93 0.006 175);
   --surface-hover: oklch(0.92 0.012 175 / 0.74);
@@ -738,6 +740,21 @@ body.home-body {
     linear-gradient(180deg, var(--line-inner-soft), var(--color-transparent)),
     var(--panel-soft);
   box-shadow: 0 10px 30px var(--shadow-soft);
+  text-decoration: none;
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    background var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+}
+
+.hero-release-tag:hover,
+.hero-release-tag:focus-visible {
+  border-color: var(--accent-line);
+  background:
+    linear-gradient(180deg, var(--accent-surface), var(--color-transparent)),
+    var(--panel-soft);
+  color: var(--accent-strong);
+  outline: none;
 }
 
 .hero-release-tag svg {
@@ -966,6 +983,8 @@ body.home-body {
   z-index: var(--z-base);
   display: grid;
   justify-items: start;
+  width: 100%;
+  min-width: 0;
   max-width: 540px;
 }
 
@@ -1058,7 +1077,7 @@ body.home-body {
   margin: 0;
   font-size: clamp(2.2rem, 4.6vw, 3.6rem);
   line-height: 1.08;
-  letter-spacing: -0.01em;
+  letter-spacing: 0;
   font-weight: 700;
   color: var(--text);
   text-shadow: 0 0 28px var(--hero-title-shadow-a);
@@ -2126,11 +2145,12 @@ body.home-body {
 
 .value-card {
   position: relative;
+  isolation: isolate;
   min-height: 218px;
   display: grid;
   align-content: end;
   overflow: hidden;
-  padding: clamp(22px, 3vw, 32px);
+  padding: 0;
   border: 1px solid var(--line-soft);
   border-radius: var(--radius);
   background: var(--panel-soft);
@@ -2144,6 +2164,11 @@ body.home-body {
 .value-card:first-child {
   grid-row: span 2;
   min-height: 452px;
+}
+
+.value-card:not(:first-child) {
+  min-height: clamp(286px, 22vw, 320px);
+  padding: 0;
 }
 
 .value-card.spotlight-card::before {
@@ -2164,6 +2189,25 @@ body.home-body {
   inset: 0;
   display: block;
   z-index: 0;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 42%, var(--line-inner-soft), var(--color-transparent) 58%),
+    var(--panel-soft);
+}
+
+.value-card:not(:first-child) .value-card-art {
+  inset: 0;
+}
+
+.value-card-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, var(--panel-soft), var(--color-transparent) 7%, var(--color-transparent) 93%, var(--panel-soft)),
+    linear-gradient(180deg, var(--panel-soft), var(--color-transparent) 10%, var(--color-transparent) 86%, var(--panel-soft));
+  opacity: 0.18;
 }
 
 .value-card-image {
@@ -2172,6 +2216,7 @@ body.home-body {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
   transition:
     filter var(--duration-med) var(--ease-standard),
     transform var(--duration-med) var(--ease-standard);
@@ -2179,7 +2224,7 @@ body.home-body {
 
 .value-card:hover .value-card-image,
 .value-card:focus-within .value-card-image {
-  transform: scale(1.025);
+  transform: none;
 }
 
 .value-card-image-dark {
@@ -2195,23 +2240,6 @@ body.home-body {
   display: block;
 }
 
-.value-card::after {
-  content: "";
-  position: absolute;
-  inset: 42% 0 0;
-  z-index: var(--z-base);
-  pointer-events: none;
-  background:
-    linear-gradient(180deg, var(--color-transparent), var(--panel) 64%, var(--panel));
-}
-
-.value-card:not(:first-child)::after {
-  inset: 0;
-  background:
-    linear-gradient(90deg, var(--panel-strong) 0%, var(--panel-strong) 50%, var(--color-transparent) 84%),
-    linear-gradient(180deg, var(--color-transparent) 0%, var(--panel-soft) 100%);
-}
-
 .value-index {
   position: absolute;
   top: 22px;
@@ -2221,6 +2249,23 @@ body.home-body {
   font-family: var(--font-mono);
   font-size: 0.78rem;
   font-weight: 600;
+}
+
+.value-card-copy {
+  position: relative;
+  z-index: var(--z-elevated);
+  width: 100%;
+  max-width: none;
+  padding: 18px clamp(18px, 2.5vw, 26px) 20px;
+  border: 0;
+  border-radius: 0;
+  background: var(--image-caption-bg);
+  box-shadow: none;
+}
+
+.value-card:not(:first-child) .value-card-copy {
+  max-width: none;
+  padding: 14px 18px 15px;
 }
 
 .value-card h3,
@@ -2233,21 +2278,29 @@ body.home-body {
 
 .value-card h3,
 .value-card p {
-  position: relative;
-  z-index: var(--z-base);
-  text-shadow: 0 1px 18px var(--panel);
+  text-shadow: none;
 }
 
 .value-card:not(:first-child) h3,
 .value-card:not(:first-child) p {
-  max-width: min(36ch, 68%);
+  max-width: none;
 }
 
-.value-card p,
-.landing-example-card p {
+.value-card:not(:first-child) h3 {
+  font-size: 0.98rem;
+  line-height: 1.12;
+}
+
+.value-card:not(:first-child) p {
+  margin-top: 6px;
+  font-size: 0.82rem;
+  line-height: 1.34;
+}
+
+.value-card p {
   max-width: 54ch;
   margin: 14px 0 0;
-  color: var(--muted);
+  color: var(--text-soft);
   line-height: 1.58;
 }
 
@@ -2836,13 +2889,14 @@ tr:last-child td {
 
 .landing-example-card {
   position: relative;
+  isolation: isolate;
   min-width: 0;
   min-height: 0;
   aspect-ratio: 1;
   display: grid;
   align-content: end;
   overflow: hidden;
-  padding: clamp(18px, 2vw, 22px);
+  padding: 0;
   border: 1px solid var(--line-soft);
   border-radius: var(--radius);
   background: var(--panel-soft);
@@ -2872,22 +2926,26 @@ tr:last-child td {
   color: var(--accent);
 }
 
-.landing-example-card::after {
-  content: "";
-  position: absolute;
-  inset: 46% 0 0;
-  z-index: var(--z-base);
-  pointer-events: none;
-  background:
-    linear-gradient(180deg, var(--color-transparent), var(--panel-soft) 72%, var(--panel-soft));
-}
-
 .landing-example-art {
   position: absolute;
   inset: 0;
   z-index: 0;
   display: block;
   overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 36%, var(--line-inner-soft), var(--color-transparent) 60%),
+    var(--panel-soft);
+}
+
+.landing-example-art::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(90deg, var(--panel-soft), var(--color-transparent) 8%, var(--color-transparent) 92%, var(--panel-soft)),
+    linear-gradient(180deg, var(--panel-soft), var(--color-transparent) 9%, var(--color-transparent) 84%, var(--panel-soft));
+  opacity: 0.24;
 }
 
 .landing-example-image {
@@ -2896,6 +2954,7 @@ tr:last-child td {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center;
   transition:
     filter var(--duration-med) var(--ease-standard),
     transform var(--duration-med) var(--ease-standard);
@@ -2916,21 +2975,33 @@ tr:last-child td {
 
 .landing-example-card:hover .landing-example-image,
 .landing-example-card:focus-visible .landing-example-image {
-  transform: scale(1.025);
+  transform: none;
+}
+
+.landing-example-copy {
+  position: relative;
+  z-index: var(--z-elevated);
+  width: 100%;
+  padding: 11px 16px 12px;
+  background: var(--image-caption-bg);
 }
 
 .landing-example-card h3,
 .landing-example-card p {
-  position: relative;
-  z-index: var(--z-base);
-  text-shadow: 0 1px 18px var(--panel);
+  text-shadow: none;
+}
+
+.landing-example-card h3 {
+  font-size: 1.04rem;
+  line-height: 1.15;
 }
 
 .landing-example-card p {
-  max-width: 24ch;
-  margin-top: 10px;
-  font-size: 0.94rem;
-  line-height: 1.42;
+  max-width: 54ch;
+  margin: 6px 0 0;
+  color: var(--text-soft);
+  font-size: 0.82rem;
+  line-height: 1.34;
 }
 
 .start-actions {
@@ -3448,7 +3519,7 @@ tr:last-child td {
   }
 
   .hero h1 {
-    font-size: 5.4rem;
+    font-size: 4.4rem;
   }
 
   .hero p {
@@ -3701,7 +3772,9 @@ tr:last-child td {
   }
 
   .hero h1 {
-    font-size: 4rem;
+    max-width: 100%;
+    font-size: 3rem;
+    text-wrap: normal;
   }
 
   .hero-brand-lockup {
@@ -3711,7 +3784,8 @@ tr:last-child td {
   }
 
   .hero p {
-    font-size: 1.18rem;
+    max-width: 100%;
+    font-size: 1.06rem;
   }
 
   .landing-example-grid {
@@ -3895,7 +3969,7 @@ tr:last-child td {
   }
 
   .hero h1 {
-    font-size: 3.35rem;
+    font-size: 2.72rem;
   }
 
   .hero-field {

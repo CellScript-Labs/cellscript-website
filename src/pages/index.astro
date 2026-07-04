@@ -227,8 +227,10 @@ const workflowIconComponents = {
                 />
               </picture>
               <span class="value-index" aria-hidden="true">0{index + 1}</span>
-              <h3 id={`value-card-${index}-title`} data-i18n={`landing.valueProps.${index}.0`}>{title}</h3>
-              <p id={`value-card-${index}-body`} data-i18n={`landing.valueProps.${index}.1`}>{body}</p>
+              <div class="value-card-copy">
+                <h3 id={`value-card-${index}-title`} data-i18n={`landing.valueProps.${index}.0`}>{title}</h3>
+                <p id={`value-card-${index}-body`} data-i18n={`landing.valueProps.${index}.1`}>{body}</p>
+              </div>
             </article>
           ))}
         </div>
@@ -305,8 +307,10 @@ const workflowIconComponents = {
                     decoding="async"
                   />
                 </picture>
-                <h3 data-i18n={`hero.exampleLabels.${example.id}`}>{t.hero.exampleLabels[example.id]}</h3>
-                <p data-i18n={`landing.exampleCardSummaries.${example.id}`}>{exampleCardSummaries[example.id]}</p>
+                <div class="landing-example-copy">
+                  <h3 data-i18n={`hero.exampleLabels.${example.id}`}>{t.hero.exampleLabels[example.id]}</h3>
+                  <p data-i18n={`landing.exampleCardSummaries.${example.id}`}>{exampleCardSummaries[example.id]}</p>
+                </div>
               </a>
             );
           })}
