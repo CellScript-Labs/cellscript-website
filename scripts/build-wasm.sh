@@ -8,11 +8,17 @@
 # Usage:
 #   website/scripts/build-wasm.sh
 #
-# Requires: rustup target wasm32-unknown-unknown, wasm-pack.
+# Requires: rustup target wasm32-unknown-unknown, wasm-pack, wasm-opt (Binaryen).
 set -euo pipefail
 
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 OUT="$REPO/website/public/wasm"
+WASM="$REPO/crates/cellscript-wasm/pkg/cellscript_wasm_bg.wasm"
+
+if ! command -v wasm-opt >/dev/null 2>&1; then
+  echo "error: wasm-opt (Binaryen) is required for the 600 KB gzip budget" >&2
+  exit 1
+fi
 
 echo "Building cellscript-wasm (size-optimised release)..."
 cd "$REPO"
@@ -22,6 +28,10 @@ CARGO_PROFILE_RELEASE_CODEGEN_UNITS=1 RUSTFLAGS="-C opt-level=z" wasm-pack build
   --target web \
   --no-default-features \
   --features wasm
+
+echo "Optimising WASM with wasm-opt -Oz..."
+wasm-opt -Oz "$WASM" -o "$WASM.optimized"
+mv "$WASM.optimized" "$WASM"
 
 echo "Copying bundle to $OUT..."
 mkdir -p "$OUT"
