@@ -1,6 +1,6 @@
 let wasmModulePromise;
 let wasmModule;
-const COMPILER_ASSET_VERSION = "20260625-multi-workspace";
+const COMPILER_ASSET_VERSION = "20260725-v0.22.0-6d63999f";
 
 const loadCompiler = async () => {
   if (!wasmModulePromise) {

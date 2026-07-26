@@ -1,5 +1,6 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { basename, resolve } from "node:path";
+import { createHash } from "node:crypto";
 
 const failures = [];
 
@@ -31,15 +32,25 @@ const root = resolve(".");
 const dist = resolve(root, "dist");
 const distIndex = resolve(dist, "index.html");
 const distDocsIndex = resolve(dist, "docs", "index.html");
+const distPlaygroundIndex = resolve(dist, "playground", "index.html");
+const distPlaygroundWorker = resolve(dist, "playground-worker.js");
+const distWasm = resolve(dist, "wasm", "cellscript_wasm_bg.wasm");
 const docsSource = resolve(root, "src", "lib", "docs.ts");
 const wikiRoot = resolve(root, "..", "docs", "wiki");
+const expectedReleaseTag = "v0.22.0";
+const expectedCompilerAssetVersion = "20260725-v0.22.0-6d63999f";
+const expectedWasmSha256 = "6d63999f92f3f243db03ff436ced21553b9e8728f96f123418c008a609066205";
 
 expectFile(distIndex);
 expectFile(distDocsIndex);
+expectFile(distPlaygroundIndex);
+expectFile(distPlaygroundWorker);
+expectFile(distWasm);
 expectFile(docsSource);
 
 const indexHtml = existsSync(distIndex) ? read(distIndex) : "";
 const docsHtml = existsSync(distDocsIndex) ? read(distDocsIndex) : "";
+const playgroundWorker = existsSync(distPlaygroundWorker) ? read(distPlaygroundWorker) : "";
 const docsSourceText = existsSync(docsSource) ? read(docsSource) : "";
 
 const cssDir = resolve(dist, "_astro");
@@ -49,12 +60,33 @@ const cssText = existsSync(cssDir)
       .map((file) => read(resolve(cssDir, file)))
       .join("\n")
   : "";
+const jsText = existsSync(cssDir)
+  ? readdirSync(cssDir)
+      .filter((file) => file.endsWith(".js"))
+      .map((file) => read(resolve(cssDir, file)))
+      .join("\n")
+  : "";
 
 if (!cssText) fail("dist/_astro: no generated CSS found");
+if (!jsText) fail("dist/_astro: no generated JavaScript found");
 
 expectContains("home", indexHtml, '<a class="hero-release-tag"');
-expectContains("home", indexHtml, 'href="https://github.com/CellScript-Labs/CellScript/releases/tag/');
+expectContains("home", indexHtml, `href="https://github.com/CellScript-Labs/CellScript/releases/tag/${expectedReleaseTag}"`);
+expectContains("home", indexHtml, `<strong>${expectedReleaseTag}</strong>`);
 expectNotContains("home", indexHtml, '<div class="hero-release-tag"');
+expectNotContains("home", indexHtml, "v0.20.0");
+
+expectContains("playground bundle", jsText, expectedCompilerAssetVersion);
+expectContains("playground bundle", jsText, 'cellscript_version = "0.22.0"');
+expectNotContains("playground bundle", jsText, 'cellscript_version = "0.20.0-rc.1"');
+expectContains("playground worker", playgroundWorker, `const COMPILER_ASSET_VERSION = "${expectedCompilerAssetVersion}"`);
+
+if (existsSync(distWasm)) {
+  const wasmSha256 = createHash("sha256").update(readFileSync(distWasm)).digest("hex");
+  if (wasmSha256 !== expectedWasmSha256) {
+    fail(`playground WASM: expected SHA-256 ${expectedWasmSha256}, found ${wasmSha256}`);
+  }
+}
 
 const valueCopyCount = countContains(indexHtml, "value-card-copy");
 if (valueCopyCount < 3) fail(`home: expected at least 3 value-card-copy layers, found ${valueCopyCount}`);
@@ -67,6 +99,8 @@ for (const token of [
   ".hero-release-tag:hover",
   ".value-card-copy",
   ".landing-example-copy",
+  "@media(max-width:840px)",
+  ".theme-toggle,.language-toggle,.nav-link{width:44px;min-width:44px;padding:0}",
   "text-shadow:none",
   "text-wrap:normal",
 ]) {
