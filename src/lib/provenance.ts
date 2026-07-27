@@ -3,7 +3,7 @@
  *
  * The website's provenance rail and hero compile-output indicator read
  * `src/data/provenance.json`, which is produced by
- * `website/scripts/regen-provenance.py` from live `cellc metadata`
+ * `website/scripts/regen-website-data.mjs` from live `cellc metadata`
  * output. These helpers turn that raw JSON into the compact shapes the
  * UI renders, and provide the formatting helpers (KB, cycles, hashes).
  */

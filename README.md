@@ -79,7 +79,7 @@ src/data/github-activity.json
 Refresh it with:
 
 ```bash
-python3 scripts/fetch-github-data.py
+npm run data:github
 ```
 
 The GitHub Actions workflow in this repo runs the same refresh on a schedule.

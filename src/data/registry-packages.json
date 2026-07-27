@@ -76,7 +76,7 @@
         "production_gate": "docs/PRODUCTION_READINESS.md",
         "profile": "evolving-dob-profile-v1",
         "protocol_family": "DOB-EVO",
-        "registry_pressure_gate": "scripts/evolving_dob_registry_pressure.py",
+        "registry_pressure_gate": "tools/src/main.rs",
         "source_actions": "src/evolving_dob_type.cell:initialise_dob_state;src/evolving_dob_type.cell:evolve_dob_state;src/evolving_dob_type.cell:finalise_dob_state",
         "state_model": "immutable-base-dob-plus-typed-successor-state-cell",
         "status": "production-ready-source-package"
@@ -96,7 +96,7 @@
       "publish_dry_run_command": "cd proposals/evolving-dob/evolving-dob-profile-v1 && cellc publish --dry-run",
       "registry_path": "proposals/evolving-dob/evolving-dob-profile-v1/registry.json",
       "repository": "https://github.com/CellScript-Labs/dob-evo",
-      "source_revision": "609bd595334efdd535235125ae9423240c197181",
+      "source_revision": "dd0f913d6a46e3bd36c22cd9ffc3fe0dd9d5b173",
       "status": "active",
       "verify_command": "cd proposals/evolving-dob/evolving-dob-profile-v1 && cellc registry verify --live --json",
       "versions": [
