@@ -24,39 +24,39 @@
   ],
   "commits": [
     {
-      "sha": "90dbdf1",
-      "message": "Cut CellScript 0.21.1 \u2014 close the 0.21 README documentation gap",
+      "sha": "dc66c6e",
+      "message": "Add 0.23 roadmap: registry production, Rust tooling port, RGB++/Fiber, off-chai\u2026",
       "author": "Arthur",
-      "date": "2026-07-11",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/90dbdf1918deb812f6684b48f7e8510201dce01a"
+      "date": "2026-07-27",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/dc66c6e7a14abcb1ae709957a28aab68fcfa302b"
     },
     {
-      "sha": "c8a45f9",
-      "message": "roadmap: add 0.22 type-theory and set-theory draft (pre-Nervos Talk)",
+      "sha": "1f1ce09",
+      "message": "Update website for CellScript 0.22.0",
       "author": "Arthur",
-      "date": "2026-07-11",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/c8a45f9aac5b1d573965af62d668568849cbdbd3"
+      "date": "2026-07-26",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/1f1ce0913ac1035aa957466863e99728af0c8104"
     },
     {
-      "sha": "a8fc70a",
-      "message": "Prepare CellScript 0.21.0 release",
+      "sha": "e9f553a",
+      "message": "Refresh README for 0.22 release",
       "author": "Arthur",
-      "date": "2026-07-11",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/a8fc70ac9df9682b658f8dc2e498a45bf99dda32"
+      "date": "2026-07-25",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/e9f553a435b77aeb120e38e8c480263cf5504f8c"
     },
     {
-      "sha": "8c1f94e",
-      "message": "Update website regression gate",
-      "author": "Tawan",
-      "date": "2026-07-04",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/8c1f94e0ff82d59c3c60701d8f53ade6d1605df6"
+      "sha": "830b597",
+      "message": "Require Docker for release WASM builds",
+      "author": "Arthur",
+      "date": "2026-07-25",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/830b5971237401a74dd7848b200f48b4d2ed79f4"
     },
     {
-      "sha": "83cdeff",
-      "message": "Update website regression fixes",
-      "author": "Tawan",
-      "date": "2026-07-04",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/83cdeff9e2d1fe9592df038fb09efb2ffb83a831"
+      "sha": "56fd971",
+      "message": "Make WASM release builds reproducible",
+      "author": "Arthur",
+      "date": "2026-07-25",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/56fd9710c3acff9364d7ea86f8e1a096dbcd403e"
     }
   ]
 }
