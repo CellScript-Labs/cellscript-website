@@ -361,7 +361,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
         role?: string;
       };
 
-      const compilerAssetVersion = "20260725-v0.22.0-6d63999f";
+      const compilerAssetVersion = "20260730-v0.22.0-1b9c2a57";
       const workerUrl = new URL(`/playground-worker.js?v=${compilerAssetVersion}`, window.location.href);
       const previousPlaygroundAbort = (window as any).__cellscriptPlaygroundAbort as AbortController | undefined;
       previousPlaygroundAbort?.abort();
