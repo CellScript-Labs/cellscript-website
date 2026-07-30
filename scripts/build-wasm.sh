@@ -39,6 +39,7 @@ if [[ "${CELLSCRIPT_WASM_CANONICAL_CONTAINER:-0}" != "1" ]]; then
     --platform linux/amd64 \
     --env CELLSCRIPT_WASM_CANONICAL_CONTAINER=1 \
     --env CARGO_TARGET_DIR=/work/CellScript/target/wasm-reproducible \
+    --env RUSTUP_TOOLCHAIN=1.97.1-x86_64-unknown-linux-gnu \
     --volume "$REPO:/work/CellScript" \
     --volume "$CKB_SDK_RUST_REPO:/work/ckb-sdk-rust:ro" \
     --workdir /work/CellScript \
