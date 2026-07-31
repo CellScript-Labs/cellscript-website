@@ -9,10 +9,10 @@
  * consume_set / create_set / estimated_cycles, etc.). On error it
  * is `{"error": "<message>"}`.
  *
- * The `target` argument is optional; pass `None` for the default
- * (ckb) target profile.
+ * `edition` is mandatory and currently only accepts `"2026"`.
+ * The `target` argument is optional; pass `None` for the default target.
  */
-export function compile_metadata_json(source: string, target?: string | null): string;
+export function compile_metadata_json(source: string, edition: string, target?: string | null): string;
 
 /**
  * Compile CellScript source and return a stable result envelope for tools.
@@ -27,7 +27,7 @@ export function compile_metadata_json(source: string, target?: string | null): s
  * span. Offsets are UTF-8 byte offsets from the original source; line and
  * column are 1-based.
  */
-export function compile_metadata_json_diagnostics(source: string, target?: string | null): string;
+export function compile_metadata_json_diagnostics(source: string, edition: string, target?: string | null): string;
 
 /**
  * Compile a virtual multi-file source set and return metadata diagnostics.
@@ -36,7 +36,7 @@ export function compile_metadata_json_diagnostics(source: string, target?: strin
  * `entry_path` selects the source that should produce metadata. This is an
  * additive API; the single-source functions remain stable.
  */
-export function compile_metadata_json_sources(sources_json: string, entry_path: string, target?: string | null): string;
+export function compile_metadata_json_sources(sources_json: string, entry_path: string, edition: string, target?: string | null): string;
 
 /**
  * Query the in-process CellScript language service for browser tooling.
@@ -57,9 +57,9 @@ export type InitInput = RequestInfo | URL | Response | BufferSource | WebAssembl
 
 export interface InitOutput {
     readonly memory: WebAssembly.Memory;
-    readonly compile_metadata_json: (a: number, b: number, c: number, d: number) => [number, number];
-    readonly compile_metadata_json_diagnostics: (a: number, b: number, c: number, d: number) => [number, number];
-    readonly compile_metadata_json_sources: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
+    readonly compile_metadata_json: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
+    readonly compile_metadata_json_diagnostics: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
+    readonly compile_metadata_json_sources: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => [number, number];
     readonly language_service_json: (a: number, b: number, c: number, d: number) => [number, number];
     readonly version: () => [number, number];
     readonly __wbindgen_externrefs: WebAssembly.Table;

@@ -1,6 +1,7 @@
 let wasmModulePromise;
 let wasmModule;
-const COMPILER_ASSET_VERSION = "20260725-v0.22.0-6d63999f";
+const COMPILER_ASSET_VERSION = "20260731-v0.22.0-9bb2d765";
+const CELLSCRIPT_EDITION = "2026";
 
 const loadCompiler = async () => {
   if (!wasmModulePromise) {
@@ -40,16 +41,16 @@ self.addEventListener("message", async (event) => {
     const start = performance.now();
     let raw;
     if (Array.isArray(sources) && sources.length && entryPath && mod.compile_metadata_json_sources) {
-      raw = mod.compile_metadata_json_sources(JSON.stringify(sources), entryPath, target || null);
+      raw = mod.compile_metadata_json_sources(JSON.stringify(sources), entryPath, CELLSCRIPT_EDITION, target || null);
     } else {
       const compile =
         mod.compile_metadata_json_diagnostics ||
-        ((src, artifactTarget) => {
-          const fallbackRaw = mod.compile_metadata_json(src, artifactTarget);
+        ((src, edition, artifactTarget) => {
+          const fallbackRaw = mod.compile_metadata_json(src, edition, artifactTarget);
           const parsed = JSON.parse(fallbackRaw);
           return JSON.stringify(parsed.error ? { metadata: null, diagnostics: [{ message: parsed.error, severity: "error" }] } : { metadata: parsed, diagnostics: [] });
         });
-      raw = compile(source || "", target || null);
+      raw = compile(source || "", CELLSCRIPT_EDITION, target || null);
     }
     const payload = JSON.parse(raw);
     self.postMessage({

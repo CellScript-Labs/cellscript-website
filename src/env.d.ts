@@ -19,18 +19,18 @@ declare module "node:path" {
 // playground's import resolves at check time. The wildcard covers the
 // absolute-path import used in the client script.
 declare module "*/wasm/cellscript_wasm.js" {
-  export function compile_metadata_json(source: string, target: string | null): string;
-  export function compile_metadata_json_diagnostics(source: string, target: string | null): string;
-  export function compile_metadata_json_sources(sourcesJson: string, entryPath: string, target: string | null): string;
+  export function compile_metadata_json(source: string, edition: "2026", target: string | null): string;
+  export function compile_metadata_json_diagnostics(source: string, edition: "2026", target: string | null): string;
+  export function compile_metadata_json_sources(sourcesJson: string, entryPath: string, edition: "2026", target: string | null): string;
   export function language_service_json(source: string, line: number, character: number): string;
   export function version(): string;
   export default function init(): Promise<void>;
 }
 
 declare module "/wasm/cellscript_wasm.js" {
-  export function compile_metadata_json(source: string, target: string | null): string;
-  export function compile_metadata_json_diagnostics(source: string, target: string | null): string;
-  export function compile_metadata_json_sources(sourcesJson: string, entryPath: string, target: string | null): string;
+  export function compile_metadata_json(source: string, edition: "2026", target: string | null): string;
+  export function compile_metadata_json_diagnostics(source: string, edition: "2026", target: string | null): string;
+  export function compile_metadata_json_sources(sourcesJson: string, entryPath: string, edition: "2026", target: string | null): string;
   export function language_service_json(source: string, line: number, character: number): string;
   export function version(): string;
   export default function init(): Promise<void>;

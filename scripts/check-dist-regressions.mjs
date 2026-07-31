@@ -38,8 +38,8 @@ const distWasm = resolve(dist, "wasm", "cellscript_wasm_bg.wasm");
 const docsSource = resolve(root, "src", "lib", "docs.ts");
 const wikiRoot = resolve(root, "..", "docs", "wiki");
 const expectedReleaseTag = "v0.22.0";
-const expectedCompilerAssetVersion = "20260725-v0.22.0-6d63999f";
-const expectedWasmSha256 = "6d63999f92f3f243db03ff436ced21553b9e8728f96f123418c008a609066205";
+const expectedCompilerAssetVersion = "20260731-v0.22.0-9bb2d765";
+const expectedWasmSha256 = "9bb2d7651b96f0916f0bac98f9f1c71b4a792c682ab08b00cff536a2494d3e31";
 
 expectFile(distIndex);
 expectFile(distDocsIndex);

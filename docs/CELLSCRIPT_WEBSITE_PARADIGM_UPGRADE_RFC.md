@@ -141,7 +141,11 @@ A thin shim exposing three functions:
 
 ```rust
 #[wasm_bindgen]
-pub fn compile_metadata_json(source: &str, target: Option<String>) -> String;
+pub fn compile_metadata_json(
+    source: &str,
+    edition: &str,
+    target: Option<String>,
+) -> String;
 
 #[wasm_bindgen]
 pub fn compile_full_json(source: &str) -> String;  // path B, v2
@@ -259,7 +263,7 @@ Mature editor projects are still valuable as **reference clones**
 ### 4.3 Compile trigger (debounced)
 
 ```
-input -> debounce 300ms -> wasm.compile_metadata_json(source) ->
+input -> debounce 300ms -> wasm.compile_metadata_json(source, "2026", target) ->
   parse JSON -> update OUTPUT tabs + PROVENANCE rail + bottom status
 ```
 
