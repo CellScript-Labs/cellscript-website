@@ -13,6 +13,8 @@ import { jsonWithAsciiEscapes } from "./ascii-json.mjs";
 const WEBSITE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = resolve(WEBSITE_ROOT, "src/data/registry-packages.json");
 const SKIP_DIRS = new Set([".git", ".astro", ".cell", "dist", "node_modules", "target"]);
+const REGISTRY_SCHEMA_VERSION = 2;
+const CELLSCRIPT_EDITION = "2026";
 
 function registryRoot() {
   const configured = process.env.CELLSCRIPT_REGISTRY_ROOT;
@@ -85,7 +87,22 @@ function deploymentSummary(deployed) {
 
 function packageRecord(registryPath) {
   const registry = readJson(registryPath);
-  if (!Array.isArray(registry.versions)) return null;
+  if (registry.schema_version !== REGISTRY_SCHEMA_VERSION) {
+    throw new Error(`${posixRelative(REPO_ROOT, registryPath)} must use registry schema ${REGISTRY_SCHEMA_VERSION}`);
+  }
+  if (!Array.isArray(registry.versions)) {
+    throw new Error(`${posixRelative(REPO_ROOT, registryPath)} must contain a versions array`);
+  }
+  for (const version of registry.versions) {
+    if (version.edition !== CELLSCRIPT_EDITION) {
+      throw new Error(`${posixRelative(REPO_ROOT, registryPath)} version ${version.version || "<unknown>"} must use Edition ${CELLSCRIPT_EDITION}`);
+    }
+    if (!/^(?:0x)?[0-9a-fA-F]{64}$/.test(String(version.compatibility_profile_hash || ""))) {
+      throw new Error(
+        `${posixRelative(REPO_ROOT, registryPath)} version ${version.version || "<unknown>"} must record compatibility_profile_hash`,
+      );
+    }
+  }
   const packageDir = dirname(registryPath);
   const manifest = readToml(resolve(packageDir, "Cell.toml"));
   const deployed = readToml(resolve(packageDir, "Deployed.toml"));
@@ -161,7 +178,11 @@ if (!registryPaths.length && existsSync(OUT)) {
   process.exit(0);
 }
 const records = registryPaths.map(packageRecord).filter(Boolean).sort((left, right) => left.coordinate.localeCompare(right.coordinate));
-const payload = { schema_version: 1, source: "repo registry.json + Cell.toml + Deployed.toml scan", packages: records };
+const payload = {
+  schema_version: REGISTRY_SCHEMA_VERSION,
+  source: "registry schema v2 + Cell.toml + Deployed.toml scan",
+  packages: records,
+};
 mkdirSync(dirname(OUT), { recursive: true });
 writeFileSync(OUT, `${jsonWithAsciiEscapes(sortJson(payload))}\n`, "utf8");
 console.log(`generated ${posixRelative(REPO_ROOT, OUT)} with ${records.length} package(s)`);

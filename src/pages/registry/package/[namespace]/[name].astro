@@ -56,7 +56,9 @@ const sourceHash = pkg.latest?.source_hash;
                 <tr>
                   <th data-i18n="registry.package.thVersion">{t.registry.package.thVersion}</th>
                   <th data-i18n="registry.package.thTag">{t.registry.package.thTag}</th>
+                  <th data-i18n="registry.package.thEdition">{t.registry.package.thEdition}</th>
                   <th data-i18n="registry.package.thSourceHash">{t.registry.package.thSourceHash}</th>
+                  <th data-i18n="registry.package.thProfileHash">{t.registry.package.thProfileHash}</th>
                   <th data-i18n="registry.package.thStatus">{t.registry.package.thStatus}</th>
                   <th data-i18n="registry.package.thReleased">{t.registry.package.thReleased}</th>
                 </tr>
@@ -66,7 +68,9 @@ const sourceHash = pkg.latest?.source_hash;
                   <tr>
                     <td>{version.version}</td>
                     <td><code>{version.tag}</code></td>
+                    <td>{version.edition}</td>
                     <td><code>{shortHash(version.source_hash)}</code></td>
+                    <td><code>{shortHash(version.compatibility_profile_hash)}</code></td>
                     <td>{version.yanked ? <span data-i18n="registry.package.statusYanked">{t.registry.package.statusYanked}</span> : <span data-i18n="registry.package.statusAvailable">{t.registry.package.statusAvailable}</span>}{version.replaced_by ? ` -> ${version.replaced_by}` : ""}</td>
                     <td>{version.released_at || <span data-i18n="registry.package.notRecorded">{t.registry.package.notRecorded}</span>}</td>
                   </tr>

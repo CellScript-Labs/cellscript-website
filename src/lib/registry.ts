@@ -4,7 +4,9 @@ export interface RegistryVersion {
   version: string;
   tag: string;
   source_hash: string;
-  cellscript_version?: string;
+  cellscript_version: string;
+  edition: "2026";
+  compatibility_profile_hash: string;
   license?: string;
   released_at?: string;
   yanked?: boolean;
@@ -68,7 +70,7 @@ export interface RegistryPackage {
 }
 
 export interface RegistryData {
-  schema_version: number;
+  schema_version: 2;
   source: string;
   packages: RegistryPackage[];
 }
