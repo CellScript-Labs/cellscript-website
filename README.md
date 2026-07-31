@@ -46,6 +46,25 @@ docs can be embedded:
 CELLSCRIPT_REPO_ROOT=/path/to/CellScript npm run build
 ```
 
+## Deploy To Production
+
+The checked-in nginx deployment serves the generated site from a read-only
+mount and runs with a read-only root filesystem, bounded temporary filesystems,
+health checks, log rotation, `no-new-privileges`, and conservative browser
+security headers. It expects the external `stack-network` used by the TLS
+reverse proxy.
+
+```bash
+cp deploy/.env.example deploy/.env
+# Set CELLSCRIPT_SITE_DIST to the absolute generated-site directory.
+docker compose --env-file deploy/.env -f deploy/docker-compose.production.yml config
+docker compose --env-file deploy/.env -f deploy/docker-compose.production.yml up -d
+```
+
+TLS terminates at the shared reverse proxy. The origin still emits HSTS and
+anti-embedding/security headers so the HTTPS response retains them through the
+proxy.
+
 ## Registry Data
 
 The site includes generated registry metadata at:
