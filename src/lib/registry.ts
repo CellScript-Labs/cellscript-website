@@ -7,15 +7,24 @@ export interface RegistryVersion {
   cellscript_version: string;
   edition: "2026";
   compatibility_profile_hash: string;
+  dependencies: Record<string, { namespace: string; version: string }>;
+  status:
+    | "source_published"
+    | "indexed_pending"
+    | "verified_build"
+    | "deployed"
+    | "on_chain_attested"
+    | "deprecated"
+    | "yanked"
+    | "quarantined";
+  yanked: boolean;
   license?: string;
   released_at?: string;
-  yanked?: boolean;
   yanked_at?: string;
   yanked_reason?: string;
   replaced_by?: string;
   abi_index?: string;
   schema_hash?: string;
-  dependencies?: Record<string, { namespace: string; version: string }>;
 }
 
 export interface RegistryDeployment {
@@ -70,7 +79,7 @@ export interface RegistryPackage {
 }
 
 export interface RegistryData {
-  schema_version: 2;
+  schema_version: 1;
   source: string;
   packages: RegistryPackage[];
 }

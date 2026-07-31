@@ -13,8 +13,18 @@ import { jsonWithAsciiEscapes } from "./ascii-json.mjs";
 const WEBSITE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const OUT = resolve(WEBSITE_ROOT, "src/data/registry-packages.json");
 const SKIP_DIRS = new Set([".git", ".astro", ".cell", "dist", "node_modules", "target"]);
-const REGISTRY_SCHEMA_VERSION = 2;
+const REGISTRY_SCHEMA_VERSION = 1;
 const CELLSCRIPT_EDITION = "2026";
+const REGISTRY_STATUSES = new Set([
+  "source_published",
+  "indexed_pending",
+  "verified_build",
+  "deployed",
+  "on_chain_attested",
+  "deprecated",
+  "yanked",
+  "quarantined",
+]);
 
 function registryRoot() {
   const configured = process.env.CELLSCRIPT_REGISTRY_ROOT;
@@ -85,34 +95,73 @@ function deploymentSummary(deployed) {
   return { count: deployments.length, active_count: active.length, networks, active };
 }
 
+function requiredText(record, key, location) {
+  const value = record?.[key];
+  if (typeof value !== "string" || value.trim() === "") {
+    throw new Error(`${location} must record ${key}`);
+  }
+  return value.trim();
+}
+
+function requiredRecord(record, key, location) {
+  const value = record?.[key];
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    throw new Error(`${location} must record ${key} as an object`);
+  }
+  return value;
+}
+
 function packageRecord(registryPath) {
   const registry = readJson(registryPath);
+  const registryLocation = posixRelative(REPO_ROOT, registryPath);
   if (registry.schema_version !== REGISTRY_SCHEMA_VERSION) {
-    throw new Error(`${posixRelative(REPO_ROOT, registryPath)} must use registry schema ${REGISTRY_SCHEMA_VERSION}`);
+    throw new Error(`${registryLocation} must use registry schema ${REGISTRY_SCHEMA_VERSION}`);
   }
-  if (!Array.isArray(registry.versions)) {
-    throw new Error(`${posixRelative(REPO_ROOT, registryPath)} must contain a versions array`);
+  const namespace = requiredText(registry, "namespace", registryLocation);
+  const name = requiredText(registry, "name", registryLocation);
+  if (!Array.isArray(registry.versions) || registry.versions.length === 0) {
+    throw new Error(`${registryLocation} must contain a non-empty versions array`);
   }
   for (const version of registry.versions) {
+    if (!version || typeof version !== "object" || Array.isArray(version)) {
+      throw new Error(`${registryLocation} versions must be objects`);
+    }
+    const versionNumber = requiredText(version, "version", registryLocation);
+    if (requiredText(version, "tag", registryLocation) !== `v${versionNumber}`) {
+      throw new Error(`${registryLocation} version ${versionNumber} must use tag v${versionNumber}`);
+    }
+    const sourceHash = requiredText(version, "source_hash", registryLocation);
+    if (!/^(?:0x)?[0-9a-fA-F]{64}$/.test(sourceHash)) {
+      throw new Error(`${registryLocation} version ${versionNumber} must record a 32-byte source_hash`);
+    }
+    requiredText(version, "cellscript_version", registryLocation);
     if (version.edition !== CELLSCRIPT_EDITION) {
-      throw new Error(`${posixRelative(REPO_ROOT, registryPath)} version ${version.version || "<unknown>"} must use Edition ${CELLSCRIPT_EDITION}`);
+      throw new Error(`${registryLocation} version ${versionNumber} must use Edition ${CELLSCRIPT_EDITION}`);
     }
     if (!/^(?:0x)?[0-9a-fA-F]{64}$/.test(String(version.compatibility_profile_hash || ""))) {
-      throw new Error(
-        `${posixRelative(REPO_ROOT, registryPath)} version ${version.version || "<unknown>"} must record compatibility_profile_hash`,
-      );
+      throw new Error(`${registryLocation} version ${versionNumber} must record compatibility_profile_hash`);
+    }
+    requiredRecord(version, "dependencies", registryLocation);
+    if (!REGISTRY_STATUSES.has(version.status)) {
+      throw new Error(`${registryLocation} version ${versionNumber} must record a valid status`);
+    }
+    if (typeof version.yanked !== "boolean") {
+      throw new Error(`${registryLocation} version ${versionNumber} must record yanked as a boolean`);
     }
   }
   const packageDir = dirname(registryPath);
   const manifest = readToml(resolve(packageDir, "Cell.toml"));
   const deployed = readToml(resolve(packageDir, "Deployed.toml"));
   const packageManifest = manifest.package && typeof manifest.package === "object" && !Array.isArray(manifest.package) ? manifest.package : {};
+  if (packageManifest.namespace !== namespace || packageManifest.name !== name) {
+    throw new Error(`${registryLocation} package identity must match Cell.toml`);
+  }
+  if (packageManifest.edition !== CELLSCRIPT_EDITION) {
+    throw new Error(`${registryLocation} Cell.toml must use Edition ${CELLSCRIPT_EDITION}`);
+  }
   const policy = manifest.policy && typeof manifest.policy === "object" && !Array.isArray(manifest.policy) ? manifest.policy : {};
   const metadata = manifest.metadata && typeof manifest.metadata === "object" && !Array.isArray(manifest.metadata) ? manifest.metadata : {};
   const latest = latestVersion(registry.versions);
-  const namespace = String(registry.namespace || packageManifest.namespace || "");
-  const name = String(registry.name || packageManifest.name || "");
-  if (!namespace || !name) return null;
   const deployment = deploymentSummary(deployed);
   const latestValue = String(latest?.version || packageManifest.version || "");
   const status = deployment.active_count ? "active" : String(metadata.status || "source-only");
@@ -180,7 +229,7 @@ if (!registryPaths.length && existsSync(OUT)) {
 const records = registryPaths.map(packageRecord).filter(Boolean).sort((left, right) => left.coordinate.localeCompare(right.coordinate));
 const payload = {
   schema_version: REGISTRY_SCHEMA_VERSION,
-  source: "registry schema v2 + Cell.toml + Deployed.toml scan",
+  source: "registry.json + Cell.toml + Deployed.toml scan",
   packages: records,
 };
 mkdirSync(dirname(OUT), { recursive: true });
