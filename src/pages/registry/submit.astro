@@ -55,7 +55,8 @@ const description = t.registry.submit.description;
         </div>
         <div class="registry-step-code">
           <code data-submit-add>cellc auth capability create --principal-id &lt;principal_id&gt; --scope publish:&lt;namespace&gt;/&lt;name&gt; --expires 90d --json &gt; capability-payload.json
-cellc auth capability submit --payload capability-payload.json --joyid-signature joyid-signature.json</code>
+cellc auth capability submit --payload capability-payload.json --joyid-signature joyid-signature.json
+cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-payload.json --joyid-signature joyid-signature.json</code>
           <button class="registry-copy" type="button" data-submit-copy data-copy-text="" data-revert-label={t.registry.submit.copyAddCommand} data-i18n="registry.submit.copyAddCommand">{t.registry.submit.copyAddCommand}</button>
         </div>
       </li>
@@ -102,6 +103,7 @@ cellc auth capability submit --payload capability-payload.json --joyid-signature
         <button class="registry-button" type="button" data-capability-connect>Connect JoyID</button>
         <button class="registry-button primary" type="button" data-capability-sign>Sign payload</button>
         <button class="registry-button" type="button" data-capability-submit>Submit capability</button>
+        <button class="registry-button" type="button" data-namespace-claim>Claim namespace</button>
         <button class="registry-copy" type="button" data-capability-copy-principal data-copy-text="" data-revert-label="Copy principal_id">Copy principal_id</button>
         <button class="registry-copy" type="button" data-capability-copy-signature data-copy-text="" data-revert-label="Copy signature">Copy signature</button>
       </div>
@@ -137,7 +139,7 @@ cellc auth capability submit --payload capability-payload.json --joyid-signature
       const path = value("path");
       const cd = path ? `cd ${shellQuote(path)} && ` : "";
       const preflightCommand = `${cd}cellc package verify --json && cellc publish --dry-run`;
-      const authCommand = `cellc auth capability create --principal-id ${shellQuote(principalId)} --scope ${shellQuote(`publish:${namespace}/${name}`)} --expires 90d --json > capability-payload.json\ncellc auth capability submit --payload capability-payload.json --joyid-signature joyid-signature.json`;
+      const authCommand = `cellc auth capability create --principal-id ${shellQuote(principalId)} --scope ${shellQuote(`publish:${namespace}/${name}`)} --expires 90d --json > capability-payload.json\ncellc auth capability submit --payload capability-payload.json --joyid-signature joyid-signature.json\ncellc auth namespace claim --namespace ${shellQuote(namespace)} --payload capability-payload.json --joyid-signature joyid-signature.json`;
       const publishCommand = `${cd}cellc publish`;
 
       if (preflight) preflight.textContent = preflightCommand;
@@ -172,6 +174,8 @@ cellc auth capability submit --payload capability-payload.json --joyid-signature
     const connectButton = document.querySelector<HTMLButtonElement>("[data-capability-connect]");
     const signButton = document.querySelector<HTMLButtonElement>("[data-capability-sign]");
     const submitButton = document.querySelector<HTMLButtonElement>("[data-capability-submit]");
+    const claimNamespaceButton = document.querySelector<HTMLButtonElement>("[data-namespace-claim]");
+    const namespaceInput = document.querySelector<HTMLInputElement>("[data-submit-form] input[name='namespace']");
     const copyPrincipalButton = document.querySelector<HTMLButtonElement>("[data-capability-copy-principal]");
     const copySignatureButton = document.querySelector<HTMLButtonElement>("[data-capability-copy-signature]");
     const statusOutput = document.querySelector<HTMLOutputElement>("[data-capability-status]");
@@ -428,6 +432,55 @@ cellc auth capability submit --payload capability-payload.json --joyid-signature
         setCapabilityStatus(error instanceof Error ? error.message : "Capability submit failed", "error");
       } finally {
         submitButton.disabled = false;
+      }
+    });
+
+    claimNamespaceButton?.addEventListener("click", async () => {
+      claimNamespaceButton.disabled = true;
+      try {
+        const namespace = namespaceInput?.value.trim() || "";
+        if (!namespace) throw new Error("Namespace is required before claiming ownership");
+        const payload = parsePayload();
+        const scopes = Array.isArray(payload["requested_scopes"])
+          ? payload["requested_scopes"].filter((scope): scope is string => typeof scope === "string")
+          : [];
+        if (!scopes.some((scope) => scope.startsWith(`publish:${namespace}/`))) {
+          throw new Error(`Capability payload has no publish scope for namespace ${namespace}`);
+        }
+        const signature = signatureOutput?.value.trim()
+          ? JSON.parse(signatureOutput.value) as CapabilitySignature
+          : await signCapabilityPayload();
+        if (signatureOutput && !signatureOutput.value.trim()) signatureOutput.value = JSON.stringify(signature, null, 2);
+        copySignatureButton?.setAttribute("data-copy-text", JSON.stringify(signature, null, 2));
+        const apiBase = (apiInput?.value || "https://api.registry.cellscript.dev").trim().replace(/\/+$/, "");
+        const response = await fetch(`${apiBase}/v1/namespaces/claim`, {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ namespace, payload, joyid_signature: signature }),
+        });
+        const text = await response.text();
+        let parsed: unknown;
+        try {
+          parsed = JSON.parse(text);
+        } catch {
+          parsed = { response: text };
+        }
+        if (responseOutput) {
+          responseOutput.hidden = false;
+          responseOutput.textContent = JSON.stringify(parsed, null, 2);
+        }
+        if (!response.ok) {
+          throw new Error(`Registry API rejected the namespace claim: HTTP ${response.status}`);
+        }
+        const claimStatus = parsed && typeof parsed === "object" && !Array.isArray(parsed)
+          && typeof (parsed as Record<string, unknown>)["status"] === "string"
+          ? String((parsed as Record<string, unknown>)["status"])
+          : "submitted";
+        setCapabilityStatus(`Namespace ${namespace}: ${claimStatus}`, claimStatus === "active" ? "ok" : "idle");
+      } catch (error) {
+        setCapabilityStatus(error instanceof Error ? error.message : "Namespace claim failed", "error");
+      } finally {
+        claimNamespaceButton.disabled = false;
       }
     });
   </script>
