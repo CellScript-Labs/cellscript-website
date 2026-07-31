@@ -1,170 +1,210 @@
 ---
-import "../styles/global.css";
-import "../styles/registry.css";
-import SiteHeader from "../components/SiteHeader.astro";
-import { ClientRouter } from "astro:transitions";
-import { links } from "../data/site";
+import RegistryLayout from "../layouts/RegistryLayout.astro";
+import { packageHref, registryPackages } from "../lib/registry";
 import { defaultLocale, translations } from "../i18n/translations";
-import { Check, CircleDot, Mail } from "lucide-astro";
+import { ArrowRight, Search } from "lucide-astro";
 
-const locale = defaultLocale;
-const t = translations[locale];
-const phases = t.comingSoon.phases;
-const phaseIcons = [Check, CircleDot, CircleDot];
-const title = `CellScript Registry — ${t.comingSoon.title}`;
+const t = translations[defaultLocale];
+const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.registry.cellscript.dev").replace(/\/$/, "");
+const fallbackPackages = registryPackages.map((pkg) => ({
+  coordinate: pkg.coordinate,
+  namespace: pkg.namespace,
+  name: pkg.name,
+  latest_version: pkg.latest_version || null,
+  status: pkg.status,
+  description: pkg.description || null,
+  repository: pkg.repository || null,
+  keywords: pkg.keywords || [],
+  categories: pkg.categories || [],
+  versions: pkg.versions,
+  href: packageHref(pkg),
+  source: "bundled",
+}));
 ---
 
-<!doctype html>
-<html lang={locale}>
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="color-scheme" content="light dark" />
-    <meta name="description" content={t.comingSoon.lead} data-i18n-content="comingSoon.lead" />
-    <meta property="og:title" content={title} />
-    <meta property="og:description" content={t.comingSoon.lead} data-i18n-content="comingSoon.lead" />
-    <link rel="icon" type="image/png" href={`${import.meta.env.BASE_URL}cellscript-logo.png`} />
-    <link rel="icon" type="image/png" media="(prefers-color-scheme: light)" href={`${import.meta.env.BASE_URL}cellscript-logo-light.png`} />
-    <link rel="icon" type="image/png" media="(prefers-color-scheme: dark)" href={`${import.meta.env.BASE_URL}cellscript-logo-dark.png`} />
-    <title>{title}</title>
-    <script is:inline>
-      (() => {
-        try {
-          const storedTheme = localStorage.getItem("cellscript-theme");
-          const storedLocale = localStorage.getItem("cellscript-locale");
-          document.documentElement.dataset.theme = storedTheme === "light" || storedTheme === "dark" ? storedTheme : "light";
-          document.documentElement.dataset.locale = storedLocale === "zh" ? "zh" : "en";
-          document.documentElement.lang = document.documentElement.dataset.locale;
-        } catch {
-          document.documentElement.dataset.theme = "light";
-          document.documentElement.dataset.locale = "en";
-          document.documentElement.lang = "en";
-        }
-      })();
-    </script>
-    <ClientRouter />
-  </head>
-  <body>
-    <a class="skip-link" href="#registry-coming-soon" data-i18n="a11y.skipToContent">{t.a11y.skipToContent}</a>
-    <SiteHeader page="registry" />
+<RegistryLayout
+  title="CellScript Registry"
+  description={t.registry.browse.description}
+  headingKey="registry.browse.title"
+  descriptionKey="registry.browse.description"
+  active="search"
+>
+  <section class="registry-browse" data-registry-browser data-api-origin={apiOrigin} aria-label={t.registry.browse.searchAria}>
+    <div class="registry-browse-search">
+      <label class="registry-browse-input">
+        <Search aria-hidden="true" />
+        <span class="sr-only" data-i18n="registry.browse.searchAria">{t.registry.browse.searchAria}</span>
+        <input
+          type="search"
+          autocomplete="off"
+          placeholder={t.registry.browse.searchPlaceholder}
+          data-i18n-placeholder="registry.browse.searchPlaceholder"
+          data-registry-query
+        />
+      </label>
+      <span class="registry-browse-count" data-registry-count aria-live="polite"></span>
+    </div>
 
-    <main id="registry-coming-soon" class="registry-coming-soon-page">
-      <section class="registry-coming-soon" aria-label={t.comingSoon.title} data-i18n-aria-label="comingSoon.title">
-        <div class="registry-coming-soon-card">
-          <p class="registry-eyebrow" data-i18n="comingSoon.eyebrow">{t.comingSoon.eyebrow}</p>
-          <h1 class="registry-coming-soon-title" data-i18n="comingSoon.title">{t.comingSoon.title}</h1>
-          <p class="registry-coming-soon-lead" data-i18n="comingSoon.lead">{t.comingSoon.lead}</p>
+    <div class="registry-service-state" data-registry-service-state data-state="loading" role="status" aria-live="polite">
+      <span class="registry-service-dot" aria-hidden="true"></span>
+      <span data-registry-service-copy data-i18n="registry.browse.loading">{t.registry.browse.loading}</span>
+      <a href={`${apiOrigin}/health`} target="_blank" rel="noopener noreferrer">API</a>
+    </div>
 
-          <div class="registry-phase-track" aria-label={t.comingSoon.phaseCaption}>
-            {phases.map((phase, index) => {
-              const PhaseIcon = phaseIcons[index];
-              const state = index === 0 ? "done" : index === 1 ? "active" : "pending";
-              return (
-                <div class:list={["registry-phase", `registry-phase-${state}`]}>
-                  <span class="registry-phase-dot"><PhaseIcon aria-hidden="true" /></span>
-                  <span class="registry-phase-label">{phase.label}</span>
-                  <strong class="registry-phase-title">{phase.title}</strong>
-                  <p class="registry-phase-caption">{phase.caption}</p>
-                </div>
-              );
-            })}
-          </div>
-
-          <div class="registry-coming-soon-actions">
-            <a class="registry-button primary" href="/registry/submit" data-i18n="comingSoon.tryLocalCta">{t.comingSoon.tryLocalCta}</a>
-            <a class="registry-button" href={links.docs} data-i18n="comingSoon.ctaWiki">{t.comingSoon.ctaWiki}</a>
-            <a class="registry-button" href={links.source} target="_blank" rel="noopener noreferrer" data-i18n="comingSoon.ctaSource">{t.comingSoon.ctaSource}</a>
-          </div>
-        </div>
-
-        <div class="registry-notify-card">
-          <span class="registry-notify-icon"><Mail aria-hidden="true" /></span>
-          <div class="registry-notify-body">
-            <label class="registry-notify-label" for="registry-notify-input" data-i18n="comingSoon.notifyLabel">{t.comingSoon.notifyLabel}</label>
-            <div class="registry-notify-form">
-              <input
-                id="registry-notify-input"
-                type="email"
-                class="registry-notify-input"
-                data-i18n-placeholder="comingSoon.notifyPlaceholder"
-                placeholder={t.comingSoon.notifyPlaceholder}
-              />
-              <button class="registry-button primary" type="button" data-registry-notify data-i18n="comingSoon.notifyButton">{t.comingSoon.notifyButton}</button>
+    <div class="registry-package-list" data-registry-list>
+      {fallbackPackages.map((pkg) => (
+        <a
+          class="registry-package-row"
+          href={pkg.href}
+          data-registry-row
+          data-registry-search={`${pkg.coordinate} ${pkg.description || ""} ${pkg.latest_version || ""} ${pkg.status} ${pkg.keywords.join(" ")} ${pkg.categories.join(" ")}`.toLowerCase()}
+        >
+          <div>
+            <strong>{pkg.coordinate}</strong>
+            <p>{pkg.description || t.registry.browse.noDescription}</p>
+            <div class="registry-badges">
+              <span class="registry-badge">{pkg.latest_version || t.registry.browse.unversioned}</span>
+              <span class="registry-badge">{pkg.status}</span>
+              <span class="registry-badge">Edition {pkg.versions[0]?.edition || "2026"}</span>
             </div>
-            <p class="registry-notify-done" data-registry-notify-done hidden data-i18n="comingSoon.notifyDone">{t.comingSoon.notifyDone}</p>
           </div>
-        </div>
-      </section>
-    </main>
+          <ArrowRight class="registry-row-arrow" aria-hidden="true" />
+        </a>
+      ))}
+    </div>
 
-    <script is:inline define:vars={{ i18n: translations }}>
-      window.__CELLSCRIPT_I18N__ = i18n;
-      window.__CELLSCRIPT_DEFAULT_LOCALE__ = "en";
-    </script>
+    <div class="registry-empty" data-registry-empty hidden>
+      <h2 data-registry-empty-title>{t.registry.browse.emptyTitle}</h2>
+      <p data-registry-empty-body>{t.registry.browse.emptyBody}</p>
+      <a class="registry-button primary" href="/registry/submit" data-i18n="registry.submitPackage">{t.registry.submitPackage}</a>
+    </div>
+  </section>
 
-    <script>
-      const i18nMessages = (window as any).__CELLSCRIPT_I18N__ as any;
-      const defaultLocaleName = (window as any).__CELLSCRIPT_DEFAULT_LOCALE__ ?? "en";
+  <script is:inline define:vars={{ fallbackPackages }}>
+    (() => {
+      const prior = window.__cellscriptRegistryBrowseAbort;
+      prior?.abort();
+      const controller = new AbortController();
+      window.__cellscriptRegistryBrowseAbort = controller;
+      const { signal } = controller;
+      document.addEventListener("astro:before-swap", () => controller.abort(), { once: true, signal });
 
-      const readLocale = () =>
-        document.documentElement.dataset.locale === "zh" ? "zh" : defaultLocaleName;
+      const app = document.querySelector("[data-registry-browser]");
+      if (!app) return;
+      const list = app.querySelector("[data-registry-list]");
+      const query = app.querySelector("[data-registry-query]");
+      const count = app.querySelector("[data-registry-count]");
+      const empty = app.querySelector("[data-registry-empty]");
+      const emptyTitle = app.querySelector("[data-registry-empty-title]");
+      const emptyBody = app.querySelector("[data-registry-empty-body]");
+      const service = app.querySelector("[data-registry-service-state]");
+      const serviceCopy = app.querySelector("[data-registry-service-copy]");
+      const apiOrigin = app.dataset.apiOrigin;
+      let packages = fallbackPackages;
+      let source = "loading";
 
-      const getMessage = (path: string, locale = readLocale()) =>
-        path.split(".").reduce((value: any, segment: string) => value?.[segment], i18nMessages?.[locale]);
+      const messages = () => window.__CELLSCRIPT_I18N__;
+      const locale = () => document.documentElement.dataset.locale === "zh" ? "zh" : "en";
+      const message = (path) => path.split(".").reduce((value, key) => value?.[key], messages()?.[locale()]);
+      const format = (template, values) => Object.entries(values).reduce((value, [key, replacement]) => value.replaceAll(`{${key}}`, String(replacement)), template || "");
 
-      const applyLocale = (locale: string) => {
-        const nextLocale = locale === "zh" ? "zh" : "en";
-        document.documentElement.dataset.locale = nextLocale;
-        document.documentElement.lang = nextLocale;
-        if (!i18nMessages) return;
-        document.querySelectorAll<HTMLElement>("[data-i18n]").forEach((element) => {
-          const value = getMessage(element.dataset.i18n ?? "", nextLocale);
-          if (typeof value === "string") element.textContent = value;
-        });
-        document.querySelectorAll<HTMLElement>("[data-i18n-aria-label]").forEach((element) => {
-          const value = getMessage(element.dataset.i18nAriaLabel ?? "", nextLocale);
-          if (typeof value === "string") element.setAttribute("aria-label", value);
-        });
-        document.querySelectorAll<HTMLElement>("[data-i18n-content]").forEach((element) => {
-          const value = getMessage(element.dataset.i18nContent ?? "", nextLocale);
-          if (typeof value === "string") element.setAttribute("content", value);
-        });
-        const comingSoonTitle = getMessage("comingSoon.title", nextLocale);
-        if (typeof comingSoonTitle === "string") document.title = `CellScript Registry — ${comingSoonTitle}`;
-        try {
-          localStorage.setItem("cellscript-locale", nextLocale);
-        } catch {
-          // Locale switching still works even when storage is unavailable.
+      const detailHref = (pkg) => {
+        if (pkg.source === "bundled" && pkg.href) return pkg.href;
+        const params = new URLSearchParams({ namespace: pkg.namespace, name: pkg.name });
+        return `/registry/package/?${params}`;
+      };
+
+      const renderRows = () => {
+        if (!list) return;
+        list.replaceChildren();
+        for (const pkg of packages) {
+          const row = document.createElement("a");
+          row.className = "registry-package-row";
+          row.href = detailHref(pkg);
+          row.dataset.registryRow = "";
+          row.dataset.registrySearch = [pkg.coordinate, pkg.description, pkg.latest_version, pkg.status, ...(pkg.keywords || []), ...(pkg.categories || [])]
+            .filter(Boolean).join(" ").toLowerCase();
+
+          const body = document.createElement("div");
+          const title = document.createElement("strong");
+          title.textContent = pkg.coordinate;
+          const description = document.createElement("p");
+          description.textContent = pkg.description || message("registry.browse.noDescription") || "No package description recorded.";
+          const badges = document.createElement("div");
+          badges.className = "registry-badges";
+          const version = document.createElement("span");
+          version.className = "registry-badge";
+          version.textContent = pkg.latest_version || message("registry.browse.unversioned") || "unversioned";
+          const status = document.createElement("span");
+          status.className = "registry-badge";
+          status.textContent = pkg.status || "source_published";
+          const edition = document.createElement("span");
+          edition.className = "registry-badge";
+          edition.textContent = `Edition ${pkg.versions?.[0]?.edition || "2026"}`;
+          badges.append(version, status, edition);
+          body.append(title, description, badges);
+
+          const arrow = document.createElement("span");
+          arrow.className = "registry-row-arrow";
+          arrow.setAttribute("aria-hidden", "true");
+          arrow.textContent = "→";
+          row.append(body, arrow);
+          list.append(row);
+        }
+        applyFilter();
+      };
+
+      const applyFilter = () => {
+        const needle = query?.value.trim().toLowerCase() || "";
+        const rows = Array.from(list?.querySelectorAll("[data-registry-row]") || []);
+        let visible = 0;
+        for (const row of rows) {
+          const matches = !needle || (row.dataset.registrySearch || "").includes(needle);
+          row.hidden = !matches;
+          if (matches) visible += 1;
+        }
+        const countKey = visible === 1 ? "registry.browse.countOne" : "registry.browse.countMany";
+        if (count) count.textContent = format(message(countKey), { n: visible });
+        if (empty) empty.hidden = visible !== 0;
+        if (emptyTitle) emptyTitle.textContent = message(needle ? "registry.browse.noMatchTitle" : "registry.browse.emptyTitle") || "";
+        if (emptyBody) emptyBody.textContent = message(needle ? "registry.browse.noMatchBody" : "registry.browse.emptyBody") || "";
+      };
+
+      const setServiceState = (next) => {
+        source = next;
+        if (service) service.dataset.state = next;
+        if (serviceCopy) {
+          const key = next === "live" ? "registry.browse.liveStatus" : next === "mirror" ? "registry.browse.mirrorStatus" : "registry.browse.loading";
+          serviceCopy.textContent = message(key) || "";
+          serviceCopy.dataset.i18n = key;
         }
       };
 
-      const reapplyRegistryLocale = () => {
-        if (!document.querySelector("#registry-coming-soon.registry-coming-soon-page")) return;
-        applyLocale(readLocale());
-      };
+      query?.addEventListener("input", applyFilter, { signal });
+      window.addEventListener("cellscript:locale-change", () => {
+        renderRows();
+        setServiceState(source);
+      }, { signal });
 
-      if (!(window as any).__cellscriptRegistryIndexLocaleBound) {
-        window.addEventListener("cellscript:locale-change", reapplyRegistryLocale);
-        document.addEventListener("astro:page-load", reapplyRegistryLocale);
-        (window as any).__cellscriptRegistryIndexLocaleBound = true;
-      }
-      reapplyRegistryLocale();
-    </script>
-
-    <script>
-      const notifyBtn = document.querySelector<HTMLButtonElement>("[data-registry-notify]");
-      const notifyDone = document.querySelector<HTMLElement>("[data-registry-notify-done]");
-      const notifyInput = document.querySelector<HTMLInputElement>("#registry-notify-input");
-      notifyBtn?.addEventListener("click", () => {
-        if (!notifyInput?.value.trim()) {
-          notifyInput?.focus();
-          return;
-        }
-        notifyBtn.hidden = true;
-        if (notifyInput) notifyInput.hidden = true;
-        notifyDone?.removeAttribute("hidden");
-      });
-    </script>
-
-  </body>
-</html>
+      renderRows();
+      setServiceState("loading");
+      fetch(`${apiOrigin}/v1/packages?limit=100`, { headers: { accept: "application/json" }, signal })
+        .then(async (response) => {
+          if (!response.ok) throw new Error(`registry API returned ${response.status}`);
+          const payload = await response.json();
+          if (payload?.schema !== "cellscript-public-registry-index-v1" || !Array.isArray(payload.packages)) {
+            throw new Error("registry API returned an unsupported schema");
+          }
+          packages = payload.packages.map((pkg) => ({ ...pkg, source: "live" }));
+          setServiceState("live");
+          renderRows();
+        })
+        .catch((error) => {
+          if (error?.name === "AbortError") return;
+          packages = fallbackPackages;
+          setServiceState("mirror");
+          renderRows();
+        });
+    })();
+  </script>
+</RegistryLayout>

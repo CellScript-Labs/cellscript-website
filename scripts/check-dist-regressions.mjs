@@ -39,7 +39,7 @@ const docsSource = resolve(root, "src", "lib", "docs.ts");
 const wikiRoot = resolve(root, "..", "docs", "wiki");
 const expectedReleaseTag = "v0.22.0";
 const expectedCompilerAssetVersion = "20260731-v0.22.0-9bb2d765";
-const expectedWasmSha256 = "9bb2d7651b96f0916f0bac98f9f1c71b4a792c682ab08b00cff536a2494d3e31";
+const expectedWasmSha256 = "1141d7227079d0585e61b09450331ee4a4791b0875ea2cae81b63219acd70530";
 
 expectFile(distIndex);
 expectFile(distDocsIndex);

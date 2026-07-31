@@ -100,21 +100,16 @@ export interface RegistrySection {
   href: string;
   label: string;
   i18nKey: string;
-  soon?: boolean;
-  soonLabel?: string;
-  soonI18nKey?: string;
 }
 
 export const registrySections: RegistrySection[] = [
-  // The public index route owns the current phase state; keep the shared
-  // sub-navigation named consistently across registry pages.
   { href: "/registry", label: "Registry", i18nKey: "registry.nav.browse" },
   { href: "/registry/submit", label: "Submit", i18nKey: "registry.nav.submit" },
   { href: "/registry/manage", label: "Manage", i18nKey: "registry.nav.manage" },
 ];
 
 export function packageHref(pkg: RegistryPackage): string {
-  return `/registry/package/${encodeURIComponent(pkg.namespace)}/${encodeURIComponent(pkg.name)}`;
+  return `/registry/package/?namespace=${encodeURIComponent(pkg.namespace)}&name=${encodeURIComponent(pkg.name)}`;
 }
 
 export function findPackage(namespace: string, name: string): RegistryPackage | undefined {

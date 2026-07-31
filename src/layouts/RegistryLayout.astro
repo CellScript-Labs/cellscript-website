@@ -85,16 +85,10 @@ const activeHref =
         {registrySections.map((section) => (
           <a
             href={section.href}
-            class:list={[
-              section.href === activeHref && "active",
-              "soon" in section && section.soon && "registry-tabs-soon",
-            ]}
+            class:list={[section.href === activeHref && "active"]}
             aria-current={section.href === activeHref ? "page" : undefined}
           >
             <span data-i18n={section.i18nKey}>{section.label}</span>
-            {"soon" in section && section.soon && section.soonLabel && (
-              <span class="registry-tabs-soon-tag" data-i18n={section.soonI18nKey}>{section.soonLabel}</span>
-            )}
           </a>
         ))}
       </nav>
