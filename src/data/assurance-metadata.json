@@ -1,5 +1,5 @@
 {
-  "metadata_schema_version": 56,
+  "metadata_schema_version": 57,
   "module": "cellscript::vesting",
   "target_profile": "ckb",
   "types": [

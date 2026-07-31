@@ -5,7 +5,9 @@ export interface RegistryVersion {
   tag: string;
   source_hash: string;
   cellscript_version: string;
+  /** Long-lived source-semantics epoch. */
   edition: "2026";
+  /** Resolved target/assurance/ABI/schema profile identity. */
   compatibility_profile_hash: string;
   dependencies: Record<string, { namespace: string; version: string }>;
   status:
