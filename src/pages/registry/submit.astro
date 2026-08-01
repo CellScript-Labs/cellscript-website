@@ -7,13 +7,21 @@ const description = t.registry.submit.description;
 const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.registry.cellscript.dev").replace(/\/$/, "");
 ---
 
-<RegistryLayout title="CellScript Registry: Submit" description={description} headingKey="registry.submit.title" descriptionKey="registry.submit.description" active="submit" showSubmitCta={false}>
+<RegistryLayout title="CellScript Registry: Submit" description={description} headingKey="registry.submit.title" descriptionKey="registry.submit.description" active="submit" compactHeader showSubmitCta={false}>
   <section class="registry-flow" aria-label={t.registry.nav.submit} data-i18n-aria-label="registry.nav.submit">
-    <div class="registry-flow-head">
-      <p class="registry-label" data-i18n="registry.submit.builderLabel">{t.registry.submit.builderLabel}</p>
-      <h2 data-i18n="registry.submit.builderHeading">{t.registry.submit.builderHeading}</h2>
-      <p data-i18n="registry.submit.builderBody">{t.registry.submit.builderBody}</p>
-    </div>
+    <aside class="registry-submit-intro" data-submit-intro hidden aria-labelledby="submit-intro-title">
+      <div class="registry-submit-intro-copy">
+        <p class="registry-label" data-i18n="registry.submit.introLabel">{t.registry.submit.introLabel}</p>
+        <h2 id="submit-intro-title" data-i18n="registry.submit.introTitle">{t.registry.submit.introTitle}</h2>
+        <p data-i18n="registry.submit.introBody">{t.registry.submit.introBody}</p>
+      </div>
+      <ol class="registry-submit-intro-steps">
+        <li><span>01</span><strong data-i18n="registry.submit.introVerify">{t.registry.submit.introVerify}</strong></li>
+        <li><span>02</span><strong data-i18n="registry.submit.introAuthorise">{t.registry.submit.introAuthorise}</strong></li>
+        <li><span>03</span><strong data-i18n="registry.submit.introPublish">{t.registry.submit.introPublish}</strong></li>
+      </ol>
+      <button class="registry-intro-dismiss" type="button" data-submit-intro-dismiss data-i18n="registry.submit.introDismiss">{t.registry.submit.introDismiss}</button>
+    </aside>
 
     <form class="registry-builder" data-submit-form novalidate>
       <div class="registry-builder-grid registry-builder-grid-compact">
@@ -54,136 +62,136 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
       <p class="registry-field-error" id="submit-coordinate-error" data-coordinate-error hidden data-i18n="registry.submit.invalidCoordinate">{t.registry.submit.invalidCoordinate}</p>
     </form>
 
-    <ol class="registry-steps">
-      <li class="registry-step-card">
-        <div class="registry-step-copy">
-          <span class="registry-step-num">01</span>
-          <h3 data-i18n="registry.submit.preflightTitle">{t.registry.submit.preflightTitle}</h3>
-          <p data-i18n="registry.submit.preflightBody">{t.registry.submit.preflightBody}</p>
-        </div>
-        <div class="registry-step-code">
-          <code data-submit-preflight>cellc package verify --json &amp;&amp; cellc publish --dry-run</code>
-          <button class="registry-copy" type="button" data-submit-preflight-copy data-copy-text="cellc package verify --json && cellc publish --dry-run" data-revert-label={t.registry.copy} data-i18n="registry.copy">{t.registry.copy}</button>
-        </div>
-      </li>
+    <div class="registry-submit-preflight">
+      <div>
+        <span class="registry-step-num">01</span>
+        <strong data-i18n="registry.submit.preflightTitle">{t.registry.submit.preflightTitle}</strong>
+        <p data-i18n="registry.submit.preflightBody">{t.registry.submit.preflightBody}</p>
+      </div>
+      <div class="registry-step-code">
+        <code data-submit-preflight>cellc package verify --json &amp;&amp; cellc publish --dry-run</code>
+        <button class="registry-copy" type="button" data-submit-preflight-copy data-copy-text="cellc package verify --json && cellc publish --dry-run" data-revert-label={t.registry.copy} data-i18n="registry.copy">{t.registry.copy}</button>
+      </div>
+    </div>
 
-      <li class="registry-step-card registry-step-card-capability">
-        <div class="registry-step-copy">
+    <section class="registry-authorisation-card" data-authorisation-card aria-labelledby="registry-wallet-heading">
+      <header class="registry-authorisation-head">
+        <div>
           <span class="registry-step-num">02</span>
-          <h3 data-i18n="registry.submit.discoveryTitle">{t.registry.submit.discoveryTitle}</h3>
-          <p data-i18n="registry.submit.discoveryBody">{t.registry.submit.discoveryBody}</p>
+          <h2 id="registry-wallet-heading" data-i18n="registry.submit.walletTitle">{t.registry.submit.walletTitle}</h2>
+          <p data-i18n="registry.submit.walletBody">{t.registry.submit.walletBody}</p>
+        </div>
+        <output class="registry-signer-status" data-capability-status role="status" aria-live="polite" data-i18n="registry.submit.walletIdle">{t.registry.submit.walletIdle}</output>
+      </header>
+
+      <div class="registry-signer" data-capability-signer data-api-origin={apiOrigin}>
+        <ol class="registry-authorisation-progress" aria-label={t.registry.submit.progressLabel} data-i18n-aria-label="registry.submit.progressLabel">
+          <li data-workflow-stage="wallet"><span>1</span><strong data-i18n="registry.submit.stageWallet">{t.registry.submit.stageWallet}</strong></li>
+          <li data-workflow-stage="payload"><span>2</span><strong data-i18n="registry.submit.stagePayload">{t.registry.submit.stagePayload}</strong></li>
+          <li data-workflow-stage="signature"><span>3</span><strong data-i18n="registry.submit.stageSignature">{t.registry.submit.stageSignature}</strong></li>
+          <li data-workflow-stage="capability"><span>4</span><strong data-i18n="registry.submit.stageCapability">{t.registry.submit.stageCapability}</strong></li>
+          <li data-workflow-stage="namespace"><span>5</span><strong data-i18n="registry.submit.stageNamespace">{t.registry.submit.stageNamespace}</strong></li>
+        </ol>
+
+        <label class="registry-builder-field registry-signer-principal" data-principal-panel hidden>
+          <span data-i18n="registry.submit.principal">{t.registry.submit.principal}</span>
+          <span class="registry-inline-control">
+            <input
+              class="registry-input"
+              data-capability-principal
+              readonly
+              placeholder={t.registry.submit.principalPlaceholder}
+              data-i18n-placeholder="registry.submit.principalPlaceholder"
+            />
+            <button class="registry-copy" type="button" data-capability-copy-principal data-copy-text="" data-revert-label={t.registry.submit.copyPrincipal} data-i18n="registry.submit.copyPrincipal">{t.registry.submit.copyPrincipal}</button>
+          </span>
+        </label>
+
+        <div class="registry-progressive-panel" data-payload-panel hidden>
+          <label class="registry-builder-field">
+            <span data-i18n="registry.submit.payload">{t.registry.submit.payload}</span>
+            <textarea
+              class="registry-textarea"
+              data-capability-payload
+              spellcheck="false"
+              placeholder={t.registry.submit.payloadPlaceholder}
+              data-i18n-placeholder="registry.submit.payloadPlaceholder"
+              aria-describedby="capability-payload-hint"
+            ></textarea>
+            <small class="registry-field-hint" id="capability-payload-hint" data-i18n="registry.submit.payloadHint">{t.registry.submit.payloadHint}</small>
+          </label>
         </div>
 
-        <section
-          class="registry-signer"
-          data-capability-signer
-          data-api-origin={apiOrigin}
-          aria-labelledby="registry-wallet-heading"
-        >
-          <div class="registry-wallet-head">
-            <div>
-              <p class="registry-label" data-i18n="registry.submit.walletLabel">{t.registry.submit.walletLabel}</p>
-              <h4 id="registry-wallet-heading" data-i18n="registry.submit.walletTitle">{t.registry.submit.walletTitle}</h4>
-              <p data-i18n="registry.submit.walletBody">{t.registry.submit.walletBody}</p>
-            </div>
-            <label class="registry-builder-field registry-network-field">
-              <span data-i18n="registry.submit.network">{t.registry.submit.network}</span>
-              <select class="registry-select" data-capability-network>
-                <option value="mainnet" data-i18n="registry.submit.mainnet">{t.registry.submit.mainnet}</option>
-                <option value="testnet" data-i18n="registry.submit.testnet">{t.registry.submit.testnet}</option>
-              </select>
-            </label>
-          </div>
-
-          <div class="registry-wallet-boundary" role="note">
-            <strong data-i18n="registry.submit.boundaryTitle">{t.registry.submit.boundaryTitle}</strong>
-            <span data-i18n="registry.submit.boundaryBody">{t.registry.submit.boundaryBody}</span>
-          </div>
-
-          <ol class="registry-authorisation-progress" aria-label={t.registry.submit.progressLabel} data-i18n-aria-label="registry.submit.progressLabel">
-            <li data-workflow-stage="wallet"><span>1</span><strong data-i18n="registry.submit.stageWallet">{t.registry.submit.stageWallet}</strong></li>
-            <li data-workflow-stage="payload"><span>2</span><strong data-i18n="registry.submit.stagePayload">{t.registry.submit.stagePayload}</strong></li>
-            <li data-workflow-stage="signature"><span>3</span><strong data-i18n="registry.submit.stageSignature">{t.registry.submit.stageSignature}</strong></li>
-            <li data-workflow-stage="capability"><span>4</span><strong data-i18n="registry.submit.stageCapability">{t.registry.submit.stageCapability}</strong></li>
-            <li data-workflow-stage="namespace"><span>5</span><strong data-i18n="registry.submit.stageNamespace">{t.registry.submit.stageNamespace}</strong></li>
-          </ol>
-
-          <label class="registry-builder-field registry-signer-principal" data-principal-panel hidden>
-            <span data-i18n="registry.submit.principal">{t.registry.submit.principal}</span>
-            <span class="registry-inline-control">
-              <input
-                class="registry-input"
-                data-capability-principal
-                readonly
-                placeholder={t.registry.submit.principalPlaceholder}
-                data-i18n-placeholder="registry.submit.principalPlaceholder"
-              />
-              <button class="registry-copy" type="button" data-capability-copy-principal data-copy-text="" data-revert-label={t.registry.submit.copyPrincipal} data-i18n="registry.submit.copyPrincipal">{t.registry.submit.copyPrincipal}</button>
-            </span>
+        <div class="registry-progressive-panel" data-signature-panel hidden>
+          <label class="registry-builder-field">
+            <span data-i18n="registry.submit.signature">{t.registry.submit.signature}</span>
+            <textarea class="registry-textarea" data-capability-signature spellcheck="false" readonly></textarea>
+            <small class="registry-field-hint" data-i18n="registry.submit.signatureReady">{t.registry.submit.signatureReady}</small>
           </label>
+          <button class="registry-copy" type="button" data-capability-copy-signature data-copy-text="" data-revert-label={t.registry.submit.copySignature} data-i18n="registry.submit.copySignature">{t.registry.submit.copySignature}</button>
+        </div>
 
-          <div class="registry-progressive-panel" data-payload-panel hidden>
-            <label class="registry-builder-field">
-              <span data-i18n="registry.submit.payload">{t.registry.submit.payload}</span>
-              <textarea
-                class="registry-textarea"
-                data-capability-payload
-                spellcheck="false"
-                placeholder={t.registry.submit.payloadPlaceholder}
-                data-i18n-placeholder="registry.submit.payloadPlaceholder"
-                aria-describedby="capability-payload-hint"
-              ></textarea>
-              <small class="registry-field-hint" id="capability-payload-hint" data-i18n="registry.submit.payloadHint">{t.registry.submit.payloadHint}</small>
-            </label>
-          </div>
+        <div class="registry-signer-actions">
+          <button class="registry-button primary registry-workflow-primary" type="button" data-capability-primary disabled data-i18n="registry.submit.continueConnect">{t.registry.submit.continueConnect}</button>
+          <button class="registry-text-button registry-change-wallet" type="button" data-capability-change-wallet hidden data-i18n="registry.submit.changeWallet">{t.registry.submit.changeWallet}</button>
+        </div>
 
-          <div class="registry-progressive-panel" data-signature-panel hidden>
-            <label class="registry-builder-field">
-              <span data-i18n="registry.submit.signature">{t.registry.submit.signature}</span>
-              <textarea class="registry-textarea" data-capability-signature spellcheck="false" readonly></textarea>
-              <small class="registry-field-hint" data-i18n="registry.submit.signatureReady">{t.registry.submit.signatureReady}</small>
-            </label>
-            <button class="registry-copy" type="button" data-capability-copy-signature data-copy-text="" data-revert-label={t.registry.submit.copySignature} data-i18n="registry.submit.copySignature">{t.registry.submit.copySignature}</button>
-          </div>
+        <details class="registry-technical-details" data-capability-details hidden>
+          <summary data-i18n="registry.submit.technicalDetails">{t.registry.submit.technicalDetails}</summary>
+          <pre class="registry-signer-response" data-capability-response></pre>
+        </details>
 
-          <div class="registry-signer-actions">
-            <button class="registry-button primary registry-workflow-primary" type="button" data-capability-primary disabled data-i18n="registry.submit.continueConnect">{t.registry.submit.continueConnect}</button>
-            <button class="registry-button" type="button" data-capability-change-wallet hidden data-i18n="registry.submit.changeWallet">{t.registry.submit.changeWallet}</button>
-          </div>
-          <output class="registry-signer-status" data-capability-status role="status" aria-live="polite" data-i18n="registry.submit.walletIdle">{t.registry.submit.walletIdle}</output>
-          <details class="registry-technical-details" data-capability-details hidden>
-            <summary data-i18n="registry.submit.technicalDetails">{t.registry.submit.technicalDetails}</summary>
-            <pre class="registry-signer-response" data-capability-response></pre>
-          </details>
-        </section>
-
-        <div class="registry-step-code registry-capability-command">
+        <details class="registry-manual-auth">
+          <summary data-i18n="registry.submit.manualAuthSummary">{t.registry.submit.manualAuthSummary}</summary>
+          <div class="registry-step-code registry-capability-command">
           <code data-submit-add>cellc auth capability create --principal-type &lt;principal_type&gt; --principal-id &lt;principal_id&gt; --scope publish:&lt;namespace&gt;/&lt;name&gt; --expires 90d --json &gt; capability-payload.json
 cellc auth capability submit --payload capability-payload.json --wallet-signature wallet-signature.json
 cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-payload.json --wallet-signature wallet-signature.json</code>
-          <button class="registry-copy" type="button" data-submit-copy data-copy-text="" data-revert-label={t.registry.submit.copyAddCommand} data-i18n="registry.submit.copyAddCommand">{t.registry.submit.copyAddCommand}</button>
-        </div>
-      </li>
+            <button class="registry-copy" type="button" data-submit-copy data-copy-text="" data-revert-label={t.registry.submit.copyAddCommand} data-i18n="registry.submit.copyAddCommand">{t.registry.submit.copyAddCommand}</button>
+          </div>
+        </details>
+      </div>
+    </section>
 
-      <li class="registry-step-card registry-publish-step" data-publish-step data-state="locked">
-        <div class="registry-step-copy">
-          <span class="registry-step-num">03</span>
-          <h3 data-i18n="registry.submit.prTitle">{t.registry.submit.prTitle}</h3>
-          <p data-i18n="registry.submit.prBody">{t.registry.submit.prBody}</p>
-          <p class="registry-publish-lock" data-publish-lock data-i18n="registry.submit.publishLocked">{t.registry.submit.publishLocked}</p>
-          <button class="registry-text-button" type="button" data-existing-capability data-i18n="registry.submit.alreadyAuthorised">{t.registry.submit.alreadyAuthorised}</button>
+    <section class="registry-publish-step" data-publish-step data-state="locked" aria-labelledby="registry-publish-heading">
+      <div class="registry-step-copy">
+        <span class="registry-step-num">03</span>
+        <h2 id="registry-publish-heading" data-i18n="registry.submit.prTitle">{t.registry.submit.prTitle}</h2>
+        <p data-i18n="registry.submit.prBody">{t.registry.submit.prBody}</p>
+        <p class="registry-publish-lock" data-publish-lock data-i18n="registry.submit.publishLocked">{t.registry.submit.publishLocked}</p>
+        <button class="registry-text-button" type="button" data-existing-capability data-i18n="registry.submit.alreadyAuthorised">{t.registry.submit.alreadyAuthorised}</button>
+      </div>
+      <div class="registry-step-code">
+        <code data-submit-publish>cellc publish</code>
+        <button class="registry-copy" type="button" data-submit-publish-copy data-copy-text="cellc publish" data-revert-label={t.registry.copy} data-i18n="registry.copy" disabled>{t.registry.copy}</button>
+      </div>
+    </section>
+
+    <dialog class="registry-wallet-dialog" data-wallet-dialog aria-labelledby="wallet-dialog-title">
+      <div class="registry-wallet-dialog-shell">
+        <header class="registry-wallet-dialog-head">
+          <button class="registry-wallet-back" type="button" data-wallet-back hidden aria-label={t.registry.submit.walletBack} data-i18n-aria-label="registry.submit.walletBack">←</button>
+          <div>
+            <p class="registry-label" data-i18n="registry.submit.walletDialogLabel">{t.registry.submit.walletDialogLabel}</p>
+            <h2 id="wallet-dialog-title" data-wallet-dialog-title data-i18n="registry.submit.walletChooseTitle">{t.registry.submit.walletChooseTitle}</h2>
+          </div>
+          <button class="registry-wallet-close" type="button" data-wallet-close aria-label={t.registry.submit.walletClose} data-i18n-aria-label="registry.submit.walletClose">×</button>
+        </header>
+        <div class="registry-wallet-network">
+          <span data-i18n="registry.submit.network">{t.registry.submit.network}</span>
+          <select class="registry-select" data-capability-network>
+            <option value="mainnet" data-i18n="registry.submit.mainnet">{t.registry.submit.mainnet}</option>
+            <option value="testnet" data-i18n="registry.submit.testnet">{t.registry.submit.testnet}</option>
+          </select>
         </div>
-        <div class="registry-step-code">
-          <code data-submit-publish>cellc publish</code>
-          <button class="registry-copy" type="button" data-submit-publish-copy data-copy-text="cellc publish" data-revert-label={t.registry.copy} data-i18n="registry.copy" disabled>{t.registry.copy}</button>
-        </div>
-      </li>
-    </ol>
+        <p class="registry-wallet-dialog-body" data-i18n="registry.submit.walletChooseBody">{t.registry.submit.walletChooseBody}</p>
+        <div class="registry-wallet-options" data-wallet-options role="list"></div>
+        <p class="registry-wallet-dialog-note" data-i18n="registry.submit.walletPrivacy">{t.registry.submit.walletPrivacy}</p>
+      </div>
+    </dialog>
   </section>
 
   <script>
-    import { applyCCCConnectorTheme } from "../../lib/cccConnectorTheme";
-
     type PrincipalType = "joyid_ckb" | "ckb_secp256k1";
     type WalletIdentity = {
       principalType: PrincipalType;
@@ -204,6 +212,8 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     const lifecycle = new AbortController();
     const { signal } = lifecycle;
     const form = document.querySelector<HTMLFormElement>("[data-submit-form]");
+    const intro = document.querySelector<HTMLElement>("[data-submit-intro]");
+    const introDismiss = document.querySelector<HTMLButtonElement>("[data-submit-intro-dismiss]");
     const namespaceInput = form?.elements.namedItem("namespace") as HTMLInputElement | null;
     const nameInput = form?.elements.namedItem("name") as HTMLInputElement | null;
     const coordinateError = document.querySelector<HTMLElement>("[data-coordinate-error]");
@@ -231,6 +241,11 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     const statusOutput = document.querySelector<HTMLOutputElement>("[data-capability-status]");
     const technicalDetails = document.querySelector<HTMLDetailsElement>("[data-capability-details]");
     const technicalOutput = document.querySelector<HTMLElement>("[data-capability-response]");
+    const walletDialog = document.querySelector<HTMLDialogElement>("[data-wallet-dialog]");
+    const walletOptions = document.querySelector<HTMLElement>("[data-wallet-options]");
+    const walletDialogTitle = document.querySelector<HTMLElement>("[data-wallet-dialog-title]");
+    const walletBack = document.querySelector<HTMLButtonElement>("[data-wallet-back]");
+    const walletClose = document.querySelector<HTMLButtonElement>("[data-wallet-close]");
     const stages = Array.from(document.querySelectorAll<HTMLElement>("[data-workflow-stage]"));
     const appLogo = `${window.location.origin}${import.meta.env.BASE_URL}cellscript-logo.png`;
     const walletStorageKey = "cellscript-registry-wallet-connection";
@@ -238,10 +253,13 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     const ckbPrincipalContext = "cellscript-registry-ckb-secp256k1-principal-v1";
     const coordinatePattern = /^[a-z0-9][a-z0-9_-]{1,62}$/;
 
-    let cccPromise: Promise<typeof import("@ckb-ccc/connector")> | null = null;
+    let cccPromise: Promise<typeof import("@ckb-ccc/connector/barrel")> | null = null;
+    let walletController: any | null = null;
+    let availableWallets: any[] = [];
+    let walletRefreshSequence = 0;
+    let walletPicker: { resolve: (signer: any) => void; reject: (error: unknown) => void; settled: boolean } | null = null;
     let activeWalletSigner: any | null = null;
     let activeWalletIdentity: WalletIdentity | null = null;
-    let activeConnector: HTMLElement | null = null;
     let capabilitySubmitted = false;
     let namespaceClaimed = false;
     let authorisedOverride = false;
@@ -256,6 +274,28 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       const messages = (window as any).__CELLSCRIPT_I18N__?.[locale]?.registry?.submit;
       return typeof messages?.[key] === "string" ? messages[key] : key;
     };
+    const introStorageKey = "cellscript-registry-submit-intro-v1";
+    const hideIntro = () => {
+      if (!intro || intro.hidden) return;
+      intro.classList.add("is-leaving");
+      window.setTimeout(() => {
+        intro.hidden = true;
+        intro.classList.remove("is-leaving");
+      }, 180);
+    };
+    try {
+      if (intro && localStorage.getItem(introStorageKey) !== "seen") {
+        intro.hidden = false;
+        localStorage.setItem(introStorageKey, "seen");
+      }
+    } catch {
+      if (intro && !(window as any).__cellscriptSubmitIntroSeen) {
+        intro.hidden = false;
+        (window as any).__cellscriptSubmitIntroSeen = true;
+      }
+    }
+    introDismiss?.addEventListener("click", hideIntro, { signal });
+
     const setStatus = (key: string, tone: "idle" | "ok" | "error" = "idle", suffix = "") => {
       statusKey = key;
       statusTone = tone;
@@ -405,21 +445,169 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     };
 
     const loadCCC = async () => {
-      cccPromise ??= import("@ckb-ccc/connector");
+      cccPromise ??= import("@ckb-ccc/connector/barrel");
       return cccPromise;
     };
-    const createCkbOnlyController = (ccc: typeof import("@ckb-ccc/connector").ccc) => new class extends ccc.SignersController {
-      private readonly ckbWallets = new Map<string, any>();
+    const createCkbOnlyController = (ccc: typeof import("@ckb-ccc/connector/barrel")) => new class extends ccc.SignersController {
       async refresh(client: any, onUpdate: (wallets: any[]) => void, configs?: any) {
         await super.refresh(client, (wallets: any[]) => {
+          const ckbWallets = new Map<string, any>();
           for (const wallet of wallets) {
             const signers = wallet.signers.filter((info: any) => info.signer?.type === ccc.SignerType.CKB);
-            if (signers.length > 0) this.ckbWallets.set(wallet.name, { ...wallet, signers });
+            if (signers.length > 0) ckbWallets.set(wallet.name, { ...wallet, signers });
           }
-          onUpdate([...this.ckbWallets.values()]);
+          onUpdate([...ckbWallets.values()]);
         }, configs);
       }
     }();
+
+    const setWalletDialogTitle = (key: string, fallback?: string) => {
+      if (!walletDialogTitle) return;
+      walletDialogTitle.textContent = fallback || message(key);
+      if (fallback) walletDialogTitle.removeAttribute("data-i18n");
+      else walletDialogTitle.dataset.i18n = `registry.submit.${key}`;
+    };
+    const transitionWalletOptions = (render: () => void) => {
+      if (!walletOptions) return;
+      walletOptions.classList.remove("is-entering");
+      walletOptions.replaceChildren();
+      render();
+      requestAnimationFrame(() => walletOptions.classList.add("is-entering"));
+    };
+    const walletOptionButton = (label: string, detail: string, icon: string | undefined, onClick: () => void) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "registry-wallet-option";
+      button.setAttribute("role", "listitem");
+      if (icon) {
+        const image = document.createElement("img");
+        image.src = icon;
+        image.alt = "";
+        button.append(image);
+      } else {
+        const mark = document.createElement("span");
+        mark.className = "registry-wallet-option-mark";
+        mark.textContent = label.slice(0, 1).toUpperCase();
+        button.append(mark);
+      }
+      const copy = document.createElement("span");
+      const name = document.createElement("strong");
+      name.textContent = label;
+      const meta = document.createElement("small");
+      meta.textContent = detail;
+      copy.append(name, meta);
+      const arrow = document.createElement("span");
+      arrow.className = "registry-wallet-option-arrow";
+      arrow.setAttribute("aria-hidden", "true");
+      arrow.textContent = "→";
+      button.append(copy, arrow);
+      button.addEventListener("click", onClick, { signal });
+      return button;
+    };
+    const renderWalletEmpty = (key = "walletEmpty") => {
+      transitionWalletOptions(() => {
+        const empty = document.createElement("p");
+        empty.className = "registry-wallet-empty";
+        empty.textContent = message(key);
+        walletOptions?.append(empty);
+      });
+    };
+    const connectWalletSigner = async (wallet: any, signerInfo: any) => {
+      if (!walletOptions || !walletPicker) return;
+      transitionWalletOptions(() => {
+        const state = document.createElement("div");
+        state.className = "registry-wallet-connecting";
+        const pulse = document.createElement("span");
+        pulse.setAttribute("aria-hidden", "true");
+        const copy = document.createElement("div");
+        const title = document.createElement("strong");
+        title.textContent = message("walletConnecting");
+        const detail = document.createElement("small");
+        detail.textContent = wallet.name;
+        copy.append(title, detail);
+        state.append(pulse, copy);
+        walletOptions.append(state);
+      });
+      try {
+        await signerInfo.signer.connect();
+        if (typeof signerInfo.signer.isConnected === "function" && !(await signerInfo.signer.isConnected())) {
+          throw new WorkflowError("errorNoWallet");
+        }
+        const picker = walletPicker;
+        if (!picker || picker.settled) return;
+        picker.settled = true;
+        picker.resolve(signerInfo.signer);
+        walletDialog?.close();
+      } catch (error) {
+        renderWalletEmpty(error instanceof Error && error.message ? "errorWallet" : "errorNoWallet");
+        setError(error, "errorWallet");
+      }
+    };
+    const renderSignerChoices = (wallet: any) => {
+      setWalletDialogTitle("walletSignerTitle", wallet.name);
+      if (walletBack) walletBack.hidden = false;
+      transitionWalletOptions(() => {
+        for (const signerInfo of wallet.signers) {
+          walletOptions?.append(walletOptionButton(
+            signerInfo.name || wallet.name,
+            message("walletCkbSigner"),
+            wallet.icon,
+            () => void connectWalletSigner(wallet, signerInfo),
+          ));
+        }
+      });
+    };
+    const renderWalletChoices = () => {
+      setWalletDialogTitle("walletChooseTitle");
+      if (walletBack) walletBack.hidden = true;
+      if (availableWallets.length === 0) {
+        renderWalletEmpty();
+        return;
+      }
+      transitionWalletOptions(() => {
+        for (const wallet of availableWallets) {
+          walletOptions?.append(walletOptionButton(
+            wallet.name,
+            wallet.signers.length > 1
+              ? message("walletMultipleSigners").replace("{count}", String(wallet.signers.length))
+              : message("walletCkbSigner"),
+            wallet.icon,
+            () => wallet.signers.length === 1
+              ? void connectWalletSigner(wallet, wallet.signers[0])
+              : renderSignerChoices(wallet),
+          ));
+        }
+      });
+    };
+    const refreshWalletChoices = async () => {
+      const sequence = ++walletRefreshSequence;
+      setWalletDialogTitle("walletChooseTitle");
+      if (walletBack) walletBack.hidden = true;
+      renderWalletEmpty("walletLoading");
+      try {
+        const ccc = await loadCCC();
+        walletController ??= createCkbOnlyController(ccc);
+        const network = networkSelect?.value === "testnet" ? "testnet" : "mainnet";
+        const client = network === "testnet" ? new ccc.ClientPublicTestnet() : new ccc.ClientPublicMainnet();
+        await walletController.refresh(client, (wallets: any[]) => {
+          if (sequence !== walletRefreshSequence) return;
+          availableWallets = wallets;
+          renderWalletChoices();
+        }, {
+          name: "CellScript Registry",
+          icon: appLogo,
+          preferredNetworks: [{
+            addressPrefix: network === "testnet" ? "ckt" : "ckb",
+            signerType: ccc.SignerType.CKB,
+            network,
+          }],
+        });
+      } catch (error) {
+        if (sequence !== walletRefreshSequence) return;
+        renderWalletEmpty("errorWallet");
+        setError(error, "errorWallet");
+      }
+    };
 
     const readSignerIdentity = async (signer: any): Promise<WalletIdentity> => {
       const raw = typeof signer.getIdentity === "function" ? await signer.getIdentity() : undefined;
@@ -443,38 +631,16 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
         return undefined;
       }
     };
-    const openWalletConnector = async (): Promise<any> => {
-      const { ccc } = await loadCCC();
-      const network = networkSelect?.value === "testnet" ? "testnet" : "mainnet";
-      const connector = document.createElement("ccc-connector") as any;
-      connector.name = "CellScript Registry";
-      connector.icon = appLogo;
-      connector.client = network === "testnet" ? new ccc.ClientPublicTestnet() : new ccc.ClientPublicMainnet();
-      connector.preferredNetworks = [{ addressPrefix: network === "testnet" ? "ckt" : "ckb", signerType: ccc.SignerType.CKB, network }];
-      connector.signersController = createCkbOnlyController(ccc);
-      activeConnector = connector;
-      applyCCCConnectorTheme(connector);
+    const openWalletConnector = (): Promise<any> => {
+      if (!walletDialog || !walletOptions) return Promise.reject(new WorkflowError("errorWallet"));
+      if (walletPicker && !walletPicker.settled) {
+        walletPicker.settled = true;
+        walletPicker.reject(new WorkflowError("errorNoWallet"));
+      }
+      if (!walletDialog.open) walletDialog.showModal();
+      void refreshWalletChoices();
       return new Promise((resolve, reject) => {
-        const timeout = window.setTimeout(() => {
-          connector.remove();
-          if (activeConnector === connector) activeConnector = null;
-          reject(new WorkflowError("errorWallet", "Wallet connection timed out"));
-        }, 180000);
-        connector.addEventListener("close", async () => {
-          window.clearTimeout(timeout);
-          try {
-            const signer = connector.signer?.signer;
-            if (!signer || (typeof signer.isConnected === "function" && !(await signer.isConnected()))) throw new WorkflowError("errorNoWallet");
-            resolve(signer);
-          } catch (error) {
-            reject(error);
-          } finally {
-            connector.remove();
-            if (activeConnector === connector) activeConnector = null;
-          }
-        }, { once: true });
-        document.body.appendChild(connector);
-        applyCCCConnectorTheme(connector);
+        walletPicker = { resolve, reject, settled: false };
       });
     };
 
@@ -645,8 +811,35 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
         syncWorkflow();
       }
     }, { signal });
-    changeWalletButton?.addEventListener("click", () => resetWallet(true), { signal });
-    networkSelect?.addEventListener("change", () => resetWallet(true), { signal });
+    changeWalletButton?.addEventListener("click", () => {
+      void (async () => {
+        busy = true;
+        syncWorkflow();
+        try {
+          await resetWallet(true);
+          await ensureWalletSigner();
+        } catch (error) {
+          setError(error, "errorWallet");
+        } finally {
+          busy = false;
+          syncWorkflow();
+        }
+      })();
+    }, { signal });
+    walletClose?.addEventListener("click", () => walletDialog?.close(), { signal });
+    walletBack?.addEventListener("click", renderWalletChoices, { signal });
+    walletDialog?.addEventListener("close", () => {
+      const picker = walletPicker;
+      if (picker && !picker.settled) {
+        picker.settled = true;
+        picker.reject(new WorkflowError("errorNoWallet"));
+      }
+      walletPicker = null;
+    }, { signal });
+    networkSelect?.addEventListener("change", () => {
+      if (activeWalletSigner) void resetWallet(true);
+      if (walletDialog?.open) void refreshWalletChoices();
+    }, { signal });
     existingCapability?.addEventListener("click", () => {
       authorisedOverride = true;
       clearTechnical();
@@ -669,12 +862,17 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     }, { signal });
     window.addEventListener("cellscript:locale-change", () => {
       setStatus(statusKey, statusTone, statusSuffix);
+      if (walletDialog?.open) renderWalletChoices();
       syncWorkflow();
     }, { signal });
     document.addEventListener("astro:before-swap", () => {
+      if (walletPicker && !walletPicker.settled) {
+        walletPicker.settled = true;
+        walletPicker.reject(new WorkflowError("errorNoWallet"));
+      }
+      walletDialog?.close();
+      walletController?.disconnect?.();
       lifecycle.abort();
-      activeConnector?.remove();
-      activeConnector = null;
     }, { once: true });
 
     lastCoordinate = `${fieldValue("namespace")}/${fieldValue("name")}`;

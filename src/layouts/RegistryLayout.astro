@@ -107,7 +107,9 @@ const activeHref =
         ))}
       </nav>}
 
-      <slot />
+      <div class="registry-route" transition:name="registry-route">
+        <slot />
+      </div>
     </main>
 
     <!-- Full i18n message table, embedded so the topbar's language

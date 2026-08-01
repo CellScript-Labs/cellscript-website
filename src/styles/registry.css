@@ -106,6 +106,11 @@
   color: var(--muted);
   font-weight: 700;
   text-decoration: none;
+  transition:
+    border-color var(--duration-med) var(--ease-standard),
+    background-color var(--duration-med) var(--ease-standard),
+    color var(--duration-med) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-quick);
 }
 
 .registry-tabs a:hover,
@@ -113,6 +118,41 @@
   border-color: var(--accent-line);
   background: var(--accent-surface);
   color: var(--accent);
+}
+
+.registry-tabs a:active {
+  transform: translateY(1px);
+}
+
+.registry-tabs a.active {
+  animation: registry-tab-settle 240ms var(--ease-quick) both;
+}
+
+.registry-route {
+  view-transition-name: registry-route;
+  animation: registry-route-in 260ms var(--ease-quick) both;
+}
+
+::view-transition-old(registry-route) {
+  animation: registry-route-out 150ms var(--ease-standard) both;
+}
+
+::view-transition-new(registry-route) {
+  animation: registry-route-in 260ms var(--ease-quick) both;
+}
+
+@keyframes registry-tab-settle {
+  from { opacity: 0.62; transform: translateY(2px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes registry-route-out {
+  to { opacity: 0; transform: translateY(-4px); }
+}
+
+@keyframes registry-route-in {
+  from { opacity: 0; transform: translateY(7px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 /* Search-first browse layout: a single full-width search bar above the
@@ -531,35 +571,110 @@
   line-height: 1.5;
 }
 
-/* ===== MVR-style submit flow ===== */
+/* ===== Submission flow ===== */
 .registry-flow {
-  padding-top: 24px;
+  padding-top: 18px;
   display: grid;
+  gap: 16px;
+}
+
+.registry-submit-intro {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(280px, 0.9fr) auto;
   gap: 24px;
+  align-items: center;
+  padding: 20px 22px;
+  overflow: hidden;
+  border: 1px solid var(--accent-line);
+  border-radius: var(--radius);
+  background:
+    radial-gradient(circle at 8% 0%, var(--accent-surface), transparent 44%),
+    var(--panel-soft);
+  animation: registry-reveal 280ms var(--ease-quick) both;
 }
 
-.registry-flow-head {
-  max-width: 760px;
+.registry-submit-intro[hidden] {
+  display: none;
 }
 
-.registry-flow-head h2 {
+.registry-submit-intro.is-leaving {
+  animation: registry-intro-leave 180ms var(--ease-standard) both;
+}
+
+.registry-submit-intro h2 {
   margin: 0;
   color: var(--text);
-  font-size: 1.6rem;
+  font-size: 1.12rem;
   letter-spacing: -0.012em;
 }
 
-.registry-flow-head p {
-  margin: 12px 0 0;
+.registry-submit-intro-copy > p:last-child {
+  max-width: 58ch;
+  margin: 7px 0 0;
   color: var(--muted);
-  line-height: 1.6;
+  font-size: 0.88rem;
+  line-height: 1.55;
+}
+
+.registry-submit-intro-steps {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.registry-submit-intro-steps li {
+  display: grid;
+  gap: 4px;
+}
+
+.registry-submit-intro-steps span {
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+}
+
+.registry-submit-intro-steps strong {
+  color: var(--text-soft);
+  font-size: 0.78rem;
+  font-weight: 650;
+  white-space: nowrap;
+}
+
+.registry-intro-dismiss {
+  min-height: 36px;
+  padding: 0 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius-sm);
+  background: var(--surface-button);
+  color: var(--text-soft);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 650;
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-quick);
+}
+
+.registry-intro-dismiss:hover {
+  border-color: var(--accent-line);
+  color: var(--accent);
+}
+
+.registry-intro-dismiss:active {
+  transform: translateY(1px);
 }
 
 .registry-builder {
-  padding: 22px;
+  padding: 18px;
   border: 1px solid var(--line-soft);
   border-radius: var(--radius);
-  background: var(--panel-soft);
+  background: var(--panel-strong);
 }
 
 .registry-builder-grid {
@@ -586,43 +701,35 @@
   letter-spacing: 0.04em;
 }
 
-.registry-steps {
-  list-style: none;
-  margin: 0;
-  padding: 0;
+.registry-submit-preflight,
+.registry-publish-step {
   display: grid;
-  gap: 14px;
-}
-
-.registry-step-card {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.85fr);
-  gap: 22px;
+  grid-template-columns: minmax(220px, 0.72fr) minmax(360px, 1.28fr);
+  gap: 24px;
   align-items: center;
-  padding: 22px;
+  padding: 18px 20px;
   border: 1px solid var(--line-soft);
   border-radius: var(--radius);
   background: var(--panel-soft);
-  position: relative;
-  overflow: hidden;
 }
 
-.registry-step-card::before {
-  content: "";
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 3px;
-  background: linear-gradient(180deg, var(--accent), var(--accent-warm));
-  opacity: 0.7;
+.registry-submit-preflight > div:first-child > strong {
+  display: block;
+  color: var(--text);
+  font-size: 0.98rem;
 }
 
-.registry-step-copy {
-  min-width: 0;
+.registry-submit-preflight p,
+.registry-publish-step .registry-step-copy > p:not(.registry-publish-lock) {
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.5;
 }
 
 .registry-step-num {
   display: inline-block;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   font-family: var(--font-mono);
   font-size: 0.72rem;
   font-weight: 700;
@@ -630,18 +737,11 @@
   letter-spacing: 0.06em;
 }
 
-.registry-step-copy h3 {
+.registry-step-copy h2 {
   margin: 0;
   color: var(--text);
-  font-size: 1.08rem;
+  font-size: 1rem;
   font-weight: 600;
-}
-
-.registry-step-copy p {
-  margin: 8px 0 0;
-  color: var(--muted);
-  font-size: 0.92rem;
-  line-height: 1.6;
 }
 
 .registry-step-code {
@@ -667,60 +767,42 @@
   justify-self: start;
 }
 
-.registry-step-card-capability {
-  grid-template-columns: minmax(0, 1fr);
-  align-items: start;
+.registry-authorisation-card {
+  padding: 22px;
+  border: 1px solid var(--accent-line);
+  border-radius: var(--radius);
+  background:
+    radial-gradient(circle at 100% 0%, var(--accent-surface), transparent 34%),
+    var(--panel-strong);
+  box-shadow: inset 0 1px 0 color-mix(in oklch, var(--text) 5%, transparent);
 }
 
-.registry-step-card-capability > .registry-step-copy {
-  max-width: 760px;
+.registry-authorisation-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+}
+
+.registry-authorisation-head h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 1.2rem;
+  letter-spacing: -0.012em;
+}
+
+.registry-authorisation-head p {
+  max-width: 62ch;
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.55;
 }
 
 .registry-signer {
   display: grid;
-  gap: 18px;
-  padding: 20px 0;
-  border-block: 1px solid var(--line-soft);
-}
-
-.registry-wallet-head {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) minmax(140px, 180px);
-  gap: 24px;
-  align-items: end;
-}
-
-.registry-wallet-head h4 {
-  margin: 4px 0 0;
-  color: var(--text);
-  font-size: 1.12rem;
-}
-
-.registry-wallet-head p:not(.registry-label) {
-  margin: 8px 0 0;
-  max-width: 720px;
-  color: var(--muted);
-  font-size: 0.9rem;
-  line-height: 1.55;
-}
-
-.registry-network-field {
-  min-width: 0;
-}
-
-.registry-wallet-boundary {
-  display: grid;
-  gap: 4px;
-  padding: 12px 14px;
-  border-left: 3px solid var(--accent);
-  background: var(--accent-surface);
-  color: var(--text-soft);
-  font-size: 0.84rem;
-  line-height: 1.5;
-}
-
-.registry-wallet-boundary strong {
-  color: var(--text);
+  gap: 16px;
+  padding-top: 18px;
 }
 
 .registry-signer-principal {
@@ -745,12 +827,16 @@
 }
 
 .registry-authorisation-progress li {
+  position: relative;
   display: grid;
   grid-template-columns: 24px minmax(0, 1fr);
   gap: 7px;
   align-items: center;
   min-width: 0;
   color: var(--dim);
+  transition:
+    color var(--duration-med) var(--ease-standard),
+    opacity var(--duration-med) var(--ease-standard);
 }
 
 .registry-authorisation-progress li span {
@@ -762,6 +848,11 @@
   border-radius: 999px;
   font-family: var(--font-mono);
   font-size: 0.68rem;
+  transition:
+    border-color var(--duration-med) var(--ease-standard),
+    background-color var(--duration-med) var(--ease-standard),
+    color var(--duration-med) var(--ease-standard),
+    transform var(--duration-med) var(--ease-quick);
 }
 
 .registry-authorisation-progress li strong {
@@ -780,6 +871,7 @@
   border-color: var(--accent-line);
   background: var(--accent-surface);
   color: var(--accent);
+  transform: scale(1.08);
 }
 
 .registry-authorisation-progress li[data-state="complete"] {
@@ -798,6 +890,7 @@
   border: 1px solid var(--line-soft);
   border-radius: var(--radius);
   background: var(--panel-strong);
+  animation: registry-panel-enter 260ms var(--ease-quick) both;
 }
 
 .registry-progressive-panel[hidden],
@@ -832,6 +925,7 @@
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
+  align-items: center;
 }
 
 .registry-signer-actions [hidden] {
@@ -839,7 +933,7 @@
 }
 
 .registry-workflow-primary {
-  min-width: 220px;
+  min-width: 210px;
 }
 
 .registry-capability-command {
@@ -847,7 +941,11 @@
 }
 
 .registry-signer-status {
-  min-height: 22px;
+  min-height: 30px;
+  padding: 6px 10px;
+  border: 1px solid var(--line-soft);
+  border-radius: 999px;
+  background: var(--panel-chip);
   color: var(--muted);
   font-family: var(--font-mono);
   font-size: 0.78rem;
@@ -855,10 +953,14 @@
 }
 
 .registry-signer-status[data-tone="ok"] {
+  border-color: var(--accent-line);
+  background: var(--accent-surface);
   color: var(--accent);
 }
 
 .registry-signer-status[data-tone="error"] {
+  border-color: var(--accent-warm-line);
+  background: var(--accent-warm-surface);
   color: var(--accent-warm);
 }
 
@@ -886,7 +988,8 @@
   border-top: 1px solid var(--line-soft);
 }
 
-.registry-technical-details summary {
+.registry-technical-details summary,
+.registry-manual-auth summary {
   width: fit-content;
   color: var(--muted);
   cursor: pointer;
@@ -899,12 +1002,39 @@
   color: var(--accent);
 }
 
-.registry-publish-step[data-state="locked"] .registry-step-code {
-  opacity: 0.5;
+.registry-manual-auth {
+  padding-top: 12px;
+  border-top: 1px solid var(--line-soft);
 }
 
-.registry-publish-step[data-state="ready"]::before {
-  background: var(--status-active);
+.registry-manual-auth[open] summary {
+  margin-bottom: 12px;
+  color: var(--accent);
+}
+
+.registry-capability-command {
+  max-width: none;
+  animation: registry-panel-enter 220ms var(--ease-quick) both;
+}
+
+.registry-publish-step {
+  transition:
+    border-color var(--duration-med) var(--ease-standard),
+    background-color var(--duration-med) var(--ease-standard),
+    opacity var(--duration-med) var(--ease-standard);
+}
+
+.registry-publish-step[data-state="locked"] {
+  opacity: 0.72;
+}
+
+.registry-publish-step[data-state="locked"] .registry-step-code {
+  opacity: 0.42;
+}
+
+.registry-publish-step[data-state="ready"] {
+  border-color: var(--status-active);
+  background: var(--status-active-surface);
 }
 
 .registry-publish-lock {
@@ -926,28 +1056,355 @@
   text-decoration-thickness: 1px;
   text-underline-offset: 3px;
   cursor: pointer;
+  transition:
+    color var(--duration-fast) var(--ease-standard),
+    opacity var(--duration-fast) var(--ease-standard);
+}
+
+.registry-text-button:hover {
+  color: var(--accent-strong);
+}
+
+.registry-change-wallet {
+  margin-top: 0;
+  font-size: 0.78rem;
+}
+
+.registry-wallet-dialog {
+  width: min(420px, calc(100vw - 28px));
+  max-height: min(680px, calc(100dvh - 32px));
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid var(--accent-line);
+  border-radius: 12px;
+  background: var(--panel-popover);
+  color: var(--text);
+  box-shadow:
+    0 28px 90px color-mix(in oklch, var(--bg) 72%, transparent),
+    inset 0 1px 0 color-mix(in oklch, var(--text) 7%, transparent);
+  animation: registry-dialog-enter 240ms var(--ease-quick) both;
+}
+
+.registry-wallet-dialog::backdrop {
+  background: color-mix(in oklch, var(--bg) 74%, transparent);
+  backdrop-filter: blur(12px) saturate(0.9);
+  animation: registry-backdrop-enter 200ms var(--ease-standard) both;
+}
+
+.registry-wallet-dialog-shell {
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+}
+
+.registry-wallet-dialog-head {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 34px;
+  gap: 10px;
+  align-items: start;
+}
+
+.registry-wallet-dialog-head h2 {
+  margin: 0;
+  font-size: 1.22rem;
+  letter-spacing: -0.015em;
+}
+
+.registry-wallet-dialog-head .registry-label {
+  margin-bottom: 4px;
+}
+
+.registry-wallet-back,
+.registry-wallet-close {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  font: inherit;
+  font-size: 1.15rem;
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-quick);
+}
+
+.registry-wallet-back[hidden] {
+  visibility: hidden;
+}
+
+.registry-wallet-back:hover,
+.registry-wallet-close:hover {
+  border-color: var(--line-soft);
+  background: var(--surface-button);
+  color: var(--text);
+}
+
+.registry-wallet-back:active,
+.registry-wallet-close:active {
+  transform: scale(0.96);
+}
+
+.registry-wallet-network {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 9px 10px 9px 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  background: var(--panel-soft);
+}
+
+.registry-wallet-network > span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 650;
+}
+
+.registry-wallet-network .registry-select {
+  width: auto;
+  min-width: 116px;
+  min-height: 36px;
+}
+
+.registry-wallet-dialog-body {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.84rem;
+  line-height: 1.5;
+}
+
+.registry-wallet-options {
+  display: grid;
+  gap: 8px;
+  max-height: min(330px, 46dvh);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.registry-wallet-options.is-entering > * {
+  animation: registry-option-enter 220ms var(--ease-quick) both;
+}
+
+.registry-wallet-option {
+  width: 100%;
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: 40px minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 10px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--radius);
+  background: var(--panel-soft);
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+  text-align: left;
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-quick);
+}
+
+.registry-wallet-option:hover,
+.registry-wallet-option:focus-visible {
+  border-color: var(--accent-line);
+  background: var(--accent-surface);
+  transform: translateY(-1px);
+}
+
+.registry-wallet-option:active {
+  transform: translateY(0) scale(0.99);
+}
+
+.registry-wallet-option img,
+.registry-wallet-option-mark {
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  background: var(--panel-chip);
+  object-fit: cover;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+.registry-wallet-option > span:nth-child(2) {
+  min-width: 0;
+  display: grid;
+  gap: 2px;
+}
+
+.registry-wallet-option strong,
+.registry-wallet-option small,
+.registry-wallet-connecting strong,
+.registry-wallet-connecting small {
+  display: block;
+}
+
+.registry-wallet-option strong {
+  overflow: hidden;
+  font-size: 0.9rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.registry-wallet-option small,
+.registry-wallet-connecting small {
+  color: var(--dim);
+  font-size: 0.72rem;
+}
+
+.registry-wallet-option-arrow {
+  color: var(--dim);
+  transition: transform var(--duration-fast) var(--ease-quick);
+}
+
+.registry-wallet-option:hover .registry-wallet-option-arrow {
+  color: var(--accent);
+  transform: translateX(2px);
+}
+
+.registry-wallet-empty,
+.registry-wallet-connecting {
+  min-height: 76px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 0;
+  padding: 16px;
+  border: 1px dashed var(--line-soft);
+  border-radius: var(--radius);
+  color: var(--muted);
+  font-size: 0.84rem;
+  text-align: center;
+}
+
+.registry-wallet-connecting {
+  justify-content: flex-start;
+  text-align: left;
+}
+
+.registry-wallet-connecting > span {
+  width: 10px;
+  height: 10px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 0 0 0 var(--accent-line);
+  animation: registry-wallet-pulse 1.25s var(--ease-standard) infinite;
+}
+
+.registry-wallet-dialog-note {
+  margin: 0;
+  padding-top: 12px;
+  border-top: 1px solid var(--line-soft);
+  color: var(--dim);
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+@keyframes registry-reveal {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes registry-intro-leave {
+  to { opacity: 0; transform: translateY(-5px); }
+}
+
+@keyframes registry-panel-enter {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes registry-dialog-enter {
+  from { opacity: 0; transform: translateY(10px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+@keyframes registry-backdrop-enter {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes registry-option-enter {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes registry-wallet-pulse {
+  70% { box-shadow: 0 0 0 8px transparent; }
+  100% { box-shadow: 0 0 0 0 transparent; }
 }
 
 @media (max-width: 900px) {
   .registry-builder-grid,
-  .registry-step-card {
+  .registry-submit-preflight,
+  .registry-publish-step {
     grid-template-columns: 1fr;
+  }
+
+  .registry-submit-intro {
+    grid-template-columns: 1fr auto;
+  }
+
+  .registry-submit-intro-copy {
+    grid-column: 1 / -1;
   }
 }
 
 @media (max-width: 620px) {
-  .registry-wallet-head {
+  .registry-submit-intro {
     grid-template-columns: 1fr;
   }
 
-  .registry-signer-actions .registry-button,
-  .registry-signer-actions .registry-copy {
+  .registry-submit-intro-steps {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .registry-submit-intro-steps li {
+    grid-template-columns: 26px minmax(0, 1fr);
+    align-items: center;
+  }
+
+  .registry-intro-dismiss {
+    justify-self: start;
+  }
+
+  .registry-authorisation-head {
+    display: grid;
+    gap: 14px;
+  }
+
+  .registry-signer-status {
+    width: fit-content;
+  }
+
+  .registry-signer-actions .registry-workflow-primary {
     width: 100%;
     justify-content: center;
   }
 
   .registry-inline-control {
     grid-template-columns: 1fr;
+  }
+
+  .registry-authorisation-card,
+  .registry-wallet-dialog-shell {
+    padding: 17px;
   }
 }
 
@@ -1681,7 +2138,21 @@
 
 @media (prefers-reduced-motion: reduce) {
   .registry-package-skeleton span,
-  .registry-browse-skeleton span {
+  .registry-browse-skeleton span,
+  .registry-tabs a.active,
+  .registry-submit-intro,
+  .registry-progressive-panel,
+  .registry-capability-command,
+  .registry-wallet-dialog,
+  .registry-wallet-dialog::backdrop,
+  .registry-wallet-options.is-entering > *,
+  .registry-wallet-connecting > span,
+  .registry-route {
     animation: none;
+  }
+
+  ::view-transition-old(registry-route),
+  ::view-transition-new(registry-route) {
+    animation-duration: 1ms;
   }
 }
