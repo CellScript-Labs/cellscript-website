@@ -96,6 +96,25 @@ const walletButton = registrySubmitHtml.match(/<button[^>]*data-capability-prima
 if (!walletButton) fail("registry submit: missing primary wallet action");
 else if (/\sdisabled(?:\s|=|>)/.test(walletButton)) fail("registry submit: primary wallet action must be enabled before package coordinates are entered");
 
+for (const wallet of [
+  "Neuron",
+  "JoyID",
+  "imToken",
+  "CKBull",
+  "SafePal",
+  "Ledger",
+  "imKey",
+  "OneKey",
+  "UTXO Global",
+  "Rei Wallet",
+  "Gate",
+  "QuantumPurse",
+]) {
+  expectContains("registry wallet bundle", jsText, wallet);
+}
+expectContains("registry wallet bundle", jsText, "external_signature");
+expectContains("registry wallet bundle", jsText, "wallet-signature.json");
+
 for (const stage of ["wallet", "scope", "authorise"]) {
   expectContains("registry submit", registrySubmitHtml, `data-workflow-stage="${stage}"`);
 }

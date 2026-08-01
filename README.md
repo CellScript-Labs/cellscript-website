@@ -18,6 +18,9 @@ The static architecture is intentional. Most pages are generated from committed 
 
 - A first-page overview of CellScript and its CKB contract workflow.
 - A registry browser backed by generated package metadata.
+- A Registry submit flow whose compact chooser includes the complete official
+  CKB wallet directory: detected CCC CKB signers connect in-browser, while
+  other wallets hand off to the same verifiable external-signature contract.
 - A playground page with the current web-facing compiler assets.
 - Learning and documentation entry points.
 - Design and audit notes under `docs/`.
@@ -45,6 +48,14 @@ docs can be embedded:
 ```bash
 CELLSCRIPT_REPO_ROOT=/path/to/CellScript npm run build
 ```
+
+The wallet directory is deliberately separate from runtime signer discovery.
+All twelve official CKB wallet entries remain visible; a wallet is labelled as
+direct only when CCC exposes a compatible CKB signer. Other entries open the
+wallet's official surface and accept a complete `wallet-signature.json`
+handoff. The Registry never accepts recovery phrases, and the API applies the
+same public-key, canonical-challenge, and recoverable-signature checks to both
+paths.
 
 ## Deploy To Production
 

@@ -131,7 +131,7 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
           <label class="registry-builder-field">
             <span data-i18n="registry.submit.signature">{t.registry.submit.signature}</span>
             <textarea class="registry-textarea" data-capability-signature spellcheck="false" readonly></textarea>
-            <small class="registry-field-hint" data-i18n="registry.submit.signatureReady">{t.registry.submit.signatureReady}</small>
+            <small class="registry-field-hint" data-signature-hint data-i18n="registry.submit.signatureReady">{t.registry.submit.signatureReady}</small>
           </label>
           <button class="registry-copy" type="button" data-capability-copy-signature data-copy-text="" data-revert-label={t.registry.submit.copySignature} data-i18n="registry.submit.copySignature">{t.registry.submit.copySignature}</button>
         </div>
@@ -200,6 +200,15 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       challenge: string;
       signature: string;
     };
+    type WalletCatalogEntry = {
+      name: string;
+      aliases: string[];
+      url: string;
+      mark: string;
+    };
+    type WalletSelection =
+      | { kind: "signer"; signer: any }
+      | { kind: "external"; wallet: WalletCatalogEntry };
 
     class WorkflowError extends Error {
       constructor(readonly key: string, technical?: string) {
@@ -233,6 +242,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     const payloadInput = document.querySelector<HTMLTextAreaElement>("[data-capability-payload]");
     const signaturePanel = document.querySelector<HTMLElement>("[data-signature-panel]");
     const signatureOutput = document.querySelector<HTMLTextAreaElement>("[data-capability-signature]");
+    const signatureHint = document.querySelector<HTMLElement>("[data-signature-hint]");
     const primaryButton = document.querySelector<HTMLButtonElement>("[data-capability-primary]");
     const changeWalletButton = document.querySelector<HTMLButtonElement>("[data-capability-change-wallet]");
     const copyPrincipalButton = document.querySelector<HTMLButtonElement>("[data-capability-copy-principal]");
@@ -251,14 +261,29 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     const joyidPrincipalContext = "cellscript-registry-joyid-ckb-principal-v1";
     const ckbPrincipalContext = "cellscript-registry-ckb-secp256k1-principal-v1";
     const coordinatePattern = /^[a-z0-9][a-z0-9_-]{1,62}$/;
+    const officialWalletCatalog: WalletCatalogEntry[] = [
+      { name: "Neuron", aliases: ["Neuron"], url: "https://neuron.magickbase.com/", mark: "N" },
+      { name: "JoyID", aliases: ["JoyID", "JoyID Passkey"], url: "https://joy.id/", mark: "J" },
+      { name: "imToken", aliases: ["imToken"], url: "https://token.im/", mark: "iM" },
+      { name: "CKBull", aliases: ["CKBull"], url: "https://ckbull.app/", mark: "CB" },
+      { name: "SafePal", aliases: ["SafePal"], url: "https://blog.safepal.com/safepal-wallet-now-supports-nervos-ckb/", mark: "SP" },
+      { name: "Ledger", aliases: ["Ledger"], url: "https://www.ledger.com/", mark: "L" },
+      { name: "imKey", aliases: ["imKey"], url: "https://imkey.im/", mark: "iK" },
+      { name: "OneKey", aliases: ["OneKey"], url: "https://onekey.so/", mark: "OK" },
+      { name: "UTXO Global", aliases: ["UTXO Global", "UTXO Global Wallet"], url: "https://utxo.global/", mark: "UG" },
+      { name: "Rei Wallet", aliases: ["Rei Wallet", "Rei"], url: "https://reiwallet.io/", mark: "R" },
+      { name: "Gate", aliases: ["Gate", "Gate Wallet"], url: "https://www.gate.io/", mark: "G" },
+      { name: "QuantumPurse", aliases: ["QuantumPurse"], url: "https://quantumpurse.org/", mark: "QP" },
+    ];
 
     let cccPromise: Promise<typeof import("@ckb-ccc/connector/barrel")> | null = null;
     let walletController: any | null = null;
     let availableWallets: any[] = [];
     let walletRefreshSequence = 0;
-    let walletPicker: { resolve: (signer: any) => void; reject: (error: unknown) => void; settled: boolean } | null = null;
+    let walletPicker: { resolve: (selection: WalletSelection) => void; reject: (error: unknown) => void; settled: boolean } | null = null;
     let activeWalletSigner: any | null = null;
     let activeWalletIdentity: WalletIdentity | null = null;
+    let activeExternalWallet: WalletCatalogEntry | null = null;
     let capabilitySubmitted = false;
     let namespaceClaimed = false;
     let authorisedOverride = false;
@@ -405,16 +430,22 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       if (stage) stage.dataset.state = complete ? "complete" : active ? "active" : "pending";
     };
     const syncWorkflow = () => {
-      const walletReady = Boolean(activeWalletSigner && activeWalletIdentity);
+      const directWalletReady = Boolean(activeWalletSigner && activeWalletIdentity);
+      const walletReady = directWalletReady || Boolean(activeExternalWallet);
       const coordinateReady = coordinateValid();
       const payloadReady = walletReady && hasValidPayload();
       const signatureReady = payloadReady && Boolean(signatureOutput?.value.trim());
       stageState("wallet", walletReady, !walletReady);
       stageState("scope", signatureReady, walletReady && !signatureReady);
       stageState("authorise", namespaceClaimed, signatureReady && !namespaceClaimed);
-      if (principalPanel) principalPanel.hidden = !walletReady;
+      if (principalPanel) principalPanel.hidden = !directWalletReady;
       if (payloadPanel) payloadPanel.hidden = !walletReady;
-      if (signaturePanel) signaturePanel.hidden = !signatureReady;
+      if (signaturePanel) signaturePanel.hidden = !signatureReady && !activeExternalWallet;
+      if (signatureHint) {
+        const key = activeExternalWallet ? "signatureExternalHint" : "signatureReady";
+        signatureHint.dataset.i18n = `registry.submit.${key}`;
+        signatureHint.textContent = message(key);
+      }
       if (changeWalletButton) changeWalletButton.hidden = !walletReady;
       const canPublish = namespaceClaimed || authorisedOverride;
       if (publishStep) {
@@ -428,7 +459,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       let primaryKey = "continueConnect";
       if (walletReady && !coordinateReady) primaryKey = "continueCoordinate";
       else if (walletReady && !payloadReady) primaryKey = "continuePayload";
-      else if (payloadReady && !signatureReady) primaryKey = "continueSign";
+      else if (payloadReady && !signatureReady) primaryKey = activeExternalWallet ? "continueExternalSignature" : "continueSign";
       else if (signatureReady && !capabilitySubmitted) primaryKey = "continueSubmit";
       else if (capabilitySubmitted && !namespaceClaimed) primaryKey = "continueClaim";
       else if (namespaceClaimed) primaryKey = "continueDone";
@@ -482,7 +513,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       render();
       requestAnimationFrame(() => walletOptions.classList.add("is-entering"));
     };
-    const walletOptionButton = (label: string, detail: string, icon: string | undefined, onClick: () => void) => {
+    const walletOptionButton = (label: string, detail: string, icon: string | undefined, onClick: () => void, fallbackMark?: string) => {
       const button = document.createElement("button");
       button.type = "button";
       button.className = "registry-wallet-option";
@@ -493,10 +524,10 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
         image.alt = "";
         button.append(image);
       } else {
-        const mark = document.createElement("span");
-        mark.className = "registry-wallet-option-mark";
-        mark.textContent = label.slice(0, 1).toUpperCase();
-        button.append(mark);
+        const markNode = document.createElement("span");
+        markNode.className = "registry-wallet-option-mark";
+        markNode.textContent = fallbackMark || label.slice(0, 1).toUpperCase();
+        button.append(markNode);
       }
       const copy = document.createElement("span");
       const name = document.createElement("strong");
@@ -544,7 +575,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
         const picker = walletPicker;
         if (!picker || picker.settled) return;
         picker.settled = true;
-        picker.resolve(signerInfo.signer);
+        picker.resolve({ kind: "signer", signer: signerInfo.signer });
         walletDialog?.close();
       } catch (error) {
         renderWalletEmpty(error instanceof Error && error.message ? "errorWallet" : "errorNoWallet");
@@ -565,20 +596,49 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
         }
       });
     };
+    const walletNameKey = (value: string) => value.trim().toLowerCase().replaceAll(/[^a-z0-9]/g, "");
+    const discoveredCatalogWallet = (entry: WalletCatalogEntry) => {
+      const aliases = new Set(entry.aliases.map(walletNameKey));
+      return availableWallets.find((wallet) => aliases.has(walletNameKey(String(wallet.name || ""))));
+    };
+    const selectExternalWallet = (wallet: WalletCatalogEntry) => {
+      window.open(wallet.url, "_blank", "noopener,noreferrer");
+      const picker = walletPicker;
+      if (!picker || picker.settled) return;
+      picker.settled = true;
+      picker.resolve({ kind: "external", wallet });
+      walletDialog?.close();
+    };
     const renderWalletChoices = () => {
       setWalletDialogTitle("walletChooseTitle");
       if (walletBack) walletBack.hidden = true;
-      if (availableWallets.length === 0) {
-        renderWalletEmpty();
-        return;
-      }
       transitionWalletOptions(() => {
-        for (const wallet of availableWallets) {
-          let detail = message("walletCkbSigner");
-          if (wallet.installOnly) detail = message("walletInstall");
-          else if (wallet.signers.length > 1) {
+        const claimed = new Set<string>();
+        for (const catalogWallet of officialWalletCatalog) {
+          const wallet = discoveredCatalogWallet(catalogWallet);
+          if (wallet) claimed.add(walletNameKey(String(wallet.name || "")));
+          const directlyConnectable = wallet && !wallet.installOnly && wallet.signers.length > 0;
+          let detail = directlyConnectable ? message("walletDirect") : message("walletExternal");
+          if (directlyConnectable && wallet.signers.length > 1) {
             detail = message("walletMultipleSigners").replace("{count}", String(wallet.signers.length));
           }
+          walletOptions?.append(walletOptionButton(
+            catalogWallet.name,
+            detail,
+            directlyConnectable ? wallet.icon : undefined,
+            () => directlyConnectable
+              ? wallet.signers.length === 1
+                ? void connectWalletSigner(wallet, wallet.signers[0])
+                : renderSignerChoices(wallet)
+              : selectExternalWallet(catalogWallet),
+            catalogWallet.mark,
+          ));
+        }
+        for (const wallet of availableWallets) {
+          if (claimed.has(walletNameKey(String(wallet.name || ""))) || wallet.installOnly || wallet.signers.length === 0) continue;
+          const detail = wallet.signers.length > 1
+            ? message("walletMultipleSigners").replace("{count}", String(wallet.signers.length))
+            : message("walletDirect");
           walletOptions?.append(walletOptionButton(
             wallet.name,
             detail,
@@ -645,7 +705,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
         return undefined;
       }
     };
-    const openWalletConnector = (): Promise<any> => {
+    const openWalletConnector = (): Promise<WalletSelection> => {
       if (!walletDialog || !walletOptions) return Promise.reject(new WorkflowError("errorWallet"));
       if (walletPicker && !walletPicker.settled) {
         walletPicker.settled = true;
@@ -670,6 +730,8 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       }
       activeWalletSigner = null;
       activeWalletIdentity = null;
+      activeExternalWallet = null;
+      signatureOutput?.setAttribute("readonly", "");
       if (principalInput) {
         principalInput.value = "";
         delete principalInput.dataset.principalType;
@@ -685,7 +747,26 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     const ensureWalletSigner = async () => {
       if (activeWalletSigner && activeWalletIdentity && (typeof activeWalletSigner.isConnected !== "function" || await activeWalletSigner.isConnected())) return activeWalletSigner;
       setStatus("walletWaiting");
-      activeWalletSigner = await openWalletConnector();
+      const selection = await openWalletConnector();
+      if (selection.kind === "external") {
+        activeWalletSigner = null;
+        activeWalletIdentity = null;
+        activeExternalWallet = selection.wallet;
+        clearSignature();
+        signatureOutput?.removeAttribute("readonly");
+        localStorage.setItem(walletStorageKey, JSON.stringify({
+          wallet: selection.wallet.name,
+          connection: "external_signature",
+          network: networkSelect?.value === "testnet" ? "testnet" : "mainnet",
+          selectedAt: new Date().toISOString(),
+        }));
+        setStatus("walletExternalReady", "ok", `: ${selection.wallet.name}`);
+        syncWorkflow();
+        return null;
+      }
+      activeExternalWallet = null;
+      signatureOutput?.setAttribute("readonly", "");
+      activeWalletSigner = selection.signer;
       activeWalletIdentity = await readSignerIdentity(activeWalletSigner);
       const principalId = activeWalletIdentity.principalType === "joyid_ckb"
         ? await joyidPrincipalId(activeWalletIdentity.keyType!, activeWalletIdentity.publicKey)
@@ -709,6 +790,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
 
     const signCapabilityPayload = async (): Promise<WalletSignature> => {
       const signer = await ensureWalletSigner();
+      if (!signer) throw new WorkflowError("errorExternalSignature");
       const identity = activeWalletIdentity;
       if (!identity) throw new WorkflowError("errorIdentityUnavailable");
       const payload = parsePayload();
@@ -802,7 +884,8 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       clearTechnical();
       syncWorkflow();
       try {
-        if (!activeWalletSigner || !activeWalletIdentity) {
+        const walletSelected = Boolean((activeWalletSigner && activeWalletIdentity) || activeExternalWallet);
+        if (!walletSelected) {
           await ensureWalletSigner();
         } else if (!coordinateValid()) {
           coordinateError?.removeAttribute("hidden");
@@ -813,12 +896,17 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
           payloadInput?.focus();
           parsePayload();
         } else if (!signatureOutput?.value.trim()) {
-          writeSignature(await signCapabilityPayload());
-          setStatus("signed", "ok");
+          if (activeExternalWallet) {
+            signatureOutput?.focus();
+            setStatus("walletExternalAwaiting", "idle", `: ${activeExternalWallet.name}`);
+          } else {
+            writeSignature(await signCapabilityPayload());
+            setStatus("signed", "ok");
+          }
         } else if (!capabilitySubmitted) await submitCapability();
         else if (!namespaceClaimed) await claimNamespace();
       } catch (error) {
-        const fallback = !activeWalletSigner ? "errorWallet" : !signatureOutput?.value.trim() ? "errorSigning" : !capabilitySubmitted ? "errorSubmit" : "errorClaim";
+        const fallback = !(activeWalletSigner || activeExternalWallet) ? "errorWallet" : !signatureOutput?.value.trim() ? "errorSigning" : !capabilitySubmitted ? "errorSubmit" : "errorClaim";
         setError(error, fallback);
       } finally {
         busy = false;
@@ -851,7 +939,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       walletPicker = null;
     }, { signal });
     networkSelect?.addEventListener("change", () => {
-      if (activeWalletSigner) void resetWallet(true);
+      if (activeWalletSigner || activeExternalWallet) void resetWallet(true);
       if (walletDialog?.open) void refreshWalletChoices();
     }, { signal });
     existingCapability?.addEventListener("click", () => {
@@ -862,6 +950,13 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     }, { signal });
     payloadInput?.addEventListener("input", () => {
       clearSignature();
+      clearTechnical();
+      syncWorkflow();
+    }, { signal });
+    signatureOutput?.addEventListener("input", () => {
+      if (!activeExternalWallet) return;
+      capabilitySubmitted = false;
+      namespaceClaimed = false;
       clearTechnical();
       syncWorkflow();
     }, { signal });
