@@ -3937,6 +3937,7 @@ tr:last-child td {
 
   .nav {
     gap: 4px;
+    padding-inline: 10px;
   }
 
   .site-header .brand {
@@ -3951,7 +3952,7 @@ tr:last-child td {
     display: none;
   }
 
-  .home-body .nav-source {
+  .nav-source {
     display: none;
   }
 
@@ -3967,6 +3968,12 @@ tr:last-child td {
     width: 76px;
     height: 76px;
     margin-bottom: 14px;
+  }
+}
+
+@media (max-width: 340px) {
+  .nav-home {
+    display: none;
   }
 }
 

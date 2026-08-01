@@ -1,0 +1,454 @@
+---
+import { defaultLocale, translations } from "../i18n/translations";
+import {
+  registryStatusTone,
+  shortHash,
+  type RegistryPackageView,
+} from "../lib/registry";
+
+interface Props {
+  pkg?: RegistryPackageView;
+  apiOrigin?: string;
+}
+
+const { pkg, apiOrigin = "https://api.registry.cellscript.dev" } = Astro.props;
+const t = translations[defaultLocale];
+const statusLabel = (status?: string) =>
+  (t.registry.statuses as Record<string, string>)[status ?? ""]
+  ?? status?.replaceAll("_", " ")
+  ?? t.registry.package.notRecorded;
+const dateLabel = (value?: string) => value?.split("T")[0] || t.registry.package.notRecorded;
+const networkLabel = pkg?.deployments.map((deployment) => deployment.network).filter(Boolean).join(", ")
+  || t.registry.package.sourceOnly;
+const sourceHash = pkg?.versions[0]?.source_hash;
+---
+
+<section
+  class="registry-package-detail"
+  data-package-detail
+  data-api-origin={apiOrigin.replace(/\/$/, "")}
+  aria-label={pkg ? `${pkg.coordinate} package detail` : t.registry.package.liveDescription}
+>
+  <div class="registry-package-loading" data-package-loading hidden={Boolean(pkg)} role="status" aria-live="polite">
+    <span class="registry-service-dot" aria-hidden="true"></span>
+    <span data-i18n="registry.package.loading">{t.registry.package.loading}</span>
+    <div class="registry-package-skeleton" aria-hidden="true">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+
+  <div class="registry-empty registry-package-error" data-package-error hidden>
+    <h2 data-i18n="registry.package.loadFailedTitle">{t.registry.package.loadFailedTitle}</h2>
+    <p data-package-error-copy>{t.registry.package.loadFailedBody}</p>
+    <div class="registry-empty-actions">
+      <button class="registry-button primary" type="button" data-package-retry data-i18n="registry.package.retry">{t.registry.package.retry}</button>
+      <a class="registry-button" href="/registry" data-i18n="registry.package.backToRegistry">{t.registry.package.backToRegistry}</a>
+    </div>
+  </div>
+
+  <article class="registry-pkg" data-package-content hidden={!pkg}>
+    <header class="registry-pkg-header">
+      <span class="registry-pkg-mark" aria-hidden="true"></span>
+      <div class="registry-pkg-titles">
+        <h1 data-package-coordinate>{pkg?.coordinate}</h1>
+        <p class="registry-pkg-meta" data-package-meta>
+          <span data-i18n="registry.manage.version">{t.registry.manage.version}</span> {pkg?.latest_version || t.registry.package.notRecorded}
+          <span aria-hidden="true">·</span>
+          <span>{networkLabel}</span>
+          <span aria-hidden="true">·</span>
+          <code>{shortHash(sourceHash)}</code>
+          {sourceHash && (
+            <button class="copy-btn registry-pkg-hash-copy" type="button" data-copy-text={sourceHash} aria-label={t.registry.package.copySourceHashAria} data-i18n-aria-label="registry.package.copySourceHashAria">
+              <span aria-hidden="true">⧉</span>
+            </button>
+          )}
+        </p>
+        <p class="registry-pkg-desc" data-package-description>{pkg?.description || t.registry.browse.noDescription}</p>
+      </div>
+      <span class="registry-status" data-package-status data-state={registryStatusTone(pkg?.status)}>{statusLabel(pkg?.status)}</span>
+    </header>
+
+    <div class="registry-pkg-body">
+      <div class="registry-pkg-main">
+        <section class="registry-panel registry-section-block" aria-labelledby="versions-title">
+          <p class="registry-label" data-i18n="registry.package.versionsLabel">{t.registry.package.versionsLabel}</p>
+          <h2 id="versions-title" data-i18n="registry.package.versionsTitle">{t.registry.package.versionsTitle}</h2>
+          <div class="registry-table-wrap registry-table-block">
+            <table class="registry-table registry-responsive-table">
+              <caption class="sr-only" data-i18n="registry.package.versionsCaption">{t.registry.package.versionsCaption}</caption>
+              <thead>
+                <tr>
+                  <th data-i18n="registry.package.thVersion">{t.registry.package.thVersion}</th>
+                  <th data-i18n="registry.package.thTag">{t.registry.package.thTag}</th>
+                  <th data-i18n="registry.package.thEdition">{t.registry.package.thEdition}</th>
+                  <th data-i18n="registry.package.thSourceHash">{t.registry.package.thSourceHash}</th>
+                  <th data-i18n="registry.package.thProfileHash">{t.registry.package.thProfileHash}</th>
+                  <th data-i18n="registry.package.thStatus">{t.registry.package.thStatus}</th>
+                  <th data-i18n="registry.package.thReleased">{t.registry.package.thReleased}</th>
+                </tr>
+              </thead>
+              <tbody data-package-versions>
+                {pkg?.versions.map((version) => (
+                  <tr>
+                    <td data-label={t.registry.package.thVersion}>{version.version}</td>
+                    <td data-label={t.registry.package.thTag}><code>{version.tag}</code></td>
+                    <td data-label={t.registry.package.thEdition}>{version.edition}</td>
+                    <td data-label={t.registry.package.thSourceHash}><code>{shortHash(version.source_hash)}</code></td>
+                    <td data-label={t.registry.package.thProfileHash}><code>{shortHash(version.compatibility_profile_hash)}</code></td>
+                    <td data-label={t.registry.package.thStatus}><span class="registry-status" data-state={registryStatusTone(version.status)}>{statusLabel(version.status)}</span></td>
+                    <td data-label={t.registry.package.thReleased}>{dateLabel(version.released_at)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <section class="registry-panel registry-section-block" aria-labelledby="deployments-title">
+          <p class="registry-label" data-i18n="registry.package.deploymentsLabel">{t.registry.package.deploymentsLabel}</p>
+          <h2 id="deployments-title" data-i18n="registry.package.deploymentsTitle">{t.registry.package.deploymentsTitle}</h2>
+          <div class="registry-table-wrap registry-table-block" data-package-deployments-wrap hidden={!pkg?.deployments.length}>
+            <table class="registry-table registry-responsive-table">
+              <caption class="sr-only" data-i18n="registry.package.deploymentsCaption">{t.registry.package.deploymentsCaption}</caption>
+              <thead>
+                <tr>
+                  <th data-i18n="registry.package.thName">{t.registry.package.thName}</th>
+                  <th data-i18n="registry.package.thNetwork">{t.registry.package.thNetwork}</th>
+                  <th data-i18n="registry.package.thOutPoint">{t.registry.package.thOutPoint}</th>
+                  <th data-i18n="registry.package.thCodeHash">{t.registry.package.thCodeHash}</th>
+                  <th data-i18n="registry.package.thCompiler">{t.registry.package.thCompiler}</th>
+                </tr>
+              </thead>
+              <tbody data-package-deployments></tbody>
+            </table>
+          </div>
+          <p class="registry-body-copy" data-package-no-deployment hidden={Boolean(pkg?.deployments.length)} data-i18n="registry.package.noDeployment">{t.registry.package.noDeployment}</p>
+        </section>
+
+        <section class="registry-panel registry-section-block" aria-labelledby="evidence-title">
+          <p class="registry-label" data-i18n="registry.package.promotionEvidenceLabel">{t.registry.package.promotionEvidenceLabel}</p>
+          <h2 id="evidence-title" data-i18n="registry.package.promotionEvidenceTitle">{t.registry.package.promotionEvidenceTitle}</h2>
+          <div class="registry-evidence-list" data-package-evidence></div>
+          <p class="registry-body-copy" data-package-no-evidence hidden={Boolean(pkg?.evidence.length)} data-i18n="registry.package.noEvidence">{t.registry.package.noEvidence}</p>
+        </section>
+      </div>
+
+      <aside class="registry-pkg-sidebar">
+        <div class="registry-side-card registry-pkg-install">
+          <h3 data-i18n="registry.package.installTitle">{t.registry.package.installTitle}</h3>
+          <p data-i18n="registry.package.installBody">{t.registry.package.installBody}</p>
+          <div class="registry-command-line">
+            <code data-package-install>{pkg?.install_command}</code>
+            <button class="registry-copy" type="button" data-package-install-copy data-copy-text={pkg?.install_command || ""} data-revert-label={t.registry.copy} data-i18n="registry.copy">{t.registry.copy}</button>
+          </div>
+        </div>
+
+        <div class="registry-side-card">
+          <h3 data-i18n="registry.package.verifyTitle">{t.registry.package.verifyTitle}</h3>
+          <p data-i18n="registry.package.verifyBody">{t.registry.package.verifyBody}</p>
+          <div class="registry-command-line">
+            <code data-package-verify>{pkg?.verify_command}</code>
+            <button class="registry-copy" type="button" data-package-verify-copy data-copy-text={pkg?.verify_command || ""} data-revert-label={t.registry.copy} data-i18n="registry.copy">{t.registry.copy}</button>
+          </div>
+        </div>
+
+        <div class="registry-side-card">
+          <h3 data-i18n="registry.package.factsTitle">{t.registry.package.factsTitle}</h3>
+          <dl class="registry-meta">
+            <div><dt data-i18n="registry.package.factLicense">{t.registry.package.factLicense}</dt><dd data-package-license>{pkg?.license || t.registry.package.notRecorded}</dd></div>
+            <div><dt data-i18n="registry.package.factProduction">{t.registry.package.factProduction}</dt><dd data-package-production>{pkg?.production ? t.registry.package.yes : t.registry.package.no}</dd></div>
+            <div data-package-path-fact hidden={!pkg?.package_path}><dt data-i18n="registry.package.factPath">{t.registry.package.factPath}</dt><dd data-package-path>{pkg?.package_path}</dd></div>
+          </dl>
+        </div>
+
+        <div class="registry-side-card registry-source-links">
+          <h3 data-i18n="registry.package.linksTitle">{t.registry.package.linksTitle}</h3>
+          <a data-package-maintain href={pkg ? `/registry/manage?package=${encodeURIComponent(pkg.coordinate)}` : undefined} data-i18n="registry.managePackage">{t.registry.managePackage}</a>
+          <a data-package-repository href={pkg?.repository} target="_blank" rel="noopener noreferrer" hidden={!pkg?.repository} data-i18n="registry.package.linkRepository">{t.registry.package.linkRepository}</a>
+          <a data-package-directory href={pkg?.package_dir_url} target="_blank" rel="noopener noreferrer" hidden={!pkg?.package_dir_url} data-i18n="registry.package.linkPackageDir">{t.registry.package.linkPackageDir}</a>
+          <a data-package-json href={pkg?.registry_json_url} target="_blank" rel="noopener noreferrer" hidden={!pkg?.registry_json_url} data-i18n="registry.package.linkRegistryJson">{t.registry.package.linkRegistryJson}</a>
+          <a data-package-snapshot href={pkg?.source_snapshot_url} target="_blank" rel="noopener noreferrer" hidden={!pkg?.source_snapshot_url} data-i18n="registry.package.linkSourceSnapshot">{t.registry.package.linkSourceSnapshot}</a>
+        </div>
+      </aside>
+    </div>
+  </article>
+
+  <script is:inline define:vars={{ initialPackage: pkg ?? null }}>
+    (() => {
+      const previous = window.__cellscriptPackageDetailAbort;
+      previous?.abort();
+      const controller = new AbortController();
+      window.__cellscriptPackageDetailAbort = controller;
+      const { signal } = controller;
+      document.addEventListener("astro:before-swap", () => controller.abort(), { once: true, signal });
+
+      const app = document.querySelector("[data-package-detail]");
+      if (!app) return;
+      const loading = app.querySelector("[data-package-loading]");
+      const errorPanel = app.querySelector("[data-package-error]");
+      const errorCopy = app.querySelector("[data-package-error-copy]");
+      const content = app.querySelector("[data-package-content]");
+      const messages = () => window.__CELLSCRIPT_I18N__;
+      const locale = () => document.documentElement.dataset.locale === "zh" ? "zh" : "en";
+      const message = (path) => path.split(".").reduce((value, key) => value?.[key], messages()?.[locale()]);
+      const short = (value, visible = 12) => {
+        if (typeof value !== "string" || !value) return message("registry.package.notRecorded") || "—";
+        const prefix = value.startsWith("0x") ? "0x" : "";
+        const clean = prefix ? value.slice(2) : value;
+        return clean.length > visible * 2 ? `${prefix}${clean.slice(0, visible)}…${clean.slice(-visible)}` : value;
+      };
+      const statusTone = (status) => {
+        if (["active", "deployed", "on_chain_attested"].includes(status)) return "active";
+        if (status === "verified_build") return "info";
+        if (["indexed_pending", "deprecated"].includes(status)) return "warning";
+        if (["yanked", "quarantined"].includes(status)) return "danger";
+        return "source";
+      };
+      const statusLabel = (status) => message(`registry.statuses.${status}`) || String(status || "").replaceAll("_", " ");
+      const dateLabel = (value) => typeof value === "string" && value ? value.split("T")[0] : message("registry.package.notRecorded");
+      const text = (selector, value) => {
+        const element = app.querySelector(selector);
+        if (element) element.textContent = value == null ? "" : String(value);
+      };
+      const showLink = (selector, href) => {
+        const link = app.querySelector(selector);
+        if (!link) return;
+        const safe = typeof href === "string" && (href.startsWith("https://") || href.startsWith("/"));
+        link.hidden = !safe;
+        if (safe) link.href = href;
+        else link.removeAttribute("href");
+      };
+      const copyButton = (value) => {
+        const button = document.createElement("button");
+        button.className = "registry-copy registry-value-copy";
+        button.type = "button";
+        button.dataset.copyText = value;
+        button.dataset.revertLabel = message("registry.copy") || "Copy";
+        button.textContent = message("registry.copy") || "Copy";
+        button.setAttribute("aria-label", `${message("registry.package.copyValue") || "Copy value"}: ${short(value)}`);
+        return button;
+      };
+      const appendCell = (row, label, value, options = {}) => {
+        const cell = document.createElement("td");
+        cell.dataset.label = label;
+        const body = document.createElement("span");
+        if (options.status) {
+          body.className = "registry-status";
+          body.dataset.state = statusTone(String(value));
+          body.textContent = statusLabel(String(value));
+        } else {
+          if (options.code) body.className = "registry-cell-code";
+          if (options.nowrap) body.classList.add("registry-cell-nowrap");
+          const visible = typeof options.short === "number" ? options.short : 12;
+          body.textContent = options.short ? short(value, visible) : String(value || message("registry.package.notRecorded") || "—");
+        }
+        cell.append(body);
+        if (options.copy && typeof value === "string" && value) cell.append(copyButton(value));
+        row.append(cell);
+      };
+      const outPoint = (value) => {
+        if (typeof value === "string") return value;
+        if (value && typeof value === "object" && typeof value.tx_hash === "string") return `${value.tx_hash}:${value.index ?? 0}`;
+        return "";
+      };
+      const normalizeLivePackage = (payload) => {
+        const rawVersions = Array.isArray(payload.versions) ? payload.versions : [];
+        const versions = rawVersions.map((version) => {
+          const entryVersions = version?.registry_entry?.versions;
+          const entry = Array.isArray(entryVersions) ? entryVersions.find((item) => item?.version === version.version) || entryVersions[0] || {} : {};
+          return {
+            version: version.version || entry.version || "",
+            tag: entry.tag || `v${version.version || ""}`,
+            edition: version.edition || entry.edition || "2026",
+            source_hash: version.source_hash || entry.source_hash || "",
+            compatibility_profile_hash: version.compatibility_profile_hash || entry.compatibility_profile_hash || "",
+            status: version.status || entry.status || "source_published",
+            yanked: Boolean(entry.yanked),
+            released_at: entry.released_at || version.created_at || "",
+            evidence: Array.isArray(version.evidence) ? version.evidence : [],
+            source_snapshot: version.source_snapshot,
+            license: entry.license,
+          };
+        });
+        const evidence = versions.flatMap((version) => version.evidence.map((item) => ({
+          version: version.version,
+          kind: item.kind,
+          evidence_hash: item.evidence_hash,
+          producer: item.evidence?.producer || item.admin_actor,
+          generated_at: item.evidence?.generated_at,
+          network: item.evidence?.network,
+          code_hash: item.evidence?.code_hash,
+          out_point: outPoint(item.evidence?.out_point),
+          raw: item.evidence,
+        })));
+        const deployments = evidence.filter((item) => item.kind === "deployed").map((item) => ({
+          name: `${payload.name}-${item.network || "deployment"}`,
+          network: item.network,
+          out_point: item.out_point,
+          code_hash: item.code_hash,
+          compiler_version: item.raw?.compiler_version,
+        }));
+        const latest = versions[0] || {};
+        const latestRaw = rawVersions[0] || {};
+        const registryJson = latestRaw.direct_url || `https://registry.cellscript.dev/packages/${encodeURIComponent(payload.namespace)}/${encodeURIComponent(payload.name)}/versions/${encodeURIComponent(payload.latest_version || latest.version || "")}.json`;
+        return {
+          coordinate: payload.coordinate || `${payload.namespace}/${payload.name}`,
+          namespace: payload.namespace,
+          name: payload.name,
+          description: payload.description,
+          repository: payload.repository,
+          homepage: payload.homepage,
+          documentation: payload.documentation,
+          license: latest.license,
+          production: ["verified_build", "deployed", "on_chain_attested"].includes(payload.status || latest.status),
+          latest_version: payload.latest_version || latest.version,
+          status: payload.status || latest.status || "source_published",
+          versions,
+          deployments,
+          evidence,
+          install_command: `cellc install ${payload.namespace}/${payload.name}@${payload.latest_version || latest.version || "<version>"}`,
+          verify_command: "cellc registry verify --live --json",
+          registry_json_url: registryJson,
+          source_snapshot_url: latest.source_snapshot?.url,
+        };
+      };
+
+      let currentPackage = initialPackage;
+      const render = (pkg) => {
+        currentPackage = pkg;
+        const networks = [...new Set((pkg.deployments || []).map((item) => item.network).filter(Boolean))];
+        const sourceHash = pkg.versions?.[0]?.source_hash || "";
+        text("[data-package-coordinate]", pkg.coordinate);
+        text("[data-package-description]", pkg.description || message("registry.browse.noDescription"));
+        const meta = app.querySelector("[data-package-meta]");
+        if (meta) {
+          meta.replaceChildren();
+          const parts = [
+            `${message("registry.manage.version")} ${pkg.latest_version || message("registry.package.notRecorded")}`,
+            networks.join(", ") || message("registry.package.sourceOnly"),
+            short(sourceHash),
+          ];
+          parts.forEach((part, index) => {
+            if (index > 0) meta.append(document.createTextNode(" · "));
+            const node = index === 2 ? document.createElement("code") : document.createElement("span");
+            node.textContent = part;
+            meta.append(node);
+          });
+          if (sourceHash) meta.append(copyButton(sourceHash));
+        }
+        const status = app.querySelector("[data-package-status]");
+        if (status) {
+          status.textContent = statusLabel(pkg.status);
+          status.dataset.state = statusTone(pkg.status);
+        }
+
+        const versionBody = app.querySelector("[data-package-versions]");
+        versionBody?.replaceChildren();
+        for (const version of pkg.versions || []) {
+          const row = document.createElement("tr");
+          appendCell(row, message("registry.package.thVersion"), version.version);
+          appendCell(row, message("registry.package.thTag"), version.tag, { code: true });
+          appendCell(row, message("registry.package.thEdition"), version.edition);
+          appendCell(row, message("registry.package.thSourceHash"), version.source_hash, { code: true, short: 8, copy: true });
+          appendCell(row, message("registry.package.thProfileHash"), version.compatibility_profile_hash, { code: true, short: 8, copy: true });
+          appendCell(row, message("registry.package.thStatus"), version.status, { status: true });
+          appendCell(row, message("registry.package.thReleased"), dateLabel(version.released_at), { nowrap: true });
+          versionBody?.append(row);
+        }
+
+        const deploymentBody = app.querySelector("[data-package-deployments]");
+        deploymentBody?.replaceChildren();
+        for (const deployment of pkg.deployments || []) {
+          const row = document.createElement("tr");
+          appendCell(row, message("registry.package.thName"), deployment.name || message("registry.package.unnamed"));
+          appendCell(row, message("registry.package.thNetwork"), deployment.network);
+          appendCell(row, message("registry.package.thOutPoint"), outPoint(deployment.out_point), { code: true, short: 8, copy: true });
+          appendCell(row, message("registry.package.thCodeHash"), deployment.code_hash, { code: true, short: 8, copy: true });
+          appendCell(row, message("registry.package.thCompiler"), deployment.compiler_version);
+          deploymentBody?.append(row);
+        }
+        const hasDeployments = Boolean(pkg.deployments?.length);
+        const deploymentWrap = app.querySelector("[data-package-deployments-wrap]");
+        const noDeployment = app.querySelector("[data-package-no-deployment]");
+        if (deploymentWrap) deploymentWrap.hidden = !hasDeployments;
+        if (noDeployment) noDeployment.hidden = hasDeployments;
+
+        const evidenceList = app.querySelector("[data-package-evidence]");
+        evidenceList?.replaceChildren();
+        for (const item of pkg.evidence || []) {
+          const card = document.createElement("div");
+          card.className = "registry-evidence-card";
+          const title = document.createElement("strong");
+          title.textContent = `${statusLabel(item.kind)} · ${item.version}`;
+          const hash = document.createElement("code");
+          hash.textContent = short(item.evidence_hash);
+          const actor = document.createElement("span");
+          actor.textContent = `${item.producer || "registry"} · ${dateLabel(item.generated_at)}`;
+          card.append(title, hash, actor);
+          if (item.evidence_hash) card.append(copyButton(item.evidence_hash));
+          evidenceList?.append(card);
+        }
+        const noEvidence = app.querySelector("[data-package-no-evidence]");
+        if (noEvidence) noEvidence.hidden = Boolean(pkg.evidence?.length);
+
+        text("[data-package-install]", pkg.install_command);
+        text("[data-package-verify]", pkg.verify_command);
+        app.querySelector("[data-package-install-copy]")?.setAttribute("data-copy-text", pkg.install_command || "");
+        app.querySelector("[data-package-verify-copy]")?.setAttribute("data-copy-text", pkg.verify_command || "");
+        text("[data-package-license]", pkg.license || message("registry.package.notRecorded"));
+        text("[data-package-production]", message(pkg.production ? "registry.package.yes" : "registry.package.no"));
+        text("[data-package-path]", pkg.package_path || "");
+        const pathFact = app.querySelector("[data-package-path-fact]");
+        if (pathFact) pathFact.hidden = !pkg.package_path;
+        showLink("[data-package-maintain]", `/registry/manage?package=${encodeURIComponent(pkg.coordinate)}`);
+        showLink("[data-package-repository]", pkg.repository);
+        showLink("[data-package-directory]", pkg.package_dir_url);
+        showLink("[data-package-json]", pkg.registry_json_url);
+        showLink("[data-package-snapshot]", pkg.source_snapshot_url);
+        if (loading) loading.hidden = true;
+        if (errorPanel) errorPanel.hidden = true;
+        if (content) content.hidden = false;
+        document.title = `${message("registry.eyebrow")}: ${pkg.coordinate}`;
+      };
+
+      const showError = (key) => {
+        if (loading) loading.hidden = true;
+        if (content) content.hidden = true;
+        if (errorPanel) errorPanel.hidden = false;
+        if (errorCopy) errorCopy.textContent = message(key) || message("registry.package.loadFailedBody");
+      };
+      const readCoordinate = () => {
+        const params = new URLSearchParams(window.location.search);
+        return { namespace: params.get("namespace")?.trim() || "", name: params.get("name")?.trim() || "" };
+      };
+      const load = async () => {
+        const { namespace, name } = readCoordinate();
+        if (!/^[a-z0-9][a-z0-9_-]{1,62}$/.test(namespace) || !/^[a-z0-9][a-z0-9_-]{1,62}$/.test(name)) {
+          showError("registry.package.invalidCoordinate");
+          return;
+        }
+        if (loading) loading.hidden = false;
+        if (content) content.hidden = true;
+        if (errorPanel) errorPanel.hidden = true;
+        try {
+          const response = await fetch(`${app.dataset.apiOrigin}/v1/packages/${encodeURIComponent(namespace)}/${encodeURIComponent(name)}`, {
+            headers: { accept: "application/json" }, signal,
+          });
+          if (response.status === 404) throw new Error("not_found");
+          if (!response.ok) throw new Error("unavailable");
+          const payload = await response.json();
+          if (payload?.schema !== "cellscript-public-registry-package-v1") throw new Error("unsupported_schema");
+          render(normalizeLivePackage(payload));
+        } catch (cause) {
+          if (cause?.name === "AbortError") return;
+          showError(cause?.message === "not_found" ? "registry.package.notFound" : "registry.package.loadFailedBody");
+        }
+      };
+
+      app.querySelector("[data-package-retry]")?.addEventListener("click", load, { signal });
+      window.addEventListener("cellscript:locale-change", () => currentPackage && render(currentPackage), { signal });
+      if (initialPackage) render(initialPackage);
+      else load();
+    })();
+  </script>
+</section>

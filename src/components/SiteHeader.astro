@@ -19,7 +19,7 @@ const t = translations[defaultLocale];
       <span>CellScript</span>
     </a>
     <div class="nav-links">
-      <a class:list={["nav-link", page === "home" && "active"]} href="/" aria-current={page === "home" ? "page" : undefined}>
+      <a class:list={["nav-link", "nav-home", page === "home" && "active"]} href="/" aria-current={page === "home" ? "page" : undefined}>
         <House aria-hidden="true" />
         <span data-i18n="nav.overview">{t.nav.overview}</span>
       </a>
@@ -65,7 +65,7 @@ const t = translations[defaultLocale];
       const theme = readTheme();
       const switchKey = theme === "light" ? "theme.switchToDark" : "theme.switchToLight";
       document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
-        button.setAttribute("aria-pressed", String(theme === "light"));
+        button.setAttribute("aria-pressed", String(theme === "dark"));
         button.setAttribute("aria-label", getMessage(switchKey) || "");
       });
     };

@@ -46,6 +46,40 @@ export interface RegistryDeployment {
   constraints_hash?: string;
 }
 
+export interface RegistryEvidence {
+  version: string;
+  kind: string;
+  evidence_hash?: string;
+  producer?: string;
+  generated_at?: string;
+  network?: string;
+  code_hash?: string;
+  out_point?: string;
+}
+
+export interface RegistryPackageView {
+  coordinate: string;
+  namespace: string;
+  name: string;
+  description?: string;
+  repository?: string;
+  homepage?: string;
+  documentation?: string;
+  package_path?: string;
+  package_dir_url?: string;
+  registry_json_url?: string;
+  source_snapshot_url?: string;
+  license?: string;
+  production: boolean;
+  latest_version?: string;
+  status: string;
+  versions: RegistryVersion[];
+  deployments: RegistryDeployment[];
+  evidence: RegistryEvidence[];
+  install_command: string;
+  verify_command: string;
+}
+
 export interface RegistryPackage {
   coordinate: string;
   namespace: string;
@@ -105,11 +139,10 @@ export interface RegistrySection {
 export const registrySections: RegistrySection[] = [
   { href: "/registry", label: "Registry", i18nKey: "registry.nav.browse" },
   { href: "/registry/submit", label: "Submit", i18nKey: "registry.nav.submit" },
-  { href: "/registry/manage", label: "Manage", i18nKey: "registry.nav.manage" },
 ];
 
 export function packageHref(pkg: RegistryPackage): string {
-  return `/registry/package/?namespace=${encodeURIComponent(pkg.namespace)}&name=${encodeURIComponent(pkg.name)}`;
+  return `/registry/package/${encodeURIComponent(pkg.namespace)}/${encodeURIComponent(pkg.name)}`;
 }
 
 export function findPackage(namespace: string, name: string): RegistryPackage | undefined {
@@ -121,6 +154,50 @@ export function shortHash(value?: string, visible = 12): string {
   const clean = value.startsWith("0x") ? value.slice(2) : value;
   if (clean.length <= visible * 2) return value;
   return `${value.startsWith("0x") ? "0x" : ""}${clean.slice(0, visible)}...${clean.slice(-visible)}`;
+}
+
+export function registryStatusTone(status?: string): "active" | "info" | "warning" | "danger" | "source" {
+  switch (status) {
+    case "active":
+    case "deployed":
+    case "on_chain_attested":
+      return "active";
+    case "verified_build":
+      return "info";
+    case "indexed_pending":
+    case "deprecated":
+      return "warning";
+    case "yanked":
+    case "quarantined":
+      return "danger";
+    default:
+      return "source";
+  }
+}
+
+export function toRegistryPackageView(pkg: RegistryPackage): RegistryPackageView {
+  const repositoryRoot = "https://github.com/CellScript-Labs/CellScript/tree/main";
+  return {
+    coordinate: pkg.coordinate,
+    namespace: pkg.namespace,
+    name: pkg.name,
+    description: pkg.description,
+    repository: pkg.repository,
+    homepage: pkg.homepage,
+    documentation: pkg.documentation,
+    package_path: pkg.path,
+    package_dir_url: `${repositoryRoot}/${pkg.path}`,
+    registry_json_url: `${repositoryRoot}/${pkg.registry_path}`,
+    license: pkg.license,
+    production: Boolean(pkg.production),
+    latest_version: pkg.latest_version,
+    status: pkg.status,
+    versions: pkg.versions,
+    deployments: pkg.deployment.active,
+    evidence: [],
+    install_command: pkg.install_command || `cellc install ${pkg.coordinate}@${pkg.latest_version ?? "<version>"}`,
+    verify_command: "cellc registry verify --live --json",
+  };
 }
 
 export function packageSearchText(pkg: RegistryPackage): string {

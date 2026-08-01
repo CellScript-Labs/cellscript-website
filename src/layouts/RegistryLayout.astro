@@ -16,9 +16,23 @@ interface Props {
   headingKey?: string;
   descriptionKey?: string;
   active: "search" | "submit" | "manage" | "package";
+  compactHeader?: boolean;
+  showSubmitCta?: boolean;
+  showHeader?: boolean;
+  showTabs?: boolean;
 }
 
-const { title, description, headingKey, descriptionKey, active } = Astro.props;
+const {
+  title,
+  description,
+  headingKey,
+  descriptionKey,
+  active,
+  compactHeader = false,
+  showSubmitCta = true,
+  showHeader = true,
+  showTabs = true,
+} = Astro.props;
 const locale = defaultLocale;
 const t = translations[locale];
 
@@ -35,7 +49,7 @@ const resolveKey = (key: string | undefined): string | undefined => {
 const headingText = resolveKey(headingKey) ?? title.replace("CellScript Registry: ", "");
 const descriptionText = resolveKey(descriptionKey) ?? description;
 const activeHref =
-  active === "submit" ? "/registry/submit" : active === "manage" ? "/registry/manage" : "/registry";
+  active === "submit" ? "/registry/submit" : "/registry";
 ---
 
 <!doctype html>
@@ -72,16 +86,16 @@ const activeHref =
     <a class="skip-link" href="#registry-main" data-i18n="a11y.skipToContent">{t.a11y.skipToContent}</a>
     <SiteHeader page="registry" />
     <main id="registry-main" class="registry-app">
-      <header class="registry-topbar" aria-label={t.registry.appLabel} data-i18n-aria-label="registry.appLabel">
+      {showHeader && <header class:list={["registry-topbar", compactHeader && "registry-topbar-compact"]} aria-label={t.registry.appLabel} data-i18n-aria-label="registry.appLabel">
         <div>
-          <p class="registry-eyebrow" data-i18n="registry.eyebrow">{t.registry.eyebrow}</p>
+          {!compactHeader && <p class="registry-eyebrow" data-i18n="registry.eyebrow">{t.registry.eyebrow}</p>}
           <h1 data-registry-heading data-registry-heading-key={headingKey}>{headingText}</h1>
           <p data-registry-description data-registry-description-key={descriptionKey}>{descriptionText}</p>
         </div>
-        <a class="registry-button primary registry-topbar-cta" href="/registry/submit" data-i18n="registry.submitPackage">{t.registry.submitPackage}</a>
-      </header>
+        {showSubmitCta && <a class="registry-button primary registry-topbar-cta" href="/registry/submit" data-registry-topbar-cta data-i18n="registry.submitPackage">{t.registry.submitPackage}</a>}
+      </header>}
 
-      <nav class="registry-tabs" aria-label={t.registry.sectionsLabel} data-i18n-aria-label="registry.sectionsLabel">
+      {showTabs && <nav class="registry-tabs" aria-label={t.registry.sectionsLabel} data-i18n-aria-label="registry.sectionsLabel">
         {registrySections.map((section) => (
           <a
             href={section.href}
@@ -91,7 +105,7 @@ const activeHref =
             <span data-i18n={section.i18nKey}>{section.label}</span>
           </a>
         ))}
-      </nav>
+      </nav>}
 
       <slot />
     </main>

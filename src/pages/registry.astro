@@ -1,6 +1,6 @@
 ---
 import RegistryLayout from "../layouts/RegistryLayout.astro";
-import { packageHref, registryPackages } from "../lib/registry";
+import { packageHref, registryPackages, registryStatusTone } from "../lib/registry";
 import { defaultLocale, translations } from "../i18n/translations";
 import { ArrowRight, Search } from "lucide-astro";
 
@@ -20,6 +20,8 @@ const fallbackPackages = registryPackages.map((pkg) => ({
   href: packageHref(pkg),
   source: "bundled",
 }));
+const fallbackStatus = (status: string) =>
+  (t.registry.statuses as Record<string, string>)[status] ?? status.replaceAll("_", " ");
 ---
 
 <RegistryLayout
@@ -28,8 +30,9 @@ const fallbackPackages = registryPackages.map((pkg) => ({
   headingKey="registry.browse.title"
   descriptionKey="registry.browse.description"
   active="search"
+  showSubmitCta={false}
 >
-  <section class="registry-browse" data-registry-browser data-api-origin={apiOrigin} aria-label={t.registry.browse.searchAria}>
+  <section class="registry-browse" data-registry-browser data-api-origin={apiOrigin} data-state="loading" aria-label={t.registry.browse.searchAria} aria-busy="true">
     <div class="registry-browse-search">
       <label class="registry-browse-input">
         <Search aria-hidden="true" />
@@ -48,10 +51,15 @@ const fallbackPackages = registryPackages.map((pkg) => ({
     <div class="registry-service-state" data-registry-service-state data-state="loading" role="status" aria-live="polite">
       <span class="registry-service-dot" aria-hidden="true"></span>
       <span data-registry-service-copy data-i18n="registry.browse.loading">{t.registry.browse.loading}</span>
+      <button class="registry-service-retry" type="button" data-registry-retry hidden data-i18n="registry.browse.retry">{t.registry.browse.retry}</button>
       <a href={`${apiOrigin}/health`} target="_blank" rel="noopener noreferrer">API</a>
     </div>
 
-    <div class="registry-package-list" data-registry-list>
+    <div class="registry-browse-skeleton" data-registry-skeleton aria-hidden="true">
+      <span></span><span></span><span></span>
+    </div>
+
+    <div class="registry-package-list" data-registry-list hidden>
       {fallbackPackages.map((pkg) => (
         <a
           class="registry-package-row"
@@ -63,8 +71,8 @@ const fallbackPackages = registryPackages.map((pkg) => ({
             <strong>{pkg.coordinate}</strong>
             <p>{pkg.description || t.registry.browse.noDescription}</p>
             <div class="registry-badges">
-              <span class="registry-badge">{pkg.latest_version || t.registry.browse.unversioned}</span>
-              <span class="registry-badge">{pkg.status}</span>
+              <span class="registry-badge" data-kind="version">{pkg.latest_version || t.registry.browse.unversioned}</span>
+              <span class="registry-status" data-state={registryStatusTone(pkg.status)}>{fallbackStatus(pkg.status)}</span>
               <span class="registry-badge">Edition {pkg.versions[0]?.edition || "2026"}</span>
             </div>
           </div>
@@ -78,42 +86,76 @@ const fallbackPackages = registryPackages.map((pkg) => ({
       <p data-registry-empty-body>{t.registry.browse.emptyBody}</p>
       <a class="registry-button primary" href="/registry/submit" data-i18n="registry.submitPackage">{t.registry.submitPackage}</a>
     </div>
+
+    <button class="registry-button registry-load-more" type="button" data-registry-more hidden data-i18n="registry.browse.loadMore">{t.registry.browse.loadMore}</button>
   </section>
 
   <script is:inline define:vars={{ fallbackPackages }}>
     (() => {
-      const prior = window.__cellscriptRegistryBrowseAbort;
-      prior?.abort();
-      const controller = new AbortController();
-      window.__cellscriptRegistryBrowseAbort = controller;
-      const { signal } = controller;
-      document.addEventListener("astro:before-swap", () => controller.abort(), { once: true, signal });
+      const previous = window.__cellscriptRegistryBrowseAbort;
+      previous?.abort();
+      const lifecycle = new AbortController();
+      window.__cellscriptRegistryBrowseAbort = lifecycle;
+      const { signal } = lifecycle;
+      document.addEventListener("astro:before-swap", () => lifecycle.abort(), { once: true, signal });
 
       const app = document.querySelector("[data-registry-browser]");
       if (!app) return;
       const list = app.querySelector("[data-registry-list]");
-      const query = app.querySelector("[data-registry-query]");
+      const queryInput = app.querySelector("[data-registry-query]");
       const count = app.querySelector("[data-registry-count]");
       const empty = app.querySelector("[data-registry-empty]");
       const emptyTitle = app.querySelector("[data-registry-empty-title]");
       const emptyBody = app.querySelector("[data-registry-empty-body]");
       const service = app.querySelector("[data-registry-service-state]");
       const serviceCopy = app.querySelector("[data-registry-service-copy]");
+      const retry = app.querySelector("[data-registry-retry]");
+      const skeleton = app.querySelector("[data-registry-skeleton]");
+      const more = app.querySelector("[data-registry-more]");
       const apiOrigin = app.dataset.apiOrigin;
-      let packages = fallbackPackages;
+      const params = new URLSearchParams(window.location.search);
+      let packages = [];
       let source = "loading";
+      let nextOffset = null;
+      let request = null;
+      let searchTimer = 0;
+      let query = params.get("q")?.trim() || "";
+      if (queryInput) queryInput.value = query;
 
       const messages = () => window.__CELLSCRIPT_I18N__;
       const locale = () => document.documentElement.dataset.locale === "zh" ? "zh" : "en";
       const message = (path) => path.split(".").reduce((value, key) => value?.[key], messages()?.[locale()]);
       const format = (template, values) => Object.entries(values).reduce((value, [key, replacement]) => value.replaceAll(`{${key}}`, String(replacement)), template || "");
-
+      const statusTone = (status) => {
+        if (["active", "deployed", "on_chain_attested"].includes(status)) return "active";
+        if (status === "verified_build") return "info";
+        if (["indexed_pending", "deprecated"].includes(status)) return "warning";
+        if (["yanked", "quarantined"].includes(status)) return "danger";
+        return "source";
+      };
+      const statusLabel = (status) => message(`registry.statuses.${status}`) || String(status || "").replaceAll("_", " ");
       const detailHref = (pkg) => {
         if (pkg.source === "bundled" && pkg.href) return pkg.href;
-        const params = new URLSearchParams({ namespace: pkg.namespace, name: pkg.name });
-        return `/registry/package/?${params}`;
+        const detail = new URLSearchParams({ namespace: pkg.namespace, name: pkg.name });
+        return `/registry/package/?${detail}`;
       };
-
+      const updateUrl = () => {
+        const url = new URL(window.location.href);
+        if (query) url.searchParams.set("q", query);
+        else url.searchParams.delete("q");
+        window.history.replaceState({}, "", url);
+      };
+      const setServiceState = (next) => {
+        source = next;
+        app.dataset.state = next;
+        if (service) service.dataset.state = next;
+        if (retry) retry.hidden = next !== "mirror";
+        if (serviceCopy) {
+          const key = next === "live" ? "registry.browse.liveStatus" : next === "mirror" ? "registry.browse.mirrorStatus" : "registry.browse.loading";
+          serviceCopy.textContent = message(key) || "";
+          serviceCopy.dataset.i18n = key;
+        }
+      };
       const renderRows = () => {
         if (!list) return;
         list.replaceChildren();
@@ -121,29 +163,26 @@ const fallbackPackages = registryPackages.map((pkg) => ({
           const row = document.createElement("a");
           row.className = "registry-package-row";
           row.href = detailHref(pkg);
-          row.dataset.registryRow = "";
-          row.dataset.registrySearch = [pkg.coordinate, pkg.description, pkg.latest_version, pkg.status, ...(pkg.keywords || []), ...(pkg.categories || [])]
-            .filter(Boolean).join(" ").toLowerCase();
-
           const body = document.createElement("div");
           const title = document.createElement("strong");
           title.textContent = pkg.coordinate;
           const description = document.createElement("p");
-          description.textContent = pkg.description || message("registry.browse.noDescription") || "No package description recorded.";
+          description.textContent = pkg.description || message("registry.browse.noDescription");
           const badges = document.createElement("div");
           badges.className = "registry-badges";
           const version = document.createElement("span");
           version.className = "registry-badge";
-          version.textContent = pkg.latest_version || message("registry.browse.unversioned") || "unversioned";
+          version.dataset.kind = "version";
+          version.textContent = pkg.latest_version || message("registry.browse.unversioned");
           const status = document.createElement("span");
-          status.className = "registry-badge";
-          status.textContent = pkg.status || "source_published";
+          status.className = "registry-status";
+          status.dataset.state = statusTone(pkg.status);
+          status.textContent = statusLabel(pkg.status);
           const edition = document.createElement("span");
           edition.className = "registry-badge";
           edition.textContent = `Edition ${pkg.versions?.[0]?.edition || "2026"}`;
           badges.append(version, status, edition);
           body.append(title, description, badges);
-
           const arrow = document.createElement("span");
           arrow.className = "registry-row-arrow";
           arrow.setAttribute("aria-hidden", "true");
@@ -151,60 +190,76 @@ const fallbackPackages = registryPackages.map((pkg) => ({
           row.append(body, arrow);
           list.append(row);
         }
-        applyFilter();
-      };
-
-      const applyFilter = () => {
-        const needle = query?.value.trim().toLowerCase() || "";
-        const rows = Array.from(list?.querySelectorAll("[data-registry-row]") || []);
-        let visible = 0;
-        for (const row of rows) {
-          const matches = !needle || (row.dataset.registrySearch || "").includes(needle);
-          row.hidden = !matches;
-          if (matches) visible += 1;
-        }
-        const countKey = visible === 1 ? "registry.browse.countOne" : "registry.browse.countMany";
+        const visible = packages.length;
+        const countKey = nextOffset == null ? (visible === 1 ? "registry.browse.countOne" : "registry.browse.countMany") : "registry.browse.countMore";
         if (count) count.textContent = format(message(countKey), { n: visible });
         if (empty) empty.hidden = visible !== 0;
-        if (emptyTitle) emptyTitle.textContent = message(needle ? "registry.browse.noMatchTitle" : "registry.browse.emptyTitle") || "";
-        if (emptyBody) emptyBody.textContent = message(needle ? "registry.browse.noMatchBody" : "registry.browse.emptyBody") || "";
+        if (emptyTitle) emptyTitle.textContent = message(query ? "registry.browse.noMatchTitle" : "registry.browse.emptyTitle") || "";
+        if (emptyBody) emptyBody.textContent = message(query ? "registry.browse.noMatchBody" : "registry.browse.emptyBody") || "";
+        if (more) more.hidden = nextOffset == null || source !== "live";
+        list.hidden = visible === 0;
+        skeleton.hidden = true;
+        app.setAttribute("aria-busy", "false");
       };
-
-      const setServiceState = (next) => {
-        source = next;
-        if (service) service.dataset.state = next;
-        if (serviceCopy) {
-          const key = next === "live" ? "registry.browse.liveStatus" : next === "mirror" ? "registry.browse.mirrorStatus" : "registry.browse.loading";
-          serviceCopy.textContent = message(key) || "";
-          serviceCopy.dataset.i18n = key;
+      const localMirror = () => {
+        const needle = query.toLowerCase();
+        packages = fallbackPackages.filter((pkg) => !needle || [pkg.coordinate, pkg.description, pkg.latest_version, pkg.status, ...(pkg.keywords || []), ...(pkg.categories || [])]
+          .filter(Boolean).join(" ").toLowerCase().includes(needle));
+        nextOffset = null;
+        setServiceState("mirror");
+        renderRows();
+      };
+      const load = async ({ append = false } = {}) => {
+        request?.abort();
+        request = new AbortController();
+        const offset = append && nextOffset != null ? nextOffset : 0;
+        if (!append) {
+          app.setAttribute("aria-busy", "true");
+          skeleton.hidden = false;
+          list.hidden = true;
+          empty.hidden = true;
+          setServiceState("loading");
+        } else if (more) {
+          more.disabled = true;
+          more.textContent = message("registry.browse.loadingMore");
+        }
+        const search = new URLSearchParams({ limit: "50", offset: String(offset) });
+        if (query) search.set("q", query);
+        try {
+          const response = await fetch(`${apiOrigin}/v1/packages?${search}`, { headers: { accept: "application/json" }, signal: request.signal });
+          if (!response.ok) throw new Error("unavailable");
+          const payload = await response.json();
+          if (payload?.schema !== "cellscript-public-registry-index-v1" || !Array.isArray(payload.packages)) throw new Error("unsupported_schema");
+          const incoming = payload.packages.map((pkg) => ({ ...pkg, source: "live" }));
+          packages = append ? [...packages, ...incoming] : incoming;
+          nextOffset = Number.isInteger(payload.next_offset) ? payload.next_offset : null;
+          setServiceState("live");
+          renderRows();
+        } catch (cause) {
+          if (cause?.name === "AbortError") return;
+          localMirror();
+        } finally {
+          if (more) {
+            more.disabled = false;
+            more.textContent = message("registry.browse.loadMore");
+          }
         }
       };
 
-      query?.addEventListener("input", applyFilter, { signal });
-      window.addEventListener("cellscript:locale-change", () => {
-        renderRows();
-        setServiceState(source);
+      queryInput?.addEventListener("input", () => {
+        query = queryInput.value.trim();
+        updateUrl();
+        window.clearTimeout(searchTimer);
+        searchTimer = window.setTimeout(() => source === "mirror" ? localMirror() : load(), 240);
       }, { signal });
-
-      renderRows();
-      setServiceState("loading");
-      fetch(`${apiOrigin}/v1/packages?limit=100`, { headers: { accept: "application/json" }, signal })
-        .then(async (response) => {
-          if (!response.ok) throw new Error(`registry API returned ${response.status}`);
-          const payload = await response.json();
-          if (payload?.schema !== "cellscript-public-registry-index-v1" || !Array.isArray(payload.packages)) {
-            throw new Error("registry API returned an unsupported schema");
-          }
-          packages = payload.packages.map((pkg) => ({ ...pkg, source: "live" }));
-          setServiceState("live");
-          renderRows();
-        })
-        .catch((error) => {
-          if (error?.name === "AbortError") return;
-          packages = fallbackPackages;
-          setServiceState("mirror");
-          renderRows();
-        });
+      more?.addEventListener("click", () => load({ append: true }), { signal });
+      retry?.addEventListener("click", () => load(), { signal });
+      window.addEventListener("cellscript:locale-change", () => {
+        setServiceState(source);
+        renderRows();
+      }, { signal });
+      signal.addEventListener("abort", () => request?.abort(), { once: true });
+      load();
     })();
   </script>
 </RegistryLayout>
