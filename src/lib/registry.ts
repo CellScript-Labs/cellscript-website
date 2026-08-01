@@ -4,12 +4,12 @@ export interface RegistryVersion {
   version: string;
   tag: string;
   source_hash: string;
-  cellscript_version: string;
+  cellscript_version?: string;
   /** Long-lived source-semantics epoch. */
-  edition: "2026";
+  edition?: "2026";
   /** Resolved target/assurance/ABI/schema profile identity. */
-  compatibility_profile_hash: string;
-  dependencies: Record<string, { namespace: string; version: string }>;
+  compatibility_profile_hash?: string;
+  dependencies?: Record<string, { namespace: string; version: string }>;
   status:
     | "source_published"
     | "indexed_pending"
@@ -51,7 +51,8 @@ export interface RegistryRelease {
   artifact_hash?: string;
   abi_hash?: string;
   build_recipe_hash?: string;
-  verification_status: "pending" | "verified" | "evidence_required" | "rejected";
+  profile_contract?: Record<string, any>;
+  verification_status: "pending" | "hash_bound" | "verified" | "evidence_required" | "rejected";
   deployment_status: "not_applicable" | "undeployed" | "deployed" | "chain_verified";
   availability_status: "active" | "deprecated" | "yanked" | "quarantined";
   immutable_bundle?: { url?: string; content_type?: string; size_bytes?: number };
@@ -89,6 +90,8 @@ export interface RegistryEvidence {
   hash_type?: string;
   dep_type?: string;
   out_point?: string | { tx_hash: string; index: number };
+  chain_verification?: string;
+  evidence?: Record<string, unknown>;
 }
 
 export interface RegistryPackageView {
@@ -202,6 +205,7 @@ export function registryStatusTone(status?: string): "active" | "info" | "warnin
     case "chain_verified":
     case "verified":
       return "active";
+    case "hash_bound":
     case "verified_build":
     case "evidence_required":
       return "info";

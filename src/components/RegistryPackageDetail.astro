@@ -25,8 +25,22 @@ const outPointLabel = (value?: string | { tx_hash: string; index: number }) => t
     ? `${value.tx_hash}:${value.index}`
     : undefined;
 const firstRelease = pkg?.releases[0];
-const allEvidence = pkg?.releases.flatMap((release) => release.evidence ?? []) ?? pkg?.evidence ?? [];
-const deploymentEvidence = allEvidence.filter((item) => item.kind === "deployed");
+const allEvidence = (pkg?.releases.flatMap((release) => release.evidence ?? []) ?? pkg?.evidence ?? []).map((item) => ({
+  ...(item.evidence && typeof item.evidence === "object" ? item.evidence : {}),
+  kind: item.kind,
+  evidence_hash: item.evidence_hash,
+})) as any[];
+const deploymentEvidence = allEvidence.filter((item) => item.kind === "deployed" && item.chain_verification);
+const profileContract = firstRelease?.profile_contract;
+const consumerCommand = pkg && firstRelease
+  ? pkg.artifact.consumption_mode === "copy"
+    ? `cellc artifact copy ${pkg.coordinate}@${firstRelease.release} --destination . --accept-hash-bound`
+    : pkg.artifact.consumption_mode === "deployment" && firstRelease.deployment_status === "chain_verified"
+      ? `cellc artifact cell-dep ${pkg.coordinate}@${firstRelease.release} --output CellDep.json --accept-hash-bound`
+      : pkg.artifact.consumption_mode === "deployment"
+        ? `cellc artifact pin ${pkg.coordinate}@${firstRelease.release} --output Artifacts.lock --accept-hash-bound\ncellc artifact record-deployment ${pkg.coordinate}@${firstRelease.release} --code-hash <code_hash> --hash-type ${profileContract?.ckb?.hash_type || "data1"} --dep-type ${profileContract?.ckb?.dep_type || "code"} --tx-hash <tx_hash> --index <index> --capability-key-id <key_id>`
+        : `cellc artifact pin ${pkg.coordinate}@${firstRelease.release} --output Artifacts.lock --accept-hash-bound`
+  : "";
 ---
 
 <section
@@ -155,12 +169,20 @@ const deploymentEvidence = allEvidence.filter((item) => item.kind === "deployed"
             <div><dt data-i18n="registry.package.factProfile">{t.registry.package.factProfile}</dt><dd data-package-fact-profile>{kindLabel(pkg?.artifact.profile)}</dd></div>
             <div><dt data-i18n="registry.package.factConsumption">{t.registry.package.factConsumption}</dt><dd data-package-fact-consumption>{kindLabel(pkg?.artifact.consumption_mode)}</dd></div>
             <div><dt data-i18n="registry.package.factLanguage">{t.registry.package.factLanguage}</dt><dd data-package-fact-language>{kindLabel(pkg?.artifact.language)}</dd></div>
+            <div data-package-fact-target-wrap hidden={!profileContract?.build?.target}><dt data-i18n="registry.package.factTarget">{t.registry.package.factTarget}</dt><dd data-package-fact-target>{profileContract?.build?.target}</dd></div>
+            <div data-package-fact-security-wrap hidden={!profileContract?.security?.status}><dt data-i18n="registry.package.factSecurity">{t.registry.package.factSecurity}</dt><dd data-package-fact-security>{kindLabel(profileContract?.security?.status)}</dd></div>
+            <div data-package-fact-verifier-wrap hidden={!profileContract?.verifier?.verifier_id}><dt data-i18n="registry.package.factVerifier">{t.registry.package.factVerifier}</dt><dd data-package-fact-verifier>{profileContract?.verifier?.verifier_id}</dd></div>
           </dl>
         </section>
         <section class="registry-panel registry-section-block" data-package-resolver hidden={pkg?.artifact.consumption_mode !== "dependency"}>
           <p class="registry-label" data-i18n="registry.package.installTitle">{t.registry.package.installTitle}</p>
           <p data-i18n="registry.package.installBody">{t.registry.package.installBody}</p>
           <div class="registry-step-code"><code data-package-install>{pkg?.install_command}</code></div>
+        </section>
+        <section class="registry-panel registry-section-block" data-package-consumer hidden={pkg?.artifact.consumption_mode === "dependency"}>
+          <p class="registry-label" data-i18n="registry.package.consumeTitle">{t.registry.package.consumeTitle}</p>
+          <p data-i18n="registry.package.consumeBody">{t.registry.package.consumeBody}</p>
+          <div class="registry-step-code"><code data-package-consume>{consumerCommand}</code></div>
         </section>
         <section class="registry-panel registry-section-block">
           <p class="registry-label" data-i18n="registry.package.linksTitle">{t.registry.package.linksTitle}</p>
@@ -191,7 +213,7 @@ const deploymentEvidence = allEvidence.filter((item) => item.kind === "deployed"
       : String(value || message("registry.package.notRecorded")).replaceAll("_", " ");
     const tone = (value?: string) => {
       if (["active", "verified", "deployed", "chain_verified"].includes(value || "")) return "active";
-      if (value === "evidence_required") return "info";
+      if (["hash_bound", "evidence_required"].includes(value || "")) return "info";
       if (["pending", "undeployed", "deprecated"].includes(value || "")) return "warning";
       if (["rejected", "yanked", "quarantined"].includes(value || "")) return "danger";
       return "source";
@@ -228,6 +250,15 @@ const deploymentEvidence = allEvidence.filter((item) => item.kind === "deployed"
       text("[data-package-fact-profile]", String(artifact.artifact.profile).replaceAll("_", " "));
       text("[data-package-fact-consumption]", String(artifact.artifact.consumption_mode).replaceAll("_", " "));
       text("[data-package-fact-language]", artifact.artifact.language);
+      const profileContract = artifact.releases?.[0]?.profile_contract;
+      const fact = (name: string, value?: string) => {
+        const wrap = app?.querySelector<HTMLElement>(`[data-package-fact-${name}-wrap]`);
+        if (wrap) wrap.hidden = !value;
+        if (value) text(`[data-package-fact-${name}]`, String(value).replaceAll("_", " "));
+      };
+      fact("target", profileContract?.build?.target);
+      fact("security", profileContract?.security?.status);
+      fact("verifier", profileContract?.verifier?.verifier_id);
 
       const releases = Array.isArray(artifact.releases) ? artifact.releases.map((release: any) => ({
         ...release,
@@ -278,7 +309,7 @@ const deploymentEvidence = allEvidence.filter((item) => item.kind === "deployed"
       if (evidenceList) evidenceList.hidden = evidence.length === 0;
       const noEvidence = app?.querySelector<HTMLElement>("[data-package-no-evidence]");
       if (noEvidence) noEvidence.hidden = evidence.length > 0;
-      const deployments = evidence.filter((item: any) => item.kind === "deployed");
+      const deployments = evidence.filter((item: any) => item.kind === "deployed" && item.chain_verification);
       const deploymentBody = app?.querySelector<HTMLTableSectionElement>("[data-package-deployments]");
       deploymentBody?.replaceChildren();
       for (const item of deployments) {
@@ -297,6 +328,17 @@ const deploymentEvidence = allEvidence.filter((item) => item.kind === "deployed"
       const resolver = app?.querySelector<HTMLElement>("[data-package-resolver]");
       if (resolver) resolver.hidden = artifact.artifact.consumption_mode !== "dependency";
       text("[data-package-install]", `cellc install ${artifact.coordinate}@${artifact.latest_release || "<release>"}`);
+      const consumer = app?.querySelector<HTMLElement>("[data-package-consumer]");
+      if (consumer) consumer.hidden = artifact.artifact.consumption_mode === "dependency";
+      const selected = releases[0];
+      const consumerCommand = artifact.artifact.consumption_mode === "copy"
+        ? `cellc artifact copy ${artifact.coordinate}@${artifact.latest_release} --destination . --accept-hash-bound`
+        : artifact.artifact.consumption_mode === "deployment" && selected?.deployment_status === "chain_verified"
+          ? `cellc artifact cell-dep ${artifact.coordinate}@${artifact.latest_release} --output CellDep.json --accept-hash-bound`
+          : artifact.artifact.consumption_mode === "deployment"
+            ? `cellc artifact pin ${artifact.coordinate}@${artifact.latest_release} --output Artifacts.lock --accept-hash-bound\ncellc artifact record-deployment ${artifact.coordinate}@${artifact.latest_release} --code-hash <code_hash> --hash-type ${profileContract?.ckb?.hash_type || "data1"} --dep-type ${profileContract?.ckb?.dep_type || "code"} --tx-hash <tx_hash> --index <index> --capability-key-id <key_id>`
+            : `cellc artifact pin ${artifact.coordinate}@${artifact.latest_release} --output Artifacts.lock --accept-hash-bound`;
+      text("[data-package-consume]", consumerCommand);
       const record = app?.querySelector<HTMLAnchorElement>("[data-package-record]");
       if (record) record.href = releases[0]?.direct_url || releases[0]?.immutable_bundle?.url || "#";
       const repository = app?.querySelector<HTMLAnchorElement>("[data-package-repository]");

@@ -9,6 +9,7 @@ const readEndpoints = [
   { method: "GET", path: "/v1/artifacts", description: t.registry.api.listArtifacts, key: "listArtifacts", href: `${apiOrigin}/v1/artifacts?limit=20` },
   { method: "GET", path: "/v1/artifacts/:namespace/:name", description: t.registry.api.artifactDetail, key: "artifactDetail" },
   { method: "GET", path: "/v1/artifacts/:namespace/:name/releases/:release/evidence", description: t.registry.api.releaseEvidence, key: "releaseEvidence" },
+  { method: "GET", path: "/v1/artifacts/:namespace/:name/releases/:release/commitment", description: t.registry.api.releaseCommitment, key: "releaseCommitment" },
 ];
 const writeEndpoints = [
   { method: "POST", path: "/v1/artifacts/:namespace/:name/releases", description: t.registry.api.publishRelease, key: "publishRelease" },

@@ -890,6 +890,32 @@
   margin-bottom: 18px;
 }
 
+.registry-profile-builder {
+  margin-top: 1rem;
+}
+
+.registry-profile-builder > .registry-field-hint {
+  margin: 0.65rem 0 1rem;
+}
+
+.registry-profile-builder [data-profile-group] {
+  margin-top: 0.75rem;
+}
+
+.registry-profile-builder [data-profile-group][hidden] {
+  display: none;
+}
+
+.registry-profile-preview {
+  margin-top: 1rem;
+  max-height: 22rem;
+  overflow: auto;
+}
+
+.registry-profile-preview code {
+  white-space: pre;
+}
+
 .registry-builder-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

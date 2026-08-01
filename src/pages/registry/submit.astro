@@ -73,6 +73,35 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
       </div>
       <p class="registry-field-hint" id="submit-coordinate-help" data-i18n="registry.submit.coordinateHelp">{t.registry.submit.coordinateHelp}</p>
       <p class="registry-field-error" id="submit-coordinate-error" data-coordinate-error hidden data-i18n="registry.submit.invalidCoordinate">{t.registry.submit.invalidCoordinate}</p>
+      <details class="registry-command-options registry-profile-builder" data-profile-builder hidden>
+        <summary data-i18n="registry.submit.profileContractTitle">{t.registry.submit.profileContractTitle}</summary>
+        <p class="registry-field-hint" data-i18n="registry.submit.profileContractBody">{t.registry.submit.profileContractBody}</p>
+        <div class="registry-builder-grid registry-builder-grid-compact" data-profile-group="build">
+          <label class="registry-builder-field"><span data-i18n="registry.submit.buildTarget">{t.registry.submit.buildTarget}</span><input class="registry-input" name="build_target" value="riscv64imac-unknown-none-elf" /></label>
+          <label class="registry-builder-field"><span data-i18n="registry.submit.toolchain">{t.registry.submit.toolchain}</span><input class="registry-input" name="toolchain" placeholder="rustc 1.97.1" /></label>
+          <label class="registry-builder-field"><span data-i18n="registry.submit.sourceRevision">{t.registry.submit.sourceRevision}</span><input class="registry-input" name="source_revision" placeholder="git commit / source digest" /></label>
+          <label class="registry-builder-field"><span data-i18n="registry.submit.reproducibleBuild">{t.registry.submit.reproducibleBuild}</span><select class="registry-select" name="build_reproducible"><option value="false" data-i18n="registry.submit.notReproducible">{t.registry.submit.notReproducible}</option><option value="true" data-i18n="registry.submit.reproducible">{t.registry.submit.reproducible}</option></select></label>
+          <label class="registry-builder-field"><span data-i18n="registry.submit.securityStatus">{t.registry.submit.securityStatus}</span><select class="registry-select" name="security_status"><option value="unaudited">unaudited</option><option value="review_required" selected>review required</option><option value="audited">audited</option><option value="rejected">rejected</option></select></label>
+        </div>
+        <div class="registry-builder-grid registry-builder-grid-compact" data-profile-group="ckb">
+          <label class="registry-builder-field"><span data-i18n="registry.submit.scriptRole">{t.registry.submit.scriptRole}</span><select class="registry-select" name="script_role"><option value="type">type</option><option value="lock">lock</option><option value="dual_role">dual role</option><option value="helper">helper</option></select></label>
+          <label class="registry-builder-field"><span data-i18n="registry.submit.vmVersion">{t.registry.submit.vmVersion}</span><select class="registry-select" name="vm_version"><option value="2">2</option><option value="1">1</option><option value="0">0</option></select></label>
+          <label class="registry-builder-field"><span>hash_type</span><select class="registry-select" name="hash_type"><option value="data1">data1</option><option value="data2">data2</option><option value="data">data</option><option value="type">type</option></select></label>
+          <label class="registry-builder-field"><span>dep_type</span><select class="registry-select" name="dep_type"><option value="code">code</option><option value="dep_group">dep_group</option></select></label>
+        </div>
+        <div class="registry-builder-grid registry-builder-grid-compact" data-profile-group="verifier">
+          <label class="registry-builder-field"><span data-i18n="registry.submit.verifierId">{t.registry.submit.verifierId}</span><input class="registry-input" name="verifier_id" placeholder="btc.bip340.v0" /></label>
+          <label class="registry-builder-field"><span data-i18n="registry.submit.ipcAbi">{t.registry.submit.ipcAbi}</span><input class="registry-input" name="ipc_abi" placeholder="cellscript-btc-bip340-ipc-v0" /></label>
+        </div>
+        <div class="registry-builder-grid registry-builder-grid-compact" data-profile-group="reproduction">
+          <label class="registry-builder-field"><span data-i18n="registry.submit.buildEnvironment">{t.registry.submit.buildEnvironment}</span><input class="registry-input" name="build_environment" placeholder="container image@sha256:digest" /></label>
+          <label class="registry-builder-field"><span data-i18n="registry.submit.buildCommand">{t.registry.submit.buildCommand}</span><input class="registry-input" name="build_command" placeholder="cargo build --locked --release" /></label>
+        </div>
+        <div class="registry-builder-grid registry-builder-grid-compact" data-profile-group="copy">
+          <label class="registry-builder-field"><span data-i18n="registry.submit.templateEntrypoint">{t.registry.submit.templateEntrypoint}</span><input class="registry-input" name="template_entrypoint" placeholder="src/main.cell" /></label>
+        </div>
+        <div class="registry-step-code registry-profile-preview"><code data-profile-contract-preview></code></div>
+      </details>
     </form>
 
     <section class="registry-submit-preflight" data-submit-workspace hidden aria-labelledby="registry-preflight-heading">
@@ -238,6 +267,9 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     const pathInput = form?.elements.namedItem("path") as HTMLInputElement | null;
     const artifactKindInput = form?.elements.namedItem("artifact_kind") as HTMLSelectElement | null;
     const artifactKindHint = document.querySelector<HTMLElement>("[data-artifact-kind-hint]");
+    const profileBuilder = document.querySelector<HTMLDetailsElement>("[data-profile-builder]");
+    const profileGroups = Array.from(document.querySelectorAll<HTMLElement>("[data-profile-group]"));
+    const profilePreview = document.querySelector<HTMLElement>("[data-profile-contract-preview]");
     const coordinateError = document.querySelector<HTMLElement>("[data-coordinate-error]");
     const preflight = document.querySelector<HTMLElement>("[data-submit-preflight]");
     const preflightCopy = document.querySelector<HTMLButtonElement>("[data-submit-preflight-copy]");
@@ -367,7 +399,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     };
     const fieldValue = (name: string) => {
       const input = form?.elements.namedItem(name);
-      return input instanceof HTMLInputElement ? input.value.trim() : "";
+      return input instanceof HTMLInputElement || input instanceof HTMLSelectElement ? input.value.trim() : "";
     };
     const coordinateValid = () => coordinatePattern.test(fieldValue("namespace")) && coordinatePattern.test(fieldValue("name"));
     const shellQuote = (text: string) => /[\s"'$]/.test(text) ? `'${text.replace(/'/g, "'\\''")}'` : text;
@@ -533,6 +565,73 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
               : "kindCellScriptHint";
       artifactKindHint.dataset.i18n = `registry.submit.${hintKey}`;
       artifactKindHint.textContent = message(hintKey);
+      const kind = artifactKindInput.value;
+      const generic = !["source_library", "profile_library"].includes(kind);
+      const reproducibleInput = form?.elements.namedItem("build_reproducible") as HTMLSelectElement | null;
+      if (reproducibleInput) {
+        if (kind === "reproducible_binary") reproducibleInput.value = "true";
+        reproducibleInput.disabled = kind === "reproducible_binary";
+      }
+      const reproducible = kind === "reproducible_binary" || fieldValue("build_reproducible") === "true";
+      if (profileBuilder) profileBuilder.hidden = !generic;
+      for (const group of profileGroups) {
+        const name = group.dataset.profileGroup;
+        group.hidden = !generic || (name === "build" && kind === "template")
+          || (name === "ckb" && !["deployable_contract", "runtime_verifier"].includes(kind))
+          || (name === "verifier" && kind !== "runtime_verifier")
+          || (name === "reproduction" && !reproducible)
+          || (name === "copy" && kind !== "template");
+      }
+      if (!generic || !profilePreview) return;
+      const profile = ["deployable_contract", "runtime_verifier"].includes(kind)
+        ? "ckb_executable"
+        : kind === "reproducible_binary" ? "reproducible_build" : "copy_material";
+      const contract: Record<string, unknown> = {
+        schema: "cellscript-registry-profile-contract-v1",
+        artifact_kind: kind,
+        profile,
+      };
+      if (kind !== "template") {
+        contract.build = {
+          target: fieldValue("build_target") || "<target>",
+          toolchain: fieldValue("toolchain") || "<pinned toolchain>",
+          profile: "release",
+          source_revision: fieldValue("source_revision") || "<source revision>",
+          reproducible,
+        };
+        const securityStatus = fieldValue("security_status") || "review_required";
+        contract.security = securityStatus === "audited"
+          ? { status: securityStatus, audit_report_hash: "<audit_report object BLAKE2b-256>" }
+          : { status: securityStatus };
+      }
+      if (["deployable_contract", "runtime_verifier"].includes(kind)) {
+        contract.ckb = {
+          vm_version: fieldValue("vm_version"),
+          script_role: fieldValue("script_role"),
+          hash_type: fieldValue("hash_type"),
+          dep_type: fieldValue("dep_type"),
+          abi_hash: "<ABI BLAKE2b-256>",
+        };
+      }
+      if (kind === "runtime_verifier") {
+        contract.verifier = {
+          verifier_id: fieldValue("verifier_id") || "<verifier id>",
+          ipc_abi: fieldValue("ipc_abi") || "<IPC ABI>",
+          ipc_abi_hash: "<ABI BLAKE2b-256>",
+        };
+      }
+      if (reproducible) {
+        contract.reproduction = {
+          environment: fieldValue("build_environment") || "<pinned environment>",
+          command: fieldValue("build_command") || "<deterministic build command>",
+          recipe_hash: "<build recipe BLAKE2b-256>",
+          expected_artifact_hash: "<artifact BLAKE2b-256>",
+        };
+      }
+      if (kind === "template") {
+        contract.copy = { format: "file_map_v1", entrypoint: fieldValue("template_entrypoint") || "<entrypoint>" };
+      }
+      profilePreview.textContent = JSON.stringify(contract, null, 2);
     };
 
     const loadCCC = async () => {

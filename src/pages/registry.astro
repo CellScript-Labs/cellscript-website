@@ -140,7 +140,7 @@ const fallbackStatus = (status: string) =>
       const format = (template, values) => Object.entries(values).reduce((value, [key, replacement]) => value.replaceAll(`{${key}}`, String(replacement)), template || "");
       const statusTone = (status) => {
         if (["active", "verified", "deployed", "chain_verified"].includes(status)) return "active";
-        if (["evidence_required"].includes(status)) return "info";
+        if (["hash_bound", "evidence_required"].includes(status)) return "info";
         if (["pending", "undeployed", "deprecated"].includes(status)) return "warning";
         if (["rejected", "yanked", "quarantined"].includes(status)) return "danger";
         return "source";
