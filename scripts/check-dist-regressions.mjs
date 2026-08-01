@@ -89,11 +89,21 @@ for (const [name, html] of [
   expectContains(name, html, ">Registry</h1>");
   expectContains(name, html, "Discover verified CellScript packages or publish a package with scoped CKB wallet authorisation.");
   expectContains(name, html, 'data-astro-transition-persist="registry-header"');
+  expectContains(name, html, 'data-i18n-aria-label="nav.registryBrowse"');
 }
 
 const walletButton = registrySubmitHtml.match(/<button[^>]*data-capability-primary[^>]*>/)?.[0] ?? "";
 if (!walletButton) fail("registry submit: missing primary wallet action");
 else if (/\sdisabled(?:\s|=|>)/.test(walletButton)) fail("registry submit: primary wallet action must be enabled before package coordinates are entered");
+
+for (const stage of ["wallet", "scope", "authorise"]) {
+  expectContains("registry submit", registrySubmitHtml, `data-workflow-stage="${stage}"`);
+}
+for (const retiredStage of ["payload", "signature", "capability", "namespace"]) {
+  expectNotContains("registry submit", registrySubmitHtml, `data-workflow-stage="${retiredStage}"`);
+}
+expectContains("registry submit", registrySubmitHtml, 'form="registry-submit-form"');
+expectContains("registry submit", registrySubmitHtml, 'data-publish-step data-state="locked" aria-labelledby="registry-publish-heading" hidden');
 
 expectContains("playground bundle", jsText, expectedCompilerAssetVersion);
 expectContains("playground bundle", jsText, 'cellscript_version = "0.22.0"');

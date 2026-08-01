@@ -23,7 +23,7 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
       <button class="registry-intro-dismiss" type="button" data-submit-intro-dismiss data-i18n="registry.submit.introDismiss">{t.registry.submit.introDismiss}</button>
     </aside>
 
-    <form class="registry-builder" data-submit-form novalidate>
+    <form class="registry-builder" id="registry-submit-form" data-submit-form novalidate>
       <div class="registry-builder-grid registry-builder-grid-compact">
         <label class="registry-builder-field">
           <span data-i18n="registry.submit.namespace">{t.registry.submit.namespace}</span>
@@ -53,31 +53,32 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
             aria-describedby="submit-coordinate-help submit-coordinate-error"
           />
         </label>
-        <label class="registry-builder-field">
-          <span data-i18n="registry.submit.packageDir">{t.registry.submit.packageDir}</span>
-          <input class="registry-input" name="path" placeholder="./path/to/package" autocomplete="off" />
-        </label>
       </div>
       <p class="registry-field-hint" id="submit-coordinate-help" data-i18n="registry.submit.coordinateHelp">{t.registry.submit.coordinateHelp}</p>
       <p class="registry-field-error" id="submit-coordinate-error" data-coordinate-error hidden data-i18n="registry.submit.invalidCoordinate">{t.registry.submit.invalidCoordinate}</p>
     </form>
 
-    <div class="registry-submit-preflight">
-      <div>
-        <span class="registry-step-num">01</span>
-        <strong data-i18n="registry.submit.preflightTitle">{t.registry.submit.preflightTitle}</strong>
+    <section class="registry-submit-preflight" aria-labelledby="registry-preflight-heading">
+      <div class="registry-step-copy">
+        <h2 id="registry-preflight-heading" data-i18n="registry.submit.preflightTitle">{t.registry.submit.preflightTitle}</h2>
         <p data-i18n="registry.submit.preflightBody">{t.registry.submit.preflightBody}</p>
       </div>
       <div class="registry-step-code">
         <code data-submit-preflight>cellc package verify --json &amp;&amp; cellc publish --dry-run</code>
         <button class="registry-copy" type="button" data-submit-preflight-copy data-copy-text="cellc package verify --json && cellc publish --dry-run" data-revert-label={t.registry.copy} data-i18n="registry.copy">{t.registry.copy}</button>
+        <details class="registry-command-options">
+          <summary data-i18n="registry.submit.localCommandOptions">{t.registry.submit.localCommandOptions}</summary>
+          <label class="registry-builder-field">
+            <span data-i18n="registry.submit.packageDir">{t.registry.submit.packageDir}</span>
+            <input class="registry-input" name="path" form="registry-submit-form" placeholder="./path/to/package" autocomplete="off" />
+          </label>
+        </details>
       </div>
-    </div>
+    </section>
 
     <section class="registry-authorisation-card" data-authorisation-card aria-labelledby="registry-wallet-heading">
       <header class="registry-authorisation-head">
         <div>
-          <span class="registry-step-num">02</span>
           <h2 id="registry-wallet-heading" data-i18n="registry.submit.walletTitle">{t.registry.submit.walletTitle}</h2>
           <p data-i18n="registry.submit.walletBody">{t.registry.submit.walletBody}</p>
         </div>
@@ -92,11 +93,9 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
 
       <div class="registry-signer" data-capability-signer data-api-origin={apiOrigin}>
         <ol class="registry-authorisation-progress" aria-label={t.registry.submit.progressLabel} data-i18n-aria-label="registry.submit.progressLabel">
-          <li data-workflow-stage="wallet"><span>1</span><strong data-i18n="registry.submit.stageWallet">{t.registry.submit.stageWallet}</strong></li>
-          <li data-workflow-stage="payload"><span>2</span><strong data-i18n="registry.submit.stagePayload">{t.registry.submit.stagePayload}</strong></li>
-          <li data-workflow-stage="signature"><span>3</span><strong data-i18n="registry.submit.stageSignature">{t.registry.submit.stageSignature}</strong></li>
-          <li data-workflow-stage="capability"><span>4</span><strong data-i18n="registry.submit.stageCapability">{t.registry.submit.stageCapability}</strong></li>
-          <li data-workflow-stage="namespace"><span>5</span><strong data-i18n="registry.submit.stageNamespace">{t.registry.submit.stageNamespace}</strong></li>
+          <li data-workflow-stage="wallet"><span>01</span><strong data-i18n="registry.submit.stageConnect">{t.registry.submit.stageConnect}</strong></li>
+          <li data-workflow-stage="scope"><span>02</span><strong data-i18n="registry.submit.stageScope">{t.registry.submit.stageScope}</strong></li>
+          <li data-workflow-stage="authorise"><span>03</span><strong data-i18n="registry.submit.stageAuthorise">{t.registry.submit.stageAuthorise}</strong></li>
         </ol>
 
         <label class="registry-builder-field registry-signer-principal" data-principal-panel hidden>
@@ -151,16 +150,14 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
             <button class="registry-copy" type="button" data-submit-copy data-copy-text="" data-revert-label={t.registry.submit.copyAddCommand} data-i18n="registry.submit.copyAddCommand">{t.registry.submit.copyAddCommand}</button>
           </div>
         </details>
+        <button class="registry-text-button registry-existing-capability" type="button" data-existing-capability data-i18n="registry.submit.alreadyAuthorised">{t.registry.submit.alreadyAuthorised}</button>
       </div>
     </section>
 
-    <section class="registry-publish-step" data-publish-step data-state="locked" aria-labelledby="registry-publish-heading">
+    <section class="registry-publish-step" data-publish-step data-state="locked" aria-labelledby="registry-publish-heading" hidden>
       <div class="registry-step-copy">
-        <span class="registry-step-num">03</span>
         <h2 id="registry-publish-heading" data-i18n="registry.submit.prTitle">{t.registry.submit.prTitle}</h2>
         <p data-i18n="registry.submit.prBody">{t.registry.submit.prBody}</p>
-        <p class="registry-publish-lock" data-publish-lock data-i18n="registry.submit.publishLocked">{t.registry.submit.publishLocked}</p>
-        <button class="registry-text-button" type="button" data-existing-capability data-i18n="registry.submit.alreadyAuthorised">{t.registry.submit.alreadyAuthorised}</button>
       </div>
       <div class="registry-step-code">
         <code data-submit-publish>cellc publish</code>
@@ -217,6 +214,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     const introDismiss = document.querySelector<HTMLButtonElement>("[data-submit-intro-dismiss]");
     const namespaceInput = form?.elements.namedItem("namespace") as HTMLInputElement | null;
     const nameInput = form?.elements.namedItem("name") as HTMLInputElement | null;
+    const pathInput = form?.elements.namedItem("path") as HTMLInputElement | null;
     const coordinateError = document.querySelector<HTMLElement>("[data-coordinate-error]");
     const preflight = document.querySelector<HTMLElement>("[data-submit-preflight]");
     const preflightCopy = document.querySelector<HTMLButtonElement>("[data-submit-preflight-copy]");
@@ -412,16 +410,17 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       const payloadReady = walletReady && hasValidPayload();
       const signatureReady = payloadReady && Boolean(signatureOutput?.value.trim());
       stageState("wallet", walletReady, !walletReady);
-      stageState("payload", payloadReady, walletReady && !payloadReady);
-      stageState("signature", signatureReady, payloadReady && !signatureReady);
-      stageState("capability", capabilitySubmitted, signatureReady && !capabilitySubmitted);
-      stageState("namespace", namespaceClaimed, capabilitySubmitted && !namespaceClaimed);
+      stageState("scope", signatureReady, walletReady && !signatureReady);
+      stageState("authorise", namespaceClaimed, signatureReady && !namespaceClaimed);
       if (principalPanel) principalPanel.hidden = !walletReady;
       if (payloadPanel) payloadPanel.hidden = !walletReady;
       if (signaturePanel) signaturePanel.hidden = !signatureReady;
       if (changeWalletButton) changeWalletButton.hidden = !walletReady;
       const canPublish = namespaceClaimed || authorisedOverride;
-      if (publishStep) publishStep.dataset.state = canPublish ? "ready" : "locked";
+      if (publishStep) {
+        publishStep.dataset.state = canPublish ? "ready" : "locked";
+        publishStep.hidden = !canPublish;
+      }
       if (publishLock) publishLock.hidden = canPublish;
       if (existingCapability) existingCapability.hidden = canPublish;
       if (publishCopy) publishCopy.disabled = !canPublish;
@@ -856,13 +855,14 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     }, { signal });
     form?.addEventListener("input", (event) => {
       const coordinate = `${fieldValue("namespace")}/${fieldValue("name")}`;
-      if (lastCoordinate && coordinate !== lastCoordinate && event.target !== form?.elements.namedItem("path")) {
+      if (lastCoordinate && coordinate !== lastCoordinate && event.target !== pathInput) {
         clearSignature();
         authorisedOverride = false;
       }
       lastCoordinate = coordinate;
       syncWorkflow();
     }, { signal });
+    pathInput?.addEventListener("input", syncWorkflow, { signal });
     window.addEventListener("cellscript:locale-change", () => {
       setStatus(statusKey, statusTone, statusSuffix);
       if (walletDialog?.open) renderWalletChoices();

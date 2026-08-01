@@ -19,23 +19,23 @@ const t = translations[defaultLocale];
       <span>CellScript</span>
     </a>
     <div class="nav-links">
-      <a class:list={["nav-link", "nav-home", page === "home" && "active"]} href="/" aria-current={page === "home" ? "page" : undefined}>
+      <a class:list={["nav-link", "nav-home", page === "home" && "active"]} href="/" aria-label={t.nav.overview} data-i18n-aria-label="nav.overview" aria-current={page === "home" ? "page" : undefined}>
         <House aria-hidden="true" />
         <span data-i18n="nav.overview">{t.nav.overview}</span>
       </a>
-      <a class:list={["nav-link", page === "docs" && "active"]} href={links.docs} aria-current={page === "docs" ? "page" : undefined}>
+      <a class:list={["nav-link", page === "docs" && "active"]} href={links.docs} aria-label={t.nav.docs} data-i18n-aria-label="nav.docs" aria-current={page === "docs" ? "page" : undefined}>
         <BookOpen aria-hidden="true" />
         <span data-i18n="nav.docs">{t.nav.docs}</span>
       </a>
-      <a class:list={["nav-link", page === "playground" && "active"]} href="/playground" aria-current={page === "playground" ? "page" : undefined}>
+      <a class:list={["nav-link", page === "playground" && "active"]} href="/playground" aria-label={t.nav.playground} data-i18n-aria-label="nav.playground" aria-current={page === "playground" ? "page" : undefined}>
         <SquareCode aria-hidden="true" />
         <span data-i18n="nav.playground">{t.nav.playground}</span>
       </a>
-      <a class:list={["nav-link", page === "registry" && "active"]} href="/registry" aria-current={page === "registry" ? "page" : undefined}>
+      <a class:list={["nav-link", page === "registry" && "active"]} href="/registry" aria-label={t.nav.registryBrowse} data-i18n-aria-label="nav.registryBrowse" aria-current={page === "registry" ? "page" : undefined}>
         <PackageCheck aria-hidden="true" />
         <span data-i18n="nav.registryBrowse">{t.nav.registryBrowse}</span>
       </a>
-      <a class="nav-link nav-source" href={links.source} target="_blank" rel="noopener noreferrer">
+      <a class="nav-link nav-source" href={links.source} target="_blank" rel="noopener noreferrer" aria-label={t.nav.source} data-i18n-aria-label="nav.source">
         <Github aria-hidden="true" />
         <span data-i18n="nav.source">{t.nav.source}</span>
       </a>
