@@ -452,11 +452,17 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     };
     const createCkbOnlyController = (ccc: typeof import("@ckb-ccc/connector/barrel")) => new class extends ccc.SignersController {
       async refresh(client: any, onUpdate: (wallets: any[]) => void, configs?: any) {
+        const ckbWallets = new Map<string, any>();
         await super.refresh(client, (wallets: any[]) => {
-          const ckbWallets = new Map<string, any>();
           for (const wallet of wallets) {
             const signers = wallet.signers.filter((info: any) => info.signer?.type === ccc.SignerType.CKB);
-            if (signers.length > 0) ckbWallets.set(wallet.name, { ...wallet, signers });
+            if (signers.length > 0) {
+              ckbWallets.set(wallet.name, {
+                ...wallet,
+                signers,
+                installOnly: signers.every((info: any) => info.signer instanceof ccc.SignerOpenLink),
+              });
+            }
           }
           onUpdate([...ckbWallets.values()]);
         }, configs);
@@ -568,11 +574,14 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       }
       transitionWalletOptions(() => {
         for (const wallet of availableWallets) {
+          let detail = message("walletCkbSigner");
+          if (wallet.installOnly) detail = message("walletInstall");
+          else if (wallet.signers.length > 1) {
+            detail = message("walletMultipleSigners").replace("{count}", String(wallet.signers.length));
+          }
           walletOptions?.append(walletOptionButton(
             wallet.name,
-            wallet.signers.length > 1
-              ? message("walletMultipleSigners").replace("{count}", String(wallet.signers.length))
-              : message("walletCkbSigner"),
+            detail,
             wallet.icon,
             () => wallet.signers.length === 1
               ? void connectWalletSigner(wallet, wallet.signers[0])
@@ -591,10 +600,10 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
         walletController ??= createCkbOnlyController(ccc);
         const network = networkSelect?.value === "testnet" ? "testnet" : "mainnet";
         const client = network === "testnet" ? new ccc.ClientPublicTestnet() : new ccc.ClientPublicMainnet();
+        let discoveredWallets: any[] = [];
         await walletController.refresh(client, (wallets: any[]) => {
           if (sequence !== walletRefreshSequence) return;
-          availableWallets = wallets;
-          renderWalletChoices();
+          discoveredWallets = wallets;
         }, {
           name: "CellScript Registry",
           icon: appLogo,
@@ -604,6 +613,9 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
             network,
           }],
         });
+        if (sequence !== walletRefreshSequence) return;
+        availableWallets = discoveredWallets;
+        renderWalletChoices();
       } catch (error) {
         if (sequence !== walletRefreshSequence) return;
         renderWalletEmpty("errorWallet");
