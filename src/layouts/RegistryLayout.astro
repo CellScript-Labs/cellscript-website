@@ -86,7 +86,7 @@ const activeHref =
     <a class="skip-link" href="#registry-main" data-i18n="a11y.skipToContent">{t.a11y.skipToContent}</a>
     <SiteHeader page="registry" />
     <main id="registry-main" class="registry-app">
-      {showHeader && <header class:list={["registry-topbar", compactHeader && "registry-topbar-compact"]} aria-label={t.registry.appLabel} data-i18n-aria-label="registry.appLabel">
+      {showHeader && <header class:list={["registry-topbar", compactHeader && "registry-topbar-compact"]} transition:name="registry-header" aria-label={t.registry.appLabel} data-i18n-aria-label="registry.appLabel">
         <div>
           {!compactHeader && <p class="registry-eyebrow" data-i18n="registry.eyebrow">{t.registry.eyebrow}</p>}
           <h1 data-registry-heading data-registry-heading-key={headingKey}>{headingText}</h1>

@@ -7,7 +7,7 @@ const description = t.registry.submit.description;
 const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.registry.cellscript.dev").replace(/\/$/, "");
 ---
 
-<RegistryLayout title="CellScript Registry: Submit" description={description} headingKey="registry.submit.title" descriptionKey="registry.submit.description" active="submit" compactHeader showSubmitCta={false}>
+<RegistryLayout title="CellScript Registry: Submit" description={description} headingKey="registry.shellTitle" descriptionKey="registry.shellDescription" active="submit" showSubmitCta={false}>
   <section class="registry-flow" aria-label={t.registry.nav.submit} data-i18n-aria-label="registry.nav.submit">
     <aside class="registry-submit-intro" data-submit-intro hidden aria-labelledby="submit-intro-title">
       <div class="registry-submit-intro-copy">
@@ -81,7 +81,13 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
           <h2 id="registry-wallet-heading" data-i18n="registry.submit.walletTitle">{t.registry.submit.walletTitle}</h2>
           <p data-i18n="registry.submit.walletBody">{t.registry.submit.walletBody}</p>
         </div>
-        <output class="registry-signer-status" data-capability-status role="status" aria-live="polite" data-i18n="registry.submit.walletIdle">{t.registry.submit.walletIdle}</output>
+        <div class="registry-authorisation-controls">
+          <output class="registry-signer-status" data-capability-status role="status" aria-live="polite" data-i18n="registry.submit.walletIdle">{t.registry.submit.walletIdle}</output>
+          <div class="registry-signer-actions">
+            <button class="registry-button primary registry-workflow-primary" type="button" data-capability-primary data-i18n="registry.submit.continueConnect">{t.registry.submit.continueConnect}</button>
+            <button class="registry-text-button registry-change-wallet" type="button" data-capability-change-wallet hidden data-i18n="registry.submit.changeWallet">{t.registry.submit.changeWallet}</button>
+          </div>
+        </div>
       </header>
 
       <div class="registry-signer" data-capability-signer data-api-origin={apiOrigin}>
@@ -129,11 +135,6 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
             <small class="registry-field-hint" data-i18n="registry.submit.signatureReady">{t.registry.submit.signatureReady}</small>
           </label>
           <button class="registry-copy" type="button" data-capability-copy-signature data-copy-text="" data-revert-label={t.registry.submit.copySignature} data-i18n="registry.submit.copySignature">{t.registry.submit.copySignature}</button>
-        </div>
-
-        <div class="registry-signer-actions">
-          <button class="registry-button primary registry-workflow-primary" type="button" data-capability-primary disabled data-i18n="registry.submit.continueConnect">{t.registry.submit.continueConnect}</button>
-          <button class="registry-text-button registry-change-wallet" type="button" data-capability-change-wallet hidden data-i18n="registry.submit.changeWallet">{t.registry.submit.changeWallet}</button>
         </div>
 
         <details class="registry-technical-details" data-capability-details hidden>
@@ -407,6 +408,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     };
     const syncWorkflow = () => {
       const walletReady = Boolean(activeWalletSigner && activeWalletIdentity);
+      const coordinateReady = coordinateValid();
       const payloadReady = walletReady && hasValidPayload();
       const signatureReady = payloadReady && Boolean(signatureOutput?.value.trim());
       stageState("wallet", walletReady, !walletReady);
@@ -425,7 +427,8 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       if (publishCopy) publishCopy.disabled = !canPublish;
 
       let primaryKey = "continueConnect";
-      if (walletReady && !payloadReady) primaryKey = "continuePayload";
+      if (walletReady && !coordinateReady) primaryKey = "continueCoordinate";
+      else if (walletReady && !payloadReady) primaryKey = "continuePayload";
       else if (payloadReady && !signatureReady) primaryKey = "continueSign";
       else if (signatureReady && !capabilitySubmitted) primaryKey = "continueSubmit";
       else if (capabilitySubmitted && !namespaceClaimed) primaryKey = "continueClaim";
@@ -433,7 +436,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       if (primaryButton) {
         primaryButton.dataset.i18n = `registry.submit.${primaryKey}`;
         primaryButton.textContent = message(primaryKey);
-        primaryButton.disabled = busy || !coordinateValid() || namespaceClaimed;
+        primaryButton.disabled = busy || namespaceClaimed;
         primaryButton.setAttribute("aria-busy", String(busy));
       }
       const valid = coordinateValid();
@@ -784,17 +787,17 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     };
 
     primaryButton?.addEventListener("click", async () => {
-      if (!coordinateValid()) {
-        coordinateError?.removeAttribute("hidden");
-        (namespaceInput?.validity.valid ? nameInput : namespaceInput)?.focus();
-        setStatus("invalidCoordinate", "error");
-        return;
-      }
       busy = true;
       clearTechnical();
       syncWorkflow();
       try {
-        if (!activeWalletSigner || !activeWalletIdentity) await ensureWalletSigner();
+        if (!activeWalletSigner || !activeWalletIdentity) {
+          await ensureWalletSigner();
+        } else if (!coordinateValid()) {
+          coordinateError?.removeAttribute("hidden");
+          (namespaceInput?.validity.valid ? nameInput : namespaceInput)?.focus();
+          setStatus("invalidCoordinate", "error");
+        }
         else if (!hasValidPayload()) {
           payloadInput?.focus();
           parsePayload();

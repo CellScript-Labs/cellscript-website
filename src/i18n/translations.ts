@@ -435,6 +435,8 @@ export const translations = {
     registry: {
       appLabel: "Registry application",
       eyebrow: "CellScript Registry",
+      shellTitle: "Registry",
+      shellDescription: "Discover verified CellScript packages or publish a package with scoped CKB wallet authorisation.",
       sectionsLabel: "Registry sections",
       nav: {
         browse: "Registry",
@@ -495,7 +497,7 @@ export const translations = {
         builderBody: "Enter the package coordinate once. The page keeps preflight, wallet authorisation and publish commands in sync without running them for you.",
         namespace: "Namespace",
         packageName: "Package name",
-        packageDir: "Package directory",
+        packageDir: "Package directory (optional)",
         preflightTitle: "Package preflight",
         preflightBody: "Run this once in the package directory before authorising a wallet.",
         discoveryTitle: "Publisher capability",
@@ -548,6 +550,7 @@ export const translations = {
         stageCapability: "Capability",
         stageNamespace: "Namespace",
         continueConnect: "Connect wallet",
+        continueCoordinate: "Complete package details",
         continuePayload: "Paste capability payload",
         continueSign: "Review and sign payload",
         continueSubmit: "Submit signed capability",
@@ -1115,6 +1118,8 @@ export const translations = {
     registry: {
       appLabel: "包注册表应用",
       eyebrow: "CellScript 包注册表",
+      shellTitle: "包注册表",
+      shellDescription: "发现已验证的 CellScript 包，或通过限定作用域的 CKB 钱包授权发布包。",
       sectionsLabel: "包注册表分区",
       nav: {
         browse: "包注册表",
@@ -1175,7 +1180,7 @@ export const translations = {
         builderBody: "包坐标只需填写一次。页面会同步生成预检、钱包授权和发布命令，但不会替你执行。",
         namespace: "命名空间",
         packageName: "包名称",
-        packageDir: "包目录",
+        packageDir: "包目录（可选）",
         preflightTitle: "包预检",
         preflightBody: "授权钱包前，在包目录中运行一次。",
         discoveryTitle: "发布者能力",
@@ -1228,6 +1233,7 @@ export const translations = {
         stageCapability: "能力",
         stageNamespace: "命名空间",
         continueConnect: "连接钱包",
+        continueCoordinate: "完善包信息",
         continuePayload: "粘贴能力载荷",
         continueSign: "审查并签署载荷",
         continueSubmit: "提交已签名能力",

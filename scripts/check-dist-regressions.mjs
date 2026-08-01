@@ -33,6 +33,8 @@ const dist = resolve(root, "dist");
 const distIndex = resolve(dist, "index.html");
 const distDocsIndex = resolve(dist, "docs", "index.html");
 const distPlaygroundIndex = resolve(dist, "playground", "index.html");
+const distRegistryIndex = resolve(dist, "registry", "index.html");
+const distRegistrySubmitIndex = resolve(dist, "registry", "submit", "index.html");
 const distPlaygroundWorker = resolve(dist, "playground-worker.js");
 const distWasm = resolve(dist, "wasm", "cellscript_wasm_bg.wasm");
 const docsSource = resolve(root, "src", "lib", "docs.ts");
@@ -44,12 +46,16 @@ const expectedWasmSha256 = "1141d7227079d0585e61b09450331ee4a4791b0875ea2cae81b6
 expectFile(distIndex);
 expectFile(distDocsIndex);
 expectFile(distPlaygroundIndex);
+expectFile(distRegistryIndex);
+expectFile(distRegistrySubmitIndex);
 expectFile(distPlaygroundWorker);
 expectFile(distWasm);
 expectFile(docsSource);
 
 const indexHtml = existsSync(distIndex) ? read(distIndex) : "";
 const docsHtml = existsSync(distDocsIndex) ? read(distDocsIndex) : "";
+const registryHtml = existsSync(distRegistryIndex) ? read(distRegistryIndex) : "";
+const registrySubmitHtml = existsSync(distRegistrySubmitIndex) ? read(distRegistrySubmitIndex) : "";
 const playgroundWorker = existsSync(distPlaygroundWorker) ? read(distPlaygroundWorker) : "";
 const docsSourceText = existsSync(docsSource) ? read(docsSource) : "";
 
@@ -75,6 +81,18 @@ expectContains("home", indexHtml, `href="https://github.com/CellScript-Labs/Cell
 expectContains("home", indexHtml, `<strong>${expectedReleaseTag}</strong>`);
 expectNotContains("home", indexHtml, '<div class="hero-release-tag"');
 expectNotContains("home", indexHtml, "v0.20.0");
+
+for (const [name, html] of [
+  ["registry", registryHtml],
+  ["registry submit", registrySubmitHtml],
+]) {
+  expectContains(name, html, ">Registry</h1>");
+  expectContains(name, html, "Discover verified CellScript packages or publish a package with scoped CKB wallet authorisation.");
+}
+
+const walletButton = registrySubmitHtml.match(/<button[^>]*data-capability-primary[^>]*>/)?.[0] ?? "";
+if (!walletButton) fail("registry submit: missing primary wallet action");
+else if (/\sdisabled(?:\s|=|>)/.test(walletButton)) fail("registry submit: primary wallet action must be enabled before package coordinates are entered");
 
 expectContains("playground bundle", jsText, expectedCompilerAssetVersion);
 expectContains("playground bundle", jsText, 'cellscript_version = "0.22.0"');
