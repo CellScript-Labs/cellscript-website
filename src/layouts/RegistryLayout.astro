@@ -15,7 +15,7 @@ interface Props {
   // package coordinate) that should not be localized.
   headingKey?: string;
   descriptionKey?: string;
-  active: "search" | "submit" | "manage" | "package";
+  active: "search" | "submit" | "api" | "manage" | "package";
   compactHeader?: boolean;
   showSubmitCta?: boolean;
   showHeader?: boolean;
@@ -49,7 +49,7 @@ const resolveKey = (key: string | undefined): string | undefined => {
 const headingText = resolveKey(headingKey) ?? title.replace("CellScript Registry: ", "");
 const descriptionText = resolveKey(descriptionKey) ?? description;
 const activeHref =
-  active === "submit" ? "/registry/submit" : "/registry";
+  active === "submit" ? "/registry/submit" : active === "api" ? "/registry/api" : "/registry";
 ---
 
 <!doctype html>

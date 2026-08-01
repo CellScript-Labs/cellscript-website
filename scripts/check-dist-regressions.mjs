@@ -87,7 +87,7 @@ for (const [name, html] of [
   ["registry submit", registrySubmitHtml],
 ]) {
   expectContains(name, html, ">Registry</h1>");
-  expectContains(name, html, "Discover verified CellScript packages or publish a package with scoped CKB wallet authorisation.");
+  expectContains(name, html, "Discover verified CKB artifacts, deployment records and CellScript packages, or publish with scoped wallet authorisation.");
   expectContains(name, html, 'data-astro-transition-persist="registry-header"');
   expectContains(name, html, 'data-i18n-aria-label="nav.registryBrowse"');
 }
@@ -96,6 +96,10 @@ const walletButton = registrySubmitHtml.match(/<button[^>]*data-capability-prima
 if (!walletButton) fail("registry submit: missing primary wallet action");
 else if (/\sdisabled(?:\s|=|>)/.test(walletButton)) fail("registry submit: primary wallet action must be enabled before package coordinates are entered");
 expectNotContains("registry submit", registrySubmitHtml, "data-capability-network");
+expectContains("registry submit", registrySubmitHtml, "data-submit-workspace hidden");
+expectContains("registry", registryHtml, "/v1/artifacts");
+expectNotContains("registry", registryHtml, "/v1/packages");
+expectNotContains("registry", registryHtml, "Live production index");
 
 for (const wallet of [
   "Neuron",

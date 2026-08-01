@@ -1,0 +1,88 @@
+---
+import RegistryLayout from "../../layouts/RegistryLayout.astro";
+import { defaultLocale, translations } from "../../i18n/translations";
+import { ArrowUpRight } from "lucide-astro";
+
+const t = translations[defaultLocale];
+const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.registry.cellscript.dev").replace(/\/$/, "");
+const readEndpoints = [
+  { method: "GET", path: "/v1/artifacts", description: t.registry.api.listArtifacts, key: "listArtifacts", href: `${apiOrigin}/v1/artifacts?limit=20` },
+  { method: "GET", path: "/v1/artifacts/:namespace/:name", description: t.registry.api.artifactDetail, key: "artifactDetail" },
+  { method: "GET", path: "/v1/artifacts/:namespace/:name/releases/:release/evidence", description: t.registry.api.releaseEvidence, key: "releaseEvidence" },
+];
+const writeEndpoints = [
+  { method: "POST", path: "/v1/artifacts/:namespace/:name/releases", description: t.registry.api.publishRelease, key: "publishRelease" },
+  { method: "POST", path: "/v1/artifacts/:namespace/:name/releases/:release/deployments", description: t.registry.api.publishDeployment, key: "publishDeployment" },
+];
+---
+
+<RegistryLayout
+  title="CellScript Registry: API"
+  description={t.registry.api.description}
+  headingKey="registry.shellTitle"
+  descriptionKey="registry.shellDescription"
+  active="api"
+  showSubmitCta={false}
+>
+  <section class="registry-api" aria-labelledby="registry-api-title">
+    <header class="registry-api-intro">
+      <div>
+        <p class="registry-label" data-i18n="registry.api.label">{t.registry.api.label}</p>
+        <h2 id="registry-api-title" data-i18n="registry.api.title">{t.registry.api.title}</h2>
+        <p data-i18n="registry.api.description">{t.registry.api.description}</p>
+      </div>
+      <a class="registry-api-health" href={`${apiOrigin}/health`} target="_blank" rel="noopener noreferrer">
+        <span data-i18n="registry.api.health">{t.registry.api.health}</span>
+        <ArrowUpRight aria-hidden="true" />
+      </a>
+    </header>
+
+    <section class="registry-api-group" aria-labelledby="registry-api-read-title">
+      <h3 id="registry-api-read-title" data-i18n="registry.api.readTitle">{t.registry.api.readTitle}</h3>
+      <div class="registry-api-endpoints">
+        {readEndpoints.map((endpoint) => (
+          <div class="registry-api-endpoint">
+            <span class="registry-api-method" data-method={endpoint.method.toLowerCase()}>{endpoint.method}</span>
+            <code>{endpoint.path}</code>
+            <p data-i18n={`registry.api.${endpoint.key}`}>{endpoint.description}</p>
+            {endpoint.href && (
+              <a href={endpoint.href} target="_blank" rel="noopener noreferrer" aria-label={t.registry.api.openEndpoint} data-i18n-aria-label="registry.api.openEndpoint">
+                <ArrowUpRight aria-hidden="true" />
+              </a>
+            )}
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section class="registry-api-group" aria-labelledby="registry-api-write-title">
+      <h3 id="registry-api-write-title" data-i18n="registry.api.writeTitle">{t.registry.api.writeTitle}</h3>
+      <div class="registry-api-endpoints">
+        {writeEndpoints.map((endpoint) => (
+          <div class="registry-api-endpoint">
+            <span class="registry-api-method" data-method={endpoint.method.toLowerCase()}>{endpoint.method}</span>
+            <code>{endpoint.path}</code>
+            <p data-i18n={`registry.api.${endpoint.key}`}>{endpoint.description}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section class="registry-api-example" aria-labelledby="registry-api-example-title">
+      <div>
+        <h3 id="registry-api-example-title" data-i18n="registry.api.exampleTitle">{t.registry.api.exampleTitle}</h3>
+        <p data-i18n="registry.api.exampleBody">{t.registry.api.exampleBody}</p>
+      </div>
+      <div class="registry-step-code">
+        <code>{`curl --fail '${apiOrigin}/v1/artifacts?kind=deployable_contract&deployment=chain_verified'`}</code>
+        <button
+          class="registry-copy"
+          type="button"
+          data-copy-text={`curl --fail '${apiOrigin}/v1/artifacts?kind=deployable_contract&deployment=chain_verified'`}
+          data-revert-label={t.registry.copy}
+          data-i18n="registry.copy"
+        >{t.registry.copy}</button>
+      </div>
+    </section>
+  </section>
+</RegistryLayout>

@@ -29,6 +29,37 @@ export interface RegistryVersion {
   schema_hash?: string;
 }
 
+export type RegistryArtifactKind =
+  | "source_library"
+  | "profile_library"
+  | "runtime_verifier"
+  | "deployable_contract"
+  | "reproducible_binary"
+  | "template";
+
+export interface RegistryArtifactDescriptor {
+  kind: RegistryArtifactKind;
+  profile: "cellscript_source" | "ckb_executable" | "reproducible_build" | "copy_material";
+  consumption_mode: "dependency" | "tcb" | "deployment" | "copy";
+  language: "cellscript" | "rust" | "c" | "javascript" | "other" | "unspecified";
+}
+
+export interface RegistryRelease {
+  release: string;
+  source_hash: string;
+  manifest_hash?: string;
+  artifact_hash?: string;
+  abi_hash?: string;
+  build_recipe_hash?: string;
+  verification_status: "pending" | "verified" | "evidence_required" | "rejected";
+  deployment_status: "not_applicable" | "undeployed" | "deployed" | "chain_verified";
+  availability_status: "active" | "deprecated" | "yanked" | "quarantined";
+  immutable_bundle?: { url?: string; content_type?: string; size_bytes?: number };
+  direct_url?: string;
+  created_at?: string;
+  evidence?: RegistryEvidence[];
+}
+
 export interface RegistryDeployment {
   name?: string;
   status?: string;
@@ -47,14 +78,17 @@ export interface RegistryDeployment {
 }
 
 export interface RegistryEvidence {
-  version: string;
+  version?: string;
   kind: string;
   evidence_hash?: string;
   producer?: string;
   generated_at?: string;
   network?: string;
   code_hash?: string;
-  out_point?: string;
+  data_hash?: string;
+  hash_type?: string;
+  dep_type?: string;
+  out_point?: string | { tx_hash: string; index: number };
 }
 
 export interface RegistryPackageView {
@@ -71,9 +105,12 @@ export interface RegistryPackageView {
   source_snapshot_url?: string;
   license?: string;
   production: boolean;
-  latest_version?: string;
-  status: string;
-  versions: RegistryVersion[];
+  latest_release?: string;
+  artifact: RegistryArtifactDescriptor;
+  verification_status: RegistryRelease["verification_status"];
+  deployment_status: RegistryRelease["deployment_status"];
+  availability_status: RegistryRelease["availability_status"];
+  releases: RegistryRelease[];
   deployments: RegistryDeployment[];
   evidence: RegistryEvidence[];
   install_command: string;
@@ -139,6 +176,7 @@ export interface RegistrySection {
 export const registrySections: RegistrySection[] = [
   { href: "/registry", label: "Registry", i18nKey: "registry.nav.browse" },
   { href: "/registry/submit", label: "Submit", i18nKey: "registry.nav.submit" },
+  { href: "/registry/api", label: "API", i18nKey: "registry.nav.api" },
 ];
 
 export function packageHref(pkg: RegistryPackage): string {
@@ -161,10 +199,15 @@ export function registryStatusTone(status?: string): "active" | "info" | "warnin
     case "active":
     case "deployed":
     case "on_chain_attested":
+    case "chain_verified":
+    case "verified":
       return "active";
     case "verified_build":
+    case "evidence_required":
       return "info";
     case "indexed_pending":
+    case "pending":
+    case "undeployed":
     case "deprecated":
       return "warning";
     case "yanked":
@@ -177,6 +220,17 @@ export function registryStatusTone(status?: string): "active" | "info" | "warnin
 
 export function toRegistryPackageView(pkg: RegistryPackage): RegistryPackageView {
   const repositoryRoot = "https://github.com/CellScript-Labs/CellScript/tree/main";
+  const verificationStatus: RegistryRelease["verification_status"] = ["verified_build", "deployed", "on_chain_attested"].includes(pkg.status)
+    ? "verified"
+    : "pending";
+  const deploymentStatus: RegistryRelease["deployment_status"] = pkg.status === "on_chain_attested"
+    ? "chain_verified"
+    : pkg.status === "deployed"
+      ? "deployed"
+      : "not_applicable";
+  const availabilityStatus: RegistryRelease["availability_status"] = ["deprecated", "yanked", "quarantined"].includes(pkg.status)
+    ? pkg.status as RegistryRelease["availability_status"]
+    : "active";
   return {
     coordinate: pkg.coordinate,
     namespace: pkg.namespace,
@@ -190,12 +244,29 @@ export function toRegistryPackageView(pkg: RegistryPackage): RegistryPackageView
     registry_json_url: `${repositoryRoot}/${pkg.registry_path}`,
     license: pkg.license,
     production: Boolean(pkg.production),
-    latest_version: pkg.latest_version,
-    status: pkg.status,
-    versions: pkg.versions,
+    latest_release: pkg.latest_version,
+    artifact: {
+      kind: "source_library",
+      profile: "cellscript_source",
+      consumption_mode: "dependency",
+      language: "cellscript",
+    },
+    verification_status: verificationStatus,
+    deployment_status: deploymentStatus,
+    availability_status: availabilityStatus,
+    releases: pkg.versions.map((version) => ({
+      release: version.version,
+      source_hash: version.source_hash,
+      verification_status: ["verified_build", "deployed", "on_chain_attested"].includes(version.status) ? "verified" : "pending",
+      deployment_status: version.status === "on_chain_attested" ? "chain_verified" : version.status === "deployed" ? "deployed" : "not_applicable",
+      availability_status: ["deprecated", "yanked", "quarantined"].includes(version.status)
+        ? version.status as RegistryRelease["availability_status"]
+        : "active",
+      created_at: version.released_at,
+    })),
     deployments: pkg.deployment.active,
     evidence: [],
-    install_command: pkg.install_command || `cellc install ${pkg.coordinate}@${pkg.latest_version ?? "<version>"}`,
+    install_command: pkg.install_command || `cellc install ${pkg.coordinate}@${pkg.latest_version ?? "<release>"}`,
     verify_command: "cellc registry verify --live --json",
   };
 }

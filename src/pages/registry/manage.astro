@@ -316,7 +316,7 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
         if (!coordinatePattern.test(current) || localPackage()) return;
         const [namespace, name] = current.split("/");
         try {
-          const response = await fetch(`${app?.dataset.apiOrigin}/v1/packages/${encodeURIComponent(namespace)}/${encodeURIComponent(name)}`, {
+          const response = await fetch(`${app?.dataset.apiOrigin}/v1/artifacts/${encodeURIComponent(namespace)}/${encodeURIComponent(name)}`, {
             headers: { accept: "application/json" },
             signal: remoteRequest.signal,
           });
@@ -325,9 +325,13 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
           if (payload?.schema !== "cellscript-public-registry-package-v1" || coordinate() !== current) return;
           remotePackage = {
             coordinate: current,
-            latest_version: payload.latest_version || payload.versions?.[0]?.version || "",
-            versions: Array.isArray(payload.versions) ? payload.versions : [],
-            status: payload.status || payload.versions?.[0]?.status || "source_published",
+            latest_version: payload.latest_release || payload.releases?.[0]?.release || "",
+            versions: Array.isArray(payload.releases) ? payload.releases.map((release) => ({
+              ...release,
+              version: release.release,
+              status: release.availability_status || release.verification_status || "pending",
+            })) : [],
+            status: payload.availability_status || payload.verification_status || "pending",
             deployment: { networks: [] },
           };
           render();

@@ -141,6 +141,131 @@
   animation: registry-route-in 220ms var(--ease-standard) both;
 }
 
+.registry-api {
+  display: grid;
+  gap: 34px;
+  padding-top: 30px;
+}
+
+.registry-api-intro {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 32px;
+  align-items: end;
+  padding-bottom: 28px;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.registry-api-intro h2 {
+  max-width: 18ch;
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(1.5rem, 2.5vw, 2.1rem);
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+}
+
+.registry-api-intro > div > p:last-child,
+.registry-api-example > div > p {
+  max-width: 62ch;
+  margin: 9px 0 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.registry-api-health {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  color: var(--accent);
+  font-size: 0.84rem;
+  font-weight: 650;
+  text-decoration: none;
+}
+
+.registry-api-health svg,
+.registry-api-endpoint > a svg {
+  width: 16px;
+  height: 16px;
+  transition: transform var(--duration-fast) var(--ease-quick);
+}
+
+.registry-api-health:hover svg,
+.registry-api-endpoint > a:hover svg {
+  transform: translate(2px, -2px);
+}
+
+.registry-api-group {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.28fr) minmax(0, 1fr);
+  gap: 28px;
+  align-items: start;
+}
+
+.registry-api-group h3,
+.registry-api-example h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
+.registry-api-endpoints {
+  border-top: 1px solid var(--line-soft);
+}
+
+.registry-api-endpoint {
+  display: grid;
+  grid-template-columns: 58px minmax(220px, 0.62fr) minmax(260px, 1fr) 20px;
+  gap: 14px;
+  align-items: center;
+  min-height: 68px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.registry-api-method,
+.registry-api-endpoint code {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+}
+
+.registry-api-method {
+  color: var(--accent);
+  font-weight: 750;
+}
+
+.registry-api-method[data-method="post"] {
+  color: var(--substrate-accent);
+}
+
+.registry-api-endpoint code {
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+
+.registry-api-endpoint p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.45;
+}
+
+.registry-api-endpoint > a {
+  display: inline-flex;
+  color: var(--accent);
+}
+
+.registry-api-example {
+  display: grid;
+  grid-template-columns: minmax(180px, 0.38fr) minmax(360px, 1fr);
+  gap: 28px;
+  align-items: start;
+  padding-top: 30px;
+  border-top: 1px solid var(--line-soft);
+}
+
 ::view-transition-old(registry-route) {
   animation: registry-route-out 150ms var(--ease-standard) both;
 }
@@ -217,10 +342,27 @@
   box-shadow: none;
 }
 
+.registry-browse-filter {
+  flex: 0 1 260px;
+}
+
+.registry-browse-filter select {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 34px 0 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: 7px;
+  background: var(--surface-select);
+  color: var(--text-soft);
+  font: inherit;
+  font-size: 0.82rem;
+}
+
 .registry-browse-skeleton,
 .registry-package-list,
 .registry-empty,
-.registry-load-more {
+.registry-load-more,
+.registry-service-state {
   grid-column: 1 / -1;
 }
 
@@ -462,6 +604,13 @@
   color: var(--text-soft);
 }
 
+.registry-badge[data-kind="artifact"] {
+  border-color: var(--status-info);
+  color: var(--status-info);
+  background: var(--status-info-surface);
+  text-transform: uppercase;
+}
+
 .registry-status[data-state="active"] {
   border-color: var(--status-active);
   color: var(--status-active);
@@ -605,6 +754,18 @@
   gap: 0;
 }
 
+.registry-submit-intro { order: 0; }
+.registry-authorisation-card { order: 1; }
+.registry-builder { order: 2; }
+.registry-submit-preflight { order: 3; }
+.registry-publish-step { order: 4; }
+.registry-wallet-dialog { order: 5; }
+
+.registry-builder[hidden],
+.registry-submit-preflight[hidden] {
+  display: none;
+}
+
 .registry-submit-intro {
   position: relative;
   display: grid;
@@ -702,6 +863,31 @@
   border-bottom: 1px solid var(--line-soft);
   border-radius: 0;
   background: transparent;
+  animation: registry-panel-enter 260ms var(--ease-quick) both;
+}
+
+.registry-builder-heading {
+  max-width: 62ch;
+  margin-bottom: 22px;
+}
+
+.registry-builder-heading h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 1.16rem;
+  letter-spacing: -0.015em;
+}
+
+.registry-builder-heading > p:last-child {
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 0.86rem;
+  line-height: 1.5;
+}
+
+.registry-artifact-kind-field {
+  max-width: 560px;
+  margin-bottom: 18px;
 }
 
 .registry-builder-grid {
@@ -1211,6 +1397,7 @@
   cursor: pointer;
   font: inherit;
   font-size: 1.15rem;
+  translate: 0 10px;
   transition:
     border-color var(--duration-fast) var(--ease-standard),
     background-color var(--duration-fast) var(--ease-standard),
@@ -1410,6 +1597,20 @@
 }
 
 @media (max-width: 900px) {
+  .registry-api-group,
+  .registry-api-example {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .registry-api-endpoint {
+    grid-template-columns: 54px minmax(0, 1fr) 20px;
+  }
+
+  .registry-api-endpoint p {
+    grid-column: 2 / -1;
+  }
+
   .registry-builder-grid,
   .registry-submit-preflight,
   .registry-publish-step {
@@ -1441,6 +1642,28 @@
 }
 
 @media (max-width: 620px) {
+  .registry-api-intro {
+    grid-template-columns: 1fr;
+    gap: 14px;
+    align-items: start;
+  }
+
+  .registry-api-health {
+    justify-self: start;
+  }
+
+  .registry-api-endpoint {
+    grid-template-columns: 50px minmax(0, 1fr);
+  }
+
+  .registry-api-endpoint p {
+    grid-column: 1 / -1;
+  }
+
+  .registry-api-endpoint > a {
+    display: none;
+  }
+
   .registry-submit-intro {
     grid-template-columns: 1fr;
   }
@@ -1847,7 +2070,11 @@
   line-height: 1.6;
 }
 
-.registry-pkg-header .registry-status {
+.registry-state-cluster {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 7px;
   align-self: flex-start;
 }
 
@@ -1865,10 +2092,50 @@
   gap: 18px;
 }
 
-.registry-pkg-sidebar {
+.registry-pkg-sidebar,
+.registry-pkg-aside {
   display: grid;
   gap: 12px;
   position: static;
+}
+
+.registry-facts {
+  display: grid;
+  gap: 0;
+  margin: 12px 0 0;
+}
+
+.registry-facts > div {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 16px;
+  padding: 10px 0;
+  border-top: 1px solid var(--line-soft);
+}
+
+.registry-facts dt {
+  color: var(--dim);
+  font-size: 0.78rem;
+}
+
+.registry-facts dd {
+  margin: 0;
+  color: var(--text-soft);
+  font-family: var(--font-mono);
+  font-size: 0.76rem;
+  text-align: right;
+}
+
+.registry-link-list {
+  display: grid;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.registry-link-list a {
+  color: var(--accent);
+  font-size: 0.84rem;
+  text-underline-offset: 3px;
 }
 
 .registry-pkg-sidebar .registry-meta {
@@ -1911,9 +2178,10 @@
     margin-top: 4px;
   }
 
-  .registry-pkg-header .registry-status {
+  .registry-state-cluster {
     grid-column: 1 / -1;
     justify-self: start;
+    justify-content: flex-start;
   }
 
   .registry-pkg-body {
@@ -2070,21 +2338,14 @@
 .registry-service-state {
   display: flex;
   align-items: center;
-  gap: 9px;
-  min-height: 58px;
-  padding: 0;
-  border: 0;
-  border-radius: 0;
-  background: transparent;
+  gap: 12px;
+  min-height: 44px;
+  padding: 10px 12px;
+  border-left: 2px solid var(--accent-warm);
+  background: color-mix(in oklch, var(--accent-warm) 6%, transparent);
   color: var(--muted);
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-}
-
-.registry-service-state a {
-  margin-left: 4px;
-  color: var(--accent);
-  opacity: 0.68;
+  font-size: 0.78rem;
+  line-height: 1.45;
 }
 
 .registry-service-retry {
@@ -2108,31 +2369,13 @@
 .registry-package-list[hidden],
 .registry-empty[hidden],
 .registry-load-more[hidden],
+.registry-service-state[hidden],
 .registry-service-retry[hidden] {
   display: none;
 }
 
 .registry-load-more {
   width: fit-content;
-}
-
-.registry-service-dot {
-  width: 6px;
-  height: 6px;
-  flex: 0 0 auto;
-  border-radius: 999px;
-  background: var(--dim);
-  box-shadow: none;
-}
-
-.registry-service-state[data-state="live"] .registry-service-dot {
-  background: var(--status-active);
-  box-shadow: none;
-}
-
-.registry-service-state[data-state="mirror"] .registry-service-dot {
-  background: var(--accent-warm);
-  box-shadow: none;
 }
 
 .registry-row-arrow {
@@ -2204,6 +2447,27 @@
   display: grid;
   gap: 10px;
   margin-top: 16px;
+}
+
+.registry-evidence-row {
+  display: grid;
+  grid-template-columns: minmax(150px, 0.5fr) minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: center;
+  padding: 12px 0;
+  border-top: 1px solid var(--line-soft);
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.registry-evidence-row strong {
+  color: var(--text);
+  text-transform: capitalize;
+}
+
+.registry-evidence-row code {
+  color: var(--text-soft);
+  overflow-wrap: anywhere;
 }
 
 .registry-evidence-card {

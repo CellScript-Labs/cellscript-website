@@ -23,7 +23,24 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
       <button class="registry-intro-dismiss" type="button" data-submit-intro-dismiss data-i18n="registry.submit.introDismiss">{t.registry.submit.introDismiss}</button>
     </aside>
 
-    <form class="registry-builder" id="registry-submit-form" data-submit-form novalidate>
+    <form class="registry-builder" id="registry-submit-form" data-submit-form data-submit-workspace hidden novalidate>
+      <div class="registry-builder-heading">
+        <p class="registry-label" data-i18n="registry.submit.detailsLabel">{t.registry.submit.detailsLabel}</p>
+        <h2 data-i18n="registry.submit.detailsTitle">{t.registry.submit.detailsTitle}</h2>
+        <p data-i18n="registry.submit.detailsBody">{t.registry.submit.detailsBody}</p>
+      </div>
+      <label class="registry-builder-field registry-artifact-kind-field">
+        <span data-i18n="registry.submit.artifactKind">{t.registry.submit.artifactKind}</span>
+        <select class="registry-select" name="artifact_kind" data-artifact-kind>
+          <option value="source_library" data-i18n="registry.submit.kindCellScript">{t.registry.submit.kindCellScript}</option>
+          <option value="profile_library" data-i18n="registry.submit.kindProfileLibrary">{t.registry.submit.kindProfileLibrary}</option>
+          <option value="deployable_contract" data-i18n="registry.submit.kindCkbScript">{t.registry.submit.kindCkbScript}</option>
+          <option value="runtime_verifier" data-i18n="registry.submit.kindRuntimeVerifier">{t.registry.submit.kindRuntimeVerifier}</option>
+          <option value="reproducible_binary" data-i18n="registry.submit.kindReproducibleBinary">{t.registry.submit.kindReproducibleBinary}</option>
+          <option value="template" data-i18n="registry.submit.kindTemplate">{t.registry.submit.kindTemplate}</option>
+        </select>
+        <small class="registry-field-hint" data-artifact-kind-hint data-i18n="registry.submit.kindCellScriptHint">{t.registry.submit.kindCellScriptHint}</small>
+      </label>
       <div class="registry-builder-grid registry-builder-grid-compact">
         <label class="registry-builder-field">
           <span data-i18n="registry.submit.namespace">{t.registry.submit.namespace}</span>
@@ -33,9 +50,9 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
             placeholder="dob"
             autocomplete="off"
             required
-            minlength="2"
-            maxlength="63"
-            pattern="[a-z0-9][a-z0-9_-]{1,62}"
+            minlength="1"
+            maxlength="64"
+            pattern="[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?"
             aria-describedby="submit-coordinate-help submit-coordinate-error"
           />
         </label>
@@ -47,9 +64,9 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
             placeholder="evolving-dob-profile-v1"
             autocomplete="off"
             required
-            minlength="2"
-            maxlength="63"
-            pattern="[a-z0-9][a-z0-9_-]{1,62}"
+            minlength="1"
+            maxlength="64"
+            pattern="[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?"
             aria-describedby="submit-coordinate-help submit-coordinate-error"
           />
         </label>
@@ -58,7 +75,7 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
       <p class="registry-field-error" id="submit-coordinate-error" data-coordinate-error hidden data-i18n="registry.submit.invalidCoordinate">{t.registry.submit.invalidCoordinate}</p>
     </form>
 
-    <section class="registry-submit-preflight" aria-labelledby="registry-preflight-heading">
+    <section class="registry-submit-preflight" data-submit-workspace hidden aria-labelledby="registry-preflight-heading">
       <div class="registry-step-copy">
         <h2 id="registry-preflight-heading" data-i18n="registry.submit.preflightTitle">{t.registry.submit.preflightTitle}</h2>
         <p data-i18n="registry.submit.preflightBody">{t.registry.submit.preflightBody}</p>
@@ -213,11 +230,14 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     const lifecycle = new AbortController();
     const { signal } = lifecycle;
     const form = document.querySelector<HTMLFormElement>("[data-submit-form]");
+    const submissionWorkspace = Array.from(document.querySelectorAll<HTMLElement>("[data-submit-workspace]"));
     const intro = document.querySelector<HTMLElement>("[data-submit-intro]");
     const introDismiss = document.querySelector<HTMLButtonElement>("[data-submit-intro-dismiss]");
     const namespaceInput = form?.elements.namedItem("namespace") as HTMLInputElement | null;
     const nameInput = form?.elements.namedItem("name") as HTMLInputElement | null;
     const pathInput = form?.elements.namedItem("path") as HTMLInputElement | null;
+    const artifactKindInput = form?.elements.namedItem("artifact_kind") as HTMLSelectElement | null;
+    const artifactKindHint = document.querySelector<HTMLElement>("[data-artifact-kind-hint]");
     const coordinateError = document.querySelector<HTMLElement>("[data-coordinate-error]");
     const preflight = document.querySelector<HTMLElement>("[data-submit-preflight]");
     const preflightCopy = document.querySelector<HTMLButtonElement>("[data-submit-preflight-copy]");
@@ -254,7 +274,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     const walletStorageKey = "cellscript-registry-wallet-connection";
     const joyidPrincipalContext = "cellscript-registry-joyid-ckb-principal-v1";
     const ckbPrincipalContext = "cellscript-registry-ckb-secp256k1-principal-v1";
-    const coordinatePattern = /^[a-z0-9][a-z0-9_-]{1,62}$/;
+    const coordinatePattern = /^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$/;
     const walletIcon = (name: string) => `${import.meta.env.BASE_URL}wallets/${name}.svg`;
     const officialWalletCatalog: WalletCatalogEntry[] = [
       { name: "Neuron", aliases: ["Neuron"], url: "https://neuron.magickbase.com/", icon: walletIcon("neuron"), mark: "N" },
@@ -404,14 +424,38 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       }
     };
 
+    const syncExternalPrincipal = () => {
+      if (!activeExternalWallet || !principalInput) return;
+      let principalId = "";
+      let principalType = "";
+      try {
+        const payload = parsePayload();
+        principalId = typeof payload.principal_id === "string" ? payload.principal_id.trim() : "";
+        principalType = typeof payload.principal_type === "string" ? payload.principal_type.trim() : "";
+      } catch {
+        // An external wallet may still be preparing the capability payload.
+      }
+      principalInput.value = principalId;
+      if (principalType) principalInput.dataset.principalType = principalType;
+      else delete principalInput.dataset.principalType;
+      if (copyPrincipalButton) copyPrincipalButton.dataset.copyText = principalId;
+    };
+
     const updateCommands = () => {
       const namespace = fieldValue("namespace") || "<namespace>";
       const name = fieldValue("name") || "<name>";
       const principalId = principalInput?.value.trim() || "<principal_id>";
       const principalType = principalInput?.dataset.principalType || "<principal_type>";
-      const preflightCommand = `${commandPrefix()}cellc package verify --json && cellc publish --dry-run`;
+      const artifactKind = artifactKindInput?.value || "source_library";
+      const isCellScript = artifactKind === "source_library" || artifactKind === "profile_library";
+      const cellscriptKindFlag = artifactKind === "profile_library" ? " --artifact-kind profile_library" : "";
+      const preflightCommand = isCellScript
+        ? `${commandPrefix()}cellc package verify --json && cellc publish${cellscriptKindFlag} --dry-run`
+        : `${commandPrefix()}cellc publish --artifact-manifest Artifact.toml --dry-run`;
       const authCommand = `cellc auth capability create --principal-type ${shellQuote(principalType)} --principal-id ${shellQuote(principalId)} --scope ${shellQuote(`publish:${namespace}/${name}`)} --expires 90d --json > capability-payload.json\ncellc auth capability submit --payload capability-payload.json --wallet-signature wallet-signature.json\ncellc auth namespace claim --namespace ${shellQuote(namespace)} --payload capability-payload.json --wallet-signature wallet-signature.json`;
-      const publishCommand = `${commandPrefix()}cellc publish`;
+      const publishCommand = isCellScript
+        ? `${commandPrefix()}cellc publish${cellscriptKindFlag}`
+        : `${commandPrefix()}cellc publish --artifact-manifest Artifact.toml`;
       if (preflight) preflight.textContent = preflightCommand;
       if (preflightCopy) preflightCopy.dataset.copyText = preflightCommand;
       if (capabilityCommand) capabilityCommand.textContent = authCommand;
@@ -427,13 +471,15 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     const syncWorkflow = () => {
       const directWalletReady = Boolean(activeWalletSigner && activeWalletIdentity);
       const walletReady = directWalletReady || Boolean(activeExternalWallet);
+      const identityReady = walletReady || authorisedOverride;
       const coordinateReady = coordinateValid();
       const payloadReady = walletReady && hasValidPayload();
       const signatureReady = payloadReady && Boolean(signatureOutput?.value.trim());
-      stageState("wallet", walletReady, !walletReady);
+      for (const section of submissionWorkspace) section.hidden = !identityReady;
+      stageState("wallet", identityReady, !identityReady);
       stageState("scope", signatureReady, walletReady && !signatureReady);
       stageState("authorise", namespaceClaimed, signatureReady && !namespaceClaimed);
-      if (principalPanel) principalPanel.hidden = !directWalletReady;
+      if (principalPanel) principalPanel.hidden = !directWalletReady && !(activeExternalWallet && principalInput?.value.trim());
       if (payloadPanel) payloadPanel.hidden = !walletReady;
       if (signaturePanel) signaturePanel.hidden = !signatureReady && !activeExternalWallet;
       if (signatureHint) {
@@ -461,7 +507,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       if (primaryButton) {
         primaryButton.dataset.i18n = `registry.submit.${primaryKey}`;
         primaryButton.textContent = message(primaryKey);
-        primaryButton.disabled = busy || namespaceClaimed;
+        primaryButton.disabled = busy || namespaceClaimed || authorisedOverride;
         primaryButton.setAttribute("aria-busy", String(busy));
       }
       const valid = coordinateValid();
@@ -470,6 +516,23 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       }
       if (coordinateError) coordinateError.hidden = valid || (!namespaceInput?.value && !nameInput?.value);
       updateCommands();
+    };
+
+    const syncArtifactKind = () => {
+      if (!artifactKindHint || !artifactKindInput) return;
+      const hintKey = artifactKindInput.value === "deployable_contract"
+        ? "kindCkbScriptHint"
+        : artifactKindInput.value === "profile_library"
+          ? "kindProfileLibraryHint"
+        : artifactKindInput.value === "runtime_verifier"
+          ? "kindRuntimeVerifierHint"
+          : artifactKindInput.value === "reproducible_binary"
+            ? "kindReproducibleBinaryHint"
+            : artifactKindInput.value === "template"
+              ? "kindTemplateHint"
+              : "kindCellScriptHint";
+      artifactKindHint.dataset.i18n = `registry.submit.${hintKey}`;
+      artifactKindHint.textContent = message(hintKey);
     };
 
     const loadCCC = async () => {
@@ -747,6 +810,11 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
         activeWalletSigner = null;
         activeWalletIdentity = null;
         activeExternalWallet = selection.wallet;
+        if (principalInput) {
+          principalInput.value = "";
+          delete principalInput.dataset.principalType;
+        }
+        if (copyPrincipalButton) copyPrincipalButton.dataset.copyText = "";
         clearSignature();
         signatureOutput?.removeAttribute("readonly");
         localStorage.setItem(walletStorageKey, JSON.stringify({
@@ -940,6 +1008,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       syncWorkflow();
     }, { signal });
     payloadInput?.addEventListener("input", () => {
+      syncExternalPrincipal();
       clearSignature();
       clearTechnical();
       syncWorkflow();
@@ -958,12 +1027,14 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
         authorisedOverride = false;
       }
       lastCoordinate = coordinate;
+      syncArtifactKind();
       syncWorkflow();
     }, { signal });
     pathInput?.addEventListener("input", syncWorkflow, { signal });
     window.addEventListener("cellscript:locale-change", () => {
       setStatus(statusKey, statusTone, statusSuffix);
       if (walletDialog?.open) renderWalletChoices();
+      syncArtifactKind();
       syncWorkflow();
     }, { signal });
     document.addEventListener("astro:before-swap", () => {
@@ -977,6 +1048,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     }, { once: true });
 
     lastCoordinate = `${fieldValue("namespace")}/${fieldValue("name")}`;
+    syncArtifactKind();
     syncWorkflow();
   </script>
 </RegistryLayout>

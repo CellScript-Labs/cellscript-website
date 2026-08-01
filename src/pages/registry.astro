@@ -1,25 +1,21 @@
 ---
 import RegistryLayout from "../layouts/RegistryLayout.astro";
-import { packageHref, registryPackages, registryStatusTone } from "../lib/registry";
+import { packageHref, registryPackages, registryStatusTone, toRegistryPackageView } from "../lib/registry";
 import { defaultLocale, translations } from "../i18n/translations";
 import { ArrowRight, Search } from "lucide-astro";
 
 const t = translations[defaultLocale];
 const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.registry.cellscript.dev").replace(/\/$/, "");
-const fallbackPackages = registryPackages.map((pkg) => ({
-  coordinate: pkg.coordinate,
-  namespace: pkg.namespace,
-  name: pkg.name,
-  latest_version: pkg.latest_version || null,
-  status: pkg.status,
-  description: pkg.description || null,
-  repository: pkg.repository || null,
-  keywords: pkg.keywords || [],
-  categories: pkg.categories || [],
-  versions: pkg.versions,
-  href: packageHref(pkg),
-  source: "bundled",
-}));
+const fallbackPackages = registryPackages.map((pkg) => {
+  const view = toRegistryPackageView(pkg);
+  return {
+    ...view,
+    keywords: pkg.keywords || [],
+    categories: pkg.categories || [],
+    href: packageHref(pkg),
+    source: "bundled",
+  };
+});
 const fallbackStatus = (status: string) =>
   (t.registry.statuses as Record<string, string>)[status] ?? status.replaceAll("_", " ");
 ---
@@ -45,14 +41,24 @@ const fallbackStatus = (status: string) =>
           data-registry-query
         />
       </label>
+      <label class="registry-browse-filter">
+        <span class="sr-only" data-i18n="registry.browse.filterKind">{t.registry.browse.filterKind}</span>
+        <select data-registry-kind aria-label={t.registry.browse.filterKind}>
+          <option value="" data-i18n="registry.browse.allKinds">{t.registry.browse.allKinds}</option>
+          <option value="source_library" data-i18n="registry.browse.kindSourceLibrary">{t.registry.browse.kindSourceLibrary}</option>
+          <option value="profile_library" data-i18n="registry.browse.kindProfileLibrary">{t.registry.browse.kindProfileLibrary}</option>
+          <option value="runtime_verifier" data-i18n="registry.browse.kindRuntimeVerifier">{t.registry.browse.kindRuntimeVerifier}</option>
+          <option value="deployable_contract" data-i18n="registry.browse.kindDeployableContract">{t.registry.browse.kindDeployableContract}</option>
+          <option value="reproducible_binary" data-i18n="registry.browse.kindReproducibleBinary">{t.registry.browse.kindReproducibleBinary}</option>
+          <option value="template" data-i18n="registry.browse.kindTemplate">{t.registry.browse.kindTemplate}</option>
+        </select>
+      </label>
       <span class="registry-browse-count" data-registry-count aria-live="polite"></span>
     </div>
 
-    <div class="registry-service-state" data-registry-service-state data-state="loading" role="status" aria-live="polite">
-      <span class="registry-service-dot" aria-hidden="true"></span>
-      <span data-registry-service-copy data-i18n="registry.browse.loading">{t.registry.browse.loading}</span>
+    <div class="registry-service-state" data-registry-service-state role="status" aria-live="polite" hidden>
+      <span data-registry-service-copy data-i18n="registry.browse.mirrorStatus">{t.registry.browse.mirrorStatus}</span>
       <button class="registry-service-retry" type="button" data-registry-retry hidden data-i18n="registry.browse.retry">{t.registry.browse.retry}</button>
-      <a href={`${apiOrigin}/health`} target="_blank" rel="noopener noreferrer">API</a>
     </div>
 
     <div class="registry-browse-skeleton" data-registry-skeleton aria-hidden="true">
@@ -65,15 +71,18 @@ const fallbackStatus = (status: string) =>
           class="registry-package-row"
           href={pkg.href}
           data-registry-row
-          data-registry-search={`${pkg.coordinate} ${pkg.description || ""} ${pkg.latest_version || ""} ${pkg.status} ${pkg.keywords.join(" ")} ${pkg.categories.join(" ")}`.toLowerCase()}
+          data-registry-search={`${pkg.coordinate} ${pkg.description || ""} ${pkg.latest_release || ""} ${pkg.artifact.kind} ${pkg.verification_status} ${pkg.deployment_status} ${pkg.keywords.join(" ")} ${pkg.categories.join(" ")}`.toLowerCase()}
         >
           <div>
             <strong>{pkg.coordinate}</strong>
             <p>{pkg.description || t.registry.browse.noDescription}</p>
             <div class="registry-badges">
-              <span class="registry-badge" data-kind="version">{pkg.latest_version || t.registry.browse.unversioned}</span>
-              <span class="registry-status" data-state={registryStatusTone(pkg.status)}>{fallbackStatus(pkg.status)}</span>
-              <span class="registry-badge">Edition {pkg.versions[0]?.edition || "2026"}</span>
+              <span class="registry-badge" data-kind="artifact">{pkg.artifact.kind.replaceAll("_", " ")}</span>
+              <span class="registry-badge" data-kind="version">{pkg.latest_release || t.registry.browse.unversioned}</span>
+              <span class="registry-status" data-state={registryStatusTone(pkg.verification_status)}>{fallbackStatus(pkg.verification_status)}</span>
+              {pkg.deployment_status !== "not_applicable" && (
+                <span class="registry-status" data-state={registryStatusTone(pkg.deployment_status)}>{fallbackStatus(pkg.deployment_status)}</span>
+              )}
             </div>
           </div>
           <ArrowRight class="registry-row-arrow" aria-hidden="true" />
@@ -103,6 +112,7 @@ const fallbackStatus = (status: string) =>
       if (!app) return;
       const list = app.querySelector("[data-registry-list]");
       const queryInput = app.querySelector("[data-registry-query]");
+      const kindInput = app.querySelector("[data-registry-kind]");
       const count = app.querySelector("[data-registry-count]");
       const empty = app.querySelector("[data-registry-empty]");
       const emptyTitle = app.querySelector("[data-registry-empty-title]");
@@ -120,20 +130,33 @@ const fallbackStatus = (status: string) =>
       let request = null;
       let searchTimer = 0;
       let query = params.get("q")?.trim() || "";
+      let kind = params.get("kind")?.trim() || "";
       if (queryInput) queryInput.value = query;
+      if (kindInput) kindInput.value = kind;
 
       const messages = () => window.__CELLSCRIPT_I18N__;
       const locale = () => document.documentElement.dataset.locale === "zh" ? "zh" : "en";
       const message = (path) => path.split(".").reduce((value, key) => value?.[key], messages()?.[locale()]);
       const format = (template, values) => Object.entries(values).reduce((value, [key, replacement]) => value.replaceAll(`{${key}}`, String(replacement)), template || "");
       const statusTone = (status) => {
-        if (["active", "deployed", "on_chain_attested"].includes(status)) return "active";
-        if (status === "verified_build") return "info";
-        if (["indexed_pending", "deprecated"].includes(status)) return "warning";
-        if (["yanked", "quarantined"].includes(status)) return "danger";
+        if (["active", "verified", "deployed", "chain_verified"].includes(status)) return "active";
+        if (["evidence_required"].includes(status)) return "info";
+        if (["pending", "undeployed", "deprecated"].includes(status)) return "warning";
+        if (["rejected", "yanked", "quarantined"].includes(status)) return "danger";
         return "source";
       };
       const statusLabel = (status) => message(`registry.statuses.${status}`) || String(status || "").replaceAll("_", " ");
+      const kindLabel = (kind) => {
+        const keys = {
+          source_library: "kindSourceLibrary",
+          profile_library: "kindProfileLibrary",
+          runtime_verifier: "kindRuntimeVerifier",
+          deployable_contract: "kindDeployableContract",
+          reproducible_binary: "kindReproducibleBinary",
+          template: "kindTemplate",
+        };
+        return message(`registry.browse.${keys[kind]}`) || String(kind || "").replaceAll("_", " ");
+      };
       const detailHref = (pkg) => {
         if (pkg.source === "bundled" && pkg.href) return pkg.href;
         const detail = new URLSearchParams({ namespace: pkg.namespace, name: pkg.name });
@@ -143,17 +166,18 @@ const fallbackStatus = (status: string) =>
         const url = new URL(window.location.href);
         if (query) url.searchParams.set("q", query);
         else url.searchParams.delete("q");
+        if (kind) url.searchParams.set("kind", kind);
+        else url.searchParams.delete("kind");
         window.history.replaceState({}, "", url);
       };
       const setServiceState = (next) => {
         source = next;
         app.dataset.state = next;
-        if (service) service.dataset.state = next;
+        if (service) service.hidden = next !== "mirror";
         if (retry) retry.hidden = next !== "mirror";
         if (serviceCopy) {
-          const key = next === "live" ? "registry.browse.liveStatus" : next === "mirror" ? "registry.browse.mirrorStatus" : "registry.browse.loading";
-          serviceCopy.textContent = message(key) || "";
-          serviceCopy.dataset.i18n = key;
+          serviceCopy.textContent = message("registry.browse.mirrorStatus") || "";
+          serviceCopy.dataset.i18n = "registry.browse.mirrorStatus";
         }
       };
       const renderRows = () => {
@@ -173,15 +197,23 @@ const fallbackStatus = (status: string) =>
           const version = document.createElement("span");
           version.className = "registry-badge";
           version.dataset.kind = "version";
-          version.textContent = pkg.latest_version || message("registry.browse.unversioned");
+          version.textContent = pkg.latest_release || message("registry.browse.unversioned");
+          const artifact = document.createElement("span");
+          artifact.className = "registry-badge";
+          artifact.dataset.kind = "artifact";
+          artifact.textContent = kindLabel(pkg.artifact?.kind);
           const status = document.createElement("span");
           status.className = "registry-status";
-          status.dataset.state = statusTone(pkg.status);
-          status.textContent = statusLabel(pkg.status);
-          const edition = document.createElement("span");
-          edition.className = "registry-badge";
-          edition.textContent = `Edition ${pkg.versions?.[0]?.edition || "2026"}`;
-          badges.append(version, status, edition);
+          status.dataset.state = statusTone(pkg.verification_status);
+          status.textContent = statusLabel(pkg.verification_status);
+          badges.append(artifact, version, status);
+          if (pkg.deployment_status && pkg.deployment_status !== "not_applicable") {
+            const deployment = document.createElement("span");
+            deployment.className = "registry-status";
+            deployment.dataset.state = statusTone(pkg.deployment_status);
+            deployment.textContent = statusLabel(pkg.deployment_status);
+            badges.append(deployment);
+          }
           body.append(title, description, badges);
           const arrow = document.createElement("span");
           arrow.className = "registry-row-arrow";
@@ -203,8 +235,16 @@ const fallbackStatus = (status: string) =>
       };
       const localMirror = () => {
         const needle = query.toLowerCase();
-        packages = fallbackPackages.filter((pkg) => !needle || [pkg.coordinate, pkg.description, pkg.latest_version, pkg.status, ...(pkg.keywords || []), ...(pkg.categories || [])]
-          .filter(Boolean).join(" ").toLowerCase().includes(needle));
+        packages = fallbackPackages.filter((pkg) => (!kind || pkg.artifact?.kind === kind) && (!needle || [
+          pkg.coordinate,
+          pkg.description,
+          pkg.latest_release,
+          pkg.artifact?.kind,
+          pkg.verification_status,
+          pkg.deployment_status,
+          ...(pkg.keywords || []),
+          ...(pkg.categories || []),
+        ].filter(Boolean).join(" ").toLowerCase().includes(needle)));
         nextOffset = null;
         setServiceState("mirror");
         renderRows();
@@ -225,12 +265,13 @@ const fallbackStatus = (status: string) =>
         }
         const search = new URLSearchParams({ limit: "50", offset: String(offset) });
         if (query) search.set("q", query);
+        if (kind) search.set("kind", kind);
         try {
-          const response = await fetch(`${apiOrigin}/v1/packages?${search}`, { headers: { accept: "application/json" }, signal: request.signal });
+          const response = await fetch(`${apiOrigin}/v1/artifacts?${search}`, { headers: { accept: "application/json" }, signal: request.signal });
           if (!response.ok) throw new Error("unavailable");
           const payload = await response.json();
-          if (payload?.schema !== "cellscript-public-registry-index-v1" || !Array.isArray(payload.packages)) throw new Error("unsupported_schema");
-          const incoming = payload.packages.map((pkg) => ({ ...pkg, source: "live" }));
+          if (payload?.schema !== "cellscript-registry-artifact-index" || !Array.isArray(payload.artifacts)) throw new Error("unsupported_schema");
+          const incoming = payload.artifacts.map((pkg) => ({ ...pkg, source: "live" }));
           packages = append ? [...packages, ...incoming] : incoming;
           nextOffset = Number.isInteger(payload.next_offset) ? payload.next_offset : null;
           setServiceState("live");
@@ -251,6 +292,11 @@ const fallbackStatus = (status: string) =>
         updateUrl();
         window.clearTimeout(searchTimer);
         searchTimer = window.setTimeout(() => source === "mirror" ? localMirror() : load(), 240);
+      }, { signal });
+      kindInput?.addEventListener("change", () => {
+        kind = kindInput.value;
+        updateUrl();
+        source === "mirror" ? localMirror() : load();
       }, { signal });
       more?.addEventListener("click", () => load({ append: true }), { signal });
       retry?.addEventListener("click", () => load(), { signal });
