@@ -57,6 +57,11 @@ handoff. The Registry never accepts recovery phrases, and the API applies the
 same public-key, canonical-challenge, and recoverable-signature checks to both
 paths.
 
+Wallet marks under `public/wallets/` are the official SVG assets published by
+the Nervos CKB documentation wallet directory. They are committed locally so
+the chooser does not depend on third-party favicon services or runtime image
+hotlinks; provenance is recorded beside the assets.
+
 ## Deploy To Production
 
 The checked-in nginx deployment serves the generated site from a read-only

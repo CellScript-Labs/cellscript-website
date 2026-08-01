@@ -114,6 +114,25 @@ for (const wallet of [
 }
 expectContains("registry wallet bundle", jsText, "external_signature");
 expectContains("registry wallet bundle", jsText, "wallet-signature.json");
+expectContains("registry wallet bundle", jsText, "/wallets/");
+
+for (const icon of [
+  "neuron.svg",
+  "joyid.svg",
+  "imtoken.svg",
+  "ckbull.svg",
+  "safepal.svg",
+  "ledger.svg",
+  "imkey.svg",
+  "onekey.svg",
+  "utxoglobal.svg",
+  "reiwallet.svg",
+  "gate.svg",
+  "quantumpurse.svg",
+]) {
+  expectFile(resolve(dist, "wallets", icon));
+  expectContains("registry wallet bundle", jsText, `\"${icon.replace(".svg", "")}\"`);
+}
 
 for (const stage of ["wallet", "scope", "authorise"]) {
   expectContains("registry submit", registrySubmitHtml, `data-workflow-stage="${stage}"`);

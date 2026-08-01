@@ -204,6 +204,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       name: string;
       aliases: string[];
       url: string;
+      icon: string;
       mark: string;
     };
     type WalletSelection =
@@ -261,19 +262,20 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     const joyidPrincipalContext = "cellscript-registry-joyid-ckb-principal-v1";
     const ckbPrincipalContext = "cellscript-registry-ckb-secp256k1-principal-v1";
     const coordinatePattern = /^[a-z0-9][a-z0-9_-]{1,62}$/;
+    const walletIcon = (name: string) => `${import.meta.env.BASE_URL}wallets/${name}.svg`;
     const officialWalletCatalog: WalletCatalogEntry[] = [
-      { name: "Neuron", aliases: ["Neuron"], url: "https://neuron.magickbase.com/", mark: "N" },
-      { name: "JoyID", aliases: ["JoyID", "JoyID Passkey"], url: "https://joy.id/", mark: "J" },
-      { name: "imToken", aliases: ["imToken"], url: "https://token.im/", mark: "iM" },
-      { name: "CKBull", aliases: ["CKBull"], url: "https://ckbull.app/", mark: "CB" },
-      { name: "SafePal", aliases: ["SafePal"], url: "https://blog.safepal.com/safepal-wallet-now-supports-nervos-ckb/", mark: "SP" },
-      { name: "Ledger", aliases: ["Ledger"], url: "https://www.ledger.com/", mark: "L" },
-      { name: "imKey", aliases: ["imKey"], url: "https://imkey.im/", mark: "iK" },
-      { name: "OneKey", aliases: ["OneKey"], url: "https://onekey.so/", mark: "OK" },
-      { name: "UTXO Global", aliases: ["UTXO Global", "UTXO Global Wallet"], url: "https://utxo.global/", mark: "UG" },
-      { name: "Rei Wallet", aliases: ["Rei Wallet", "Rei"], url: "https://reiwallet.io/", mark: "R" },
-      { name: "Gate", aliases: ["Gate", "Gate Wallet"], url: "https://www.gate.io/", mark: "G" },
-      { name: "QuantumPurse", aliases: ["QuantumPurse"], url: "https://quantumpurse.org/", mark: "QP" },
+      { name: "Neuron", aliases: ["Neuron"], url: "https://neuron.magickbase.com/", icon: walletIcon("neuron"), mark: "N" },
+      { name: "JoyID", aliases: ["JoyID", "JoyID Passkey"], url: "https://joy.id/", icon: walletIcon("joyid"), mark: "J" },
+      { name: "imToken", aliases: ["imToken"], url: "https://token.im/", icon: walletIcon("imtoken"), mark: "iM" },
+      { name: "CKBull", aliases: ["CKBull"], url: "https://ckbull.app/", icon: walletIcon("ckbull"), mark: "CB" },
+      { name: "SafePal", aliases: ["SafePal"], url: "https://blog.safepal.com/safepal-wallet-now-supports-nervos-ckb/", icon: walletIcon("safepal"), mark: "SP" },
+      { name: "Ledger", aliases: ["Ledger"], url: "https://www.ledger.com/", icon: walletIcon("ledger"), mark: "L" },
+      { name: "imKey", aliases: ["imKey"], url: "https://imkey.im/", icon: walletIcon("imkey"), mark: "iK" },
+      { name: "OneKey", aliases: ["OneKey"], url: "https://onekey.so/", icon: walletIcon("onekey"), mark: "OK" },
+      { name: "UTXO Global", aliases: ["UTXO Global", "UTXO Global Wallet"], url: "https://utxo.global/", icon: walletIcon("utxoglobal"), mark: "UG" },
+      { name: "Rei Wallet", aliases: ["Rei Wallet", "Rei"], url: "https://reiwallet.io/", icon: walletIcon("reiwallet"), mark: "R" },
+      { name: "Gate", aliases: ["Gate", "Gate Wallet"], url: "https://www.gate.io/", icon: walletIcon("gate"), mark: "G" },
+      { name: "QuantumPurse", aliases: ["QuantumPurse"], url: "https://quantumpurse.org/", icon: walletIcon("quantumpurse"), mark: "QP" },
     ];
 
     let cccPromise: Promise<typeof import("@ckb-ccc/connector/barrel")> | null = null;
@@ -522,6 +524,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
         const image = document.createElement("img");
         image.src = icon;
         image.alt = "";
+        image.decoding = "async";
         button.append(image);
       } else {
         const markNode = document.createElement("span");
@@ -625,7 +628,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
           walletOptions?.append(walletOptionButton(
             catalogWallet.name,
             detail,
-            directlyConnectable ? wallet.icon : undefined,
+            catalogWallet.icon,
             () => directlyConnectable
               ? wallet.signers.length === 1
                 ? void connectWalletSigner(wallet, wallet.signers[0])
