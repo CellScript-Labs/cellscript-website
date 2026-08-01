@@ -88,6 +88,7 @@ for (const [name, html] of [
 ]) {
   expectContains(name, html, ">Registry</h1>");
   expectContains(name, html, "Discover verified CellScript packages or publish a package with scoped CKB wallet authorisation.");
+  expectContains(name, html, 'data-astro-transition-persist="registry-header"');
 }
 
 const walletButton = registrySubmitHtml.match(/<button[^>]*data-capability-primary[^>]*>/)?.[0] ?? "";
