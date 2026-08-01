@@ -55,7 +55,8 @@ direct only when CCC exposes a compatible CKB signer. Other entries open the
 wallet's official surface and accept a complete `wallet-signature.json`
 handoff. The Registry never accepts recovery phrases, and the API applies the
 same public-key, canonical-challenge, and recoverable-signature checks to both
-paths.
+paths. Registry wallet authorisation is mainnet-only; the chooser does not
+offer a network switch or construct a testnet CCC client.
 
 Wallet marks under `public/wallets/` are the official SVG assets published by
 the Nervos CKB documentation wallet directory. They are committed locally so

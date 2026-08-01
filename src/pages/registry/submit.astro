@@ -175,13 +175,6 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
           </div>
           <button class="registry-wallet-close" type="button" data-wallet-close aria-label={t.registry.submit.walletClose} data-i18n-aria-label="registry.submit.walletClose">×</button>
         </header>
-        <div class="registry-wallet-network">
-          <span data-i18n="registry.submit.network">{t.registry.submit.network}</span>
-          <select class="registry-select" data-capability-network>
-            <option value="mainnet" data-i18n="registry.submit.mainnet">{t.registry.submit.mainnet}</option>
-            <option value="testnet" data-i18n="registry.submit.testnet">{t.registry.submit.testnet}</option>
-          </select>
-        </div>
         <p class="registry-wallet-dialog-body" data-i18n="registry.submit.walletChooseBody">{t.registry.submit.walletChooseBody}</p>
         <div class="registry-wallet-options" data-wallet-options role="list"></div>
         <p class="registry-wallet-dialog-note" data-i18n="registry.submit.walletPrivacy">{t.registry.submit.walletPrivacy}</p>
@@ -236,7 +229,6 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     const publishLock = document.querySelector<HTMLElement>("[data-publish-lock]");
     const existingCapability = document.querySelector<HTMLButtonElement>("[data-existing-capability]");
     const signerRoot = document.querySelector<HTMLElement>("[data-capability-signer]");
-    const networkSelect = document.querySelector<HTMLSelectElement>("[data-capability-network]");
     const principalPanel = document.querySelector<HTMLElement>("[data-principal-panel]");
     const principalInput = document.querySelector<HTMLInputElement>("[data-capability-principal]");
     const payloadPanel = document.querySelector<HTMLElement>("[data-payload-panel]");
@@ -258,6 +250,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     const walletClose = document.querySelector<HTMLButtonElement>("[data-wallet-close]");
     const stages = Array.from(document.querySelectorAll<HTMLElement>("[data-workflow-stage]"));
     const appLogo = `${window.location.origin}${import.meta.env.BASE_URL}cellscript-logo.png`;
+    const registryNetwork = "mainnet" as const;
     const walletStorageKey = "cellscript-registry-wallet-connection";
     const joyidPrincipalContext = "cellscript-registry-joyid-ckb-principal-v1";
     const ckbPrincipalContext = "cellscript-registry-ckb-secp256k1-principal-v1";
@@ -661,8 +654,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       try {
         const ccc = await loadCCC();
         walletController ??= createCkbOnlyController(ccc);
-        const network = networkSelect?.value === "testnet" ? "testnet" : "mainnet";
-        const client = network === "testnet" ? new ccc.ClientPublicTestnet() : new ccc.ClientPublicMainnet();
+        const client = new ccc.ClientPublicMainnet();
         let discoveredWallets: any[] = [];
         await walletController.refresh(client, (wallets: any[]) => {
           if (sequence !== walletRefreshSequence) return;
@@ -671,9 +663,9 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
           name: "CellScript Registry",
           icon: appLogo,
           preferredNetworks: [{
-            addressPrefix: network === "testnet" ? "ckt" : "ckb",
+            addressPrefix: "ckb",
             signerType: ccc.SignerType.CKB,
-            network,
+            network: registryNetwork,
           }],
         });
         if (sequence !== walletRefreshSequence) return;
@@ -760,7 +752,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
         localStorage.setItem(walletStorageKey, JSON.stringify({
           wallet: selection.wallet.name,
           connection: "external_signature",
-          network: networkSelect?.value === "testnet" ? "testnet" : "mainnet",
+          network: registryNetwork,
           selectedAt: new Date().toISOString(),
         }));
         setStatus("walletExternalReady", "ok", `: ${selection.wallet.name}`);
@@ -783,7 +775,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       localStorage.setItem(walletStorageKey, JSON.stringify({
         principalType: activeWalletIdentity.principalType,
         address,
-        network: networkSelect?.value === "testnet" ? "testnet" : "mainnet",
+        network: registryNetwork,
         connectedAt: new Date().toISOString(),
       }));
       setStatus("walletConnected", "ok", address ? `: ${address}` : "");
@@ -940,10 +932,6 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
         picker.reject(new WorkflowError("errorNoWallet"));
       }
       walletPicker = null;
-    }, { signal });
-    networkSelect?.addEventListener("change", () => {
-      if (activeWalletSigner || activeExternalWallet) void resetWallet(true);
-      if (walletDialog?.open) void refreshWalletChoices();
     }, { signal });
     existingCapability?.addEventListener("click", () => {
       authorisedOverride = true;

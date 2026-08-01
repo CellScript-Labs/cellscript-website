@@ -95,6 +95,7 @@ for (const [name, html] of [
 const walletButton = registrySubmitHtml.match(/<button[^>]*data-capability-primary[^>]*>/)?.[0] ?? "";
 if (!walletButton) fail("registry submit: missing primary wallet action");
 else if (/\sdisabled(?:\s|=|>)/.test(walletButton)) fail("registry submit: primary wallet action must be enabled before package coordinates are entered");
+expectNotContains("registry submit", registrySubmitHtml, "data-capability-network");
 
 for (const wallet of [
   "Neuron",
@@ -168,6 +169,7 @@ for (const token of [
   ".landing-example-copy",
   "@media(max-width:840px)",
   ".theme-toggle,.language-toggle,.nav-link{width:44px;min-width:44px;padding:0}",
+  ".registry-wallet-dialog-head:has(.registry-wallet-back[hidden])",
   "text-shadow:none",
   "text-wrap:normal",
 ]) {

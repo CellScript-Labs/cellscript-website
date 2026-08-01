@@ -1183,6 +1183,10 @@
   align-items: start;
 }
 
+.registry-wallet-dialog-head:has(.registry-wallet-back[hidden]) {
+  grid-template-columns: minmax(0, 1fr) 44px;
+}
+
 .registry-wallet-dialog-head h2 {
   margin: 0;
   font-size: 1.22rem;
@@ -1215,7 +1219,7 @@
 }
 
 .registry-wallet-back[hidden] {
-  visibility: hidden;
+  display: none;
 }
 
 .registry-wallet-back:hover,
@@ -1228,29 +1232,6 @@
 .registry-wallet-back:active,
 .registry-wallet-close:active {
   transform: scale(0.96);
-}
-
-.registry-wallet-network {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding: 9px 10px 9px 12px;
-  border: 1px solid var(--line-soft);
-  border-radius: var(--radius);
-  background: var(--panel-soft);
-}
-
-.registry-wallet-network > span {
-  color: var(--muted);
-  font-size: 0.78rem;
-  font-weight: 650;
-}
-
-.registry-wallet-network .registry-select {
-  width: auto;
-  min-width: 116px;
-  min-height: 40px;
 }
 
 .registry-wallet-dialog-body {
