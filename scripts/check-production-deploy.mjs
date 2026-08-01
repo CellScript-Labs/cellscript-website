@@ -25,6 +25,7 @@ for (const [value, label] of [
 }
 
 requireText(nginx, "server_tokens off", "server-token suppression");
+requireText(nginx, "absolute_redirect off", "proxy-safe relative directory redirects");
 for (const header of [
   "Permissions-Policy",
   "Referrer-Policy",
