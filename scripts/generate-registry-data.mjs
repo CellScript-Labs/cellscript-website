@@ -20,7 +20,7 @@ const REGISTRY_STATUSES = new Set([
   "indexed_pending",
   "verified_build",
   "deployed",
-  "on_chain_attested",
+  "on_chain_committed",
   "deprecated",
   "yanked",
   "quarantined",

@@ -537,25 +537,26 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       if (stage) stage.dataset.state = complete ? "complete" : active ? "active" : "pending";
     };
     const syncWorkflow = () => {
-      const directWalletReady = Boolean(activeWalletSigner && activeWalletIdentity);
-      const walletReady = directWalletReady || Boolean(activeExternalWallet);
-      const identityReady = walletReady || authorisedOverride;
+      const directSignerConnected = Boolean(activeWalletSigner && activeWalletIdentity);
+      const manualSignatureMode = Boolean(activeExternalWallet);
+      const signingRouteSelected = directSignerConnected || manualSignatureMode;
+      const workflowUnlocked = signingRouteSelected || authorisedOverride;
       const coordinateReady = coordinateValid();
-      const payloadReady = walletReady && hasValidPayload();
+      const payloadReady = signingRouteSelected && hasValidPayload();
       const signatureReady = payloadReady && Boolean(signatureOutput?.value.trim());
-      for (const section of submissionWorkspace) section.hidden = !identityReady;
-      stageState("wallet", identityReady, !identityReady);
-      stageState("scope", signatureReady, walletReady && !signatureReady);
+      for (const section of submissionWorkspace) section.hidden = !workflowUnlocked;
+      stageState("wallet", signingRouteSelected, !signingRouteSelected);
+      stageState("scope", signatureReady, signingRouteSelected && !signatureReady);
       stageState("authorise", namespaceClaimed, signatureReady && !namespaceClaimed);
-      if (principalPanel) principalPanel.hidden = !directWalletReady && !(activeExternalWallet && principalInput?.value.trim());
-      if (payloadPanel) payloadPanel.hidden = !walletReady;
-      if (signaturePanel) signaturePanel.hidden = !signatureReady && !activeExternalWallet;
+      if (principalPanel) principalPanel.hidden = !directSignerConnected && !(manualSignatureMode && principalInput?.value.trim());
+      if (payloadPanel) payloadPanel.hidden = !signingRouteSelected;
+      if (signaturePanel) signaturePanel.hidden = !signatureReady && !manualSignatureMode;
       if (signatureHint) {
         const key = activeExternalWallet ? "signatureExternalHint" : "signatureReady";
         signatureHint.dataset.i18n = `registry.submit.${key}`;
         signatureHint.textContent = message(key);
       }
-      if (changeWalletButton) changeWalletButton.hidden = !walletReady;
+      if (changeWalletButton) changeWalletButton.hidden = !signingRouteSelected;
       const canPublish = namespaceClaimed || authorisedOverride;
       if (publishStep) {
         publishStep.dataset.state = canPublish ? "ready" : "locked";
@@ -566,8 +567,8 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       if (publishCopy) publishCopy.disabled = !canPublish;
 
       let primaryKey = "continueConnect";
-      if (walletReady && !coordinateReady) primaryKey = "continueCoordinate";
-      else if (walletReady && !payloadReady) primaryKey = "continuePayload";
+      if (signingRouteSelected && !coordinateReady) primaryKey = "continueCoordinate";
+      else if (signingRouteSelected && !payloadReady) primaryKey = "continuePayload";
       else if (payloadReady && !signatureReady) primaryKey = activeExternalWallet ? "continueExternalSignature" : "continueSign";
       else if (signatureReady && !capabilitySubmitted) primaryKey = "continueSubmit";
       else if (capabilitySubmitted && !namespaceClaimed) primaryKey = "continueClaim";
@@ -1056,7 +1057,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
           network: registryNetwork,
           selectedAt: new Date().toISOString(),
         }));
-        setStatus("walletExternalReady", "ok", `: ${selection.wallet.name}`);
+        setStatus("walletExternalReady", "idle", `: ${selection.wallet.name}`);
         syncWorkflow();
         return null;
       }
@@ -1127,10 +1128,37 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       if (signatureOutput) signatureOutput.value = text;
       if (copySignatureButton) copySignatureButton.dataset.copyText = text;
     };
-    const signatureForPayload = (payload: Record<string, unknown>): WalletSignature => {
+    const signatureForPayload = async (payload: Record<string, unknown>): Promise<WalletSignature> => {
       if (!signatureOutput?.value.trim()) throw new WorkflowError("errorSigning");
-      const signature = JSON.parse(signatureOutput.value) as WalletSignature;
+      let signature: WalletSignature;
+      try {
+        signature = JSON.parse(signatureOutput.value) as WalletSignature;
+      } catch (error) {
+        throw new WorkflowError("errorSigning", error instanceof Error ? error.message : undefined);
+      }
       if (signature.challenge !== canonicalJson(payload)) throw new WorkflowError("errorPayloadChanged");
+      const principalType = typeof payload.principal_type === "string" ? payload.principal_type : "";
+      const principalId = typeof payload.principal_id === "string" ? payload.principal_id.trim().toLowerCase() : "";
+      if (principalType === "ckb_secp256k1") {
+        if (signature.scheme !== "ckb_secp256k1"
+          || typeof signature.public_key !== "string"
+          || !/^(?:0x)?(?:02|03)[0-9a-fA-F]{64}$/.test(signature.public_key)
+          || typeof signature.signature !== "string"
+          || !/^0x[0-9a-fA-F]{130}$/.test(signature.signature)) {
+          throw new WorkflowError("errorCkbSignature");
+        }
+        if (principalId !== await ckbPrincipalId(signature.public_key)) throw new WorkflowError("errorPrincipalId");
+      } else if (principalType === "joyid_ckb") {
+        if (typeof signature.pubkey !== "string"
+          || (signature.keyType !== "main_key" && signature.keyType !== "sub_key")
+          || typeof signature.signature !== "string"
+          || !signature.signature) {
+          throw new WorkflowError("errorJoyidSignature");
+        }
+        if (principalId !== await joyidPrincipalId(signature.keyType, signature.pubkey)) throw new WorkflowError("errorPrincipalId");
+      } else {
+        throw new WorkflowError("errorUnsupportedIdentity");
+      }
       return signature;
     };
     const readApiResponse = async (response: Response) => {
@@ -1143,7 +1171,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     };
     const submitCapability = async () => {
       const payload = parsePayload();
-      const signature = signatureForPayload(payload);
+      const signature = await signatureForPayload(payload);
       const response = await fetch(`${signerRoot?.dataset.apiOrigin}/v1/capabilities`, {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -1162,7 +1190,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       const payload = parsePayload();
       const scopes = Array.isArray(payload.requested_scopes) ? payload.requested_scopes.filter((scope): scope is string => typeof scope === "string") : [];
       if (!scopes.includes(`publish:${namespace}/${name}`)) throw new WorkflowError("errorScope");
-      const signature = signatureForPayload(payload);
+      const signature = await signatureForPayload(payload);
       const response = await fetch(`${signerRoot?.dataset.apiOrigin}/v1/namespaces/claim`, {
         method: "POST",
         headers: { "content-type": "application/json" },

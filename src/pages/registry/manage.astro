@@ -186,14 +186,11 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
               <input class="registry-input" name="artifact_version" list="manage-version-options" autocomplete="off" />
             </label>
           </div>
-          <div class="registry-yank-grid" data-manage-reproduce-fields hidden>
+          <div data-manage-reproduce-fields hidden>
             <label class="registry-builder-field">
-              <span data-i18n="registry.manage.firstReport">{t.registry.manage.firstReport}</span>
-              <input class="registry-input" name="report_a" autocomplete="off" placeholder="reproduction-builder-a.json" />
-            </label>
-            <label class="registry-builder-field">
-              <span data-i18n="registry.manage.secondReport">{t.registry.manage.secondReport}</span>
-              <input class="registry-input" name="report_b" autocomplete="off" placeholder="reproduction-builder-b.json" />
+              <span data-i18n="registry.manage.reportFiles">{t.registry.manage.reportFiles}</span>
+              <textarea class="registry-input registry-report-paths" name="reports" rows="4" autocomplete="off" placeholder="reproduction-builder-a.json&#10;reproduction-builder-b.json"></textarea>
+              <small class="registry-field-hint" data-i18n="registry.manage.reportFilesHint">{t.registry.manage.reportFilesHint}</small>
             </label>
           </div>
           <div data-manage-deployment-fields hidden>
@@ -279,7 +276,7 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
       const g = (path) => getMessage(path) || "";
       const statusLabel = (status) => g(`registry.statuses.${status}`) || String(status || "").replaceAll("_", " ");
       const statusTone = (status) => {
-        if (["active", "deployed", "on_chain_attested"].includes(status)) return "active";
+        if (["active", "deployed", "on_chain_committed"].includes(status)) return "active";
         if (status === "verified_build") return "info";
         if (["indexed_pending", "deprecated"].includes(status)) return "warning";
         if (["yanked", "quarantined"].includes(status)) return "danger";
@@ -288,7 +285,9 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
       const coordinate = () => coordinateInput?.value.trim() || "";
       const field = (name) => {
         const input = form?.elements.namedItem(name);
-        return input instanceof HTMLInputElement || input instanceof HTMLSelectElement ? input.value.trim() : "";
+        return input instanceof HTMLInputElement || input instanceof HTMLSelectElement || input instanceof HTMLTextAreaElement
+          ? input.value.trim()
+          : "";
       };
       const selectedTask = () => form?.querySelector("input[name='action']:checked")?.value || "publish";
       const shellArg = (value) => `'${String(value).replace(/'/g, "'\\''")}'`;
@@ -394,7 +393,11 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
           tone = "read";
         } else if (task === "reproduce") {
           const selectedVersion = field("artifact_version") || pkg?.latest_version || "<version>";
-          next = `cellc artifact reproduction-evidence ${shellArg(`${coordinate()}@${selectedVersion}`)} --report ${shellArg(field("report_a") || "<builder-a.json>")} --report ${shellArg(field("report_b") || "<builder-b.json>")} --output reproduced-build-promotion.json`;
+          const reportPaths = field("reports").split(/\r?\n/).map((path) => path.trim()).filter(Boolean);
+          const reportArguments = (reportPaths.length ? reportPaths : ["<builder-a.json>", "<builder-b.json>"])
+            .map((path) => `--report ${shellArg(path)}`)
+            .join(" ");
+          next = `cellc artifact reproduction-evidence ${shellArg(`${coordinate()}@${selectedVersion}`)} ${reportArguments} --output reproduced-build-promotion.json`;
           helpKey = "registry.manage.helpReproduce";
           noteKey = "registry.manage.noteReproduce";
           kindKey = "registry.manage.kindLocalChange";
@@ -416,7 +419,10 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
         }
         const yankReady = !isYank || Boolean(field("version") && field("note") && /^cap_[0-9a-f]{32}$/.test(field("capability")));
         const artifactReady = !isArtifactTask || Boolean(field("artifact_version"))
-          && (task !== "reproduce" || Boolean(field("report_a") && field("report_b")))
+          && (task !== "reproduce" || (() => {
+            const reportCount = field("reports").split(/\r?\n/).map((path) => path.trim()).filter(Boolean).length;
+            return reportCount >= 2 && reportCount <= 16;
+          })())
           && (task !== "deployment" || Boolean(
             /^0x[0-9a-fA-F]{64}$/.test(field("code_hash"))
             && /^0x[0-9a-fA-F]{64}$/.test(field("tx_hash"))

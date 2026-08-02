@@ -15,7 +15,7 @@ export interface RegistryVersion {
     | "indexed_pending"
     | "verified_build"
     | "deployed"
-    | "on_chain_attested"
+    | "on_chain_committed"
     | "deprecated"
     | "yanked"
     | "quarantined";
@@ -201,7 +201,7 @@ export function registryStatusTone(status?: string): "active" | "info" | "warnin
   switch (status) {
     case "active":
     case "deployed":
-    case "on_chain_attested":
+    case "on_chain_committed":
     case "chain_verified":
     case "verified":
       return "active";
@@ -224,10 +224,10 @@ export function registryStatusTone(status?: string): "active" | "info" | "warnin
 
 export function toRegistryPackageView(pkg: RegistryPackage): RegistryPackageView {
   const repositoryRoot = "https://github.com/CellScript-Labs/CellScript/tree/main";
-  const verificationStatus: RegistryRelease["verification_status"] = ["verified_build", "deployed", "on_chain_attested"].includes(pkg.status)
+  const verificationStatus: RegistryRelease["verification_status"] = ["verified_build", "deployed", "on_chain_committed"].includes(pkg.status)
     ? "verified"
     : "pending";
-  const deploymentStatus: RegistryRelease["deployment_status"] = pkg.status === "on_chain_attested"
+  const deploymentStatus: RegistryRelease["deployment_status"] = pkg.status === "on_chain_committed"
     ? "chain_verified"
     : pkg.status === "deployed"
       ? "deployed"
@@ -261,8 +261,8 @@ export function toRegistryPackageView(pkg: RegistryPackage): RegistryPackageView
     releases: pkg.versions.map((version) => ({
       release: version.version,
       source_hash: version.source_hash,
-      verification_status: ["verified_build", "deployed", "on_chain_attested"].includes(version.status) ? "verified" : "pending",
-      deployment_status: version.status === "on_chain_attested" ? "chain_verified" : version.status === "deployed" ? "deployed" : "not_applicable",
+      verification_status: ["verified_build", "deployed", "on_chain_committed"].includes(version.status) ? "verified" : "pending",
+      deployment_status: version.status === "on_chain_committed" ? "chain_verified" : version.status === "deployed" ? "deployed" : "not_applicable",
       availability_status: ["deprecated", "yanked", "quarantined"].includes(version.status)
         ? version.status as RegistryRelease["availability_status"]
         : "active",
