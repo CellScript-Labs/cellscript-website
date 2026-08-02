@@ -13,7 +13,7 @@ export const registryRuntime = environmentValue === "testnet-sandbox"
       addressPrefix: "ckt",
       apiOrigin: (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.testnet.registry.cellscript.dev").replace(/\/$/, ""),
       staticOrigin: (import.meta.env.PUBLIC_STATIC_REGISTRY_ORIGIN || "https://objects.testnet.registry.cellscript.dev").replace(/\/$/, ""),
-      siteOrigin: (import.meta.env.PUBLIC_REGISTRY_SITE_ORIGIN || "https://testnet.cellscript.dev").replace(/\/$/, ""),
+      siteOrigin: (import.meta.env.PUBLIC_REGISTRY_SITE_ORIGIN || "https://testnet.registry.cellscript.dev").replace(/\/$/, ""),
       alternateOrigin: "https://cellscript.dev/registry",
       ttlHours: 72,
     }
@@ -24,7 +24,7 @@ export const registryRuntime = environmentValue === "testnet-sandbox"
       apiOrigin: (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.registry.cellscript.dev").replace(/\/$/, ""),
       staticOrigin: (import.meta.env.PUBLIC_STATIC_REGISTRY_ORIGIN || "https://registry.cellscript.dev").replace(/\/$/, ""),
       siteOrigin: (import.meta.env.PUBLIC_REGISTRY_SITE_ORIGIN || "https://cellscript.dev").replace(/\/$/, ""),
-      alternateOrigin: "https://testnet.cellscript.dev/registry",
+      alternateOrigin: "https://testnet.registry.cellscript.dev/registry",
       ttlHours: null,
     };
 

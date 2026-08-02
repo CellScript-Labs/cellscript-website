@@ -6,7 +6,7 @@ services:
     container_name: cellscript-testnet-site
     restart: unless-stopped
     environment:
-      VIRTUAL_HOST: ${CELLSCRIPT_TESTNET_SITE_HOST:-testnet.cellscript.dev}
+      VIRTUAL_HOST: ${CELLSCRIPT_TESTNET_SITE_HOST:-testnet.registry.cellscript.dev}
       VIRTUAL_PORT: "80"
     volumes:
       - ${CELLSCRIPT_TESTNET_SITE_DIST:?CELLSCRIPT_TESTNET_SITE_DIST is required}:/usr/share/nginx/html:ro
