@@ -19,8 +19,9 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
   headingKey="registry.manage.title"
   descriptionKey="registry.manage.description"
   active="manage"
-  compactHeader
   showSubmitCta={false}
+  showHeader={false}
+  showTabs={false}
 >
   <section
     class="registry-maintainer"
@@ -37,73 +38,92 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
     <div class="registry-maintainer-context">
       <div class="registry-maintainer-package">
         <span class="registry-label" data-i18n="registry.manage.packageContext">{t.registry.manage.packageContext}</span>
-        <strong data-manage-title>{initialCoordinate || t.registry.manage.packagePlaceholder}</strong>
+        <h1 data-manage-title>{initialCoordinate || t.registry.manage.packagePlaceholder}</h1>
         <p data-manage-sub>
           {t.registry.manage.version} {first?.latest_version || t.registry.manage.notRecorded} · <span class="registry-status" data-state={registryStatusTone(first?.status ?? "source_published")}>{initialStatus}</span>
         </p>
       </div>
+      <p class="registry-maintainer-description" data-i18n="registry.manage.description">{t.registry.manage.description}</p>
     </div>
 
     <div class="registry-maintainer-workbench">
       <form class="registry-maintainer-tasks" data-manage-form novalidate>
-        <div class="registry-manage-context-fields">
-          <label class="registry-builder-field">
-            <span data-i18n="registry.manage.packageCoordinate">{t.registry.manage.packageCoordinate}</span>
-            <input
-              class="registry-input"
-              name="coordinate"
-              value={initialCoordinate}
-              list="manage-package-options"
-              placeholder={t.registry.manage.packagePlaceholder}
-              data-i18n-placeholder="registry.manage.packagePlaceholder"
-              autocomplete="off"
-              required
-              pattern="[a-z0-9][a-z0-9_-]{0,63}/[a-z0-9][a-z0-9_-]{0,63}"
-              aria-describedby="manage-coordinate-error"
-              data-manage-package
-            />
-            <small class="registry-field-error" id="manage-coordinate-error" data-manage-coordinate-error hidden data-i18n="registry.manage.invalidPackage">{t.registry.manage.invalidPackage}</small>
-          </label>
-          <datalist id="manage-package-options">
-            {registryPackages.map((pkg) => <option value={pkg.coordinate}></option>)}
-          </datalist>
-          <label class="registry-builder-field">
-            <span data-i18n="registry.manage.localPath">{t.registry.manage.localPath}</span>
-            <input class="registry-input" name="path" autocomplete="off" placeholder="./path/to/package" />
-            <small class="registry-field-hint" data-i18n="registry.manage.localPathHint">{t.registry.manage.localPathHint}</small>
-          </label>
-        </div>
+        <details class="registry-maintainer-options" open={!initialCoordinate}>
+          <summary data-i18n="registry.manage.optionsSummary">{t.registry.manage.optionsSummary}</summary>
+          <div class="registry-manage-context-fields">
+            <label class="registry-builder-field">
+              <span data-i18n="registry.manage.packageCoordinate">{t.registry.manage.packageCoordinate}</span>
+              <input
+                class="registry-input"
+                name="coordinate"
+                value={initialCoordinate}
+                list="manage-package-options"
+                placeholder={t.registry.manage.packagePlaceholder}
+                data-i18n-placeholder="registry.manage.packagePlaceholder"
+                autocomplete="off"
+                required
+                pattern="[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?/[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?"
+                aria-describedby="manage-coordinate-error"
+                data-manage-package
+              />
+              <small class="registry-field-error" id="manage-coordinate-error" data-manage-coordinate-error hidden data-i18n="registry.manage.invalidPackage">{t.registry.manage.invalidPackage}</small>
+            </label>
+            <datalist id="manage-package-options">
+              {registryPackages.map((pkg) => <option value={pkg.coordinate}></option>)}
+            </datalist>
+            <label class="registry-builder-field">
+              <span data-i18n="registry.manage.localPath">{t.registry.manage.localPath}</span>
+              <input class="registry-input" name="path" autocomplete="off" placeholder="./path/to/package" />
+              <small class="registry-field-hint" data-i18n="registry.manage.localPathHint">{t.registry.manage.localPathHint}</small>
+            </label>
+          </div>
+        </details>
 
         <fieldset class="registry-task-picker">
           <legend data-i18n="registry.manage.chooseTask">{t.registry.manage.chooseTask}</legend>
           <div class="registry-task-options">
-            <div class="registry-task-option">
-              <input id="manage-task-publish" type="radio" name="action" value="publish" checked />
-              <label for="manage-task-publish">
-                <strong data-i18n="registry.manage.taskPublish">{t.registry.manage.taskPublish}</strong>
-                <span data-i18n="registry.manage.taskPublishBody">{t.registry.manage.taskPublishBody}</span>
-              </label>
+            <div class="registry-task-cluster" data-task-tone="primary">
+              <span class="registry-task-cluster-label" data-i18n="registry.manage.primaryAction">{t.registry.manage.primaryAction}</span>
+              <div class="registry-task-option">
+                <input id="manage-task-publish" type="radio" name="action" value="publish" checked />
+                <label for="manage-task-publish">
+                  <strong data-i18n="registry.manage.taskPublish">{t.registry.manage.taskPublish}</strong>
+                  <span data-i18n="registry.manage.taskPublishBody">{t.registry.manage.taskPublishBody}</span>
+                  <i aria-hidden="true">01</i>
+                </label>
+              </div>
             </div>
-            <div class="registry-task-option">
-              <input id="manage-task-yank" type="radio" name="action" value="yank" />
-              <label for="manage-task-yank">
-                <strong data-i18n="registry.manage.taskYank">{t.registry.manage.taskYank}</strong>
-                <span data-i18n="registry.manage.taskYankBody">{t.registry.manage.taskYankBody}</span>
-              </label>
+            <div class="registry-task-cluster" data-task-tone="read">
+              <span class="registry-task-cluster-label" data-i18n="registry.manage.readOnlyActions">{t.registry.manage.readOnlyActions}</span>
+              <div class="registry-task-cluster-grid">
+                <div class="registry-task-option">
+                  <input id="manage-task-package" type="radio" name="action" value="package" />
+                  <label for="manage-task-package">
+                    <strong data-i18n="registry.manage.taskVerifyPackage">{t.registry.manage.taskVerifyPackage}</strong>
+                    <span data-i18n="registry.manage.taskVerifyPackageBody">{t.registry.manage.taskVerifyPackageBody}</span>
+                    <i aria-hidden="true">02</i>
+                  </label>
+                </div>
+                <div class="registry-task-option">
+                  <input id="manage-task-live" type="radio" name="action" value="live" />
+                  <label for="manage-task-live">
+                    <strong data-i18n="registry.manage.taskVerifyLive">{t.registry.manage.taskVerifyLive}</strong>
+                    <span data-i18n="registry.manage.taskVerifyLiveBody">{t.registry.manage.taskVerifyLiveBody}</span>
+                    <i aria-hidden="true">03</i>
+                  </label>
+                </div>
+              </div>
             </div>
-            <div class="registry-task-option">
-              <input id="manage-task-package" type="radio" name="action" value="package" />
-              <label for="manage-task-package">
-                <strong data-i18n="registry.manage.taskVerifyPackage">{t.registry.manage.taskVerifyPackage}</strong>
-                <span data-i18n="registry.manage.taskVerifyPackageBody">{t.registry.manage.taskVerifyPackageBody}</span>
-              </label>
-            </div>
-            <div class="registry-task-option">
-              <input id="manage-task-live" type="radio" name="action" value="live" />
-              <label for="manage-task-live">
-                <strong data-i18n="registry.manage.taskVerifyLive">{t.registry.manage.taskVerifyLive}</strong>
-                <span data-i18n="registry.manage.taskVerifyLiveBody">{t.registry.manage.taskVerifyLiveBody}</span>
-              </label>
+            <div class="registry-task-cluster" data-task-tone="danger">
+              <span class="registry-task-cluster-label" data-i18n="registry.manage.dangerAction">{t.registry.manage.dangerAction}</span>
+              <div class="registry-task-option">
+                <input id="manage-task-yank" type="radio" name="action" value="yank" />
+                <label for="manage-task-yank">
+                  <strong data-i18n="registry.manage.taskYank">{t.registry.manage.taskYank}</strong>
+                  <span data-i18n="registry.manage.taskYankBody">{t.registry.manage.taskYankBody}</span>
+                  <i aria-hidden="true">04</i>
+                </label>
+              </div>
             </div>
           </div>
         </fieldset>
@@ -115,8 +135,8 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
               <input class="registry-input" name="version" list="manage-version-options" autocomplete="off" />
             </label>
             <label class="registry-builder-field">
-              <span data-i18n="registry.manage.replacementLabel">{t.registry.manage.replacementLabel}</span>
-              <input class="registry-input" name="replacement" list="manage-version-options" autocomplete="off" placeholder={t.registry.manage.optional} data-i18n-placeholder="registry.manage.optional" />
+              <span data-i18n="registry.manage.capabilityKeyLabel">{t.registry.manage.capabilityKeyLabel}</span>
+              <input class="registry-input" name="capability" autocomplete="off" placeholder="cap_…" pattern="cap_[0-9a-f]{32}" />
             </label>
           </div>
           <datalist id="manage-version-options" data-manage-version-options></datalist>
@@ -177,9 +197,10 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
       const copy = app?.querySelector("[data-manage-copy]");
       const yankFields = app?.querySelector("[data-manage-yank-fields]");
       const versionInput = form?.elements.namedItem("version");
-      const replacementInput = form?.elements.namedItem("replacement");
+      const reasonInput = form?.elements.namedItem("note");
+      const capabilityInput = form?.elements.namedItem("capability");
       const versionOptions = app?.querySelector("[data-manage-version-options]");
-      const coordinatePattern = /^[a-z0-9][a-z0-9_-]{0,63}\/[a-z0-9][a-z0-9_-]{0,63}$/;
+      const coordinatePattern = /^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?\/[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$/;
       const params = new URLSearchParams(window.location.search);
       const allowedTasks = new Set(["publish", "yank", "package", "live"]);
       const requestedCoordinate = params.get("package")?.trim() || "";
@@ -240,10 +261,6 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
           versionInput.value = pkg?.latest_version || pkg?.versions?.[0]?.version || "";
           versionInput.dataset.package = coordinate();
         }
-        if (replacementInput instanceof HTMLInputElement && replacementInput.dataset.package !== coordinate()) {
-          replacementInput.value = "";
-          replacementInput.dataset.package = coordinate();
-        }
         if (sub) {
           sub.replaceChildren(document.createTextNode(`${g("registry.manage.version")} ${pkg?.latest_version || g("registry.manage.notRecorded")}`));
           if (pkg) {
@@ -254,7 +271,7 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
             status.textContent = statusLabel(pkg.status);
             sub.append(status);
           }
-          const networks = pkg?.deployment?.networks || [];
+          const networks = (pkg?.deployment?.networks || []).filter((network) => network === "mainnet");
           if (networks.length) sub.append(document.createTextNode(` · ${networks.join(", ")}`));
         }
       };
@@ -268,8 +285,14 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
         const isYank = task === "yank";
         if (yankFields) yankFields.hidden = !isYank;
         if (versionInput instanceof HTMLInputElement) versionInput.required = isYank;
+        if (reasonInput instanceof HTMLInputElement) reasonInput.required = isYank;
+        if (capabilityInput instanceof HTMLInputElement) capabilityInput.required = isYank;
 
-        let next = `${prefix()}cellc package verify --json && cellc publish --dry-run && cellc publish`;
+        const pkg = localPackage() || remotePackage;
+        const generic = pkg?.artifact?.profile && pkg.artifact.profile !== "cellscript_source";
+        let next = generic
+          ? `${prefix()}cellc publish --artifact-manifest Artifact.toml --dry-run && cellc publish --artifact-manifest Artifact.toml`
+          : `${prefix()}cellc package verify --json && cellc publish --dry-run && cellc publish`;
         let helpKey = "registry.manage.helpPublish";
         let noteKey = "registry.manage.noteWrite";
         let kindKey = "registry.manage.kindRegistryWrite";
@@ -277,34 +300,36 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
         if (task === "yank") {
           const version = field("version") || "<version>";
           const reason = field("note");
-          const replacement = field("replacement");
-          const edit = `cellc registry edit --yank ${shellArg(version)}${reason ? ` --reason ${shellArg(reason)}` : ""}${replacement ? ` --replaced-by ${shellArg(replacement)}` : ""}`;
-          next = `${prefix()}${edit} && cellc package verify --json && cellc publish --dry-run && cellc publish`;
+          const capability = field("capability") || "<key_id>";
+          next = `cellc artifact set-availability ${shellArg(`${coordinate()}@${version}`)} --status yanked --reason ${shellArg(reason || "<reason>")} --capability-key-id ${shellArg(capability)}`;
           helpKey = "registry.manage.helpYank";
           noteKey = "registry.manage.noteYank";
-          kindKey = "registry.manage.kindLocalChange";
+          kindKey = "registry.manage.kindRegistryWrite";
           tone = "danger";
         } else if (task === "package") {
-          next = `${prefix()}cellc package verify --json`;
+          next = generic ? `${prefix()}cellc publish --artifact-manifest Artifact.toml --dry-run` : `${prefix()}cellc package verify --json`;
           helpKey = "registry.manage.helpVerifyPackage";
           noteKey = "registry.manage.noteReadOnly";
           kindKey = "registry.manage.kindLocalCheck";
           tone = "read";
         } else if (task === "live") {
-          next = `${prefix()}cellc registry verify --live --json`;
+          next = pkg?.artifact?.profile === "ckb_executable"
+            ? `cellc artifact cell-dep ${shellArg(`${coordinate()}@${field("version") || pkg?.latest_version || "<version>"}`)} --output CellDep.json --accept-hash-bound`
+            : `${prefix()}cellc registry verify --live --json`;
           helpKey = "registry.manage.helpVerifyLive";
           noteKey = "registry.manage.noteReadOnly";
           kindKey = "registry.manage.kindLiveCheck";
           tone = "read";
         }
+        const yankReady = !isYank || Boolean(field("version") && field("note") && /^cap_[0-9a-f]{32}$/.test(field("capability")));
         if (command) command.textContent = valid ? next : g("registry.manage.invalidPackage");
         if (help) help.textContent = g(helpKey);
         if (note) note.textContent = g(noteKey);
         if (kind) kind.textContent = g(kindKey);
         if (output) output.dataset.tone = tone;
         if (copy) {
-          copy.disabled = !valid;
-          copy.dataset.copyText = valid ? next : "";
+          copy.disabled = !valid || !yankReady;
+          copy.dataset.copyText = valid && yankReady ? next : "";
         }
         syncUrl();
       };
@@ -332,6 +357,7 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
               status: release.availability_status || release.verification_status || "pending",
             })) : [],
             status: payload.availability_status || payload.verification_status || "pending",
+            artifact: payload.artifact,
             deployment: { networks: [] },
           };
           render();
@@ -351,6 +377,13 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
         window.clearTimeout(remoteTimer);
         remoteTimer = window.setTimeout(loadRemote, 260);
       }, { signal });
+      for (const action of form?.querySelectorAll("input[name='action']") || []) {
+        action.addEventListener("change", () => {
+          if (window.matchMedia("(max-width: 900px)").matches) {
+            window.setTimeout(() => output?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 80);
+          }
+        }, { signal });
+      }
       window.addEventListener("cellscript:locale-change", render, { signal });
       signal.addEventListener("abort", () => remoteRequest?.abort(), { once: true });
       render();

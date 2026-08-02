@@ -29,6 +29,10 @@ const fallbackStatus = (status: string) =>
   showSubmitCta={false}
 >
   <section class="registry-browse" data-registry-browser data-api-origin={apiOrigin} data-state="loading" aria-label={t.registry.browse.searchAria} aria-busy="true">
+    <div class="registry-index-strip">
+      <span class="registry-index-network"><i aria-hidden="true"></i><span data-i18n="registry.browse.indexNetwork">{t.registry.browse.indexNetwork}</span></span>
+      <span class="registry-index-scope" data-i18n="registry.browse.indexScope">{t.registry.browse.indexScope}</span>
+    </div>
     <div class="registry-browse-search">
       <label class="registry-browse-input">
         <Search aria-hidden="true" />
@@ -41,19 +45,21 @@ const fallbackStatus = (status: string) =>
           data-registry-query
         />
       </label>
-      <label class="registry-browse-filter">
-        <span class="sr-only" data-i18n="registry.browse.filterKind">{t.registry.browse.filterKind}</span>
-        <select data-registry-kind aria-label={t.registry.browse.filterKind}>
-          <option value="" data-i18n="registry.browse.allKinds">{t.registry.browse.allKinds}</option>
-          <option value="source_library" data-i18n="registry.browse.kindSourceLibrary">{t.registry.browse.kindSourceLibrary}</option>
-          <option value="profile_library" data-i18n="registry.browse.kindProfileLibrary">{t.registry.browse.kindProfileLibrary}</option>
-          <option value="runtime_verifier" data-i18n="registry.browse.kindRuntimeVerifier">{t.registry.browse.kindRuntimeVerifier}</option>
-          <option value="deployable_contract" data-i18n="registry.browse.kindDeployableContract">{t.registry.browse.kindDeployableContract}</option>
-          <option value="reproducible_binary" data-i18n="registry.browse.kindReproducibleBinary">{t.registry.browse.kindReproducibleBinary}</option>
-          <option value="template" data-i18n="registry.browse.kindTemplate">{t.registry.browse.kindTemplate}</option>
-        </select>
-      </label>
-      <span class="registry-browse-count" data-registry-count aria-live="polite"></span>
+      <div class="registry-browse-filter-row">
+        <label class="registry-browse-filter">
+          <span class="sr-only" data-i18n="registry.browse.filterKind">{t.registry.browse.filterKind}</span>
+          <select data-registry-kind aria-label={t.registry.browse.filterKind}>
+            <option value="" data-i18n="registry.browse.allKinds">{t.registry.browse.allKinds}</option>
+            <option value="source_library" data-i18n="registry.browse.kindSourceLibrary">{t.registry.browse.kindSourceLibrary}</option>
+            <option value="profile_library" data-i18n="registry.browse.kindProfileLibrary">{t.registry.browse.kindProfileLibrary}</option>
+            <option value="runtime_verifier" data-i18n="registry.browse.kindRuntimeVerifier">{t.registry.browse.kindRuntimeVerifier}</option>
+            <option value="deployable_contract" data-i18n="registry.browse.kindDeployableContract">{t.registry.browse.kindDeployableContract}</option>
+            <option value="reproducible_binary" data-i18n="registry.browse.kindReproducibleBinary">{t.registry.browse.kindReproducibleBinary}</option>
+            <option value="template" data-i18n="registry.browse.kindTemplate">{t.registry.browse.kindTemplate}</option>
+          </select>
+        </label>
+        <span class="registry-browse-count" data-registry-count aria-live="polite"></span>
+      </div>
     </div>
 
     <div class="registry-service-state" data-registry-service-state role="status" aria-live="polite" hidden>
@@ -91,9 +97,18 @@ const fallbackStatus = (status: string) =>
     </div>
 
     <div class="registry-empty" data-registry-empty hidden>
-      <h2 data-registry-empty-title>{t.registry.browse.emptyTitle}</h2>
-      <p data-registry-empty-body>{t.registry.browse.emptyBody}</p>
-      <a class="registry-button primary" href="/registry/submit" data-i18n="registry.submitPackage">{t.registry.submitPackage}</a>
+      <div class="registry-empty-copy">
+        <span class="registry-label" data-i18n="registry.browse.indexNetwork">{t.registry.browse.indexNetwork}</span>
+        <h2 data-registry-empty-title>{t.registry.browse.emptyTitle}</h2>
+        <p data-registry-empty-body>{t.registry.browse.emptyBody}</p>
+        <a class="registry-button primary" href="/registry/submit" data-i18n="registry.submitPackage">{t.registry.submitPackage}</a>
+      </div>
+      <div class="registry-cell-blueprint" aria-hidden="true">
+        <div class="registry-cell-blueprint-head"><span>live cell</span><i></i></div>
+        <div class="registry-cell-blueprint-row"><span>lock</span><i></i></div>
+        <div class="registry-cell-blueprint-row"><span>type</span><i></i></div>
+        <div class="registry-cell-blueprint-row"><span>data</span><i></i></div>
+      </div>
     </div>
 
     <button class="registry-button registry-load-more" type="button" data-registry-more hidden data-i18n="registry.browse.loadMore">{t.registry.browse.loadMore}</button>
@@ -272,7 +287,13 @@ const fallbackStatus = (status: string) =>
           const payload = await response.json();
           if (payload?.schema !== "cellscript-registry-artifact-index" || !Array.isArray(payload.artifacts)) throw new Error("unsupported_schema");
           const incoming = payload.artifacts.map((pkg) => ({ ...pkg, source: "live" }));
-          packages = append ? [...packages, ...incoming] : incoming;
+          if (append) {
+            const merged = new Map(packages.map((pkg) => [pkg.coordinate, pkg]));
+            for (const pkg of incoming) merged.set(pkg.coordinate, pkg);
+            packages = [...merged.values()];
+          } else {
+            packages = incoming;
+          }
           nextOffset = Number.isInteger(payload.next_offset) ? payload.next_offset : null;
           setServiceState("live");
           renderRows();

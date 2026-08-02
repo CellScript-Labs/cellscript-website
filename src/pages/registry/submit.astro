@@ -15,11 +15,6 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
         <h2 id="submit-intro-title" data-i18n="registry.submit.introTitle">{t.registry.submit.introTitle}</h2>
         <p data-i18n="registry.submit.introBody">{t.registry.submit.introBody}</p>
       </div>
-      <ol class="registry-submit-intro-steps">
-        <li><span>01</span><strong data-i18n="registry.submit.introVerify">{t.registry.submit.introVerify}</strong></li>
-        <li><span>02</span><strong data-i18n="registry.submit.introAuthorise">{t.registry.submit.introAuthorise}</strong></li>
-        <li><span>03</span><strong data-i18n="registry.submit.introPublish">{t.registry.submit.introPublish}</strong></li>
-      </ol>
       <button class="registry-intro-dismiss" type="button" data-submit-intro-dismiss data-i18n="registry.submit.introDismiss">{t.registry.submit.introDismiss}</button>
     </aside>
 
@@ -76,6 +71,9 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
       <details class="registry-command-options registry-profile-builder" data-profile-builder hidden>
         <summary data-i18n="registry.submit.profileContractTitle">{t.registry.submit.profileContractTitle}</summary>
         <p class="registry-field-hint" data-i18n="registry.submit.profileContractBody">{t.registry.submit.profileContractBody}</p>
+        <div class="registry-builder-grid registry-builder-grid-compact" data-profile-group="identity">
+          <label class="registry-builder-field"><span data-i18n="registry.submit.release">{t.registry.submit.release}</span><input class="registry-input" name="artifact_release" placeholder="1.0.0" pattern="[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?" /></label>
+        </div>
         <div class="registry-builder-grid registry-builder-grid-compact" data-profile-group="build">
           <label class="registry-builder-field"><span data-i18n="registry.submit.buildTarget">{t.registry.submit.buildTarget}</span><input class="registry-input" name="build_target" value="riscv64imac-unknown-none-elf" /></label>
           <label class="registry-builder-field"><span data-i18n="registry.submit.toolchain">{t.registry.submit.toolchain}</span><input class="registry-input" name="toolchain" placeholder="rustc 1.97.1" /></label>
@@ -100,7 +98,16 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
         <div class="registry-builder-grid registry-builder-grid-compact" data-profile-group="copy">
           <label class="registry-builder-field"><span data-i18n="registry.submit.templateEntrypoint">{t.registry.submit.templateEntrypoint}</span><input class="registry-input" name="template_entrypoint" placeholder="src/main.cell" /></label>
         </div>
-        <div class="registry-step-code registry-profile-preview"><code data-profile-contract-preview></code></div>
+        <div class="registry-step-code registry-profile-preview">
+          <span class="registry-label">Artifact.toml</span>
+          <code data-artifact-manifest-preview></code>
+          <button class="registry-copy" type="button" data-artifact-manifest-copy data-copy-text="" data-revert-label={t.registry.copy} data-i18n="registry.copy">{t.registry.copy}</button>
+        </div>
+        <div class="registry-step-code registry-profile-preview">
+          <span class="registry-label">artifact.bundle.json</span>
+          <code data-profile-contract-preview></code>
+          <button class="registry-copy" type="button" data-artifact-bundle-copy data-copy-text="" data-revert-label={t.registry.copy} data-i18n="registry.copy">{t.registry.copy}</button>
+        </div>
       </details>
     </form>
 
@@ -129,6 +136,7 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
           <p data-i18n="registry.submit.walletBody">{t.registry.submit.walletBody}</p>
         </div>
         <div class="registry-authorisation-controls">
+          <span class="registry-network-badge"><i aria-hidden="true"></i>CKB mainnet</span>
           <output class="registry-signer-status" data-capability-status role="status" aria-live="polite" data-i18n="registry.submit.walletIdle">{t.registry.submit.walletIdle}</output>
           <div class="registry-signer-actions">
             <button class="registry-button primary registry-workflow-primary" type="button" data-capability-primary data-i18n="registry.submit.continueConnect">{t.registry.submit.continueConnect}</button>
@@ -222,6 +230,13 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
           <button class="registry-wallet-close" type="button" data-wallet-close aria-label={t.registry.submit.walletClose} data-i18n-aria-label="registry.submit.walletClose">×</button>
         </header>
         <p class="registry-wallet-dialog-body" data-i18n="registry.submit.walletChooseBody">{t.registry.submit.walletChooseBody}</p>
+        <div class="registry-wallet-toolbar">
+          <label>
+            <span class="sr-only" data-i18n="registry.submit.walletSearchPlaceholder">{t.registry.submit.walletSearchPlaceholder}</span>
+            <input type="search" autocomplete="off" placeholder={t.registry.submit.walletSearchPlaceholder} data-i18n-placeholder="registry.submit.walletSearchPlaceholder" data-wallet-search />
+          </label>
+          <span data-wallet-count>{t.registry.submit.walletCount.replace("{count}", "12")}</span>
+        </div>
         <div class="registry-wallet-options" data-wallet-options role="list"></div>
         <p class="registry-wallet-dialog-note" data-i18n="registry.submit.walletPrivacy">{t.registry.submit.walletPrivacy}</p>
       </div>
@@ -270,6 +285,9 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     const profileBuilder = document.querySelector<HTMLDetailsElement>("[data-profile-builder]");
     const profileGroups = Array.from(document.querySelectorAll<HTMLElement>("[data-profile-group]"));
     const profilePreview = document.querySelector<HTMLElement>("[data-profile-contract-preview]");
+    const artifactManifestPreview = document.querySelector<HTMLElement>("[data-artifact-manifest-preview]");
+    const artifactManifestCopy = document.querySelector<HTMLButtonElement>("[data-artifact-manifest-copy]");
+    const artifactBundleCopy = document.querySelector<HTMLButtonElement>("[data-artifact-bundle-copy]");
     const coordinateError = document.querySelector<HTMLElement>("[data-coordinate-error]");
     const preflight = document.querySelector<HTMLElement>("[data-submit-preflight]");
     const preflightCopy = document.querySelector<HTMLButtonElement>("[data-submit-preflight-copy]");
@@ -297,6 +315,9 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     const technicalOutput = document.querySelector<HTMLElement>("[data-capability-response]");
     const walletDialog = document.querySelector<HTMLDialogElement>("[data-wallet-dialog]");
     const walletOptions = document.querySelector<HTMLElement>("[data-wallet-options]");
+    const walletToolbar = document.querySelector<HTMLElement>(".registry-wallet-toolbar");
+    const walletSearch = document.querySelector<HTMLInputElement>("[data-wallet-search]");
+    const walletCount = document.querySelector<HTMLElement>("[data-wallet-count]");
     const walletDialogTitle = document.querySelector<HTMLElement>("[data-wallet-dialog-title]");
     const walletBack = document.querySelector<HTMLButtonElement>("[data-wallet-back]");
     const walletClose = document.querySelector<HTMLButtonElement>("[data-wallet-close]");
@@ -582,7 +603,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
           || (name === "reproduction" && !reproducible)
           || (name === "copy" && kind !== "template");
       }
-      if (!generic || !profilePreview) return;
+      if (!generic || !profilePreview || !artifactManifestPreview) return;
       const profile = ["deployable_contract", "runtime_verifier"].includes(kind)
         ? "ckb_executable"
         : kind === "reproducible_binary" ? "reproducible_build" : "copy_material";
@@ -631,7 +652,35 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       if (kind === "template") {
         contract.copy = { format: "file_map_v1", entrypoint: fieldValue("template_entrypoint") || "<entrypoint>" };
       }
-      profilePreview.textContent = JSON.stringify(contract, null, 2);
+      const release = fieldValue("artifact_release") || "1.0.0";
+      const language = kind === "template" ? "unspecified" : "rust";
+      const manifest = [
+        'schema = "cellscript-registry-artifact"',
+        `namespace = ${JSON.stringify(fieldValue("namespace") || "<namespace>")}`,
+        `name = ${JSON.stringify(fieldValue("name") || "<name>")}`,
+        `release = ${JSON.stringify(release)}`,
+        `kind = ${JSON.stringify(kind)}`,
+        `language = ${JSON.stringify(language)}`,
+        'bundle = "artifact.bundle.json"',
+      ].join("\n");
+      const roles = kind === "template"
+        ? ["source"]
+        : kind === "reproducible_binary"
+          ? ["source", "executable", "build_recipe"]
+          : ["source", "executable", "abi", ...(reproducible ? ["build_recipe"] : []), ...(fieldValue("security_status") === "audited" ? ["audit_report"] : [])];
+      const bundle = JSON.stringify({
+        schema: "cellscript-registry-bundle",
+        namespace: fieldValue("namespace") || "<namespace>",
+        name: fieldValue("name") || "<name>",
+        release,
+        profile,
+        manifest_json: JSON.stringify(contract),
+        objects: roles.map((role) => ({ role, content_base64: `<replace with base64 ${role} bytes>` })),
+      }, null, 2);
+      artifactManifestPreview.textContent = manifest;
+      profilePreview.textContent = bundle;
+      if (artifactManifestCopy) artifactManifestCopy.dataset.copyText = manifest;
+      if (artifactBundleCopy) artifactBundleCopy.dataset.copyText = bundle;
     };
 
     const loadCCC = async () => {
@@ -670,11 +719,20 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       render();
       requestAnimationFrame(() => walletOptions.classList.add("is-entering"));
     };
-    const walletOptionButton = (label: string, detail: string, icon: string | undefined, onClick: () => void, fallbackMark?: string) => {
+    const walletOptionButton = (
+      label: string,
+      detail: string,
+      icon: string | undefined,
+      onClick: () => void,
+      fallbackMark?: string,
+      mode: "direct" | "manual" = "manual",
+    ) => {
       const button = document.createElement("button");
       button.type = "button";
       button.className = "registry-wallet-option";
       button.setAttribute("role", "listitem");
+      button.dataset.connectMode = mode;
+      button.dataset.walletSearch = `${label} ${detail}`.toLowerCase();
       if (icon) {
         const image = document.createElement("img");
         image.src = icon;
@@ -701,7 +759,40 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       button.addEventListener("click", onClick, { signal });
       return button;
     };
+    const walletGroup = (label: string, items: HTMLButtonElement[], mode: "direct" | "manual") => {
+      const section = document.createElement("section");
+      section.className = "registry-wallet-group";
+      section.dataset.walletGroup = "";
+      section.dataset.groupMode = mode;
+      const heading = document.createElement("div");
+      const title = document.createElement("strong");
+      title.textContent = label;
+      const count = document.createElement("span");
+      count.textContent = String(items.length).padStart(2, "0");
+      heading.append(title, count);
+      const list = document.createElement("div");
+      list.append(...items);
+      section.append(heading, list);
+      return section;
+    };
+    const applyWalletSearch = () => {
+      const query = walletSearch?.value.trim().toLowerCase() || "";
+      let visible = 0;
+      for (const button of walletOptions?.querySelectorAll<HTMLButtonElement>(".registry-wallet-option") || []) {
+        button.hidden = Boolean(query) && !(button.dataset.walletSearch || "").includes(query);
+        if (!button.hidden) visible += 1;
+      }
+      for (const group of walletOptions?.querySelectorAll<HTMLElement>("[data-wallet-group]") || []) {
+        group.hidden = !group.querySelector(".registry-wallet-option:not([hidden])");
+      }
+      if (walletCount) {
+        const countKey = visible === 1 ? "walletCountSingular" : "walletCount";
+        walletCount.textContent = message(countKey).replace("{count}", String(visible));
+      }
+    };
+    walletSearch?.addEventListener("input", applyWalletSearch, { signal });
     const renderWalletEmpty = (key = "walletEmpty") => {
+      if (walletToolbar) walletToolbar.hidden = true;
       transitionWalletOptions(() => {
         const empty = document.createElement("p");
         empty.className = "registry-wallet-empty";
@@ -711,6 +802,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     };
     const connectWalletSigner = async (wallet: any, signerInfo: any) => {
       if (!walletOptions || !walletPicker) return;
+      if (walletToolbar) walletToolbar.hidden = true;
       transitionWalletOptions(() => {
         const state = document.createElement("div");
         state.className = "registry-wallet-connecting";
@@ -743,6 +835,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     const renderSignerChoices = (wallet: any) => {
       setWalletDialogTitle("walletSignerTitle", wallet.name);
       if (walletBack) walletBack.hidden = false;
+      if (walletToolbar) walletToolbar.hidden = true;
       transitionWalletOptions(() => {
         for (const signerInfo of wallet.signers) {
           walletOptions?.append(walletOptionButton(
@@ -770,8 +863,12 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     const renderWalletChoices = () => {
       setWalletDialogTitle("walletChooseTitle");
       if (walletBack) walletBack.hidden = true;
+      if (walletToolbar) walletToolbar.hidden = false;
+      if (walletSearch) walletSearch.value = "";
       transitionWalletOptions(() => {
         const claimed = new Set<string>();
+        const direct: HTMLButtonElement[] = [];
+        const directory: HTMLButtonElement[] = [];
         for (const catalogWallet of officialWalletCatalog) {
           const wallet = discoveredCatalogWallet(catalogWallet);
           if (wallet) claimed.add(walletNameKey(String(wallet.name || "")));
@@ -780,7 +877,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
           if (directlyConnectable && wallet.signers.length > 1) {
             detail = message("walletMultipleSigners").replace("{count}", String(wallet.signers.length));
           }
-          walletOptions?.append(walletOptionButton(
+          const option = walletOptionButton(
             catalogWallet.name,
             detail,
             catalogWallet.icon,
@@ -790,23 +887,30 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
                 : renderSignerChoices(wallet)
               : selectExternalWallet(catalogWallet),
             catalogWallet.mark,
-          ));
+            directlyConnectable ? "direct" : "manual",
+          );
+          (directlyConnectable ? direct : directory).push(option);
         }
         for (const wallet of availableWallets) {
           if (claimed.has(walletNameKey(String(wallet.name || ""))) || wallet.installOnly || wallet.signers.length === 0) continue;
           const detail = wallet.signers.length > 1
             ? message("walletMultipleSigners").replace("{count}", String(wallet.signers.length))
             : message("walletDirect");
-          walletOptions?.append(walletOptionButton(
+          direct.push(walletOptionButton(
             wallet.name,
             detail,
             wallet.icon,
             () => wallet.signers.length === 1
               ? void connectWalletSigner(wallet, wallet.signers[0])
               : renderSignerChoices(wallet),
+            undefined,
+            "direct",
           ));
         }
+        if (direct.length) walletOptions?.append(walletGroup(message("walletAvailableNow"), direct, "direct"));
+        if (directory.length) walletOptions?.append(walletGroup(message("walletDirectory"), directory, "manual"));
       });
+      applyWalletSearch();
     };
     const refreshWalletChoices = async () => {
       const sequence = ++walletRefreshSequence;
@@ -835,7 +939,8 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
         renderWalletChoices();
       } catch (error) {
         if (sequence !== walletRefreshSequence) return;
-        renderWalletEmpty("errorWallet");
+        availableWallets = [];
+        renderWalletChoices();
         setError(error, "errorWallet");
       }
     };
