@@ -114,6 +114,35 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
                 </div>
               </div>
             </div>
+            <div class="registry-task-cluster" data-task-tone="chain">
+              <span class="registry-task-cluster-label" data-i18n="registry.manage.chainActions">{t.registry.manage.chainActions}</span>
+              <div class="registry-task-cluster-grid">
+                <div class="registry-task-option">
+                  <input id="manage-task-reproduce" type="radio" name="action" value="reproduce" />
+                  <label for="manage-task-reproduce">
+                    <strong data-i18n="registry.manage.taskReproduce">{t.registry.manage.taskReproduce}</strong>
+                    <span data-i18n="registry.manage.taskReproduceBody">{t.registry.manage.taskReproduceBody}</span>
+                    <i aria-hidden="true">04</i>
+                  </label>
+                </div>
+                <div class="registry-task-option">
+                  <input id="manage-task-deployment" type="radio" name="action" value="deployment" />
+                  <label for="manage-task-deployment">
+                    <strong data-i18n="registry.manage.taskDeployment">{t.registry.manage.taskDeployment}</strong>
+                    <span data-i18n="registry.manage.taskDeploymentBody">{t.registry.manage.taskDeploymentBody}</span>
+                    <i aria-hidden="true">05</i>
+                  </label>
+                </div>
+                <div class="registry-task-option">
+                  <input id="manage-task-commitment" type="radio" name="action" value="commitment" />
+                  <label for="manage-task-commitment">
+                    <strong data-i18n="registry.manage.taskCommitment">{t.registry.manage.taskCommitment}</strong>
+                    <span data-i18n="registry.manage.taskCommitmentBody">{t.registry.manage.taskCommitmentBody}</span>
+                    <i aria-hidden="true">06</i>
+                  </label>
+                </div>
+              </div>
+            </div>
             <div class="registry-task-cluster" data-task-tone="danger">
               <span class="registry-task-cluster-label" data-i18n="registry.manage.dangerAction">{t.registry.manage.dangerAction}</span>
               <div class="registry-task-option">
@@ -121,7 +150,7 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
                 <label for="manage-task-yank">
                   <strong data-i18n="registry.manage.taskYank">{t.registry.manage.taskYank}</strong>
                   <span data-i18n="registry.manage.taskYankBody">{t.registry.manage.taskYankBody}</span>
-                  <i aria-hidden="true">04</i>
+                  <i aria-hidden="true">07</i>
                 </label>
               </div>
             </div>
@@ -147,6 +176,37 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
           <div class="registry-yank-warning" role="note">
             <strong data-i18n="registry.manage.yankWarningTitle">{t.registry.manage.yankWarningTitle}</strong>
             <span data-i18n="registry.manage.yankWarningBody">{t.registry.manage.yankWarningBody}</span>
+          </div>
+        </div>
+
+        <div class="registry-yank-fields" data-manage-artifact-fields hidden>
+          <div class="registry-yank-grid">
+            <label class="registry-builder-field">
+              <span data-i18n="registry.manage.versionLabel">{t.registry.manage.versionLabel}</span>
+              <input class="registry-input" name="artifact_version" list="manage-version-options" autocomplete="off" />
+            </label>
+          </div>
+          <div class="registry-yank-grid" data-manage-reproduce-fields hidden>
+            <label class="registry-builder-field">
+              <span data-i18n="registry.manage.firstReport">{t.registry.manage.firstReport}</span>
+              <input class="registry-input" name="report_a" autocomplete="off" placeholder="reproduction-builder-a.json" />
+            </label>
+            <label class="registry-builder-field">
+              <span data-i18n="registry.manage.secondReport">{t.registry.manage.secondReport}</span>
+              <input class="registry-input" name="report_b" autocomplete="off" placeholder="reproduction-builder-b.json" />
+            </label>
+          </div>
+          <div data-manage-deployment-fields hidden>
+            <div class="registry-yank-grid">
+              <label class="registry-builder-field"><span>code_hash</span><input class="registry-input" name="code_hash" placeholder="0x…" /></label>
+              <label class="registry-builder-field"><span>tx_hash</span><input class="registry-input" name="tx_hash" placeholder="0x…" /></label>
+            </div>
+            <div class="registry-yank-grid">
+              <label class="registry-builder-field"><span>hash_type</span><select class="registry-select" name="deployment_hash_type"><option value="data1">data1</option><option value="data2">data2</option><option value="data">data</option><option value="type">type</option></select></label>
+              <label class="registry-builder-field"><span>dep_type</span><select class="registry-select" name="deployment_dep_type"><option value="code">code</option><option value="dep_group">dep_group</option></select></label>
+              <label class="registry-builder-field"><span data-i18n="registry.manage.outputIndex">{t.registry.manage.outputIndex}</span><input class="registry-input" name="output_index" inputmode="numeric" value="0" pattern="[0-9]+" /></label>
+              <label class="registry-builder-field"><span data-i18n="registry.manage.capabilityKeyLabel">{t.registry.manage.capabilityKeyLabel}</span><input class="registry-input" name="deployment_capability" placeholder="cap_…" pattern="cap_[0-9a-f]{32}" /></label>
+            </div>
           </div>
         </div>
       </form>
@@ -196,13 +256,17 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
       const output = app?.querySelector("[data-manage-output]");
       const copy = app?.querySelector("[data-manage-copy]");
       const yankFields = app?.querySelector("[data-manage-yank-fields]");
+      const artifactFields = app?.querySelector("[data-manage-artifact-fields]");
+      const reproduceFields = app?.querySelector("[data-manage-reproduce-fields]");
+      const deploymentFields = app?.querySelector("[data-manage-deployment-fields]");
       const versionInput = form?.elements.namedItem("version");
+      const artifactVersionInput = form?.elements.namedItem("artifact_version");
       const reasonInput = form?.elements.namedItem("note");
       const capabilityInput = form?.elements.namedItem("capability");
       const versionOptions = app?.querySelector("[data-manage-version-options]");
       const coordinatePattern = /^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?\/[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$/;
       const params = new URLSearchParams(window.location.search);
-      const allowedTasks = new Set(["publish", "yank", "package", "live"]);
+      const allowedTasks = new Set(["publish", "yank", "package", "live", "reproduce", "deployment", "commitment"]);
       const requestedCoordinate = params.get("package")?.trim() || "";
       const requestedTask = params.get("task")?.trim() || "";
       let remotePackage = null;
@@ -224,7 +288,7 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
       const coordinate = () => coordinateInput?.value.trim() || "";
       const field = (name) => {
         const input = form?.elements.namedItem(name);
-        return input instanceof HTMLInputElement ? input.value.trim() : "";
+        return input instanceof HTMLInputElement || input instanceof HTMLSelectElement ? input.value.trim() : "";
       };
       const selectedTask = () => form?.querySelector("input[name='action']:checked")?.value || "publish";
       const shellArg = (value) => `'${String(value).replace(/'/g, "'\\''")}'`;
@@ -261,6 +325,10 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
           versionInput.value = pkg?.latest_version || pkg?.versions?.[0]?.version || "";
           versionInput.dataset.package = coordinate();
         }
+        if (artifactVersionInput instanceof HTMLInputElement && artifactVersionInput.dataset.package !== coordinate()) {
+          artifactVersionInput.value = pkg?.latest_version || pkg?.versions?.[0]?.version || "";
+          artifactVersionInput.dataset.package = coordinate();
+        }
         if (sub) {
           sub.replaceChildren(document.createTextNode(`${g("registry.manage.version")} ${pkg?.latest_version || g("registry.manage.notRecorded")}`));
           if (pkg) {
@@ -283,7 +351,11 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
         syncPackage();
         const task = selectedTask();
         const isYank = task === "yank";
+        const isArtifactTask = ["reproduce", "deployment", "commitment"].includes(task);
         if (yankFields) yankFields.hidden = !isYank;
+        if (artifactFields) artifactFields.hidden = !isArtifactTask;
+        if (reproduceFields) reproduceFields.hidden = task !== "reproduce";
+        if (deploymentFields) deploymentFields.hidden = task !== "deployment";
         if (versionInput instanceof HTMLInputElement) versionInput.required = isYank;
         if (reasonInput instanceof HTMLInputElement) reasonInput.required = isYank;
         if (capabilityInput instanceof HTMLInputElement) capabilityInput.required = isYank;
@@ -320,16 +392,45 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
           noteKey = "registry.manage.noteReadOnly";
           kindKey = "registry.manage.kindLiveCheck";
           tone = "read";
+        } else if (task === "reproduce") {
+          const selectedVersion = field("artifact_version") || pkg?.latest_version || "<version>";
+          next = `cellc artifact reproduction-evidence ${shellArg(`${coordinate()}@${selectedVersion}`)} --report ${shellArg(field("report_a") || "<builder-a.json>")} --report ${shellArg(field("report_b") || "<builder-b.json>")} --output reproduced-build-promotion.json`;
+          helpKey = "registry.manage.helpReproduce";
+          noteKey = "registry.manage.noteReproduce";
+          kindKey = "registry.manage.kindLocalChange";
+          tone = "read";
+        } else if (task === "deployment") {
+          const selectedVersion = field("artifact_version") || pkg?.latest_version || "<version>";
+          next = `cellc artifact record-deployment ${shellArg(`${coordinate()}@${selectedVersion}`)} --code-hash ${shellArg(field("code_hash") || "<code_hash>")} --hash-type ${shellArg(field("deployment_hash_type"))} --dep-type ${shellArg(field("deployment_dep_type"))} --tx-hash ${shellArg(field("tx_hash") || "<tx_hash>")} --index ${shellArg(field("output_index") || "0")} --capability-key-id ${shellArg(field("deployment_capability") || "<key_id>")}`;
+          helpKey = "registry.manage.helpDeployment";
+          noteKey = "registry.manage.noteWrite";
+          kindKey = "registry.manage.kindRegistryWrite";
+          tone = "write";
+        } else if (task === "commitment") {
+          const selectedVersion = field("artifact_version") || pkg?.latest_version || "<version>";
+          next = `cellc artifact commitment ${shellArg(`${coordinate()}@${selectedVersion}`)} --output registry-commitment.json`;
+          helpKey = "registry.manage.helpCommitment";
+          noteKey = "registry.manage.noteCommitment";
+          kindKey = "registry.manage.kindLiveCheck";
+          tone = "read";
         }
         const yankReady = !isYank || Boolean(field("version") && field("note") && /^cap_[0-9a-f]{32}$/.test(field("capability")));
+        const artifactReady = !isArtifactTask || Boolean(field("artifact_version"))
+          && (task !== "reproduce" || Boolean(field("report_a") && field("report_b")))
+          && (task !== "deployment" || Boolean(
+            /^0x[0-9a-fA-F]{64}$/.test(field("code_hash"))
+            && /^0x[0-9a-fA-F]{64}$/.test(field("tx_hash"))
+            && /^[0-9]+$/.test(field("output_index"))
+            && /^cap_[0-9a-f]{32}$/.test(field("deployment_capability")),
+          ));
         if (command) command.textContent = valid ? next : g("registry.manage.invalidPackage");
         if (help) help.textContent = g(helpKey);
         if (note) note.textContent = g(noteKey);
         if (kind) kind.textContent = g(kindKey);
         if (output) output.dataset.tone = tone;
         if (copy) {
-          copy.disabled = !valid || !yankReady;
-          copy.dataset.copyText = valid && yankReady ? next : "";
+          copy.disabled = !valid || !yankReady || !artifactReady;
+          copy.dataset.copyText = valid && yankReady && artifactReady ? next : "";
         }
         syncUrl();
       };

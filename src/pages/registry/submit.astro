@@ -24,18 +24,32 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
         <h2 data-i18n="registry.submit.detailsTitle">{t.registry.submit.detailsTitle}</h2>
         <p data-i18n="registry.submit.detailsBody">{t.registry.submit.detailsBody}</p>
       </div>
-      <label class="registry-builder-field registry-artifact-kind-field">
-        <span data-i18n="registry.submit.artifactKind">{t.registry.submit.artifactKind}</span>
-        <select class="registry-select" name="artifact_kind" data-artifact-kind>
-          <option value="source_library" data-i18n="registry.submit.kindCellScript">{t.registry.submit.kindCellScript}</option>
-          <option value="profile_library" data-i18n="registry.submit.kindProfileLibrary">{t.registry.submit.kindProfileLibrary}</option>
-          <option value="deployable_contract" data-i18n="registry.submit.kindCkbScript">{t.registry.submit.kindCkbScript}</option>
-          <option value="runtime_verifier" data-i18n="registry.submit.kindRuntimeVerifier">{t.registry.submit.kindRuntimeVerifier}</option>
-          <option value="reproducible_binary" data-i18n="registry.submit.kindReproducibleBinary">{t.registry.submit.kindReproducibleBinary}</option>
-          <option value="template" data-i18n="registry.submit.kindTemplate">{t.registry.submit.kindTemplate}</option>
-        </select>
-        <small class="registry-field-hint" data-artifact-kind-hint data-i18n="registry.submit.kindCellScriptHint">{t.registry.submit.kindCellScriptHint}</small>
-      </label>
+      <div class="registry-builder-grid registry-builder-grid-compact">
+        <label class="registry-builder-field registry-artifact-kind-field">
+          <span data-i18n="registry.submit.artifactKind">{t.registry.submit.artifactKind}</span>
+          <select class="registry-select" name="artifact_kind" data-artifact-kind>
+            <option value="source_library" data-i18n="registry.submit.kindCellScript">{t.registry.submit.kindCellScript}</option>
+            <option value="profile_library" data-i18n="registry.submit.kindProfileLibrary">{t.registry.submit.kindProfileLibrary}</option>
+            <option value="deployable_contract" data-i18n="registry.submit.kindCkbScript">{t.registry.submit.kindCkbScript}</option>
+            <option value="runtime_verifier" data-i18n="registry.submit.kindRuntimeVerifier">{t.registry.submit.kindRuntimeVerifier}</option>
+            <option value="reproducible_binary" data-i18n="registry.submit.kindReproducibleBinary">{t.registry.submit.kindReproducibleBinary}</option>
+            <option value="template" data-i18n="registry.submit.kindTemplate">{t.registry.submit.kindTemplate}</option>
+          </select>
+          <small class="registry-field-hint" data-artifact-kind-hint data-i18n="registry.submit.kindCellScriptHint">{t.registry.submit.kindCellScriptHint}</small>
+        </label>
+        <label class="registry-builder-field" data-artifact-language-field>
+          <span data-i18n="registry.submit.artifactLanguage">{t.registry.submit.artifactLanguage}</span>
+          <select class="registry-select" name="artifact_language" data-artifact-language>
+            <option value="cellscript">CellScript</option>
+            <option value="rust">Rust</option>
+            <option value="c">C</option>
+            <option value="javascript">JavaScript</option>
+            <option value="other">Other</option>
+            <option value="unspecified">Unspecified</option>
+          </select>
+          <small class="registry-field-hint" data-i18n="registry.submit.artifactLanguageHint">{t.registry.submit.artifactLanguageHint}</small>
+        </label>
+      </div>
       <div class="registry-builder-grid registry-builder-grid-compact">
         <label class="registry-builder-field">
           <span data-i18n="registry.submit.namespace">{t.registry.submit.namespace}</span>
@@ -281,6 +295,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     const nameInput = form?.elements.namedItem("name") as HTMLInputElement | null;
     const pathInput = form?.elements.namedItem("path") as HTMLInputElement | null;
     const artifactKindInput = form?.elements.namedItem("artifact_kind") as HTMLSelectElement | null;
+    const artifactLanguageInput = form?.elements.namedItem("artifact_language") as HTMLSelectElement | null;
     const artifactKindHint = document.querySelector<HTMLElement>("[data-artifact-kind-hint]");
     const profileBuilder = document.querySelector<HTMLDetailsElement>("[data-profile-builder]");
     const profileGroups = Array.from(document.querySelectorAll<HTMLElement>("[data-profile-group]"));
@@ -588,6 +603,20 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       artifactKindHint.textContent = message(hintKey);
       const kind = artifactKindInput.value;
       const generic = !["source_library", "profile_library"].includes(kind);
+      const allowedLanguages: Record<string, string[]> = {
+        source_library: ["cellscript"],
+        profile_library: ["cellscript"],
+        deployable_contract: ["cellscript", "rust", "c", "javascript", "other"],
+        runtime_verifier: ["cellscript", "rust", "c", "javascript", "other"],
+        reproducible_binary: ["rust", "c", "other"],
+        template: ["cellscript", "rust", "c", "javascript", "other", "unspecified"],
+      };
+      if (artifactLanguageInput) {
+        const allowed = allowedLanguages[kind] || ["other"];
+        for (const option of artifactLanguageInput.options) option.hidden = !allowed.includes(option.value);
+        if (!allowed.includes(artifactLanguageInput.value)) artifactLanguageInput.value = allowed[0];
+        artifactLanguageInput.disabled = allowed.length === 1;
+      }
       const reproducibleInput = form?.elements.namedItem("build_reproducible") as HTMLSelectElement | null;
       if (reproducibleInput) {
         if (kind === "reproducible_binary") reproducibleInput.value = "true";
@@ -653,7 +682,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
         contract.copy = { format: "file_map_v1", entrypoint: fieldValue("template_entrypoint") || "<entrypoint>" };
       }
       const release = fieldValue("artifact_release") || "1.0.0";
-      const language = kind === "template" ? "unspecified" : "rust";
+      const language = fieldValue("artifact_language") || "other";
       const manifest = [
         'schema = "cellscript-registry-artifact"',
         `namespace = ${JSON.stringify(fieldValue("namespace") || "<namespace>")}`,

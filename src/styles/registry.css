@@ -2145,6 +2145,10 @@
   gap: 8px;
 }
 
+.registry-task-cluster[data-task-tone="chain"] .registry-task-option:last-child:nth-child(odd) {
+  grid-column: 1 / -1;
+}
+
 .registry-task-option {
   position: relative;
   min-width: 0;
@@ -2256,7 +2260,9 @@
   border-top: 1px solid var(--line-soft);
 }
 
-.registry-yank-fields[hidden] {
+.registry-yank-fields[hidden],
+[data-manage-reproduce-fields][hidden],
+[data-manage-deployment-fields][hidden] {
   display: none;
 }
 
