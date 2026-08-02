@@ -2,9 +2,10 @@
 import RegistryPackageDetail from "../../../../components/RegistryPackageDetail.astro";
 import RegistryLayout from "../../../../layouts/RegistryLayout.astro";
 import { registryPackages, toRegistryPackageView, type RegistryPackage } from "../../../../lib/registry";
+import { isTestnetSandbox } from "../../../../lib/registry-runtime";
 
 export function getStaticPaths() {
-  return registryPackages.map((pkg) => ({
+  return (isTestnetSandbox ? [] : registryPackages).map((pkg) => ({
     params: { namespace: pkg.namespace, name: pkg.name },
     props: { pkg },
   }));

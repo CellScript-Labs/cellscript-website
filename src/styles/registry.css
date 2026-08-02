@@ -12,6 +12,70 @@
   padding: 18px 0 88px;
 }
 
+.registry-environment-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  min-height: 42px;
+  padding: 9px 0;
+  border-bottom: 1px solid var(--line-soft);
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.registry-environment-identity {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  min-width: 0;
+}
+
+.registry-environment-identity i {
+  width: 7px;
+  height: 7px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 0 0 4px color-mix(in oklch, var(--accent) 12%, transparent);
+}
+
+.registry-environment-bar strong {
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.registry-environment-bar a {
+  flex: 0 0 auto;
+  color: var(--text);
+  font-weight: 650;
+  text-underline-offset: 3px;
+}
+
+.registry-environment-bar.is-testnet {
+  border-bottom-color: color-mix(in oklch, #d88b2d 35%, var(--line-soft));
+}
+
+.registry-environment-bar.is-testnet .registry-environment-identity i {
+  background: #d88b2d;
+  box-shadow: 0 0 0 4px color-mix(in oklch, #d88b2d 14%, transparent);
+}
+
+.registry-sandbox-expiry {
+  width: fit-content;
+  margin: 12px 0 0;
+  padding: 6px 9px;
+  border: 1px solid color-mix(in oklch, #d88b2d 34%, var(--line-soft));
+  border-radius: 7px;
+  background: color-mix(in oklch, #d88b2d 8%, var(--panel-soft));
+  color: color-mix(in oklch, #d88b2d 76%, var(--text));
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+}
+
 .registry-topbar {
   display: flex;
   flex-wrap: wrap;
@@ -1856,6 +1920,21 @@
 }
 
 @media (max-width: 620px) {
+  .registry-environment-bar,
+  .registry-environment-identity {
+    align-items: flex-start;
+  }
+
+  .registry-environment-bar {
+    flex-direction: column;
+    gap: 6px;
+    padding: 11px 0;
+  }
+
+  .registry-environment-identity {
+    flex-wrap: wrap;
+  }
+
   .registry-index-strip {
     align-items: flex-start;
     flex-direction: column;

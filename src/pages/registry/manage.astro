@@ -2,6 +2,7 @@
 import RegistryLayout from "../../layouts/RegistryLayout.astro";
 import { registryPackages, registryStatusTone } from "../../lib/registry";
 import { defaultLocale, translations } from "../../i18n/translations";
+import { registryRuntime } from "../../lib/registry-runtime";
 
 const t = translations[defaultLocale];
 const description = t.registry.manage.description;
@@ -10,7 +11,7 @@ const initialCoordinate = first?.coordinate ?? "";
 const initialStatus = first
   ? (t.registry.statuses as Record<string, string>)[first.status] ?? first.status.replaceAll("_", " ")
   : t.registry.manage.notRecorded;
-const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.registry.cellscript.dev").replace(/\/$/, "");
+const apiOrigin = registryRuntime.apiOrigin;
 ---
 
 <RegistryLayout
@@ -29,6 +30,7 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
     data-i18n-aria-label="registry.manage.manageAria"
     data-manage-app
     data-api-origin={apiOrigin}
+    data-registry-network={registryRuntime.network}
   >
     <a class="registry-maintainer-back" href="/registry" data-manage-back>
       <span aria-hidden="true">←</span>
@@ -338,7 +340,8 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
             status.textContent = statusLabel(pkg.status);
             sub.append(status);
           }
-          const networks = (pkg?.deployment?.networks || []).filter((network) => network === "mainnet");
+          const registryNetwork = app?.dataset.registryNetwork || "mainnet";
+          const networks = (pkg?.deployment?.networks || []).filter((network) => network === registryNetwork);
           if (networks.length) sub.append(document.createTextNode(` · ${networks.join(", ")}`));
         }
       };
@@ -404,7 +407,8 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
           tone = "read";
         } else if (task === "deployment") {
           const selectedVersion = field("artifact_version") || pkg?.latest_version || "<version>";
-          next = `cellc artifact record-deployment ${shellArg(`${coordinate()}@${selectedVersion}`)} --code-hash ${shellArg(field("code_hash") || "<code_hash>")} --hash-type ${shellArg(field("deployment_hash_type"))} --dep-type ${shellArg(field("deployment_dep_type"))} --tx-hash ${shellArg(field("tx_hash") || "<tx_hash>")} --index ${shellArg(field("output_index") || "0")} --capability-key-id ${shellArg(field("deployment_capability") || "<key_id>")}`;
+          const network = app?.dataset.registryNetwork || "mainnet";
+          next = `cellc artifact record-deployment ${shellArg(`${coordinate()}@${selectedVersion}`)} --network ${shellArg(network)} --api-url ${shellArg(app?.dataset.apiOrigin || "https://api.registry.cellscript.dev")} --code-hash ${shellArg(field("code_hash") || "<code_hash>")} --hash-type ${shellArg(field("deployment_hash_type"))} --dep-type ${shellArg(field("deployment_dep_type"))} --tx-hash ${shellArg(field("tx_hash") || "<tx_hash>")} --index ${shellArg(field("output_index") || "0")} --capability-key-id ${shellArg(field("deployment_capability") || "<key_id>")}`;
           helpKey = "registry.manage.helpDeployment";
           noteKey = "registry.manage.noteWrite";
           kindKey = "registry.manage.kindRegistryWrite";

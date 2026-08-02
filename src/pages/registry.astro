@@ -3,10 +3,11 @@ import RegistryLayout from "../layouts/RegistryLayout.astro";
 import { packageHref, registryPackages, registryStatusTone, toRegistryPackageView } from "../lib/registry";
 import { defaultLocale, translations } from "../i18n/translations";
 import { ArrowRight, Search } from "lucide-astro";
+import { isTestnetSandbox, registryRuntime } from "../lib/registry-runtime";
 
 const t = translations[defaultLocale];
-const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.registry.cellscript.dev").replace(/\/$/, "");
-const fallbackPackages = registryPackages.map((pkg) => {
+const apiOrigin = registryRuntime.apiOrigin;
+const fallbackPackages = (isTestnetSandbox ? [] : registryPackages).map((pkg) => {
   const view = toRegistryPackageView(pkg);
   return {
     ...view,

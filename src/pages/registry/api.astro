@@ -1,10 +1,11 @@
 ---
 import RegistryLayout from "../../layouts/RegistryLayout.astro";
 import { defaultLocale, translations } from "../../i18n/translations";
+import { registryRuntime } from "../../lib/registry-runtime";
 import { ArrowUpRight } from "lucide-astro";
 
 const t = translations[defaultLocale];
-const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.registry.cellscript.dev").replace(/\/$/, "");
+const apiOrigin = registryRuntime.apiOrigin;
 const readEndpoints = [
   { method: "GET", path: "/v1/artifacts", description: t.registry.api.listArtifacts, key: "listArtifacts", href: `${apiOrigin}/v1/artifacts?limit=20` },
   { method: "GET", path: "/v1/artifacts/:namespace/:name", description: t.registry.api.artifactDetail, key: "artifactDetail" },

@@ -5,6 +5,7 @@ import SiteHeader from "../components/SiteHeader.astro";
 import { ClientRouter } from "astro:transitions";
 import { defaultLocale, translations } from "../i18n/translations";
 import { registrySections } from "../lib/registry";
+import { isTestnetSandbox, registryRuntime } from "../lib/registry-runtime";
 
 interface Props {
   title: string;
@@ -53,12 +54,13 @@ const activeHref =
 ---
 
 <!doctype html>
-<html lang={locale}>
+<html lang={locale} data-registry-environment={registryRuntime.environment} data-registry-network={registryRuntime.network}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
     <meta name="description" content={description} />
+    {isTestnetSandbox && <meta name="robots" content="noindex,nofollow,noarchive" />}
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <link rel="icon" type="image/png" href={`${import.meta.env.BASE_URL}cellscript-logo.png`} />
@@ -86,6 +88,14 @@ const activeHref =
     <a class="skip-link" href="#registry-main" data-i18n="a11y.skipToContent">{t.a11y.skipToContent}</a>
     <SiteHeader page="registry" />
     <main id="registry-main" class="registry-app">
+      <aside class:list={["registry-environment-bar", isTestnetSandbox && "is-testnet"]} aria-label={isTestnetSandbox ? t.registry.sandboxTitle : t.registry.productionTitle}>
+        <span class="registry-environment-identity">
+          <i aria-hidden="true"></i>
+          <strong data-i18n={isTestnetSandbox ? "registry.sandboxTitle" : "registry.productionTitle"}>{isTestnetSandbox ? t.registry.sandboxTitle : t.registry.productionTitle}</strong>
+          <span data-i18n={isTestnetSandbox ? "registry.sandboxBody" : "registry.productionBody"}>{isTestnetSandbox ? t.registry.sandboxBody : t.registry.productionBody}</span>
+        </span>
+        <a href={registryRuntime.alternateOrigin} data-i18n={isTestnetSandbox ? "registry.openProduction" : "registry.openSandbox"}>{isTestnetSandbox ? t.registry.openProduction : t.registry.openSandbox}</a>
+      </aside>
       {showHeader && <header class:list={["registry-topbar", compactHeader && "registry-topbar-compact"]} transition:persist="registry-header" aria-label={t.registry.appLabel} data-i18n-aria-label="registry.appLabel">
         <div>
           <h1 data-registry-heading data-registry-heading-key={headingKey}>{headingText}</h1>

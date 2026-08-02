@@ -32,14 +32,16 @@ const allEvidence = (pkg?.releases.flatMap((release) => release.evidence ?? []) 
 })) as any[];
 const deploymentEvidence = allEvidence.filter((item) => item.kind === "deployed" && item.chain_verification);
 const profileContract = firstRelease?.profile_contract;
+const cliApiArg = ` --api-url ${apiOrigin.replace(/\/$/, "")}`;
+const releaseNetwork = firstRelease?.network || "mainnet";
 const consumerCommand = pkg && firstRelease
   ? pkg.artifact.consumption_mode === "copy"
-    ? `cellc artifact copy ${pkg.coordinate}@${firstRelease.release} --destination . --accept-hash-bound`
+    ? `cellc artifact copy ${pkg.coordinate}@${firstRelease.release} --destination . --accept-hash-bound${cliApiArg}`
     : pkg.artifact.consumption_mode === "deployment" && firstRelease.deployment_status === "chain_verified"
-      ? `cellc artifact cell-dep ${pkg.coordinate}@${firstRelease.release} --output CellDep.json --accept-hash-bound`
+      ? `cellc artifact cell-dep ${pkg.coordinate}@${firstRelease.release} --output CellDep.json --accept-hash-bound${cliApiArg}`
       : pkg.artifact.consumption_mode === "deployment"
-        ? `cellc artifact pin ${pkg.coordinate}@${firstRelease.release} --output Artifacts.lock --accept-hash-bound\ncellc artifact record-deployment ${pkg.coordinate}@${firstRelease.release} --code-hash <code_hash> --hash-type ${profileContract?.ckb?.hash_type || "data1"} --dep-type ${profileContract?.ckb?.dep_type || "code"} --tx-hash <tx_hash> --index <index> --capability-key-id <key_id>`
-        : `cellc artifact pin ${pkg.coordinate}@${firstRelease.release} --output Artifacts.lock --accept-hash-bound`
+        ? `cellc artifact pin ${pkg.coordinate}@${firstRelease.release} --output Artifacts.lock --accept-hash-bound${cliApiArg}\ncellc artifact record-deployment ${pkg.coordinate}@${firstRelease.release} --network ${releaseNetwork} --code-hash <code_hash> --hash-type ${profileContract?.ckb?.hash_type || "data1"} --dep-type ${profileContract?.ckb?.dep_type || "code"} --tx-hash <tx_hash> --index <index> --capability-key-id <key_id>${cliApiArg}`
+        : `cellc artifact pin ${pkg.coordinate}@${firstRelease.release} --output Artifacts.lock --accept-hash-bound${cliApiArg}`
   : "";
 ---
 
@@ -76,6 +78,7 @@ const consumerCommand = pkg && firstRelease
           <span data-package-release>{pkg?.latest_release || t.registry.package.notRecorded}</span>
         </p>
         <p class="registry-pkg-desc" data-package-description>{pkg?.description || t.registry.browse.noDescription}</p>
+        <p class="registry-sandbox-expiry" data-package-expiry hidden={!firstRelease?.expires_at} data-expires-at={firstRelease?.expires_at}></p>
       </div>
       <div class="registry-state-cluster" aria-label={t.registry.package.stateSummary}>
         <span class="registry-status" data-package-verification data-state={registryStatusTone(pkg?.verification_status)}>{statusLabel(pkg?.verification_status)}</span>
@@ -208,6 +211,30 @@ const consumerCommand = pkg && firstRelease
       const clean = value.startsWith("0x") ? value.slice(2) : value;
       return clean.length > 24 ? `${value.startsWith("0x") ? "0x" : ""}${clean.slice(0, 12)}…${clean.slice(-12)}` : value;
     };
+    const expiryOutput = app?.querySelector<HTMLElement>("[data-package-expiry]");
+    const renderExpiry = (expiresAt?: string) => {
+      if (!expiryOutput) return;
+      const expiry = expiresAt ? Date.parse(expiresAt) : Number.NaN;
+      if (!Number.isFinite(expiry)) {
+        expiryOutput.hidden = true;
+        return;
+      }
+      expiryOutput.dataset.expiresAt = expiresAt;
+      expiryOutput.hidden = false;
+      const remaining = Math.max(0, expiry - Date.now());
+      const hours = Math.ceil(remaining / 3_600_000);
+      const days = Math.floor(hours / 24);
+      const residualHours = hours % 24;
+      const locale = document.documentElement.dataset.locale === "zh" ? "zh-CN" : "en";
+      const duration = days > 0 ? `${days}d ${residualHours}h` : `${hours}h`;
+      const template = remaining > 0 ? message("registry.sandboxExpires") : message("registry.sandboxExpired");
+      expiryOutput.textContent = template
+        .replace("{duration}", duration)
+        .replace("{time}", new Date(expiry).toLocaleString(locale, { dateStyle: "medium", timeStyle: "short" }));
+    };
+    renderExpiry(expiryOutput?.dataset.expiresAt);
+    const expiryTimer = window.setInterval(() => renderExpiry(expiryOutput?.dataset.expiresAt), 60_000);
+    signal.addEventListener("abort", () => window.clearInterval(expiryTimer), { once: true });
     const label = (value?: string) => message(`registry.statuses.${value}`) !== `registry.statuses.${value}`
       ? message(`registry.statuses.${value}`)
       : String(value || message("registry.package.notRecorded")).replaceAll("_", " ");
@@ -331,13 +358,17 @@ const consumerCommand = pkg && firstRelease
       const consumer = app?.querySelector<HTMLElement>("[data-package-consumer]");
       if (consumer) consumer.hidden = artifact.artifact.consumption_mode === "dependency";
       const selected = releases[0];
+      renderExpiry(selected?.expires_at);
+      const apiOrigin = app?.dataset.apiOrigin || "https://api.registry.cellscript.dev";
+      const apiArg = ` --api-url ${apiOrigin}`;
+      const releaseNetwork = selected?.network || artifact.network || "mainnet";
       const consumerCommand = artifact.artifact.consumption_mode === "copy"
-        ? `cellc artifact copy ${artifact.coordinate}@${artifact.latest_release} --destination . --accept-hash-bound`
+        ? `cellc artifact copy ${artifact.coordinate}@${artifact.latest_release} --destination . --accept-hash-bound${apiArg}`
         : artifact.artifact.consumption_mode === "deployment" && selected?.deployment_status === "chain_verified"
-          ? `cellc artifact cell-dep ${artifact.coordinate}@${artifact.latest_release} --output CellDep.json --accept-hash-bound`
+          ? `cellc artifact cell-dep ${artifact.coordinate}@${artifact.latest_release} --output CellDep.json --accept-hash-bound${apiArg}`
           : artifact.artifact.consumption_mode === "deployment"
-            ? `cellc artifact pin ${artifact.coordinate}@${artifact.latest_release} --output Artifacts.lock --accept-hash-bound\ncellc artifact record-deployment ${artifact.coordinate}@${artifact.latest_release} --code-hash <code_hash> --hash-type ${profileContract?.ckb?.hash_type || "data1"} --dep-type ${profileContract?.ckb?.dep_type || "code"} --tx-hash <tx_hash> --index <index> --capability-key-id <key_id>`
-            : `cellc artifact pin ${artifact.coordinate}@${artifact.latest_release} --output Artifacts.lock --accept-hash-bound`;
+            ? `cellc artifact pin ${artifact.coordinate}@${artifact.latest_release} --output Artifacts.lock --accept-hash-bound${apiArg}\ncellc artifact record-deployment ${artifact.coordinate}@${artifact.latest_release} --network ${releaseNetwork} --code-hash <code_hash> --hash-type ${profileContract?.ckb?.hash_type || "data1"} --dep-type ${profileContract?.ckb?.dep_type || "code"} --tx-hash <tx_hash> --index <index> --capability-key-id <key_id>${apiArg}`
+            : `cellc artifact pin ${artifact.coordinate}@${artifact.latest_release} --output Artifacts.lock --accept-hash-bound${apiArg}`;
       text("[data-package-consume]", consumerCommand);
       const record = app?.querySelector<HTMLAnchorElement>("[data-package-record]");
       if (record) record.href = releases[0]?.direct_url || releases[0]?.immutable_bundle?.url || "#";

@@ -1,10 +1,11 @@
 ---
 import RegistryLayout from "../../layouts/RegistryLayout.astro";
 import { defaultLocale, translations } from "../../i18n/translations";
+import { registryRuntime } from "../../lib/registry-runtime";
 
 const t = translations[defaultLocale];
 const description = t.registry.submit.description;
-const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.registry.cellscript.dev").replace(/\/$/, "");
+const apiOrigin = registryRuntime.apiOrigin;
 ---
 
 <RegistryLayout title="CellScript Registry: Submit" description={description} headingKey="registry.shellTitle" descriptionKey="registry.shellDescription" active="submit" showSubmitCta={false}>
@@ -150,7 +151,7 @@ const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.re
           <p data-i18n="registry.submit.walletBody">{t.registry.submit.walletBody}</p>
         </div>
         <div class="registry-authorisation-controls">
-          <span class="registry-network-badge"><i aria-hidden="true"></i>CKB mainnet</span>
+          <span class="registry-network-badge"><i aria-hidden="true"></i>CKB {registryRuntime.network}</span>
           <output class="registry-signer-status" data-capability-status role="status" aria-live="polite" data-i18n="registry.submit.walletIdle">{t.registry.submit.walletIdle}</output>
           <div class="registry-signer-actions">
             <button class="registry-button primary registry-workflow-primary" type="button" data-capability-primary data-i18n="registry.submit.continueConnect">{t.registry.submit.continueConnect}</button>
@@ -338,8 +339,8 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     const walletClose = document.querySelector<HTMLButtonElement>("[data-wallet-close]");
     const stages = Array.from(document.querySelectorAll<HTMLElement>("[data-workflow-stage]"));
     const appLogo = `${window.location.origin}${import.meta.env.BASE_URL}cellscript-logo.png`;
-    const registryNetwork = "mainnet" as const;
-    const walletStorageKey = "cellscript-registry-wallet-connection";
+    const registryNetwork = document.documentElement.dataset.registryNetwork === "testnet" ? "testnet" : "mainnet";
+    const walletStorageKey = `cellscript-registry-wallet-connection:${registryNetwork}`;
     const joyidPrincipalContext = "cellscript-registry-joyid-ckb-principal-v1";
     const ckbPrincipalContext = "cellscript-registry-ckb-secp256k1-principal-v1";
     const coordinatePattern = /^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$/;
@@ -517,13 +518,15 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       const artifactKind = artifactKindInput?.value || "source_library";
       const isCellScript = artifactKind === "source_library" || artifactKind === "profile_library";
       const cellscriptKindFlag = artifactKind === "profile_library" ? " --artifact-kind profile_library" : "";
+      const registryApi = signerRoot?.dataset.apiOrigin || "https://api.registry.cellscript.dev";
+      const apiFlag = ` --api-url ${shellQuote(registryApi)}`;
       const preflightCommand = isCellScript
-        ? `${commandPrefix()}cellc package verify --json && cellc publish${cellscriptKindFlag} --dry-run`
-        : `${commandPrefix()}cellc publish --artifact-manifest Artifact.toml --dry-run`;
-      const authCommand = `cellc auth capability create --principal-type ${shellQuote(principalType)} --principal-id ${shellQuote(principalId)} --scope ${shellQuote(`publish:${namespace}/${name}`)} --expires 90d --json > capability-payload.json\ncellc auth capability submit --payload capability-payload.json --wallet-signature wallet-signature.json\ncellc auth namespace claim --namespace ${shellQuote(namespace)} --payload capability-payload.json --wallet-signature wallet-signature.json`;
+        ? `${commandPrefix()}cellc package verify --json && cellc publish${cellscriptKindFlag}${apiFlag} --dry-run`
+        : `${commandPrefix()}cellc publish --artifact-manifest Artifact.toml${apiFlag} --dry-run`;
+      const authCommand = `cellc auth capability create --registry-origin ${shellQuote(registryApi)} --principal-type ${shellQuote(principalType)} --principal-id ${shellQuote(principalId)} --scope ${shellQuote(`publish:${namespace}/${name}`)} --expires 90d --json > capability-payload.json\ncellc auth capability submit${apiFlag} --payload capability-payload.json --wallet-signature wallet-signature.json\ncellc auth namespace claim${apiFlag} --namespace ${shellQuote(namespace)} --payload capability-payload.json --wallet-signature wallet-signature.json`;
       const publishCommand = isCellScript
-        ? `${commandPrefix()}cellc publish${cellscriptKindFlag}`
-        : `${commandPrefix()}cellc publish --artifact-manifest Artifact.toml`;
+        ? `${commandPrefix()}cellc publish${cellscriptKindFlag}${apiFlag}`
+        : `${commandPrefix()}cellc publish --artifact-manifest Artifact.toml${apiFlag}`;
       if (preflight) preflight.textContent = preflightCommand;
       if (preflightCopy) preflightCopy.dataset.copyText = preflightCommand;
       if (capabilityCommand) capabilityCommand.textContent = authCommand;
@@ -950,7 +953,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       try {
         const ccc = await loadCCC();
         walletController ??= createCkbOnlyController(ccc);
-        const client = new ccc.ClientPublicMainnet();
+        const client = registryNetwork === "testnet" ? new ccc.ClientPublicTestnet() : new ccc.ClientPublicMainnet();
         let discoveredWallets: any[] = [];
         await walletController.refresh(client, (wallets: any[]) => {
           if (sequence !== walletRefreshSequence) return;
@@ -959,7 +962,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
           name: "CellScript Registry",
           icon: appLogo,
           preferredNetworks: [{
-            addressPrefix: "ckb",
+            addressPrefix: registryNetwork === "testnet" ? "ckt" : "ckb",
             signerType: ccc.SignerType.CKB,
             network: registryNetwork,
           }],

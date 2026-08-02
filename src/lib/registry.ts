@@ -58,6 +58,10 @@ export interface RegistryRelease {
   immutable_bundle?: { url?: string; content_type?: string; size_bytes?: number };
   direct_url?: string;
   created_at?: string;
+  registry_environment?: "production" | "testnet-sandbox";
+  network?: "mainnet" | "testnet";
+  expires_at?: string;
+  purge_after?: string;
   evidence?: RegistryEvidence[];
 }
 

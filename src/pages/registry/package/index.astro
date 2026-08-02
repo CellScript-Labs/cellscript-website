@@ -1,10 +1,11 @@
 ---
 import RegistryPackageDetail from "../../../components/RegistryPackageDetail.astro";
+import { registryRuntime } from "../../../lib/registry-runtime";
 import RegistryLayout from "../../../layouts/RegistryLayout.astro";
 import { defaultLocale, translations } from "../../../i18n/translations";
 
 const t = translations[defaultLocale];
-const apiOrigin = (import.meta.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.registry.cellscript.dev").replace(/\/$/, "");
+const apiOrigin = registryRuntime.apiOrigin;
 ---
 
 <RegistryLayout
