@@ -118,6 +118,13 @@ expectNotContains("registry submit", registrySubmitHtml, "data-capability-networ
 expectContains("registry submit", registrySubmitHtml, "data-submit-workspace hidden");
 expectContains("registry", registryHtml, "/v1/artifacts");
 expectNotContains("registry", registryHtml, "/v1/packages");
+expectContains("registry", registryHtml, 'data-state="loading" data-source="loading"');
+expectContains("registry", registryHtml, 'data-registry-empty role="status" aria-live="polite" aria-atomic="true"');
+expectContains("registry", registryHtml, "data-registry-empty-submit");
+expectContains("registry", registryHtml, "data-registry-clear");
+expectContains("registry", registryHtml, "const setViewState");
+expectContains("registry", registryHtml, '"no-results"');
+expectContains("registry", registryHtml, '"mirror-empty"');
 expectNotContains("registry", registryHtml, "Live production index");
 
 for (const wallet of [
@@ -193,6 +200,8 @@ for (const token of [
   "@media(max-width:840px)",
   ".theme-toggle,.language-toggle,.nav-link{width:44px;min-width:44px;padding:0}",
   ".registry-wallet-dialog-head:has(.registry-wallet-back[hidden])",
+  "@keyframes registry-empty-surface",
+  "@keyframes registry-empty-blueprint",
   "text-shadow:none",
   "text-wrap:normal",
 ]) {

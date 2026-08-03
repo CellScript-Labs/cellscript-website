@@ -2704,7 +2704,7 @@
   margin-top: 14px;
 }
 
-.registry-empty .registry-button {
+.registry-empty .registry-button.primary {
   min-height: 46px;
   margin-top: 22px;
   padding: 0 18px;
@@ -2714,9 +2714,24 @@
   color: var(--primary-contrast);
 }
 
-.registry-empty .registry-button:hover {
+.registry-empty .registry-button.primary:hover {
   background: var(--accent-strong);
   color: var(--primary-contrast);
+  transform: translateY(-1px);
+}
+
+.registry-empty .registry-button.secondary {
+  min-height: 46px;
+  padding: 0 18px;
+  border-color: var(--line-strong);
+  background: transparent;
+  color: var(--text);
+}
+
+.registry-empty .registry-button.secondary:hover {
+  border-color: var(--accent-line);
+  background: var(--accent-surface);
+  color: var(--accent);
   transform: translateY(-1px);
 }
 
@@ -2770,6 +2785,90 @@
 
 .registry-cell-blueprint-row:last-child {
   border-bottom: 0;
+}
+
+.registry-browse:is([data-state="empty"], [data-state="mirror-empty"], [data-state="no-results"]) .registry-empty {
+  animation: registry-empty-surface 440ms var(--ease-standard) both;
+}
+
+.registry-browse:is([data-state="empty"], [data-state="mirror-empty"], [data-state="no-results"]) .registry-empty-copy > * {
+  animation: registry-empty-copy 480ms var(--ease-standard) both;
+}
+
+.registry-browse:is([data-state="empty"], [data-state="mirror-empty"], [data-state="no-results"]) .registry-empty-copy > :nth-child(2) {
+  animation-delay: 45ms;
+}
+
+.registry-browse:is([data-state="empty"], [data-state="mirror-empty"], [data-state="no-results"]) .registry-empty-copy > :nth-child(3) {
+  animation-delay: 90ms;
+}
+
+.registry-browse:is([data-state="empty"], [data-state="mirror-empty"], [data-state="no-results"]) .registry-empty-copy > :nth-child(4) {
+  animation-delay: 135ms;
+}
+
+.registry-browse:is([data-state="empty"], [data-state="mirror-empty"], [data-state="no-results"]) .registry-cell-blueprint {
+  animation: registry-empty-blueprint 560ms var(--ease-standard) 80ms both;
+}
+
+.registry-browse:is([data-state="empty"], [data-state="mirror-empty"], [data-state="no-results"]) :is(.registry-cell-blueprint-head, .registry-cell-blueprint-row) {
+  animation: registry-empty-cell-row 420ms var(--ease-standard) both;
+}
+
+.registry-browse:is([data-state="empty"], [data-state="mirror-empty"], [data-state="no-results"]) .registry-cell-blueprint-row:nth-child(2) {
+  animation-delay: 170ms;
+}
+
+.registry-browse:is([data-state="empty"], [data-state="mirror-empty"], [data-state="no-results"]) .registry-cell-blueprint-row:nth-child(3) {
+  animation-delay: 220ms;
+}
+
+.registry-browse:is([data-state="empty"], [data-state="mirror-empty"], [data-state="no-results"]) .registry-cell-blueprint-row:nth-child(4) {
+  animation-delay: 270ms;
+}
+
+@keyframes registry-empty-surface {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.992);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes registry-empty-copy {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes registry-empty-blueprint {
+  from {
+    opacity: 0;
+    transform: translateY(14px) rotate(-1.5deg) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) rotate(-1.5deg) scale(1);
+  }
+}
+
+@keyframes registry-empty-cell-row {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .registry-cell-blueprint-head span,
@@ -2907,6 +3006,7 @@
 .registry-package-list[hidden],
 .registry-empty[hidden],
 .registry-load-more[hidden],
+.registry-button[hidden],
 .registry-service-state[hidden],
 .registry-service-retry[hidden] {
   display: none;
@@ -2979,6 +3079,10 @@
   flex-wrap: wrap;
   gap: 10px;
   margin-top: 18px;
+}
+
+.registry-empty .registry-empty-actions .registry-button {
+  margin-top: 0;
 }
 
 .registry-evidence-list {
@@ -3289,7 +3393,12 @@
   .registry-wallet-dialog,
   .registry-wallet-dialog::backdrop,
   .registry-wallet-options.is-entering > *,
-  .registry-wallet-connecting > span {
+  .registry-wallet-connecting > span,
+  .registry-empty,
+  .registry-empty-copy > *,
+  .registry-cell-blueprint,
+  .registry-cell-blueprint-head,
+  .registry-cell-blueprint-row {
     animation: none;
   }
 }

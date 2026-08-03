@@ -29,7 +29,7 @@ const fallbackStatus = (status: string) =>
   active="search"
   showSubmitCta={false}
 >
-  <section class="registry-browse" data-registry-browser data-api-origin={apiOrigin} data-state="loading" aria-label={t.registry.browse.searchAria} aria-busy="true">
+  <section class="registry-browse" data-registry-browser data-api-origin={apiOrigin} data-state="loading" data-source="loading" aria-label={t.registry.browse.searchAria} aria-busy="true">
     <div class="registry-index-strip">
       <span class="registry-index-network"><i aria-hidden="true"></i><span data-i18n="registry.browse.indexNetwork">{t.registry.browse.indexNetwork}</span></span>
       <span class="registry-index-scope" data-i18n="registry.browse.indexScope">{t.registry.browse.indexScope}</span>
@@ -97,12 +97,15 @@ const fallbackStatus = (status: string) =>
       ))}
     </div>
 
-    <div class="registry-empty" data-registry-empty hidden>
+    <div class="registry-empty" data-registry-empty role="status" aria-live="polite" aria-atomic="true" hidden>
       <div class="registry-empty-copy">
         <span class="registry-label" data-i18n="registry.browse.indexNetwork">{t.registry.browse.indexNetwork}</span>
         <h2 data-registry-empty-title>{t.registry.browse.emptyTitle}</h2>
         <p data-registry-empty-body>{t.registry.browse.emptyBody}</p>
-        <a class="registry-button primary" href="/registry/submit" data-i18n="registry.submitPackage">{t.registry.submitPackage}</a>
+        <div class="registry-empty-actions">
+          <a class="registry-button primary" href="/registry/submit" data-registry-empty-submit data-i18n="registry.submitPackage">{t.registry.submitPackage}</a>
+          <button class="registry-button secondary" type="button" data-registry-clear hidden data-i18n="registry.browse.clearFilters">{t.registry.browse.clearFilters}</button>
+        </div>
       </div>
       <div class="registry-cell-blueprint" aria-hidden="true">
         <div class="registry-cell-blueprint-head"><span>live cell</span><i></i></div>
@@ -133,6 +136,8 @@ const fallbackStatus = (status: string) =>
       const empty = app.querySelector("[data-registry-empty]");
       const emptyTitle = app.querySelector("[data-registry-empty-title]");
       const emptyBody = app.querySelector("[data-registry-empty-body]");
+      const emptySubmit = app.querySelector("[data-registry-empty-submit]");
+      const clearFilters = app.querySelector("[data-registry-clear]");
       const service = app.querySelector("[data-registry-service-state]");
       const serviceCopy = app.querySelector("[data-registry-service-copy]");
       const retry = app.querySelector("[data-registry-retry]");
@@ -188,13 +193,16 @@ const fallbackStatus = (status: string) =>
       };
       const setServiceState = (next) => {
         source = next;
-        app.dataset.state = next;
+        app.dataset.source = next;
         if (service) service.hidden = next !== "mirror";
         if (retry) retry.hidden = next !== "mirror";
         if (serviceCopy) {
           serviceCopy.textContent = message("registry.browse.mirrorStatus") || "";
           serviceCopy.dataset.i18n = "registry.browse.mirrorStatus";
         }
+      };
+      const setViewState = (next) => {
+        app.dataset.state = next;
       };
       const renderRows = () => {
         if (!list) return;
@@ -239,15 +247,19 @@ const fallbackStatus = (status: string) =>
           list.append(row);
         }
         const visible = packages.length;
+        const hasFilters = Boolean(query || kind);
         const countKey = nextOffset == null ? (visible === 1 ? "registry.browse.countOne" : "registry.browse.countMany") : "registry.browse.countMore";
         if (count) count.textContent = format(message(countKey), { n: visible });
         if (empty) empty.hidden = visible !== 0;
-        if (emptyTitle) emptyTitle.textContent = message(query ? "registry.browse.noMatchTitle" : "registry.browse.emptyTitle") || "";
-        if (emptyBody) emptyBody.textContent = message(query ? "registry.browse.noMatchBody" : "registry.browse.emptyBody") || "";
+        if (emptyTitle) emptyTitle.textContent = message(hasFilters ? "registry.browse.noMatchTitle" : "registry.browse.emptyTitle") || "";
+        if (emptyBody) emptyBody.textContent = message(hasFilters ? "registry.browse.noMatchBody" : "registry.browse.emptyBody") || "";
+        if (emptySubmit) emptySubmit.hidden = hasFilters;
+        if (clearFilters) clearFilters.hidden = !hasFilters;
         if (more) more.hidden = nextOffset == null || source !== "live";
         list.hidden = visible === 0;
         skeleton.hidden = true;
         app.setAttribute("aria-busy", "false");
+        setViewState(visible > 0 ? "ready" : hasFilters ? "no-results" : source === "mirror" ? "mirror-empty" : "empty");
       };
       const localMirror = () => {
         const needle = query.toLowerCase();
@@ -271,6 +283,7 @@ const fallbackStatus = (status: string) =>
         const offset = append && nextOffset != null ? nextOffset : 0;
         if (!append) {
           app.setAttribute("aria-busy", "true");
+          setViewState("loading");
           skeleton.hidden = false;
           list.hidden = true;
           empty.hidden = true;
@@ -322,6 +335,14 @@ const fallbackStatus = (status: string) =>
       }, { signal });
       more?.addEventListener("click", () => load({ append: true }), { signal });
       retry?.addEventListener("click", () => load(), { signal });
+      clearFilters?.addEventListener("click", () => {
+        query = "";
+        kind = "";
+        if (queryInput) queryInput.value = "";
+        if (kindInput) kindInput.value = "";
+        updateUrl();
+        source === "mirror" ? localMirror() : load();
+      }, { signal });
       window.addEventListener("cellscript:locale-change", () => {
         setServiceState(source);
         renderRows();
