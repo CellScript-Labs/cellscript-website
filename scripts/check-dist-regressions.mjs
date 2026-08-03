@@ -31,6 +31,7 @@ const countContains = (value, needle) => value.split(needle).length - 1;
 const root = resolve(".");
 const dist = resolve(root, "dist");
 const distIndex = resolve(dist, "index.html");
+const dist404 = resolve(dist, "404.html");
 const distDocsIndex = resolve(dist, "docs", "index.html");
 const distPlaygroundIndex = resolve(dist, "playground", "index.html");
 const distRegistryIndex = resolve(dist, "registry", "index.html");
@@ -44,6 +45,7 @@ const expectedCompilerAssetVersion = "20260731-v0.22.0-9bb2d765";
 const expectedWasmSha256 = "1141d7227079d0585e61b09450331ee4a4791b0875ea2cae81b63219acd70530";
 
 expectFile(distIndex);
+expectFile(dist404);
 expectFile(distDocsIndex);
 expectFile(distPlaygroundIndex);
 expectFile(distRegistryIndex);
@@ -53,7 +55,9 @@ expectFile(distWasm);
 expectFile(docsSource);
 
 const indexHtml = existsSync(distIndex) ? read(distIndex) : "";
+const notFoundHtml = existsSync(dist404) ? read(dist404) : "";
 const docsHtml = existsSync(distDocsIndex) ? read(distDocsIndex) : "";
+const playgroundHtml = existsSync(distPlaygroundIndex) ? read(distPlaygroundIndex) : "";
 const registryHtml = existsSync(distRegistryIndex) ? read(distRegistryIndex) : "";
 const registrySubmitHtml = existsSync(distRegistrySubmitIndex) ? read(distRegistrySubmitIndex) : "";
 const playgroundWorker = existsSync(distPlaygroundWorker) ? read(distPlaygroundWorker) : "";
@@ -83,12 +87,27 @@ expectNotContains("home", indexHtml, '<div class="hero-release-tag"');
 expectNotContains("home", indexHtml, "v0.20.0");
 
 for (const [name, html] of [
+  ["home", indexHtml],
+  ["404", notFoundHtml],
+  ["docs", docsHtml],
+  ["playground", playgroundHtml],
+  ["registry", registryHtml],
+  ["registry submit", registrySubmitHtml],
+]) {
+  expectContains(name, html, 'data-theme="light"');
+  expectContains(name, html, "data-astro-rerun");
+  expectContains(name, html, "cellscript-theme");
+}
+
+for (const [name, html] of [
   ["registry", registryHtml],
   ["registry submit", registrySubmitHtml],
 ]) {
   expectContains(name, html, ">Registry</h1>");
   expectContains(name, html, "Discover verified CKB artifacts, deployment records and CellScript packages, or publish with scoped wallet authorisation.");
   expectContains(name, html, 'data-astro-transition-persist="registry-header"');
+  expectContains(name, html, 'data-astro-transition-persist="registry-environment"');
+  expectContains(name, html, 'data-astro-transition-persist="registry-tabs"');
   expectContains(name, html, 'data-i18n-aria-label="nav.registryBrowse"');
 }
 

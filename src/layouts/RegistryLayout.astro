@@ -2,6 +2,7 @@
 import "../styles/global.css";
 import "../styles/registry.css";
 import SiteHeader from "../components/SiteHeader.astro";
+import SitePreferencesBootstrap from "../components/SitePreferencesBootstrap.astro";
 import { ClientRouter } from "astro:transitions";
 import { defaultLocale, translations } from "../i18n/translations";
 import { registrySections } from "../lib/registry";
@@ -54,7 +55,7 @@ const activeHref =
 ---
 
 <!doctype html>
-<html lang={locale} data-registry-environment={registryRuntime.environment} data-registry-network={registryRuntime.network}>
+<html lang={locale} data-theme="light" data-locale={locale} data-registry-environment={registryRuntime.environment} data-registry-network={registryRuntime.network}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -67,28 +68,14 @@ const activeHref =
     <link rel="icon" type="image/png" media="(prefers-color-scheme: light)" href={`${import.meta.env.BASE_URL}cellscript-logo-light.png`} />
     <link rel="icon" type="image/png" media="(prefers-color-scheme: dark)" href={`${import.meta.env.BASE_URL}cellscript-logo-dark.png`} />
     <title>{title}</title>
-    <script is:inline>
-      (() => {
-        try {
-          const storedTheme = localStorage.getItem("cellscript-theme");
-          const storedLocale = localStorage.getItem("cellscript-locale");
-          document.documentElement.dataset.theme = storedTheme === "light" || storedTheme === "dark" ? storedTheme : "light";
-          document.documentElement.dataset.locale = storedLocale === "zh" ? "zh" : "en";
-          document.documentElement.lang = document.documentElement.dataset.locale;
-        } catch {
-          document.documentElement.dataset.theme = "light";
-          document.documentElement.dataset.locale = "en";
-          document.documentElement.lang = "en";
-        }
-      })();
-    </script>
+    <SitePreferencesBootstrap />
     <ClientRouter />
   </head>
   <body class="registry-body">
     <a class="skip-link" href="#registry-main" data-i18n="a11y.skipToContent">{t.a11y.skipToContent}</a>
     <SiteHeader page="registry" />
     <main id="registry-main" class="registry-app">
-      <aside class:list={["registry-environment-bar", isTestnetSandbox && "is-testnet"]} aria-label={isTestnetSandbox ? t.registry.sandboxTitle : t.registry.productionTitle}>
+      <aside class:list={["registry-environment-bar", isTestnetSandbox && "is-testnet"]} transition:persist="registry-environment" aria-label={isTestnetSandbox ? t.registry.sandboxTitle : t.registry.productionTitle}>
         <span class="registry-environment-identity">
           <i aria-hidden="true"></i>
           <strong data-i18n={isTestnetSandbox ? "registry.sandboxTitle" : "registry.productionTitle"}>{isTestnetSandbox ? t.registry.sandboxTitle : t.registry.productionTitle}</strong>
@@ -104,7 +91,7 @@ const activeHref =
         {showSubmitCta && <a class="registry-button primary registry-topbar-cta" href="/registry/submit" data-registry-topbar-cta data-i18n="registry.submitPackage">{t.registry.submitPackage}</a>}
       </header>}
 
-      {showTabs && <nav class="registry-tabs" aria-label={t.registry.sectionsLabel} data-i18n-aria-label="registry.sectionsLabel">
+      {showTabs && <nav class="registry-tabs" transition:persist="registry-tabs" aria-label={t.registry.sectionsLabel} data-i18n-aria-label="registry.sectionsLabel">
         {registrySections.map((section) => (
           <a
             href={section.href}
@@ -116,7 +103,7 @@ const activeHref =
         ))}
       </nav>}
 
-      <div class="registry-route" transition:name="registry-route">
+      <div class="registry-route">
         <slot />
       </div>
     </main>
@@ -178,15 +165,34 @@ const activeHref =
         applyLocale(readLocale());
       };
 
+      const normaliseRegistryPath = (pathname: string) => pathname.replace(/\/+$/, "") || "/";
+      const syncRegistryTabs = () => {
+        const tabs = document.querySelector<HTMLElement>(".registry-tabs");
+        if (!tabs) return;
+        const currentPath = normaliseRegistryPath(window.location.pathname);
+        tabs.querySelectorAll<HTMLAnchorElement>("a[href]").forEach((link) => {
+          const targetPath = normaliseRegistryPath(new URL(link.href, window.location.href).pathname);
+          const isActive = targetPath === currentPath;
+          link.classList.toggle("active", isActive);
+          if (isActive) link.setAttribute("aria-current", "page");
+          else link.removeAttribute("aria-current");
+        });
+      };
+
+      const syncRegistryShell = () => {
+        reapplyRegistryLocale();
+        syncRegistryTabs();
+      };
+
       // React to the topbar's locale-change event (it dispatches after
       // updating <html data-locale>) and after Astro swaps page content.
       if (!(window as any).__cellscriptRegistryLayoutLocaleBound) {
         window.addEventListener("cellscript:locale-change", reapplyRegistryLocale);
-        document.addEventListener("astro:page-load", reapplyRegistryLocale);
+        document.addEventListener("astro:page-load", syncRegistryShell);
         (window as any).__cellscriptRegistryLayoutLocaleBound = true;
       }
       // Apply the stored locale once on load so a refresh honours it.
-      reapplyRegistryLocale();
+      syncRegistryShell();
     </script>
 
     <script is:inline>

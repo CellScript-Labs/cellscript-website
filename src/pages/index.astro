@@ -6,6 +6,7 @@ import { renderLine } from "../lib/highlight";
 import { provenanceForExample, effectsSummary, formatBytes, shortHash } from "../lib/provenance";
 import HeroStatus from "../components/HeroStatus.astro";
 import SiteHeader from "../components/SiteHeader.astro";
+import SitePreferencesBootstrap from "../components/SitePreferencesBootstrap.astro";
 import BrandMark from "../components/BrandMark.astro";
 import { ClientRouter } from "astro:transitions";
 import { ArrowRight, Box, Check, ClipboardList, Copy, Cpu, FileArchive, FileCode2 } from "lucide-astro";
@@ -73,7 +74,7 @@ const workflowIconComponents = {
 ---
 
 <!doctype html>
-<html lang={locale}>
+<html lang={locale} data-theme="light" data-locale={locale}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -85,21 +86,7 @@ const workflowIconComponents = {
     <link rel="icon" type="image/png" media="(prefers-color-scheme: light)" href={`${import.meta.env.BASE_URL}cellscript-logo-light.png`} />
     <link rel="icon" type="image/png" media="(prefers-color-scheme: dark)" href={`${import.meta.env.BASE_URL}cellscript-logo-dark.png`} />
     <title data-i18n-meta="meta.titleLong">{t.meta.titleLong}</title>
-    <script is:inline>
-      (() => {
-        try {
-          const storedTheme = localStorage.getItem("cellscript-theme");
-          const storedLocale = localStorage.getItem("cellscript-locale");
-          document.documentElement.dataset.theme = storedTheme === "light" || storedTheme === "dark" ? storedTheme : "light";
-          document.documentElement.dataset.locale = storedLocale === "zh" ? "zh" : "en";
-          document.documentElement.lang = document.documentElement.dataset.locale;
-        } catch {
-          document.documentElement.dataset.theme = "light";
-          document.documentElement.dataset.locale = "en";
-          document.documentElement.lang = "en";
-        }
-      })();
-    </script>
+    <SitePreferencesBootstrap />
     <ClientRouter />
   </head>
   <body class="home-body">
@@ -374,15 +361,6 @@ const workflowIconComponents = {
         return path.split(".").reduce((value, segment) => value?.[segment], i18nMessages?.[locale]);
       };
 
-      const readTheme = () => document.documentElement.dataset.theme === "dark" ? "dark" : "light";
-      const syncThemeToggle = () => {
-        const themeToggle = document.querySelector<HTMLButtonElement>("[data-theme-toggle]");
-        if (!themeToggle) return;
-        const isLight = readTheme() === "light";
-        themeToggle.setAttribute("aria-pressed", String(isLight));
-        themeToggle.setAttribute("aria-label", getMessage(isLight ? "theme.switchToDark" : "theme.switchToLight") ?? "");
-      };
-
       const applyLocale = (locale: string) => {
         const nextLocale = locale === "zh" ? "zh" : "en";
         document.documentElement.dataset.locale = nextLocale;
@@ -414,7 +392,6 @@ const workflowIconComponents = {
         } catch {
           // Language switching still works even when storage is unavailable.
         }
-        syncThemeToggle();
       };
 
       const root = document.querySelector("[data-code-tabs]");
@@ -504,26 +481,6 @@ const workflowIconComponents = {
       });
 
       applyLocale(readLocale());
-      syncThemeToggle();
-
-      const themeToggle = document.querySelector<HTMLButtonElement>("[data-theme-toggle]");
-      themeToggle?.addEventListener("click", () => {
-        const nextTheme = readTheme() === "light" ? "dark" : "light";
-        document.documentElement.dataset.theme = nextTheme;
-        try {
-          localStorage.setItem("cellscript-theme", nextTheme);
-        } catch {
-          // Theme changes still work even when storage is unavailable.
-        }
-        syncThemeToggle();
-      });
-      if (themeToggle) themeToggle.dataset.homeBound = "true";
-
-      const languageToggle = document.querySelector<HTMLButtonElement>("[data-language-toggle]");
-      languageToggle?.addEventListener("click", () => {
-        applyLocale(readLocale() === "en" ? "zh" : "en");
-      });
-      if (languageToggle) languageToggle.dataset.homeBound = "true";
 
       const flashCopied = (btn: HTMLButtonElement) => {
         btn.classList.add("is-copied");
@@ -558,88 +515,6 @@ const workflowIconComponents = {
           if (ok) flashCopied(btn);
         });
       });
-
-      const readStoredTheme = () => {
-        try {
-          const storedTheme = localStorage.getItem("cellscript-theme");
-          return storedTheme === "light" || storedTheme === "dark" ? storedTheme : "light";
-        } catch {
-          return "light";
-        }
-      };
-
-      const readStoredLocale = () => {
-        try {
-          return localStorage.getItem("cellscript-locale") === "zh" ? "zh" : "en";
-        } catch {
-          return "en";
-        }
-      };
-
-      const bindHomeThemeToggle = () => {
-        const currentThemeToggle = document.querySelector<HTMLButtonElement>("[data-theme-toggle]");
-        if (!currentThemeToggle) return;
-        const nextThemeToggle = currentThemeToggle.cloneNode(true) as HTMLButtonElement;
-        nextThemeToggle.dataset.homeBound = "true";
-        currentThemeToggle.replaceWith(nextThemeToggle);
-        nextThemeToggle.addEventListener("click", () => {
-          const nextTheme = readTheme() === "light" ? "dark" : "light";
-          document.documentElement.dataset.theme = nextTheme;
-          try {
-            localStorage.setItem("cellscript-theme", nextTheme);
-          } catch {
-            // Theme changes still work even when storage is unavailable.
-          }
-          syncThemeToggle();
-        });
-      };
-
-      const bindHomeLanguageToggle = () => {
-        const currentLanguageToggle = document.querySelector<HTMLButtonElement>("[data-language-toggle]");
-        if (!currentLanguageToggle) return;
-        const nextLanguageToggle = currentLanguageToggle.cloneNode(true) as HTMLButtonElement;
-        nextLanguageToggle.dataset.homeBound = "true";
-        currentLanguageToggle.replaceWith(nextLanguageToggle);
-        nextLanguageToggle.addEventListener("click", () => {
-          applyLocale(readLocale() === "en" ? "zh" : "en");
-        });
-      };
-
-      const toggleHomeTheme = () => {
-        const nextTheme = readTheme() === "light" ? "dark" : "light";
-        document.documentElement.dataset.theme = nextTheme;
-        try {
-          localStorage.setItem("cellscript-theme", nextTheme);
-        } catch {
-          // Theme changes still work even when storage is unavailable.
-        }
-        syncThemeToggle();
-      };
-
-      const toggleHomeLanguage = () => {
-        applyLocale(readLocale() === "en" ? "zh" : "en");
-      };
-
-      if (!(window as any).__cellscriptHomeToggleDelegationBound) {
-        document.addEventListener("click", (event) => {
-          if (!document.body.classList.contains("home-body")) return;
-          if (!(event.target instanceof Element)) return;
-          const themeButton = event.target.closest<HTMLButtonElement>("[data-theme-toggle]");
-          if (themeButton) {
-            event.preventDefault();
-            event.stopImmediatePropagation();
-            toggleHomeTheme();
-            return;
-          }
-          const languageButton = event.target.closest<HTMLButtonElement>("[data-language-toggle]");
-          if (languageButton) {
-            event.preventDefault();
-            event.stopImmediatePropagation();
-            toggleHomeLanguage();
-          }
-        }, true);
-        (window as any).__cellscriptHomeToggleDelegationBound = true;
-      }
 
       const bindHomeSpotlights = () => {
         document.querySelectorAll<HTMLElement>(".spotlight-card, .value-card, .landing-example-card, .step, .workflow-checks").forEach((target) => {
@@ -741,21 +616,19 @@ const workflowIconComponents = {
 
       const hydrateHomePage = () => {
         if (!document.body.classList.contains("home-body")) return;
-        document.documentElement.dataset.theme = readStoredTheme();
-        const nextLocale = readStoredLocale();
-        document.documentElement.dataset.locale = nextLocale;
-        document.documentElement.lang = nextLocale;
-        bindHomeThemeToggle();
-        bindHomeLanguageToggle();
         bindHomeSpotlights();
         bindHomeCopyButtons();
         bindHomeCodeTabs();
-        applyLocale(nextLocale);
-        syncThemeToggle();
+        applyLocale(readLocale());
+      };
+
+      const reapplyHomeLocale = () => {
+        if (document.body.classList.contains("home-body")) applyLocale(readLocale());
       };
 
       if (!(window as any).__cellscriptHomePageLoadBound) {
         document.addEventListener("astro:page-load", hydrateHomePage);
+        window.addEventListener("cellscript:locale-change", reapplyHomeLocale);
         (window as any).__cellscriptHomePageLoadBound = true;
       }
     </script>

@@ -17,11 +17,11 @@
   align-items: center;
   justify-content: space-between;
   gap: 20px;
-  min-height: 42px;
-  padding: 9px 0;
+  min-height: 38px;
+  padding: 7px 0 8px;
   border-bottom: 1px solid var(--line-soft);
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: 0.72rem;
 }
 
 .registry-environment-identity {
@@ -43,14 +43,15 @@
 .registry-environment-bar strong {
   color: var(--text);
   font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.02em;
+  font-size: 0.68rem;
+  letter-spacing: 0.035em;
   text-transform: uppercase;
 }
 
 .registry-environment-bar a {
   flex: 0 0 auto;
   color: var(--text);
+  font-size: 0.72rem;
   font-weight: 650;
   text-underline-offset: 3px;
 }
@@ -77,17 +78,15 @@
 }
 
 .registry-topbar {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 18px;
-  padding: 20px 0 14px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: clamp(20px, 4vw, 48px);
+  padding: 24px 0 16px;
 }
 
 .registry-topbar > div {
   min-width: 0;
-  flex: 1 1 320px;
 }
 
 .registry-topbar-cta {
@@ -115,9 +114,10 @@
 }
 
 .registry-topbar h1 {
-  font-size: clamp(1.7rem, 2.5vw, 2.25rem);
+  font-size: clamp(1.9rem, 2.7vw, 2.4rem);
   line-height: 1.06;
-  letter-spacing: -0.025em;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
 }
 
 .registry-topbar-compact {
@@ -140,10 +140,11 @@
 .registry-empty p,
 .registry-body-copy {
   max-width: 62ch;
-  margin: 6px 0 0;
+  margin: 8px 0 0;
   color: var(--muted);
-  font-size: 0.94rem;
+  font-size: 0.9rem;
   line-height: 1.5;
+  text-wrap: pretty;
 }
 
 .registry-panel,
@@ -161,8 +162,8 @@
   top: 68px;
   z-index: var(--z-sticky);
   display: flex;
-  gap: 26px;
-  min-height: 48px;
+  gap: 28px;
+  min-height: 46px;
   padding: 0;
   background: color-mix(in oklch, var(--bg) 94%, transparent);
   backdrop-filter: blur(14px);
@@ -173,17 +174,33 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  min-height: 48px;
+  min-height: 46px;
   padding: 0;
   border: 0;
   border-radius: 0;
   color: var(--muted);
-  font-size: 0.9rem;
-  font-weight: 600;
+  font-size: 0.82rem;
+  font-weight: 650;
   text-decoration: none;
   transition:
     color var(--duration-med) var(--ease-standard),
     transform var(--duration-fast) var(--ease-quick);
+}
+
+.registry-tabs a::after {
+  content: "";
+  position: absolute;
+  right: 0;
+  bottom: -1px;
+  left: 0;
+  height: 2px;
+  background: var(--accent-quiet);
+  opacity: 0;
+  transform: scaleX(0.65);
+  transform-origin: center;
+  transition:
+    opacity var(--duration-fast) var(--ease-standard),
+    transform var(--duration-med) var(--ease-quick);
 }
 
 .registry-tabs a:hover,
@@ -197,12 +214,18 @@
 }
 
 .registry-tabs a.active {
-  box-shadow: inset 0 -2px 0 var(--accent-quiet);
+  box-shadow: none;
 }
 
-.registry-route {
-  view-transition-name: registry-route;
-  animation: registry-route-in 220ms var(--ease-standard) both;
+.registry-tabs a.active::after {
+  opacity: 1;
+  transform: scaleX(1);
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
 }
 
 .registry-api {
@@ -328,23 +351,6 @@
   align-items: start;
   padding-top: 30px;
   border-top: 1px solid var(--line-soft);
-}
-
-::view-transition-old(registry-route) {
-  animation: registry-route-out 150ms var(--ease-standard) both;
-}
-
-::view-transition-new(registry-route) {
-  animation: registry-route-in 260ms var(--ease-quick) both;
-}
-
-@keyframes registry-route-out {
-  to { opacity: 0; }
-}
-
-@keyframes registry-route-in {
-  from { opacity: 0; }
-  to { opacity: 1; }
 }
 
 .registry-browse {
@@ -866,9 +872,9 @@
 
 /* ===== Submission flow ===== */
 .registry-flow {
-  width: min(100%, 1040px);
-  padding-top: 28px;
-  margin-inline: auto;
+  width: 100%;
+  padding-top: 26px;
+  margin-inline: 0;
   display: grid;
   gap: 0;
 }
@@ -888,10 +894,10 @@
 .registry-submit-intro {
   position: relative;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 24px;
+  grid-template-columns: minmax(0, 1fr) minmax(220px, 0.32fr);
+  gap: clamp(28px, 5vw, 64px);
   align-items: center;
-  padding: 18px 0 26px;
+  padding: 18px 0 24px;
   overflow: hidden;
   border: 0;
   border-bottom: 1px solid var(--line-soft);
@@ -911,9 +917,10 @@
 .registry-submit-intro h2 {
   margin: 0;
   color: var(--text);
-  font-size: clamp(1.35rem, 2vw, 1.75rem);
+  font-size: clamp(1.35rem, 1.9vw, 1.68rem);
   line-height: 1.08;
   letter-spacing: -0.025em;
+  text-wrap: balance;
 }
 
 .registry-submit-intro-copy > p:last-child {
@@ -922,9 +929,11 @@
   color: var(--muted);
   font-size: 0.9rem;
   line-height: 1.55;
+  text-wrap: pretty;
 }
 
 .registry-intro-dismiss {
+  justify-self: end;
   min-height: 36px;
   padding: 0 12px;
   border: 1px solid var(--line-soft);
@@ -1125,35 +1134,28 @@
 
 .registry-authorisation-card {
   position: relative;
-  margin: 28px 0 38px;
-  padding: clamp(24px, 4vw, 38px);
+  margin: 24px 0 38px;
+  padding: clamp(24px, 3.2vw, 34px);
   overflow: hidden;
   border: 1px solid var(--line-soft);
-  border-radius: 22px;
-  background:
-    radial-gradient(circle at 100% 0%, var(--accent-surface), transparent 32%),
-    var(--panel-soft);
+  border-radius: 14px;
+  background: color-mix(in oklch, var(--panel-soft) 92%, var(--bg));
   box-shadow: inset 0 1px 0 var(--line-inner);
 }
 
+.registry-flow:not(:has(.registry-submit-intro:not([hidden]))) .registry-authorisation-card {
+  margin-top: 0;
+}
+
 .registry-authorisation-card::before {
-  content: "01";
-  position: absolute;
-  right: clamp(24px, 4vw, 38px);
-  bottom: -0.22em;
-  color: color-mix(in oklch, var(--text) 5%, transparent);
-  font-family: var(--font-mono);
-  font-size: clamp(5rem, 12vw, 9rem);
-  line-height: 1;
-  letter-spacing: -0.08em;
-  pointer-events: none;
+  content: none;
 }
 
 .registry-authorisation-head {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(250px, 0.34fr);
   align-items: flex-start;
-  justify-content: space-between;
-  gap: 24px;
+  gap: clamp(28px, 5vw, 64px);
 }
 
 .registry-authorisation-head > div:first-child {
@@ -1161,11 +1163,11 @@
 }
 
 .registry-authorisation-controls {
-  min-width: min(100%, 250px);
+  width: 100%;
+  min-width: 0;
   display: grid;
   gap: 9px;
-  justify-items: end;
-  flex: 0 0 auto;
+  justify-items: start;
 }
 
 .registry-network-badge {
@@ -1182,10 +1184,11 @@
 .registry-authorisation-head h2 {
   margin: 0;
   color: var(--text);
-  max-width: 18ch;
-  font-size: clamp(1.55rem, 3vw, 2.25rem);
-  line-height: 1.02;
-  letter-spacing: -0.04em;
+  max-width: 22ch;
+  font-size: clamp(1.45rem, 2.2vw, 1.9rem);
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
 }
 
 .registry-authorisation-head p {
@@ -1194,6 +1197,7 @@
   color: var(--muted);
   font-size: 0.88rem;
   line-height: 1.55;
+  text-wrap: pretty;
 }
 
 .registry-signer {
@@ -1216,9 +1220,9 @@
 .registry-authorisation-progress {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
+  gap: 0;
   margin: 0;
-  padding: 18px 0 2px;
+  padding: 24px 0 2px;
   list-style: none;
 }
 
@@ -1226,19 +1230,24 @@
   position: relative;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  gap: 10px;
+  gap: 9px;
   align-items: center;
   min-width: 0;
-  min-height: 48px;
-  padding: 0 12px;
-  border: 1px solid var(--line-soft);
-  border-radius: 9px;
-  background: color-mix(in oklch, var(--surface-select) 50%, transparent);
+  min-height: 42px;
+  padding: 11px 14px 0 0;
+  border: 0;
+  border-top: 1px solid var(--line-soft);
+  border-radius: 0;
+  background: transparent;
   color: var(--dim);
   transition:
     border-color var(--duration-med) var(--ease-standard),
     color var(--duration-med) var(--ease-standard),
     opacity var(--duration-med) var(--ease-standard);
+}
+
+.registry-authorisation-progress li + li {
+  padding-left: 14px;
 }
 
 .registry-authorisation-progress li span {
@@ -1256,9 +1265,10 @@
 }
 
 .registry-authorisation-progress li[data-state="active"] {
-  border-color: var(--accent);
+  border-top-color: var(--accent);
   color: var(--text);
-  background: var(--accent-surface);
+  background: transparent;
+  box-shadow: inset 0 1px 0 var(--accent);
 }
 
 .registry-authorisation-progress li[data-state="active"] span {
@@ -1266,9 +1276,9 @@
 }
 
 .registry-authorisation-progress li[data-state="complete"] {
-  border-color: var(--status-active);
+  border-top-color: var(--status-active);
   color: var(--status-active);
-  background: var(--status-active-surface);
+  background: transparent;
 }
 
 .registry-authorisation-progress li[data-state="complete"] span {
@@ -1316,9 +1326,10 @@
 .registry-signer-actions {
   display: flex;
   flex-wrap: wrap;
+  width: 100%;
   gap: 10px;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
 }
 
 .registry-signer-actions [hidden] {
@@ -1326,7 +1337,8 @@
 }
 
 .registry-workflow-primary {
-  min-width: 224px;
+  width: 100%;
+  min-width: 0;
   min-height: 48px;
   padding-inline: 18px;
   border-color: var(--accent);
@@ -3117,12 +3129,11 @@
   .registry-authorisation-card {
     margin: 22px 0 30px;
     padding: 22px;
-    border-radius: 16px;
+    border-radius: 14px;
   }
 
-  .registry-authorisation-card::before {
-    right: 18px;
-    font-size: 6.5rem;
+  .registry-authorisation-head {
+    grid-template-columns: 1fr;
   }
 
   .registry-authorisation-progress {
@@ -3132,6 +3143,11 @@
   .registry-authorisation-progress li {
     grid-template-columns: 30px minmax(0, 1fr);
     min-height: 44px;
+    padding-right: 0;
+  }
+
+  .registry-authorisation-progress li + li {
+    padding-left: 0;
   }
 
   .registry-wallet-dialog {
@@ -3266,20 +3282,14 @@
 @media (prefers-reduced-motion: reduce) {
   .registry-package-skeleton span,
   .registry-browse-skeleton span,
-  .registry-tabs a.active,
+  .registry-tabs a::after,
   .registry-submit-intro,
   .registry-progressive-panel,
   .registry-capability-command,
   .registry-wallet-dialog,
   .registry-wallet-dialog::backdrop,
   .registry-wallet-options.is-entering > *,
-  .registry-wallet-connecting > span,
-  .registry-route {
+  .registry-wallet-connecting > span {
     animation: none;
-  }
-
-  ::view-transition-old(registry-route),
-  ::view-transition-new(registry-route) {
-    animation-duration: 1ms;
   }
 }

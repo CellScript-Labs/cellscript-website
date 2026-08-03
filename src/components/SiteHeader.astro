@@ -58,6 +58,21 @@ const t = translations[defaultLocale];
     const getMessages = () => window.__CELLSCRIPT_I18N__ || i18n;
     const readLocale = () => document.documentElement.dataset.locale === "zh" ? "zh" : "en";
     const readTheme = () => document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+    const readStoredTheme = () => {
+      try {
+        const storedTheme = localStorage.getItem("cellscript-theme");
+        return storedTheme === "light" || storedTheme === "dark" ? storedTheme : null;
+      } catch {
+        return null;
+      }
+    };
+    const readStoredLocale = () => {
+      try {
+        return localStorage.getItem("cellscript-locale") === "zh" ? "zh" : "en";
+      } catch {
+        return null;
+      }
+    };
     const getMessage = (path, locale = readLocale()) =>
       path.split(".").reduce((value, segment) => value == null ? value : value[segment], getMessages()?.[locale]);
 
@@ -122,9 +137,19 @@ const t = translations[defaultLocale];
         /* Theme switching still works without storage. */
       }
       syncThemeToggles();
+      window.dispatchEvent(new CustomEvent("cellscript:theme-change", { detail: { theme: nextTheme } }));
     };
 
-    const syncTopbar = () => syncLocalizedStrings(readLocale());
+    const syncTopbar = () => {
+      const storedTheme = readStoredTheme();
+      const storedLocale = readStoredLocale();
+      if (storedTheme) document.documentElement.dataset.theme = storedTheme;
+      if (storedLocale) {
+        document.documentElement.dataset.locale = storedLocale;
+        document.documentElement.lang = storedLocale;
+      }
+      syncLocalizedStrings(readLocale());
+    };
 
     if (!window.__cellscriptTopbarDelegationBound) {
       document.addEventListener("click", (event) => {
@@ -141,7 +166,27 @@ const t = translations[defaultLocale];
           setLocale(readLocale() === "en" ? "zh" : "en");
         }
       });
+      document.addEventListener("astro:before-swap", (event) => {
+        const nextRoot = event.newDocument?.documentElement;
+        if (!nextRoot) return;
+        const theme = readTheme();
+        const locale = readLocale();
+        nextRoot.dataset.theme = theme;
+        nextRoot.dataset.locale = locale;
+        nextRoot.lang = locale;
+      });
       document.addEventListener("astro:page-load", syncTopbar);
+      window.addEventListener("storage", (event) => {
+        if (event.key === "cellscript-theme" && (event.newValue === "light" || event.newValue === "dark")) {
+          document.documentElement.dataset.theme = event.newValue;
+        }
+        if (event.key === "cellscript-locale") {
+          const locale = event.newValue === "zh" ? "zh" : "en";
+          document.documentElement.dataset.locale = locale;
+          document.documentElement.lang = locale;
+        }
+        syncLocalizedStrings(readLocale());
+      });
       window.__cellscriptTopbarDelegationBound = true;
     }
 
