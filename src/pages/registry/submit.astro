@@ -310,7 +310,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
           </div>
           <button class="registry-wallet-close" type="button" data-wallet-close aria-label={t.registry.submit.walletClose} data-i18n-aria-label="registry.submit.walletClose">×</button>
         </header>
-        <p class="registry-wallet-dialog-body" data-i18n="registry.submit.walletChooseBody">{t.registry.submit.walletChooseBody}</p>
+        <p class="registry-wallet-dialog-body" data-wallet-dialog-body data-i18n="registry.submit.walletChooseBody">{t.registry.submit.walletChooseBody}</p>
         <div class="registry-wallet-toolbar">
           <label>
             <span class="sr-only" data-i18n="registry.submit.walletSearchPlaceholder">{t.registry.submit.walletSearchPlaceholder}</span>
@@ -433,6 +433,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     const technicalDetails = document.querySelector<HTMLDetailsElement>("[data-capability-details]");
     const technicalOutput = document.querySelector<HTMLElement>("[data-capability-response]");
     const walletDialog = document.querySelector<HTMLDialogElement>("[data-wallet-dialog]");
+    const walletDialogBody = document.querySelector<HTMLElement>("[data-wallet-dialog-body]");
     const walletOptions = document.querySelector<HTMLElement>("[data-wallet-options]");
     const walletToolbar = document.querySelector<HTMLElement>(".registry-wallet-toolbar");
     const walletSearch = document.querySelector<HTMLInputElement>("[data-wallet-search]");
@@ -463,13 +464,49 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     ];
     const sessionUrl = new URL(window.location.href);
     const sessionFragment = new URLSearchParams(sessionUrl.hash.slice(1));
+    const authorisationSessionStorageCurrent = "cellscript-registry-authorisation-session-current-v1";
+    const authorisationSessionStoragePrefix = "cellscript-registry-authorisation-session-token-v1:";
+    const storedCurrentSessionId = (() => {
+      try { return sessionStorage.getItem(authorisationSessionStorageCurrent)?.trim().toLowerCase() ?? ""; }
+      catch { return ""; }
+    })();
     const authorisationSessionId = (sessionFragment.get("authorisation_session")
-      ?? sessionUrl.searchParams.get("authorisation_session"))?.trim().toLowerCase() ?? "";
-    const authorisationBrowserToken = sessionFragment.get("browser_token")?.trim() ?? "";
+      ?? sessionUrl.searchParams.get("authorisation_session")
+      ?? storedCurrentSessionId)?.trim().toLowerCase() ?? "";
+    const authorisationSessionStorageKey = `${authorisationSessionStoragePrefix}${authorisationSessionId}`;
+    const fragmentBrowserToken = sessionFragment.get("browser_token")?.trim() ?? "";
+    const storedBrowserToken = (() => {
+      if (!/^auth_[0-9a-f]{32}$/.test(authorisationSessionId)) return "";
+      try { return sessionStorage.getItem(authorisationSessionStorageKey)?.trim() ?? ""; }
+      catch { return ""; }
+    })();
+    const authorisationBrowserToken = /^browser_[0-9a-f]{32}$/.test(storedBrowserToken)
+      ? storedBrowserToken
+      : fragmentBrowserToken;
     const authorisationSessionMode = /^auth_[0-9a-f]{32}$/.test(authorisationSessionId);
+    if (authorisationSessionMode && /^browser_[0-9a-f]{32}$/.test(authorisationBrowserToken)) {
+      try {
+        sessionStorage.setItem(authorisationSessionStorageKey, authorisationBrowserToken);
+        sessionStorage.setItem(authorisationSessionStorageCurrent, authorisationSessionId);
+      } catch {
+        // The session still works until refresh when storage is unavailable.
+      }
+    }
     if (authorisationSessionMode && sessionUrl.hash) {
       history.replaceState(history.state, "", `${sessionUrl.pathname}${sessionUrl.search}`);
     }
+
+    const clearStoredAuthorisationSession = () => {
+      if (!authorisationSessionMode) return;
+      try {
+        sessionStorage.removeItem(authorisationSessionStorageKey);
+        if (sessionStorage.getItem(authorisationSessionStorageCurrent) === authorisationSessionId) {
+          sessionStorage.removeItem(authorisationSessionStorageCurrent);
+        }
+      } catch {
+        // Storage may be disabled; there is no persisted token to clear in that case.
+      }
+    };
 
     let cccPromise: Promise<typeof import("@ckb-ccc/connector/barrel")> | null = null;
     let walletController: any | null = null;
@@ -718,12 +755,17 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
 
       for (const button of capabilityActionButtons) {
         const action = button.dataset.capabilityAction;
+        if (action === "sign") {
+          const labelKey = authorisationSessionMode ? "continueSubmit" : "continueSign";
+          button.dataset.i18n = `registry.submit.${labelKey}`;
+          button.textContent = message(labelKey);
+        }
         const visible = action === "connect"
           ? newMode && !signingRouteSelected && !authorisationSessionFinished
           : action === "sign"
             ? newMode && directSignerConnected && (authorisationSessionMode || payloadReady) && !signatureReady && !authorisationSessionFinished
             : action === "submit"
-              ? newMode && signatureReady && !capabilitySubmitted && !authorisationSessionFinished
+              ? !authorisationSessionMode && newMode && signatureReady && !capabilitySubmitted && !authorisationSessionFinished
               : action === "claim"
                 ? !authorisationSessionMode && newMode && capabilitySubmitted && !namespaceClaimed && !namespaceReviewPending
                 : false;
@@ -979,9 +1021,9 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
         group.hidden = !group.querySelector(".registry-wallet-option:not([hidden])");
       }
       if (walletCount) {
-        walletCount.textContent = message("walletCount")
-          .replace("{direct}", String(direct))
-          .replace("{external}", String(external));
+        walletCount.textContent = authorisationSessionMode
+          ? message("walletCountDirect").replace("{direct}", String(direct))
+          : message("walletCount").replace("{direct}", String(direct)).replace("{external}", String(external));
       }
     };
     walletSearch?.addEventListener("input", applyWalletSearch, { signal });
@@ -1056,6 +1098,11 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     };
     const renderWalletChoices = () => {
       setWalletDialogTitle("walletChooseTitle");
+      if (walletDialogBody) {
+        const bodyKey = authorisationSessionMode ? "walletSessionChooseBody" : "walletChooseBody";
+        walletDialogBody.dataset.i18n = `registry.submit.${bodyKey}`;
+        walletDialogBody.textContent = message(bodyKey);
+      }
       if (walletBack) walletBack.hidden = true;
       if (walletToolbar) walletToolbar.hidden = false;
       if (walletSearch) walletSearch.value = "";
@@ -1102,7 +1149,9 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
           ));
         }
         if (direct.length) walletOptions?.append(walletGroup(message("walletAvailableNow"), direct, "direct"));
-        if (directory.length) walletOptions?.append(walletGroup(message("walletDirectory"), directory, "manual"));
+        if (!authorisationSessionMode && directory.length) {
+          walletOptions?.append(walletGroup(message("walletDirectory"), directory, "manual"));
+        }
       });
       applyWalletSearch();
     };
@@ -1362,8 +1411,13 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       if (artifactKindInput) artifactKindInput.value = session.artifact.kind;
       authorisationMode = "new";
       authorisationSessionFinished = session.status !== "pending";
-      if (session.status === "authorised") setStatus("sessionCompleted", "ok");
-      else if (session.status === "review_pending") setStatus("sessionReviewPending", "idle");
+      if (session.status === "authorised") {
+        clearStoredAuthorisationSession();
+        setStatus("sessionCompleted", "ok");
+      } else if (session.status === "review_pending") {
+        clearStoredAuthorisationSession();
+        setStatus("sessionReviewPending", "idle");
+      }
       else setStatus("walletIdle");
       lastCoordinate = `${session.artifact.namespace}/${session.artifact.name}`;
       syncArtifactKind();
@@ -1379,7 +1433,10 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
         signal,
       });
       const parsed = await readApiResponse(response, false);
-      if (response.status === 410) throw new WorkflowError("errorSessionExpired", JSON.stringify(parsed, null, 2));
+      if (response.status === 410) {
+        clearStoredAuthorisationSession();
+        throw new WorkflowError("errorSessionExpired", JSON.stringify(parsed, null, 2));
+      }
       if (!response.ok) throw new WorkflowError("errorSessionLoad", JSON.stringify({ status: response.status, response: parsed }, null, 2));
       if (!isAuthorisationSession(parsed)) throw new WorkflowError("errorSessionResponse");
       if (!coordinatePattern.test(parsed.artifact.namespace) || !coordinatePattern.test(parsed.artifact.name)) {
@@ -1429,6 +1486,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       capabilitySubmitted = true;
       namespaceReviewPending = completedStatus === "review_pending";
       authorisationSessionFinished = true;
+      clearStoredAuthorisationSession();
       if (sessionPanel) sessionPanel.dataset.state = String(completedStatus);
       setStatus(completedStatus === "authorised" ? "sessionCompleted" : "sessionReviewPending", completedStatus === "authorised" ? "ok" : "idle");
     };
@@ -1554,17 +1612,32 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
             if (action === "connect") {
               await ensureWalletSigner();
             } else if (action === "sign") {
-              if (authorisationSessionMode) await prepareAuthorisationSessionChallenge();
-              else parsePayload();
-              writeSignature(await signCapabilityPayload());
-              setStatus("signed", "ok");
+              if (authorisationSessionMode) {
+                await prepareAuthorisationSessionChallenge();
+                writeSignature(await signCapabilityPayload());
+                setStatus("signed", "ok");
+                await completeAuthorisationSession();
+              } else {
+                parsePayload();
+                writeSignature(await signCapabilityPayload());
+                setStatus("signed", "ok");
+              }
             } else if (action === "submit") {
-              if (authorisationSessionMode) await completeAuthorisationSession();
-              else await submitCapability();
+              await submitCapability();
             } else if (action === "claim") {
               await claimNamespace();
             }
           } catch (error) {
+            let recovered = false;
+            if (authorisationSessionMode && action === "sign") {
+              try {
+                await loadAuthorisationSession();
+                recovered = authorisationSessionFinished;
+              } catch {
+                // Keep the original signing or submission error.
+              }
+              if (!recovered) clearSignature();
+            }
             const fallback = action === "connect"
               ? "errorWallet"
               : action === "sign"
@@ -1572,7 +1645,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
                 : action === "submit"
                   ? "errorSubmit"
                   : "errorClaim";
-            setError(error, fallback);
+            if (!recovered) setError(error, fallback);
           } finally {
             busy = false;
             syncWorkflow();

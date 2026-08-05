@@ -40,6 +40,7 @@ const distRegistryManageIndex = resolve(dist, "registry", "manage", "index.html"
 const distPlaygroundWorker = resolve(dist, "playground-worker.js");
 const distWasm = resolve(dist, "wasm", "cellscript_wasm_bg.wasm");
 const docsSource = resolve(root, "src", "lib", "docs.ts");
+const registrySubmitSource = resolve(root, "src", "pages", "registry", "submit.astro");
 const wikiRoot = resolve(root, "..", "docs", "wiki");
 const expectedReleaseTag = "v0.22.0";
 const expectedCompilerAssetVersion = "20260731-v0.22.0-9bb2d765";
@@ -55,6 +56,7 @@ expectFile(distRegistryManageIndex);
 expectFile(distPlaygroundWorker);
 expectFile(distWasm);
 expectFile(docsSource);
+expectFile(registrySubmitSource);
 
 const indexHtml = existsSync(distIndex) ? read(distIndex) : "";
 const notFoundHtml = existsSync(dist404) ? read(dist404) : "";
@@ -65,6 +67,7 @@ const registrySubmitHtml = existsSync(distRegistrySubmitIndex) ? read(distRegist
 const registryManageHtml = existsSync(distRegistryManageIndex) ? read(distRegistryManageIndex) : "";
 const playgroundWorker = existsSync(distPlaygroundWorker) ? read(distPlaygroundWorker) : "";
 const docsSourceText = existsSync(docsSource) ? read(docsSource) : "";
+const registrySubmitSourceText = existsSync(registrySubmitSource) ? read(registrySubmitSource) : "";
 
 const cssDir = resolve(dist, "_astro");
 const cssText = existsSync(cssDir)
@@ -143,6 +146,12 @@ expectContains("registry submit", registrySubmitHtml, "entering a key ID alone n
 expectContains("registry submit bundle", jsText, "/v1/capabilities/");
 expectContains("registry submit bundle", jsText, "/check?");
 expectContains("registry submit bundle", jsText, "--capability-key-id");
+expectContains("registry submit", registrySubmitHtml, "This cellc session can continue only through CKB connectors detected in this browser.");
+expectContains("registry submit source", registrySubmitSourceText, "if (!authorisationSessionMode && directory.length)");
+expectContains("registry submit source", registrySubmitSourceText, "await completeAuthorisationSession();");
+expectContains("registry submit source", registrySubmitSourceText, "? !authorisationSessionMode && newMode && signatureReady");
+expectContains("registry submit source", registrySubmitSourceText, "sessionStorage.setItem(authorisationSessionStorageKey, authorisationBrowserToken)");
+expectContains("registry submit source", registrySubmitSourceText, "clearStoredAuthorisationSession();");
 expectContains("registry", registryHtml, "/v1/artifacts");
 expectNotContains("registry", registryHtml, "/v1/packages");
 expectContains("registry", registryHtml, 'data-state="loading" data-source="loading"');
