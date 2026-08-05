@@ -8,34 +8,91 @@ const description = t.registry.submit.description;
 const apiOrigin = registryRuntime.apiOrigin;
 ---
 
-<RegistryLayout title="CellScript Artifact Registry: Submit" description={description} headingKey="registry.shellTitle" descriptionKey="registry.shellDescription" active="submit" showSubmitCta={false}>
+<RegistryLayout title="CellScript Artifact Registry: Publish" description={description} headingKey="registry.shellTitle" descriptionKey="registry.shellDescription" active="submit" showSubmitCta={false}>
   <section class="registry-flow" aria-label={t.registry.nav.submit} data-i18n-aria-label="registry.nav.submit">
-    <aside class="registry-submit-intro" data-submit-intro hidden aria-labelledby="submit-intro-title">
-      <div class="registry-submit-intro-copy">
-        <p class="registry-label" data-i18n="registry.submit.introLabel">{t.registry.submit.introLabel}</p>
-        <h2 id="submit-intro-title" data-i18n="registry.submit.introTitle">{t.registry.submit.introTitle}</h2>
-        <p data-i18n="registry.submit.introBody">{t.registry.submit.introBody}</p>
+    <section class="registry-publish-entry" data-publish-entry aria-labelledby="registry-publish-entry-title">
+      <div class="registry-publish-entry-main">
+        <p class="registry-label" data-i18n="registry.submit.entryLabel">{t.registry.submit.entryLabel}</p>
+        <h2 id="registry-publish-entry-title" data-i18n="registry.submit.entryTitle">{t.registry.submit.entryTitle}</h2>
+        <p class="registry-publish-entry-lead" data-i18n="registry.submit.entryBody">{t.registry.submit.entryBody}</p>
+        <div class="registry-publish-command" aria-label={t.registry.submit.entryCommandLabel} data-i18n-aria-label="registry.submit.entryCommandLabel">
+          <span>
+            <small data-i18n="registry.submit.entryCommandLabel">{t.registry.submit.entryCommandLabel}</small>
+            <code>cellc publish --authorise</code>
+          </span>
+          <button class="registry-button primary" type="button" data-copy-text="cellc publish --authorise" data-revert-label={t.registry.submit.entryCopyCommand} data-i18n="registry.submit.entryCopyCommand">{t.registry.submit.entryCopyCommand}</button>
+        </div>
+        <p class="registry-publish-entry-note" data-i18n="registry.submit.entryNote">{t.registry.submit.entryNote}</p>
+        <button class="registry-text-button registry-publish-advanced" type="button" data-open-manual-publish data-i18n="registry.submit.entryAdvanced">{t.registry.submit.entryAdvanced}</button>
       </div>
-      <button class="registry-intro-dismiss" type="button" data-submit-intro-dismiss data-i18n="registry.submit.introDismiss">{t.registry.submit.introDismiss}</button>
-    </aside>
+      <aside class="registry-publish-journey" aria-label={t.registry.submit.entryJourneyLabel} data-i18n-aria-label="registry.submit.entryJourneyLabel">
+        <p class="registry-label" data-i18n="registry.submit.entryJourneyLabel">{t.registry.submit.entryJourneyLabel}</p>
+        <ol>
+          <li><span>01</span><div><strong data-i18n="registry.submit.entryStepCheck">{t.registry.submit.entryStepCheck}</strong><small data-i18n="registry.submit.entryStepCheckBody">{t.registry.submit.entryStepCheckBody}</small></div></li>
+          <li><span>02</span><div><strong data-i18n="registry.submit.entryStepApprove">{t.registry.submit.entryStepApprove}</strong><small data-i18n="registry.submit.entryStepApproveBody">{t.registry.submit.entryStepApproveBody}</small></div></li>
+          <li><span>03</span><div><strong data-i18n="registry.submit.entryStepPublish">{t.registry.submit.entryStepPublish}</strong><small data-i18n="registry.submit.entryStepPublishBody">{t.registry.submit.entryStepPublishBody}</small></div></li>
+        </ol>
+      </aside>
+    </section>
 
-    <aside class="registry-submit-boundary" aria-label={t.registry.submit.toolBoundaryTitle}>
-      <strong data-i18n="registry.submit.toolBoundaryTitle">{t.registry.submit.toolBoundaryTitle}</strong>
-      <span data-i18n="registry.submit.toolBoundaryBody">{t.registry.submit.toolBoundaryBody}</span>
-    </aside>
-
-    <aside class="registry-authorisation-session" data-authorisation-session hidden aria-labelledby="registry-authorisation-session-title">
-      <div>
+    <section class="registry-session-approval" data-authorisation-session data-state="loading" hidden aria-labelledby="registry-authorisation-session-title">
+      <div class="registry-session-main">
         <p class="registry-label" data-i18n="registry.submit.sessionLabel">{t.registry.submit.sessionLabel}</p>
-        <h2 id="registry-authorisation-session-title" data-i18n="registry.submit.sessionTitle">{t.registry.submit.sessionTitle}</h2>
-        <p data-i18n="registry.submit.sessionBody">{t.registry.submit.sessionBody}</p>
+        <h2 id="registry-authorisation-session-title">
+          <span data-session-title data-i18n="registry.submit.sessionApprovalTitle">{t.registry.submit.sessionApprovalTitle}</span>
+          <strong data-session-coordinate aria-live="polite">—</strong>
+        </h2>
+        <p class="registry-session-lead" data-session-lead data-i18n="registry.submit.sessionApprovalBody">{t.registry.submit.sessionApprovalBody}</p>
+        <dl class="registry-session-facts">
+          <div><dt data-i18n="registry.submit.sessionArtifactType">{t.registry.submit.sessionArtifactType}</dt><dd data-session-kind>—</dd></div>
+          <div><dt data-i18n="registry.submit.sessionPermission">{t.registry.submit.sessionPermission}</dt><dd data-i18n="registry.submit.sessionPermissionBody">{t.registry.submit.sessionPermissionBody}</dd></div>
+        </dl>
+        <div class="registry-session-action" data-session-action>
+          <output class="registry-signer-status" data-capability-status role="status" aria-live="polite" data-i18n="registry.submit.sessionLoading">{t.registry.submit.sessionLoading}</output>
+          <div class="registry-session-buttons">
+            <button class="registry-button primary" type="button" data-capability-action="connect" data-i18n="registry.submit.continueConnect" hidden>{t.registry.submit.continueConnect}</button>
+            <button class="registry-button primary" type="button" data-capability-action="sign" data-i18n="registry.submit.continueSubmit" hidden>{t.registry.submit.continueSubmit}</button>
+            <button class="registry-text-button registry-change-wallet" type="button" data-capability-change-wallet hidden data-i18n="registry.submit.changeWallet">{t.registry.submit.changeWallet}</button>
+          </div>
+        </div>
+        <div class="registry-session-recovery">
+          <p data-i18n="registry.submit.sessionRecoveryBody">{t.registry.submit.sessionRecoveryBody}</p>
+          <div>
+            <button class="registry-button" type="button" data-session-retry data-i18n="registry.submit.sessionRetry">{t.registry.submit.sessionRetry}</button>
+            <button class="registry-copy" type="button" data-copy-text="cellc publish --authorise" data-revert-label={t.registry.submit.entryCopyCommand} data-i18n="registry.submit.entryCopyCommand">{t.registry.submit.entryCopyCommand}</button>
+          </div>
+        </div>
+        <details class="registry-session-details">
+          <summary data-i18n="registry.submit.technicalDetails">{t.registry.submit.technicalDetails}</summary>
+          <dl>
+            <div><dt data-i18n="registry.submit.sessionAccess">{t.registry.submit.sessionAccess}</dt><dd data-session-scope>—</dd></div>
+            <div><dt data-i18n="registry.submit.sessionExpires">{t.registry.submit.sessionExpires}</dt><dd data-session-expiry>—</dd></div>
+            <div><dt data-i18n="registry.submit.sessionId">{t.registry.submit.sessionId}</dt><dd data-session-id>—</dd></div>
+          </dl>
+        </details>
       </div>
-      <dl>
-        <div><dt data-i18n="registry.submit.sessionArtifact">{t.registry.submit.sessionArtifact}</dt><dd data-session-artifact></dd></div>
-        <div><dt data-i18n="registry.submit.sessionAccess">{t.registry.submit.sessionAccess}</dt><dd data-session-scope></dd></div>
-        <div><dt data-i18n="registry.submit.sessionExpires">{t.registry.submit.sessionExpires}</dt><dd data-session-expiry></dd></div>
-      </dl>
-    </aside>
+      <aside class="registry-session-journey" aria-label={t.registry.submit.sessionJourneyLabel} data-i18n-aria-label="registry.submit.sessionJourneyLabel">
+        <span class="registry-network-badge"><i aria-hidden="true"></i>CKB {registryRuntime.network}</span>
+        <ol>
+          <li data-session-stage="local" data-state="complete"><span>01</span><div><strong data-i18n="registry.submit.sessionStepLocal">{t.registry.submit.sessionStepLocal}</strong><small data-session-stage-state data-i18n="registry.submit.sessionStepComplete">{t.registry.submit.sessionStepComplete}</small></div></li>
+          <li data-session-stage="approval" data-state="active"><span>02</span><div><strong data-i18n="registry.submit.sessionStepApproval">{t.registry.submit.sessionStepApproval}</strong><small data-session-stage-state data-i18n="registry.submit.sessionStepCurrent">{t.registry.submit.sessionStepCurrent}</small></div></li>
+          <li data-session-stage="publish" data-state="pending"><span>03</span><div><strong data-i18n="registry.submit.sessionStepPublish">{t.registry.submit.sessionStepPublish}</strong><small data-session-stage-state data-i18n="registry.submit.sessionStepNext">{t.registry.submit.sessionStepNext}</small></div></li>
+        </ol>
+      </aside>
+    </section>
+
+    <section class="registry-manual-publish" data-manual-publish hidden aria-labelledby="registry-manual-publish-title">
+      <header class="registry-manual-publish-head">
+        <button class="registry-text-button" type="button" data-close-manual-publish data-i18n="registry.submit.manualBack">{t.registry.submit.manualBack}</button>
+        <p class="registry-label" data-i18n="registry.submit.manualLabel">{t.registry.submit.manualLabel}</p>
+        <h2 id="registry-manual-publish-title" data-i18n="registry.submit.manualTitle">{t.registry.submit.manualTitle}</h2>
+        <p data-i18n="registry.submit.manualBody">{t.registry.submit.manualBody}</p>
+      </header>
+
+      <aside class="registry-submit-boundary" aria-label={t.registry.submit.toolBoundaryTitle}>
+        <strong data-i18n="registry.submit.toolBoundaryTitle">{t.registry.submit.toolBoundaryTitle}</strong>
+        <span data-i18n="registry.submit.toolBoundaryBody">{t.registry.submit.toolBoundaryBody}</span>
+      </aside>
 
     <form class="registry-builder" id="registry-submit-form" data-submit-form novalidate>
       <div class="registry-builder-heading">
@@ -101,10 +158,6 @@ const apiOrigin = registryRuntime.apiOrigin;
       </div>
       <p class="registry-field-hint" id="submit-coordinate-help" data-i18n="registry.submit.coordinateHelp">{t.registry.submit.coordinateHelp}</p>
       <p class="registry-field-error" id="submit-coordinate-error" data-coordinate-error hidden data-i18n="registry.submit.invalidCoordinate">{t.registry.submit.invalidCoordinate}</p>
-      <aside class="registry-version-rule">
-        <strong data-i18n="registry.submit.versionRuleTitle">{t.registry.submit.versionRuleTitle}</strong>
-        <span data-i18n="registry.submit.versionRuleBody">{t.registry.submit.versionRuleBody}</span>
-      </aside>
       <details class="registry-command-options registry-profile-builder" data-profile-builder hidden>
         <summary data-i18n="registry.submit.profileContractTitle">{t.registry.submit.profileContractTitle}</summary>
         <p class="registry-field-hint" data-i18n="registry.submit.profileContractBody">{t.registry.submit.profileContractBody}</p>
@@ -198,6 +251,13 @@ const apiOrigin = registryRuntime.apiOrigin;
           <li data-workflow-stage="scope"><span>02</span><strong data-i18n="registry.submit.stageScope">{t.registry.submit.stageScope}</strong></li>
           <li data-workflow-stage="authorise"><span>03</span><strong data-i18n="registry.submit.stageAuthorise">{t.registry.submit.stageAuthorise}</strong></li>
         </ol>
+        <div class="registry-workflow-guide" data-workflow-guide data-state="active" role="status" aria-live="polite" aria-atomic="true">
+          <span data-workflow-guide-index>01</span>
+          <div>
+            <strong data-workflow-guide-title data-i18n="registry.submit.guideChooseRouteTitle">{t.registry.submit.guideChooseRouteTitle}</strong>
+            <p data-workflow-guide-body data-i18n="registry.submit.guideChooseRouteBody">{t.registry.submit.guideChooseRouteBody}</p>
+          </div>
+        </div>
 
         <label class="registry-builder-field registry-signer-principal" data-principal-panel hidden>
           <span data-i18n="registry.submit.principal">{t.registry.submit.principal}</span>
@@ -299,6 +359,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
         <button class="registry-copy" type="button" data-submit-publish-copy data-copy-text="" data-revert-label={t.registry.copy} data-i18n="registry.copy" disabled>{t.registry.copy}</button>
       </div>
     </section>
+    </section>
 
     <dialog class="registry-wallet-dialog" data-wallet-dialog aria-labelledby="wallet-dialog-title">
       <div class="registry-wallet-dialog-shell">
@@ -325,6 +386,8 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
   </section>
 
   <script>
+    import { clearAuthorisationSession, readAuthorisationSession } from "../../lib/authorisation-session-storage.mjs";
+
     type PrincipalType = "joyid_ckb" | "ckb_secp256k1";
     type WalletIdentity = {
       principalType: PrincipalType;
@@ -375,13 +438,20 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     const lifecycle = new AbortController();
     const { signal } = lifecycle;
     const form = document.querySelector<HTMLFormElement>("[data-submit-form]");
-    const intro = document.querySelector<HTMLElement>("[data-submit-intro]");
-    const introDismiss = document.querySelector<HTMLButtonElement>("[data-submit-intro-dismiss]");
-    const submitBoundary = document.querySelector<HTMLElement>(".registry-submit-boundary");
+    const publishEntry = document.querySelector<HTMLElement>("[data-publish-entry]");
+    const manualPublish = document.querySelector<HTMLElement>("[data-manual-publish]");
+    const openManualPublish = document.querySelector<HTMLButtonElement>("[data-open-manual-publish]");
+    const closeManualPublish = document.querySelector<HTMLButtonElement>("[data-close-manual-publish]");
     const sessionPanel = document.querySelector<HTMLElement>("[data-authorisation-session]");
-    const sessionArtifact = document.querySelector<HTMLElement>("[data-session-artifact]");
+    const sessionTitle = document.querySelector<HTMLElement>("[data-session-title]");
+    const sessionLead = document.querySelector<HTMLElement>("[data-session-lead]");
+    const sessionCoordinate = document.querySelector<HTMLElement>("[data-session-coordinate]");
+    const sessionKind = document.querySelector<HTMLElement>("[data-session-kind]");
     const sessionScope = document.querySelector<HTMLElement>("[data-session-scope]");
     const sessionExpiry = document.querySelector<HTMLElement>("[data-session-expiry]");
+    const sessionIdOutput = document.querySelector<HTMLElement>("[data-session-id]");
+    const sessionRetry = document.querySelector<HTMLButtonElement>("[data-session-retry]");
+    const sessionStages = Array.from(document.querySelectorAll<HTMLElement>("[data-session-stage]"));
     const namespaceInput = form?.elements.namedItem("namespace") as HTMLInputElement | null;
     const nameInput = form?.elements.namedItem("name") as HTMLInputElement | null;
     const pathInput = form?.elements.namedItem("path") as HTMLInputElement | null;
@@ -404,9 +474,6 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     const publish = document.querySelector<HTMLElement>("[data-submit-publish]");
     const publishCopy = document.querySelector<HTMLButtonElement>("[data-submit-publish-copy]");
     const publishStep = document.querySelector<HTMLElement>("[data-publish-step]");
-    const preflightSection = document.querySelector<HTMLElement>(".registry-submit-preflight");
-    const authorisationPaths = document.querySelector<HTMLElement>(".registry-authorisation-paths");
-    const manualAuthorisation = document.querySelector<HTMLElement>(".registry-manual-auth");
     const authorisationModes = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-authorisation-mode]"));
     const newCapabilityFlow = document.querySelector<HTMLElement>("[data-new-capability-flow]");
     const existingCapabilityPanel = document.querySelector<HTMLElement>("[data-existing-capability-panel]");
@@ -426,10 +493,10 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     const signatureOutput = document.querySelector<HTMLTextAreaElement>("[data-capability-signature]");
     const signatureHint = document.querySelector<HTMLElement>("[data-signature-hint]");
     const capabilityActionButtons = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-capability-action]"));
-    const changeWalletButton = document.querySelector<HTMLButtonElement>("[data-capability-change-wallet]");
+    const changeWalletButtons = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-capability-change-wallet]"));
     const copyPrincipalButton = document.querySelector<HTMLButtonElement>("[data-capability-copy-principal]");
     const copySignatureButton = document.querySelector<HTMLButtonElement>("[data-capability-copy-signature]");
-    const statusOutput = document.querySelector<HTMLOutputElement>("[data-capability-status]");
+    const statusOutputs = Array.from(document.querySelectorAll<HTMLOutputElement>("[data-capability-status]"));
     const technicalDetails = document.querySelector<HTMLDetailsElement>("[data-capability-details]");
     const technicalOutput = document.querySelector<HTMLElement>("[data-capability-response]");
     const walletDialog = document.querySelector<HTMLDialogElement>("[data-wallet-dialog]");
@@ -442,6 +509,10 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     const walletBack = document.querySelector<HTMLButtonElement>("[data-wallet-back]");
     const walletClose = document.querySelector<HTMLButtonElement>("[data-wallet-close]");
     const stages = Array.from(document.querySelectorAll<HTMLElement>("[data-workflow-stage]"));
+    const workflowGuide = document.querySelector<HTMLElement>("[data-workflow-guide]");
+    const workflowGuideIndex = document.querySelector<HTMLElement>("[data-workflow-guide-index]");
+    const workflowGuideTitle = document.querySelector<HTMLElement>("[data-workflow-guide-title]");
+    const workflowGuideBody = document.querySelector<HTMLElement>("[data-workflow-guide-body]");
     const appLogo = `${window.location.origin}${import.meta.env.BASE_URL}cellscript-logo.png`;
     const registryNetwork = document.documentElement.dataset.registryNetwork === "testnet" ? "testnet" : "mainnet";
     const joyidPrincipalContext = "cellscript-registry-joyid-ckb-principal-v1";
@@ -462,50 +533,16 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       { name: "Gate", aliases: ["Gate", "Gate Wallet"], url: "https://www.gate.io/", icon: walletIcon("gate"), mark: "G" },
       { name: "QuantumPurse", aliases: ["QuantumPurse"], url: "https://quantumpurse.org/", icon: walletIcon("quantumpurse"), mark: "QP" },
     ];
-    const sessionUrl = new URL(window.location.href);
-    const sessionFragment = new URLSearchParams(sessionUrl.hash.slice(1));
-    const authorisationSessionStorageCurrent = "cellscript-registry-authorisation-session-current-v1";
-    const authorisationSessionStoragePrefix = "cellscript-registry-authorisation-session-token-v1:";
-    const storedCurrentSessionId = (() => {
-      try { return sessionStorage.getItem(authorisationSessionStorageCurrent)?.trim().toLowerCase() ?? ""; }
-      catch { return ""; }
-    })();
-    const authorisationSessionId = (sessionFragment.get("authorisation_session")
-      ?? sessionUrl.searchParams.get("authorisation_session")
-      ?? storedCurrentSessionId)?.trim().toLowerCase() ?? "";
-    const authorisationSessionStorageKey = `${authorisationSessionStoragePrefix}${authorisationSessionId}`;
-    const fragmentBrowserToken = sessionFragment.get("browser_token")?.trim() ?? "";
-    const storedBrowserToken = (() => {
-      if (!/^auth_[0-9a-f]{32}$/.test(authorisationSessionId)) return "";
-      try { return sessionStorage.getItem(authorisationSessionStorageKey)?.trim() ?? ""; }
-      catch { return ""; }
-    })();
-    const authorisationBrowserToken = /^browser_[0-9a-f]{32}$/.test(storedBrowserToken)
-      ? storedBrowserToken
-      : fragmentBrowserToken;
-    const authorisationSessionMode = /^auth_[0-9a-f]{32}$/.test(authorisationSessionId);
-    if (authorisationSessionMode && /^browser_[0-9a-f]{32}$/.test(authorisationBrowserToken)) {
-      try {
-        sessionStorage.setItem(authorisationSessionStorageKey, authorisationBrowserToken);
-        sessionStorage.setItem(authorisationSessionStorageCurrent, authorisationSessionId);
-      } catch {
-        // The session still works until refresh when storage is unavailable.
-      }
-    }
-    if (authorisationSessionMode && sessionUrl.hash) {
-      history.replaceState(history.state, "", `${sessionUrl.pathname}${sessionUrl.search}`);
+    const recoveredAuthorisationSession = readAuthorisationSession(window.location.href, sessionStorage);
+    const authorisationSessionId = recoveredAuthorisationSession.sessionId;
+    const authorisationBrowserToken = recoveredAuthorisationSession.browserToken;
+    const authorisationSessionMode = recoveredAuthorisationSession.sessionMode;
+    if (recoveredAuthorisationSession.cleanedUrl) {
+      history.replaceState(history.state, "", recoveredAuthorisationSession.cleanedUrl);
     }
 
     const clearStoredAuthorisationSession = () => {
-      if (!authorisationSessionMode) return;
-      try {
-        sessionStorage.removeItem(authorisationSessionStorageKey);
-        if (sessionStorage.getItem(authorisationSessionStorageCurrent) === authorisationSessionId) {
-          sessionStorage.removeItem(authorisationSessionStorageCurrent);
-        }
-      } catch {
-        // Storage may be disabled; there is no persisted token to clear in that case.
-      }
+      clearAuthorisationSession(sessionStorage, authorisationSessionId);
     };
 
     let cccPromise: Promise<typeof import("@ckb-ccc/connector/barrel")> | null = null;
@@ -537,40 +574,12 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       const messages = (window as any).__CELLSCRIPT_I18N__?.[locale]?.registry?.submit;
       return typeof messages?.[key] === "string" ? messages[key] : key;
     };
-    const introStorageKey = "cellscript-registry-submit-intro-v1";
-    const introDismissAnimationMs = 180;
-    const hideIntro = () => {
-      if (!intro || intro.hidden) return;
-      intro.classList.add("is-leaving");
-      window.setTimeout(() => {
-        intro.hidden = true;
-        intro.classList.remove("is-leaving");
-      }, introDismissAnimationMs);
-    };
-    try {
-      if (intro && !authorisationSessionMode && localStorage.getItem(introStorageKey) !== "seen") {
-        intro.hidden = false;
-        localStorage.setItem(introStorageKey, "seen");
-      }
-    } catch {
-      if (intro && !authorisationSessionMode && !(window as any).__cellscriptSubmitIntroSeen) {
-        intro.hidden = false;
-        (window as any).__cellscriptSubmitIntroSeen = true;
-      }
-    }
-    introDismiss?.addEventListener("click", hideIntro, { signal });
-
+    const preferredScrollBehavior: ScrollBehavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
     const applyAuthorisationSessionLayout = () => {
-      if (!authorisationSessionMode) return;
-      if (intro) intro.hidden = true;
-      if (submitBoundary) submitBoundary.hidden = true;
-      if (form) form.hidden = true;
-      if (preflightSection) preflightSection.hidden = true;
-      if (authorisationPaths) authorisationPaths.hidden = true;
-      if (manualAuthorisation) manualAuthorisation.hidden = true;
-      if (publishStep) publishStep.hidden = true;
+      if (publishEntry) publishEntry.hidden = authorisationSessionMode;
+      if (manualPublish) manualPublish.hidden = true;
       if (sessionPanel) {
-        sessionPanel.hidden = false;
+        sessionPanel.hidden = !authorisationSessionMode;
         sessionPanel.dataset.state = authorisationSession ? "ready" : "loading";
       }
     };
@@ -580,10 +589,10 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       statusKey = key;
       statusTone = tone;
       statusSuffix = suffix;
-      if (statusOutput) {
-        statusOutput.dataset.tone = tone;
-        statusOutput.textContent = `${message(key)}${suffix}`;
-        statusOutput.removeAttribute("data-i18n");
+      for (const output of statusOutputs) {
+        output.dataset.tone = tone;
+        output.textContent = `${message(key)}${suffix}`;
+        output.removeAttribute("data-i18n");
       }
     };
     const showTechnical = (value: unknown) => {
@@ -715,6 +724,44 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       const stage = stages.find((item) => item.dataset.workflowStage === name);
       if (stage) stage.dataset.state = complete ? "complete" : active ? "active" : "pending";
     };
+    const setWorkflowGuide = (index: "01" | "02" | "03", key: string, state: "active" | "complete" = "active") => {
+      if (workflowGuide) workflowGuide.dataset.state = state;
+      if (workflowGuideIndex) workflowGuideIndex.textContent = index;
+      if (workflowGuideTitle) {
+        workflowGuideTitle.dataset.i18n = `registry.submit.guide${key}Title`;
+        workflowGuideTitle.textContent = message(`guide${key}Title`);
+      }
+      if (workflowGuideBody) {
+        workflowGuideBody.dataset.i18n = `registry.submit.guide${key}Body`;
+        workflowGuideBody.textContent = message(`guide${key}Body`);
+      }
+    };
+    const setSessionStage = (name: string, state: "pending" | "active" | "complete", labelKey: string) => {
+      const stage = sessionStages.find((item) => item.dataset.sessionStage === name);
+      if (!stage) return;
+      stage.dataset.state = state;
+      const label = stage.querySelector<HTMLElement>("[data-session-stage-state]");
+      if (label) {
+        label.dataset.i18n = `registry.submit.${labelKey}`;
+        label.textContent = message(labelKey);
+      }
+    };
+    const syncSessionJourney = () => {
+      if (!authorisationSessionMode || !authorisationSession) return;
+      setSessionStage("local", "complete", "sessionStepComplete");
+      if (!authorisationSessionFinished) {
+        setSessionStage("approval", "active", busy ? "sessionStepWaiting" : "sessionStepCurrent");
+        setSessionStage("publish", "pending", "sessionStepNext");
+      } else {
+        setSessionStage("approval", "complete", "sessionStepApproved");
+        setSessionStage(
+          "publish",
+          namespaceReviewPending ? "pending" : "active",
+          namespaceReviewPending ? "sessionStepAfterReview" : "sessionStepContinuing",
+        );
+      }
+      if (sessionPanel) sessionPanel.toggleAttribute("data-busy", busy);
+    };
     const syncWorkflow = () => {
       const coordinateReady = coordinateValid();
       const newMode = authorisationMode === "new";
@@ -737,6 +784,24 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       stageState("wallet", newMode && signingRouteSelected, newMode && !signingRouteSelected);
       stageState("scope", newMode && signatureReady, newMode && signingRouteSelected && !signatureReady);
       stageState("authorise", authorisationSessionFinished || Boolean(confirmedCapabilityKeyId), newMode && signatureReady && !authorisationSessionFinished && !confirmedCapabilityKeyId);
+      if (authorisationSessionFinished) {
+        setWorkflowGuide("03", namespaceReviewPending ? "WaitForReview" : "ReturnToCli", "complete");
+      } else if (!signingRouteSelected) {
+        setWorkflowGuide("01", authorisationSessionMode ? "ConnectSessionWallet" : "ChooseRoute");
+      } else if (authorisationSessionMode) {
+        setWorkflowGuide("02", busy ? "ApprovalInProgress" : "ApproveSession");
+      } else if (!payloadReady) {
+        setWorkflowGuide("02", manualSignatureMode ? "PrepareExternalPayload" : "PreparePayload");
+      } else if (!signatureReady) {
+        setWorkflowGuide("02", manualSignatureMode ? "ImportSignature" : "ApproveScope");
+      } else if (!capabilitySubmitted) {
+        setWorkflowGuide("03", "SubmitAccess");
+      } else if (!namespaceClaimed && !namespaceReviewPending) {
+        setWorkflowGuide("03", "ClaimNamespace");
+      } else {
+        setWorkflowGuide("03", namespaceReviewPending ? "WaitForReview" : "PublishReady", "complete");
+      }
+      syncSessionJourney();
       if (principalPanel) principalPanel.hidden = !directSignerConnected && !(manualSignatureMode && principalInput?.value.trim());
       if (payloadPanel) payloadPanel.hidden = authorisationSessionMode || !newMode || !signingRouteSelected;
       if (signaturePanel) signaturePanel.hidden = authorisationSessionMode || !newMode || (!signatureReady && !manualSignatureMode);
@@ -745,7 +810,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
         signatureHint.dataset.i18n = `registry.submit.${key}`;
         signatureHint.textContent = message(key);
       }
-      if (changeWalletButton) changeWalletButton.hidden = !newMode || !signingRouteSelected;
+      for (const button of changeWalletButtons) button.hidden = !newMode || !signingRouteSelected || authorisationSessionFinished;
       const canPublish = !authorisationSessionMode && Boolean(confirmedCapabilityKeyId);
       if (publishStep) {
         publishStep.dataset.state = canPublish ? "ready" : "locked";
@@ -1398,19 +1463,51 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
         && typeof session.capability_expires_at === "string"
         && typeof session.expires_at === "string";
     };
+    const artifactKindLabel = (kind: string) => {
+      const key = ({
+        source_library: "kindCellScript",
+        profile_library: "kindProfileLibrary",
+        deployable_contract: "kindCkbScript",
+        runtime_verifier: "kindRuntimeVerifier",
+        reproducible_binary: "kindReproducibleBinary",
+        template: "kindTemplate",
+      } as Record<string, string>)[kind];
+      return key ? message(key) : kind.replaceAll("_", " ");
+    };
+    const setSessionCopy = (status: "pending" | "authorised" | "review_pending" | "error") => {
+      const prefix = status === "authorised"
+        ? "sessionCompleted"
+        : status === "review_pending"
+          ? "sessionReview"
+          : status === "error"
+            ? "sessionError"
+            : "sessionApproval";
+      if (sessionTitle) {
+        sessionTitle.dataset.i18n = `registry.submit.${prefix}Title`;
+        sessionTitle.textContent = message(`${prefix}Title`);
+      }
+      if (sessionLead) {
+        sessionLead.dataset.i18n = `registry.submit.${prefix}Body`;
+        sessionLead.textContent = message(`${prefix}Body`);
+      }
+    };
     const renderAuthorisationSession = (session: AuthorisationSession) => {
       authorisationSession = session;
       const locale = document.documentElement.dataset.locale === "zh" ? "zh-CN" : "en-GB";
       const formatter = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" });
-      if (sessionArtifact) sessionArtifact.textContent = `${session.artifact.namespace}/${session.artifact.name} · ${session.artifact.kind}`;
+      if (sessionCoordinate) sessionCoordinate.textContent = `${session.artifact.namespace}/${session.artifact.name}`;
+      if (sessionKind) sessionKind.textContent = artifactKindLabel(session.artifact.kind);
       if (sessionScope) sessionScope.textContent = session.requested_scopes.join(" · ");
       if (sessionExpiry) sessionExpiry.textContent = formatter.format(new Date(session.expires_at));
+      if (sessionIdOutput) sessionIdOutput.textContent = session.session_id;
       if (sessionPanel) sessionPanel.dataset.state = session.status;
+      setSessionCopy(session.status);
       if (namespaceInput) namespaceInput.value = session.artifact.namespace;
       if (nameInput) nameInput.value = session.artifact.name;
       if (artifactKindInput) artifactKindInput.value = session.artifact.kind;
       authorisationMode = "new";
       authorisationSessionFinished = session.status !== "pending";
+      namespaceReviewPending = session.status === "review_pending";
       if (session.status === "authorised") {
         clearStoredAuthorisationSession();
         setStatus("sessionCompleted", "ok");
@@ -1418,7 +1515,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
         clearStoredAuthorisationSession();
         setStatus("sessionReviewPending", "idle");
       }
-      else setStatus("walletIdle");
+      else setStatus("sessionReady");
       lastCoordinate = `${session.artifact.namespace}/${session.artifact.name}`;
       syncArtifactKind();
       syncWorkflow();
@@ -1488,6 +1585,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       authorisationSessionFinished = true;
       clearStoredAuthorisationSession();
       if (sessionPanel) sessionPanel.dataset.state = String(completedStatus);
+      setSessionCopy(completedStatus);
       setStatus(completedStatus === "authorised" ? "sessionCompleted" : "sessionReviewPending", completedStatus === "authorised" ? "ok" : "idle");
     };
     const renderCapabilityCheck = (check: CapabilityCheck) => {
@@ -1653,17 +1751,49 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
         })();
       }, { signal });
     }
-    changeWalletButton?.addEventListener("click", () => {
+    for (const button of changeWalletButtons) {
+      button.addEventListener("click", () => {
+        void (async () => {
+          busy = true;
+          syncWorkflow();
+          try {
+            await resetWallet(true);
+            await ensureWalletSigner();
+          } catch (error) {
+            setError(error, "errorWallet");
+          } finally {
+            busy = false;
+            syncWorkflow();
+          }
+        })();
+      }, { signal });
+    }
+    openManualPublish?.addEventListener("click", () => {
+      if (publishEntry) publishEntry.hidden = true;
+      if (manualPublish) manualPublish.hidden = false;
+      closeManualPublish?.focus({ preventScroll: true });
+      manualPublish?.scrollIntoView({ behavior: preferredScrollBehavior, block: "start" });
+    }, { signal });
+    closeManualPublish?.addEventListener("click", () => {
+      if (manualPublish) manualPublish.hidden = true;
+      if (publishEntry) publishEntry.hidden = false;
+      publishEntry?.scrollIntoView({ behavior: preferredScrollBehavior, block: "start" });
+      openManualPublish?.focus({ preventScroll: true });
+    }, { signal });
+    sessionRetry?.addEventListener("click", () => {
       void (async () => {
-        busy = true;
-        syncWorkflow();
+        if (sessionPanel) sessionPanel.dataset.state = "loading";
+        setSessionCopy("pending");
+        setStatus("sessionLoading");
+        sessionRetry.disabled = true;
         try {
-          await resetWallet(true);
-          await ensureWalletSigner();
+          await loadAuthorisationSession();
         } catch (error) {
-          setError(error, "errorWallet");
+          if (sessionPanel) sessionPanel.dataset.state = "error";
+          setSessionCopy("error");
+          setError(error, "errorSessionLoad");
         } finally {
-          busy = false;
+          sessionRetry.disabled = false;
           syncWorkflow();
         }
       })();
@@ -1747,6 +1877,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     window.addEventListener("cellscript:locale-change", () => {
       setStatus(statusKey, statusTone, statusSuffix);
       if (lastCapabilityCheck) renderCapabilityCheck(lastCapabilityCheck);
+      if (authorisationSession && sessionKind) sessionKind.textContent = artifactKindLabel(authorisationSession.artifact.kind);
       if (walletDialog?.open) renderWalletChoices();
       syncArtifactKind();
       syncWorkflow();
@@ -1767,6 +1898,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     if (authorisationSessionMode) {
       void loadAuthorisationSession().catch((error) => {
         if (sessionPanel) sessionPanel.dataset.state = "error";
+        setSessionCopy("error");
         setError(error, "errorSessionLoad");
         syncWorkflow();
       });

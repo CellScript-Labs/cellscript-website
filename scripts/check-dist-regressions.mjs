@@ -138,6 +138,16 @@ for (const [name, html] of [
   }
 }
 expectContains("registry submit", registrySubmitHtml, "data-submit-form novalidate");
+expectContains("registry submit", registrySubmitHtml, "data-publish-entry");
+expectContains("registry submit", registrySubmitHtml, "cellc publish --authorise");
+expectContains("registry submit", registrySubmitHtml, "data-open-manual-publish");
+expectContains("registry submit", registrySubmitHtml, "data-manual-publish hidden");
+expectContains("registry submit", registrySubmitHtml, 'data-authorisation-session data-state="loading" hidden');
+expectContains("registry submit", registrySubmitHtml, 'data-session-stage="local" data-state="complete"');
+expectContains("registry submit", registrySubmitHtml, "data-session-retry");
+if (registrySubmitHtml.indexOf("data-publish-entry") > registrySubmitHtml.indexOf("data-submit-form")) {
+  fail("registry submit: the session-first entry must precede the advanced manual form");
+}
 expectContains("registry submit", registrySubmitHtml, 'data-authorisation-mode="new"');
 expectContains("registry submit", registrySubmitHtml, 'data-authorisation-mode="existing"');
 expectContains("registry submit", registrySubmitHtml, "data-submit-create-capability");
@@ -150,8 +160,10 @@ expectContains("registry submit", registrySubmitHtml, "This cellc session can co
 expectContains("registry submit source", registrySubmitSourceText, "if (!authorisationSessionMode && directory.length)");
 expectContains("registry submit source", registrySubmitSourceText, "await completeAuthorisationSession();");
 expectContains("registry submit source", registrySubmitSourceText, "? !authorisationSessionMode && newMode && signatureReady");
-expectContains("registry submit source", registrySubmitSourceText, "sessionStorage.setItem(authorisationSessionStorageKey, authorisationBrowserToken)");
+expectContains("registry submit source", registrySubmitSourceText, "readAuthorisationSession(window.location.href, sessionStorage)");
+expectContains("registry submit source", registrySubmitSourceText, "clearAuthorisationSession(sessionStorage, authorisationSessionId)");
 expectContains("registry submit source", registrySubmitSourceText, "clearStoredAuthorisationSession();");
+expectContains("registry submit", registrySubmitHtml, "data-workflow-guide");
 expectContains("registry", registryHtml, "/v1/artifacts");
 expectNotContains("registry", registryHtml, "/v1/packages");
 expectContains("registry", registryHtml, 'data-state="loading" data-source="loading"');
