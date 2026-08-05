@@ -30,15 +30,15 @@ const writeEndpoints = [
 >
   <section class="registry-api" aria-labelledby="registry-api-title">
     <header class="registry-api-intro">
-      <div>
+      <div class="registry-api-meta">
         <p class="registry-label" data-i18n="registry.api.label">{t.registry.api.label}</p>
-        <h2 id="registry-api-title" data-i18n="registry.api.title">{t.registry.api.title}</h2>
-        <p data-i18n="registry.api.description">{t.registry.api.description}</p>
+        <a class="registry-api-health" href={`${apiOrigin}/health`} target="_blank" rel="noopener noreferrer">
+          <span data-i18n="registry.api.health">{t.registry.api.health}</span>
+          <ArrowUpRight aria-hidden="true" />
+        </a>
       </div>
-      <a class="registry-api-health" href={`${apiOrigin}/health`} target="_blank" rel="noopener noreferrer">
-        <span data-i18n="registry.api.health">{t.registry.api.health}</span>
-        <ArrowUpRight aria-hidden="true" />
-      </a>
+      <h2 id="registry-api-title" data-i18n="registry.api.title">{t.registry.api.title}</h2>
+      <p data-i18n="registry.api.description">{t.registry.api.description}</p>
     </header>
 
     <section class="registry-api-group" aria-labelledby="registry-api-read-title">

@@ -230,51 +230,64 @@
 
 .registry-api {
   display: grid;
-  gap: 34px;
-  padding-top: 30px;
+  gap: 38px;
+  padding-top: 34px;
 }
 
 .registry-api-intro {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 32px;
-  align-items: end;
-  padding-bottom: 28px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 0;
+  padding-bottom: 30px;
   border-bottom: 1px solid var(--line-soft);
 }
 
-.registry-api-intro h2 {
-  max-width: 18ch;
-  margin: 0;
-  color: var(--text);
-  font-size: clamp(1.5rem, 2.5vw, 2.1rem);
-  line-height: 1.08;
-  letter-spacing: -0.025em;
+.registry-api-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 10px;
 }
 
-.registry-api-intro > div > p:last-child,
+.registry-api-meta .registry-label {
+  margin-bottom: 0;
+}
+
+.registry-api-intro h2 {
+  max-width: 780px;
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(1.8rem, 2.65vw, 2.35rem);
+  line-height: 1.06;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.registry-api-intro > p,
 .registry-api-example > div > p {
-  max-width: 62ch;
-  margin: 9px 0 0;
-  color: var(--muted);
-  line-height: 1.55;
+  max-width: 72ch;
+  margin: 12px 0 0;
+  color: var(--text-soft);
+  font-size: 0.96rem;
+  line-height: 1.6;
 }
 
 .registry-api-health {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  min-height: 44px;
+  gap: 7px;
+  min-height: 28px;
   color: var(--accent);
-  font-size: 0.84rem;
+  font-size: 0.8rem;
   font-weight: 650;
   text-decoration: none;
 }
 
 .registry-api-health svg,
 .registry-api-endpoint > a svg {
-  width: 16px;
-  height: 16px;
+  width: 15px;
+  height: 15px;
   transition: transform var(--duration-fast) var(--ease-quick);
 }
 
@@ -285,16 +298,15 @@
 
 .registry-api-group {
   display: grid;
-  grid-template-columns: minmax(150px, 0.28fr) minmax(0, 1fr);
-  gap: 28px;
-  align-items: start;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 12px;
 }
 
 .registry-api-group h3,
 .registry-api-example h3 {
   margin: 0;
   color: var(--text);
-  font-size: 0.86rem;
+  font-size: 0.9rem;
   font-weight: 700;
 }
 
@@ -304,18 +316,18 @@
 
 .registry-api-endpoint {
   display: grid;
-  grid-template-columns: 58px minmax(220px, 0.62fr) minmax(260px, 1fr) 20px;
-  gap: 14px;
+  grid-template-columns: 62px minmax(380px, 1.1fr) minmax(280px, 0.9fr) 20px;
+  gap: 18px;
   align-items: center;
-  min-height: 68px;
-  padding: 12px 0;
+  min-height: 66px;
+  padding: 14px 0;
   border-bottom: 1px solid var(--line-soft);
 }
 
 .registry-api-method,
 .registry-api-endpoint code {
   font-family: var(--font-mono);
-  font-size: 0.72rem;
+  font-size: 0.77rem;
 }
 
 .registry-api-method {
@@ -329,14 +341,15 @@
 
 .registry-api-endpoint code {
   color: var(--text);
+  line-height: 1.5;
   overflow-wrap: anywhere;
 }
 
 .registry-api-endpoint p {
   margin: 0;
-  color: var(--muted);
-  font-size: 0.82rem;
-  line-height: 1.45;
+  color: var(--text-soft);
+  font-size: 0.88rem;
+  line-height: 1.5;
 }
 
 .registry-api-endpoint > a {
@@ -346,11 +359,19 @@
 
 .registry-api-example {
   display: grid;
-  grid-template-columns: minmax(180px, 0.38fr) minmax(360px, 1fr);
-  gap: 28px;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 18px;
   align-items: start;
   padding-top: 30px;
   border-top: 1px solid var(--line-soft);
+}
+
+.registry-api-example > div:first-child {
+  max-width: 68ch;
+}
+
+.registry-api-example .registry-step-code {
+  max-width: 920px;
 }
 
 .registry-browse {
@@ -2857,8 +2878,20 @@
 
   .registry-api-intro {
     grid-template-columns: 1fr;
-    gap: 14px;
+    gap: 0;
     align-items: start;
+  }
+
+  .registry-api-meta {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .registry-api-intro h2 {
+    max-width: none;
+    font-size: clamp(1.75rem, 9vw, 2.2rem);
   }
 
   .registry-api-health {
