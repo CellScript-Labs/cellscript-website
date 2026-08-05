@@ -18,11 +18,18 @@ const apiOrigin = registryRuntime.apiOrigin;
         <div class="registry-publish-command" aria-label={t.registry.submit.entryCommandLabel} data-i18n-aria-label="registry.submit.entryCommandLabel">
           <span>
             <small data-i18n="registry.submit.entryCommandLabel">{t.registry.submit.entryCommandLabel}</small>
-            <code>cellc publish --authorise</code>
+            <code><i aria-hidden="true">$</i><span>cellc publish --authorise</span></code>
           </span>
           <button class="registry-button primary" type="button" data-copy-text="cellc publish --authorise" data-revert-label={t.registry.submit.entryCopyCommand} data-i18n="registry.submit.entryCopyCommand">{t.registry.submit.entryCopyCommand}</button>
         </div>
-        <p class="registry-publish-entry-note" data-i18n="registry.submit.entryNote">{t.registry.submit.entryNote}</p>
+        <p class="registry-publish-entry-note">
+          <span class="registry-assurance-mark" aria-hidden="true">
+            <svg viewBox="0 0 16 16" fill="none">
+              <path d="m4 8.25 2.35 2.35L12.25 4.7" />
+            </svg>
+          </span>
+          <span data-i18n="registry.submit.entryNote">{t.registry.submit.entryNote}</span>
+        </p>
         <button class="registry-text-button registry-publish-advanced" type="button" data-open-manual-publish data-i18n="registry.submit.entryAdvanced">{t.registry.submit.entryAdvanced}</button>
       </div>
       <aside class="registry-publish-journey" aria-label={t.registry.submit.entryJourneyLabel} data-i18n-aria-label="registry.submit.entryJourneyLabel">
