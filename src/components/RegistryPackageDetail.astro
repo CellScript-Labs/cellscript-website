@@ -26,6 +26,15 @@ const firstRelease = detail?.firstRelease;
 const allEvidence = detail?.evidence ?? [];
 const deploymentEvidence = detail?.deployments ?? [];
 const profileContract = detail?.profileContract;
+const nextAction = detail?.nextAction;
+const nextActionKey = (kind?: string) => kind
+  ? `next${kind.split("_").map((part) => `${part[0]?.toUpperCase()}${part.slice(1)}`).join("")}`
+  : "nextFetch";
+const initialNextKey = nextActionKey(nextAction?.kind);
+const packageTranslations = t.registry.package as unknown as Record<string, string>;
+const initialNextTitle = packageTranslations[`${initialNextKey}Title`] ?? "";
+const initialNextBody = packageTranslations[`${initialNextKey}Body`] ?? "";
+const initialNextAction = packageTranslations[`${initialNextKey}Action`] ?? "";
 ---
 
 <section
@@ -149,6 +158,26 @@ const profileContract = detail?.profileContract;
       </div>
 
       <aside class="registry-pkg-aside">
+        <section class="registry-panel registry-next-action" data-package-next data-next-kind={nextAction?.kind} aria-labelledby="artifact-next-title">
+          <p class="registry-label" data-i18n="registry.package.nextLabel">{t.registry.package.nextLabel}</p>
+          <h2 id="artifact-next-title" data-package-next-title>{initialNextTitle}</h2>
+          <p data-package-next-body>{initialNextBody}</p>
+          <a
+            class="registry-button primary"
+            data-package-next-link
+            href={nextAction?.action === "link" ? nextAction.value : "#"}
+            hidden={nextAction?.action !== "link"}
+          >{initialNextAction}</a>
+          <button
+            class="registry-button primary"
+            type="button"
+            data-package-next-button
+            data-next-action={nextAction?.action}
+            data-next-value={nextAction?.value}
+            hidden={nextAction?.action === "link"}
+          >{initialNextAction}</button>
+          <output data-package-next-feedback role="status" aria-live="polite"></output>
+        </section>
         <section class="registry-panel registry-section-block" aria-labelledby="artifact-facts-title">
           <h2 id="artifact-facts-title" class="registry-label" data-i18n="registry.package.artifactFacts">{t.registry.package.artifactFacts}</h2>
           <dl class="registry-facts">
@@ -243,6 +272,37 @@ const profileContract = detail?.profileContract;
       if (!node) return;
       node.textContent = label(value);
       node.dataset.state = registryStatusTone(value);
+    };
+    const nextPanel = app?.querySelector<HTMLElement>("[data-package-next]");
+    const nextTitle = app?.querySelector<HTMLElement>("[data-package-next-title]");
+    const nextBody = app?.querySelector<HTMLElement>("[data-package-next-body]");
+    const nextLink = app?.querySelector<HTMLAnchorElement>("[data-package-next-link]");
+    const nextButton = app?.querySelector<HTMLButtonElement>("[data-package-next-button]");
+    const nextFeedback = app?.querySelector<HTMLOutputElement>("[data-package-next-feedback]");
+    const nextKey = (kind: string) => `next${kind.split("_").map((part) => `${part[0]?.toUpperCase()}${part.slice(1)}`).join("")}`;
+    const renderNextText = () => {
+      const kind = nextPanel?.dataset.nextKind;
+      if (!kind) return;
+      const key = nextKey(kind);
+      if (nextTitle) nextTitle.textContent = message(`registry.package.${key}Title`);
+      if (nextBody) nextBody.textContent = message(`registry.package.${key}Body`);
+      if (nextLink) nextLink.textContent = message(`registry.package.${key}Action`);
+      if (nextButton) nextButton.textContent = message(`registry.package.${key}Action`);
+    };
+    const renderNextAction = (detail: ReturnType<typeof registryPackageDetailView>) => {
+      const next = detail.nextAction;
+      if (nextPanel) nextPanel.dataset.nextKind = next.kind;
+      if (nextLink) {
+        nextLink.hidden = next.action !== "link";
+        nextLink.href = next.action === "link" ? next.value || "#" : "#";
+      }
+      if (nextButton) {
+        nextButton.hidden = next.action === "link";
+        nextButton.dataset.nextAction = next.action;
+        nextButton.dataset.nextValue = next.value || "";
+      }
+      if (nextFeedback) nextFeedback.textContent = "";
+      renderNextText();
     };
     const cell = (row: HTMLTableRowElement, title: string, value?: string, code = false): HTMLTableCellElement => {
       const td = document.createElement("td");
@@ -368,11 +428,12 @@ const profileContract = detail?.profileContract;
       if (repository) { repository.hidden = !artifact.repository; repository.href = artifact.repository || "#"; }
       const maintain = app?.querySelector<HTMLAnchorElement>("[data-package-maintain]");
       if (maintain) maintain.href = detail.maintainUrl;
+      renderNextAction(detail);
       formatPackageDates();
     };
     let requestInFlight = false;
-    const load = async () => {
-      if (!app || !app.querySelector("[data-package-content][hidden]") || requestInFlight) return;
+    const load = async (force = false) => {
+      if (!app || (!force && !app.querySelector("[data-package-content][hidden]")) || requestInFlight) return;
       const loading = app.querySelector<HTMLElement>("[data-package-loading]");
       const errorPanel = app.querySelector<HTMLElement>("[data-package-error]");
       const errorCopy = app.querySelector<HTMLElement>("[data-package-error-copy]");
@@ -423,8 +484,24 @@ const profileContract = detail?.profileContract;
         requestInFlight = false;
       }
     };
-    app?.querySelector<HTMLButtonElement>("[data-package-retry]")?.addEventListener("click", load, { signal });
-    window.addEventListener("cellscript:locale-change", formatPackageDates, { signal });
+    app?.querySelector<HTMLButtonElement>("[data-package-retry]")?.addEventListener("click", () => void load(), { signal });
+    nextButton?.addEventListener("click", () => {
+      if (nextButton.dataset.nextAction === "refresh") {
+        void load(true);
+        return;
+      }
+      const value = nextButton.dataset.nextValue;
+      if (!value) return;
+      void navigator.clipboard.writeText(value).then(() => {
+        if (nextFeedback) nextFeedback.textContent = message("registry.package.nextCopied");
+      }).catch(() => {
+        if (nextFeedback) nextFeedback.textContent = message("registry.package.nextCopyFailed");
+      });
+    }, { signal });
+    window.addEventListener("cellscript:locale-change", () => {
+      formatPackageDates();
+      renderNextText();
+    }, { signal });
     document.addEventListener("astro:before-swap", () => lifecycle.abort(), { once: true, signal });
     formatPackageDates();
     load();

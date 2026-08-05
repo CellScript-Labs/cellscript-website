@@ -24,6 +24,19 @@ const apiOrigin = registryRuntime.apiOrigin;
       <span data-i18n="registry.submit.toolBoundaryBody">{t.registry.submit.toolBoundaryBody}</span>
     </aside>
 
+    <aside class="registry-authorisation-session" data-authorisation-session hidden aria-labelledby="registry-authorisation-session-title">
+      <div>
+        <p class="registry-label" data-i18n="registry.submit.sessionLabel">{t.registry.submit.sessionLabel}</p>
+        <h2 id="registry-authorisation-session-title" data-i18n="registry.submit.sessionTitle">{t.registry.submit.sessionTitle}</h2>
+        <p data-i18n="registry.submit.sessionBody">{t.registry.submit.sessionBody}</p>
+      </div>
+      <dl>
+        <div><dt data-i18n="registry.submit.sessionArtifact">{t.registry.submit.sessionArtifact}</dt><dd data-session-artifact></dd></div>
+        <div><dt data-i18n="registry.submit.sessionAccess">{t.registry.submit.sessionAccess}</dt><dd data-session-scope></dd></div>
+        <div><dt data-i18n="registry.submit.sessionExpires">{t.registry.submit.sessionExpires}</dt><dd data-session-expiry></dd></div>
+      </dl>
+    </aside>
+
     <form class="registry-builder" id="registry-submit-form" data-submit-form novalidate>
       <div class="registry-builder-heading">
         <p class="registry-label" data-i18n="registry.submit.detailsLabel">{t.registry.submit.detailsLabel}</p>
@@ -88,6 +101,10 @@ const apiOrigin = registryRuntime.apiOrigin;
       </div>
       <p class="registry-field-hint" id="submit-coordinate-help" data-i18n="registry.submit.coordinateHelp">{t.registry.submit.coordinateHelp}</p>
       <p class="registry-field-error" id="submit-coordinate-error" data-coordinate-error hidden data-i18n="registry.submit.invalidCoordinate">{t.registry.submit.invalidCoordinate}</p>
+      <aside class="registry-version-rule">
+        <strong data-i18n="registry.submit.versionRuleTitle">{t.registry.submit.versionRuleTitle}</strong>
+        <span data-i18n="registry.submit.versionRuleBody">{t.registry.submit.versionRuleBody}</span>
+      </aside>
       <details class="registry-command-options registry-profile-builder" data-profile-builder hidden>
         <summary data-i18n="registry.submit.profileContractTitle">{t.registry.submit.profileContractTitle}</summary>
         <p class="registry-field-hint" data-i18n="registry.submit.profileContractBody">{t.registry.submit.profileContractBody}</p>
@@ -339,6 +356,15 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       usable_for_publish: boolean;
       reasons: string[];
     };
+    type AuthorisationSession = {
+      schema: "cellscript-registry-authorisation-session-v1";
+      session_id: string;
+      status: "pending" | "authorised" | "review_pending";
+      artifact: { namespace: string; name: string; kind: string };
+      requested_scopes: string[];
+      capability_expires_at: string;
+      expires_at: string;
+    };
 
     class WorkflowError extends Error {
       constructor(readonly key: string, technical?: string) {
@@ -351,6 +377,11 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     const form = document.querySelector<HTMLFormElement>("[data-submit-form]");
     const intro = document.querySelector<HTMLElement>("[data-submit-intro]");
     const introDismiss = document.querySelector<HTMLButtonElement>("[data-submit-intro-dismiss]");
+    const submitBoundary = document.querySelector<HTMLElement>(".registry-submit-boundary");
+    const sessionPanel = document.querySelector<HTMLElement>("[data-authorisation-session]");
+    const sessionArtifact = document.querySelector<HTMLElement>("[data-session-artifact]");
+    const sessionScope = document.querySelector<HTMLElement>("[data-session-scope]");
+    const sessionExpiry = document.querySelector<HTMLElement>("[data-session-expiry]");
     const namespaceInput = form?.elements.namedItem("namespace") as HTMLInputElement | null;
     const nameInput = form?.elements.namedItem("name") as HTMLInputElement | null;
     const pathInput = form?.elements.namedItem("path") as HTMLInputElement | null;
@@ -373,6 +404,9 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     const publish = document.querySelector<HTMLElement>("[data-submit-publish]");
     const publishCopy = document.querySelector<HTMLButtonElement>("[data-submit-publish-copy]");
     const publishStep = document.querySelector<HTMLElement>("[data-publish-step]");
+    const preflightSection = document.querySelector<HTMLElement>(".registry-submit-preflight");
+    const authorisationPaths = document.querySelector<HTMLElement>(".registry-authorisation-paths");
+    const manualAuthorisation = document.querySelector<HTMLElement>(".registry-manual-auth");
     const authorisationModes = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-authorisation-mode]"));
     const newCapabilityFlow = document.querySelector<HTMLElement>("[data-new-capability-flow]");
     const existingCapabilityPanel = document.querySelector<HTMLElement>("[data-existing-capability-panel]");
@@ -427,6 +461,15 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       { name: "Gate", aliases: ["Gate", "Gate Wallet"], url: "https://www.gate.io/", icon: walletIcon("gate"), mark: "G" },
       { name: "QuantumPurse", aliases: ["QuantumPurse"], url: "https://quantumpurse.org/", icon: walletIcon("quantumpurse"), mark: "QP" },
     ];
+    const sessionUrl = new URL(window.location.href);
+    const sessionFragment = new URLSearchParams(sessionUrl.hash.slice(1));
+    const authorisationSessionId = (sessionFragment.get("authorisation_session")
+      ?? sessionUrl.searchParams.get("authorisation_session"))?.trim().toLowerCase() ?? "";
+    const authorisationBrowserToken = sessionFragment.get("browser_token")?.trim() ?? "";
+    const authorisationSessionMode = /^auth_[0-9a-f]{32}$/.test(authorisationSessionId);
+    if (authorisationSessionMode && sessionUrl.hash) {
+      history.replaceState(history.state, "", `${sessionUrl.pathname}${sessionUrl.search}`);
+    }
 
     let cccPromise: Promise<typeof import("@ckb-ccc/connector/barrel")> | null = null;
     let walletController: any | null = null;
@@ -448,6 +491,9 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     let statusTone: "idle" | "ok" | "error" = "idle";
     let statusSuffix = "";
     let lastCoordinate = "";
+    let authorisationSession: AuthorisationSession | null = null;
+    let authorisationChallengeToken = "";
+    let authorisationSessionFinished = false;
 
     const message = (key: string): string => {
       const locale = document.documentElement.dataset.locale === "zh" ? "zh" : "en";
@@ -465,17 +511,33 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       }, introDismissAnimationMs);
     };
     try {
-      if (intro && localStorage.getItem(introStorageKey) !== "seen") {
+      if (intro && !authorisationSessionMode && localStorage.getItem(introStorageKey) !== "seen") {
         intro.hidden = false;
         localStorage.setItem(introStorageKey, "seen");
       }
     } catch {
-      if (intro && !(window as any).__cellscriptSubmitIntroSeen) {
+      if (intro && !authorisationSessionMode && !(window as any).__cellscriptSubmitIntroSeen) {
         intro.hidden = false;
         (window as any).__cellscriptSubmitIntroSeen = true;
       }
     }
     introDismiss?.addEventListener("click", hideIntro, { signal });
+
+    const applyAuthorisationSessionLayout = () => {
+      if (!authorisationSessionMode) return;
+      if (intro) intro.hidden = true;
+      if (submitBoundary) submitBoundary.hidden = true;
+      if (form) form.hidden = true;
+      if (preflightSection) preflightSection.hidden = true;
+      if (authorisationPaths) authorisationPaths.hidden = true;
+      if (manualAuthorisation) manualAuthorisation.hidden = true;
+      if (publishStep) publishStep.hidden = true;
+      if (sessionPanel) {
+        sessionPanel.hidden = false;
+        sessionPanel.dataset.state = authorisationSession ? "ready" : "loading";
+      }
+    };
+    applyAuthorisationSessionLayout();
 
     const setStatus = (key: string, tone: "idle" | "ok" | "error" = "idle", suffix = "") => {
       statusKey = key;
@@ -623,7 +685,10 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       const directSignerConnected = Boolean(activeWalletSigner && activeWalletIdentity);
       const manualSignatureMode = Boolean(activeExternalWallet);
       const signingRouteSelected = directSignerConnected || manualSignatureMode;
-      const payloadReady = newMode && signingRouteSelected && hasValidPayload();
+      const payloadReady = newMode
+        && signingRouteSelected
+        && hasValidPayload()
+        && (!authorisationSessionMode || Boolean(authorisationChallengeToken));
       const signatureReady = payloadReady && Boolean(signatureOutput?.value.trim());
       if (newCapabilityFlow) newCapabilityFlow.hidden = !newMode;
       if (existingCapabilityPanel) existingCapabilityPanel.hidden = !existingMode;
@@ -634,17 +699,17 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       }
       stageState("wallet", newMode && signingRouteSelected, newMode && !signingRouteSelected);
       stageState("scope", newMode && signatureReady, newMode && signingRouteSelected && !signatureReady);
-      stageState("authorise", Boolean(confirmedCapabilityKeyId), newMode && signatureReady && !confirmedCapabilityKeyId);
+      stageState("authorise", authorisationSessionFinished || Boolean(confirmedCapabilityKeyId), newMode && signatureReady && !authorisationSessionFinished && !confirmedCapabilityKeyId);
       if (principalPanel) principalPanel.hidden = !directSignerConnected && !(manualSignatureMode && principalInput?.value.trim());
-      if (payloadPanel) payloadPanel.hidden = !newMode || !signingRouteSelected;
-      if (signaturePanel) signaturePanel.hidden = !newMode || (!signatureReady && !manualSignatureMode);
+      if (payloadPanel) payloadPanel.hidden = authorisationSessionMode || !newMode || !signingRouteSelected;
+      if (signaturePanel) signaturePanel.hidden = authorisationSessionMode || !newMode || (!signatureReady && !manualSignatureMode);
       if (signatureHint) {
         const key = activeExternalWallet ? "signatureExternalHint" : "signatureReady";
         signatureHint.dataset.i18n = `registry.submit.${key}`;
         signatureHint.textContent = message(key);
       }
       if (changeWalletButton) changeWalletButton.hidden = !newMode || !signingRouteSelected;
-      const canPublish = Boolean(confirmedCapabilityKeyId);
+      const canPublish = !authorisationSessionMode && Boolean(confirmedCapabilityKeyId);
       if (publishStep) {
         publishStep.dataset.state = canPublish ? "ready" : "locked";
         publishStep.hidden = !canPublish;
@@ -654,13 +719,13 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       for (const button of capabilityActionButtons) {
         const action = button.dataset.capabilityAction;
         const visible = action === "connect"
-          ? newMode && !signingRouteSelected
+          ? newMode && !signingRouteSelected && !authorisationSessionFinished
           : action === "sign"
-            ? newMode && directSignerConnected && payloadReady && !signatureReady
+            ? newMode && directSignerConnected && (authorisationSessionMode || payloadReady) && !signatureReady && !authorisationSessionFinished
             : action === "submit"
-              ? newMode && signatureReady && !capabilitySubmitted
+              ? newMode && signatureReady && !capabilitySubmitted && !authorisationSessionFinished
               : action === "claim"
-                ? newMode && capabilitySubmitted && !namespaceClaimed && !namespaceReviewPending
+                ? !authorisationSessionMode && newMode && capabilitySubmitted && !namespaceClaimed && !namespaceReviewPending
                 : false;
         button.hidden = !visible;
         button.disabled = busy || !coordinateReady;
@@ -901,17 +966,22 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     };
     const applyWalletSearch = () => {
       const query = walletSearch?.value.trim().toLowerCase() || "";
-      let visible = 0;
+      let direct = 0;
+      let external = 0;
       for (const button of walletOptions?.querySelectorAll<HTMLButtonElement>(".registry-wallet-option") || []) {
         button.hidden = Boolean(query) && !(button.dataset.walletSearch || "").includes(query);
-        if (!button.hidden) visible += 1;
+        if (!button.hidden) {
+          if (button.dataset.connectMode === "direct") direct += 1;
+          else external += 1;
+        }
       }
       for (const group of walletOptions?.querySelectorAll<HTMLElement>("[data-wallet-group]") || []) {
         group.hidden = !group.querySelector(".registry-wallet-option:not([hidden])");
       }
       if (walletCount) {
-        const countKey = visible === 1 ? "walletCountSingular" : "walletCount";
-        walletCount.textContent = message(countKey).replace("{count}", String(visible));
+        walletCount.textContent = message("walletCount")
+          .replace("{direct}", String(direct))
+          .replace("{external}", String(external));
       }
     };
     walletSearch?.addEventListener("input", applyWalletSearch, { signal });
@@ -1116,6 +1186,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     const clearSignature = () => {
       if (signatureOutput) signatureOutput.value = "";
       if (copySignatureButton) copySignatureButton.dataset.copyText = "";
+      authorisationChallengeToken = "";
       capabilitySubmitted = false;
       submittedCapabilityKeyId = "";
       namespaceClaimed = false;
@@ -1146,6 +1217,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       setStatus("walletWaiting");
       const selection = await openWalletConnector();
       if (selection.kind === "external") {
+        if (authorisationSessionMode) throw new WorkflowError("errorSessionExternal");
         activeWalletSigner = null;
         activeWalletIdentity = null;
         activeExternalWallet = selection.wallet;
@@ -1254,13 +1326,111 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       }
       return signature;
     };
-    const readApiResponse = async (response: Response) => {
+    const readApiResponse = async (response: Response, reveal = true) => {
       const text = await response.text();
       let parsed: unknown;
       try { parsed = JSON.parse(text); }
       catch { parsed = { response: text }; }
-      showTechnical({ status: response.status, response: parsed });
+      if (reveal) showTechnical({ status: response.status, response: parsed });
       return parsed;
+    };
+    const isAuthorisationSession = (value: unknown): value is AuthorisationSession => {
+      if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+      const session = value as Partial<AuthorisationSession>;
+      return session.schema === "cellscript-registry-authorisation-session-v1"
+        && session.session_id === authorisationSessionId
+        && (session.status === "pending" || session.status === "authorised" || session.status === "review_pending")
+        && Boolean(session.artifact)
+        && typeof session.artifact?.namespace === "string"
+        && typeof session.artifact?.name === "string"
+        && typeof session.artifact?.kind === "string"
+        && Array.isArray(session.requested_scopes)
+        && session.requested_scopes.every((scope) => typeof scope === "string")
+        && typeof session.capability_expires_at === "string"
+        && typeof session.expires_at === "string";
+    };
+    const renderAuthorisationSession = (session: AuthorisationSession) => {
+      authorisationSession = session;
+      const locale = document.documentElement.dataset.locale === "zh" ? "zh-CN" : "en-GB";
+      const formatter = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" });
+      if (sessionArtifact) sessionArtifact.textContent = `${session.artifact.namespace}/${session.artifact.name} · ${session.artifact.kind}`;
+      if (sessionScope) sessionScope.textContent = session.requested_scopes.join(" · ");
+      if (sessionExpiry) sessionExpiry.textContent = formatter.format(new Date(session.expires_at));
+      if (sessionPanel) sessionPanel.dataset.state = session.status;
+      if (namespaceInput) namespaceInput.value = session.artifact.namespace;
+      if (nameInput) nameInput.value = session.artifact.name;
+      if (artifactKindInput) artifactKindInput.value = session.artifact.kind;
+      authorisationMode = "new";
+      authorisationSessionFinished = session.status !== "pending";
+      if (session.status === "authorised") setStatus("sessionCompleted", "ok");
+      else if (session.status === "review_pending") setStatus("sessionReviewPending", "idle");
+      else setStatus("walletIdle");
+      lastCoordinate = `${session.artifact.namespace}/${session.artifact.name}`;
+      syncArtifactKind();
+      syncWorkflow();
+    };
+    const loadAuthorisationSession = async () => {
+      if (!authorisationSessionMode) return;
+      if (!/^browser_[0-9a-f]{32}$/.test(authorisationBrowserToken)) throw new WorkflowError("errorSessionLoad");
+      const apiOrigin = signerRoot?.dataset.apiOrigin;
+      if (!apiOrigin) throw new WorkflowError("errorSessionLoad");
+      const response = await fetch(`${apiOrigin}/v1/authorisation-sessions/${encodeURIComponent(authorisationSessionId)}`, {
+        headers: { accept: "application/json", authorization: `Bearer ${authorisationBrowserToken}` },
+        signal,
+      });
+      const parsed = await readApiResponse(response, false);
+      if (response.status === 410) throw new WorkflowError("errorSessionExpired", JSON.stringify(parsed, null, 2));
+      if (!response.ok) throw new WorkflowError("errorSessionLoad", JSON.stringify({ status: response.status, response: parsed }, null, 2));
+      if (!isAuthorisationSession(parsed)) throw new WorkflowError("errorSessionResponse");
+      if (!coordinatePattern.test(parsed.artifact.namespace) || !coordinatePattern.test(parsed.artifact.name)) {
+        throw new WorkflowError("errorSessionResponse");
+      }
+      renderAuthorisationSession(parsed);
+    };
+    const prepareAuthorisationSessionChallenge = async () => {
+      if (!authorisationSession || authorisationSession.status !== "pending") throw new WorkflowError("errorSessionLoad");
+      if (!activeWalletIdentity || !principalInput?.value.trim()) throw new WorkflowError("errorIdentityUnavailable");
+      setStatus("sessionPreparing");
+      const response = await fetch(`${signerRoot?.dataset.apiOrigin}/v1/authorisation-sessions/${encodeURIComponent(authorisationSessionId)}/challenge`, {
+        method: "POST",
+        headers: { "content-type": "application/json", accept: "application/json", authorization: `Bearer ${authorisationBrowserToken}` },
+        body: JSON.stringify({
+          principal_type: activeWalletIdentity.principalType,
+          principal_id: principalInput.value.trim(),
+        }),
+        signal,
+      });
+      const parsed = await readApiResponse(response, false);
+      if (!response.ok) throw new WorkflowError("errorSessionLoad", JSON.stringify({ status: response.status, response: parsed }, null, 2));
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new WorkflowError("errorSessionResponse");
+      const challenge = parsed as Record<string, unknown>;
+      if (typeof challenge.challenge_token !== "string" || !challenge.challenge_token.startsWith("challenge_")
+        || !challenge.payload || typeof challenge.payload !== "object" || Array.isArray(challenge.payload)) {
+        throw new WorkflowError("errorSessionResponse");
+      }
+      authorisationChallengeToken = challenge.challenge_token;
+      if (payloadInput) payloadInput.value = JSON.stringify({ payload: challenge.payload }, null, 2);
+    };
+    const completeAuthorisationSession = async () => {
+      if (!authorisationChallengeToken) throw new WorkflowError("errorSessionResponse");
+      const payload = parsePayload();
+      const signature = await signatureForPayload(payload);
+      const response = await fetch(`${signerRoot?.dataset.apiOrigin}/v1/authorisation-sessions/${encodeURIComponent(authorisationSessionId)}/complete`, {
+        method: "POST",
+        headers: { "content-type": "application/json", accept: "application/json", authorization: `Bearer ${authorisationBrowserToken}` },
+        body: JSON.stringify({ challenge_token: authorisationChallengeToken, wallet_signature: signature }),
+        signal,
+      });
+      const parsed = await readApiResponse(response, !response.ok);
+      if (!response.ok) throw new WorkflowError("errorSubmit", JSON.stringify({ status: response.status, response: parsed }, null, 2));
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new WorkflowError("errorSessionResponse");
+      const completedStatus = (parsed as Record<string, unknown>).status;
+      if (completedStatus !== "authorised" && completedStatus !== "review_pending") throw new WorkflowError("errorSessionResponse");
+      capabilitySubmitted = true;
+      namespaceReviewPending = completedStatus === "review_pending";
+      authorisationSessionFinished = true;
+      if (sessionPanel) sessionPanel.dataset.state = String(completedStatus);
+      setStatus(completedStatus === "authorised" ? "sessionCompleted" : "sessionReviewPending", completedStatus === "authorised" ? "ok" : "idle");
     };
     const renderCapabilityCheck = (check: CapabilityCheck) => {
       lastCapabilityCheck = check;
@@ -1384,11 +1554,13 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
             if (action === "connect") {
               await ensureWalletSigner();
             } else if (action === "sign") {
-              parsePayload();
+              if (authorisationSessionMode) await prepareAuthorisationSessionChallenge();
+              else parsePayload();
               writeSignature(await signCapabilityPayload());
               setStatus("signed", "ok");
             } else if (action === "submit") {
-              await submitCapability();
+              if (authorisationSessionMode) await completeAuthorisationSession();
+              else await submitCapability();
             } else if (action === "claim") {
               await claimNamespace();
             }
@@ -1519,5 +1691,12 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     lastCoordinate = `${fieldValue("namespace")}/${fieldValue("name")}`;
     syncArtifactKind();
     syncWorkflow();
+    if (authorisationSessionMode) {
+      void loadAuthorisationSession().catch((error) => {
+        if (sessionPanel) sessionPanel.dataset.state = "error";
+        setError(error, "errorSessionLoad");
+        syncWorkflow();
+      });
+    }
   </script>
 </RegistryLayout>

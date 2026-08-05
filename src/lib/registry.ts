@@ -128,6 +128,22 @@ export interface RegistryPackageDetailView {
   consumerCommand: string;
   recordUrl: string;
   maintainUrl: string;
+  nextAction: RegistryPackageNextAction;
+}
+
+export interface RegistryPackageNextAction {
+  kind:
+    | "unavailable"
+    | "deprecated"
+    | "verification_rejected"
+    | "verification_pending"
+    | "reproducibility_evidence"
+    | "deployment_evidence"
+    | "chain_verification"
+    | "install"
+    | "fetch";
+  action: "link" | "copy" | "refresh";
+  value?: string;
 }
 
 export interface RegistryPackageView {
@@ -431,6 +447,28 @@ export function registryPackageDetailView(pkg: RegistryPackageView, apiOrigin: s
         : pkg.artifact.consumption_mode === "deployment"
           ? `cellc artifact pin ${coordinate} --output Artifacts.lock --accept-hash-bound${apiArg}\ncellc artifact record-deployment ${coordinate} --network ${releaseNetwork} --code-hash <code_hash> --hash-type ${profileContract?.ckb?.hash_type || "data1"} --dep-type ${profileContract?.ckb?.dep_type || "code"} --tx-hash <tx_hash> --index <index> --capability-key-id <key_id>${apiArg}`
           : `cellc artifact pin ${coordinate} --output Artifacts.lock --accept-hash-bound${apiArg}`;
+  const recordUrl = firstRelease?.direct_url || firstRelease?.immutable_bundle?.url || pkg.registry_json_url || "#";
+  const maintainUrl = `/registry/manage?package=${encodeURIComponent(pkg.coordinate)}`;
+  let nextAction: RegistryPackageNextAction;
+  if (pkg.availability_status === "deprecated") {
+    nextAction = { kind: "deprecated", action: "link", value: recordUrl };
+  } else if (pkg.availability_status !== "active") {
+    nextAction = { kind: "unavailable", action: "link", value: recordUrl };
+  } else if (pkg.verification_status === "rejected") {
+    nextAction = { kind: "verification_rejected", action: "link", value: maintainUrl };
+  } else if (pkg.verification_status === "pending") {
+    nextAction = { kind: "verification_pending", action: "refresh" };
+  } else if (pkg.verification_status === "evidence_required") {
+    nextAction = { kind: "reproducibility_evidence", action: "link", value: maintainUrl };
+  } else if (pkg.artifact.consumption_mode === "deployment" && pkg.deployment_status === "undeployed") {
+    nextAction = { kind: "deployment_evidence", action: "link", value: maintainUrl };
+  } else if (pkg.artifact.consumption_mode === "deployment" && pkg.deployment_status === "deployed") {
+    nextAction = { kind: "chain_verification", action: "link", value: maintainUrl };
+  } else if (pkg.artifact.consumption_mode === "dependency") {
+    nextAction = { kind: "install", action: "copy", value: pkg.install_command || `cellc install ${coordinate}` };
+  } else {
+    nextAction = { kind: "fetch", action: "copy", value: consumerCommand };
+  }
 
   return {
     pkg,
@@ -441,8 +479,9 @@ export function registryPackageDetailView(pkg: RegistryPackageView, apiOrigin: s
     profileContract,
     installCommand: pkg.install_command || `cellc install ${coordinate}`,
     consumerCommand,
-    recordUrl: firstRelease?.direct_url || firstRelease?.immutable_bundle?.url || pkg.registry_json_url || "#",
-    maintainUrl: `/registry/manage?package=${encodeURIComponent(pkg.coordinate)}`,
+    recordUrl,
+    maintainUrl,
+    nextAction,
   };
 }
 
