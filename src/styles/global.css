@@ -3680,6 +3680,12 @@ tr:last-child td {
     padding: 0;
   }
 
+  .theme-toggle,
+  .language-toggle,
+  .nav-link {
+    min-height: 44px;
+  }
+
   .nav-link span,
   .language-toggle [data-language-label],
   .theme-toggle [data-theme-label] {

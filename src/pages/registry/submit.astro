@@ -12,7 +12,7 @@ const apiOrigin = registryRuntime.apiOrigin;
   <section class="registry-flow" aria-label={t.registry.nav.submit} data-i18n-aria-label="registry.nav.submit">
     <section class="registry-publish-entry" data-publish-entry aria-labelledby="registry-publish-entry-title">
       <div class="registry-publish-entry-main">
-        <p class="registry-label" data-i18n="registry.submit.entryLabel">{t.registry.submit.entryLabel}</p>
+        <p class="registry-context-label" data-i18n="registry.submit.entryLabel">{t.registry.submit.entryLabel}</p>
         <h2 id="registry-publish-entry-title" data-i18n="registry.submit.entryTitle">{t.registry.submit.entryTitle}</h2>
         <p class="registry-publish-entry-lead" data-i18n="registry.submit.entryBody">{t.registry.submit.entryBody}</p>
         <div class="registry-publish-command" aria-label={t.registry.submit.entryCommandLabel} data-i18n-aria-label="registry.submit.entryCommandLabel">
@@ -35,9 +35,9 @@ const apiOrigin = registryRuntime.apiOrigin;
       <aside class="registry-publish-journey" aria-label={t.registry.submit.entryJourneyLabel} data-i18n-aria-label="registry.submit.entryJourneyLabel">
         <p class="registry-label" data-i18n="registry.submit.entryJourneyLabel">{t.registry.submit.entryJourneyLabel}</p>
         <ol>
-          <li><span>01</span><div><strong data-i18n="registry.submit.entryStepCheck">{t.registry.submit.entryStepCheck}</strong><small data-i18n="registry.submit.entryStepCheckBody">{t.registry.submit.entryStepCheckBody}</small></div></li>
-          <li><span>02</span><div><strong data-i18n="registry.submit.entryStepApprove">{t.registry.submit.entryStepApprove}</strong><small data-i18n="registry.submit.entryStepApproveBody">{t.registry.submit.entryStepApproveBody}</small></div></li>
-          <li><span>03</span><div><strong data-i18n="registry.submit.entryStepPublish">{t.registry.submit.entryStepPublish}</strong><small data-i18n="registry.submit.entryStepPublishBody">{t.registry.submit.entryStepPublishBody}</small></div></li>
+          <li><span aria-hidden="true"></span><div><strong data-i18n="registry.submit.entryStepCheck">{t.registry.submit.entryStepCheck}</strong><small data-i18n="registry.submit.entryStepCheckBody">{t.registry.submit.entryStepCheckBody}</small></div></li>
+          <li><span aria-hidden="true"></span><div><strong data-i18n="registry.submit.entryStepApprove">{t.registry.submit.entryStepApprove}</strong><small data-i18n="registry.submit.entryStepApproveBody">{t.registry.submit.entryStepApproveBody}</small></div></li>
+          <li><span aria-hidden="true"></span><div><strong data-i18n="registry.submit.entryStepPublish">{t.registry.submit.entryStepPublish}</strong><small data-i18n="registry.submit.entryStepPublishBody">{t.registry.submit.entryStepPublishBody}</small></div></li>
         </ol>
       </aside>
     </section>
@@ -91,15 +91,24 @@ const apiOrigin = registryRuntime.apiOrigin;
     <section class="registry-manual-publish" data-manual-publish hidden aria-labelledby="registry-manual-publish-title">
       <header class="registry-manual-publish-head">
         <button class="registry-text-button" type="button" data-close-manual-publish data-i18n="registry.submit.manualBack">{t.registry.submit.manualBack}</button>
-        <p class="registry-label" data-i18n="registry.submit.manualLabel">{t.registry.submit.manualLabel}</p>
-        <h2 id="registry-manual-publish-title" data-i18n="registry.submit.manualTitle">{t.registry.submit.manualTitle}</h2>
-        <p data-i18n="registry.submit.manualBody">{t.registry.submit.manualBody}</p>
+        <div class="registry-manual-publish-intro">
+          <p class="registry-context-label" data-i18n="registry.submit.manualLabel">{t.registry.submit.manualLabel}</p>
+          <h2 id="registry-manual-publish-title" data-i18n="registry.submit.manualTitle">{t.registry.submit.manualTitle}</h2>
+          <p data-i18n="registry.submit.manualBody">{t.registry.submit.manualBody}</p>
+        </div>
+        <aside class="registry-submit-boundary" aria-label={t.registry.submit.toolBoundaryTitle}>
+          <strong data-i18n="registry.submit.toolBoundaryTitle">{t.registry.submit.toolBoundaryTitle}</strong>
+          <span data-i18n="registry.submit.toolBoundaryBody">{t.registry.submit.toolBoundaryBody}</span>
+        </aside>
       </header>
 
-      <aside class="registry-submit-boundary" aria-label={t.registry.submit.toolBoundaryTitle}>
-        <strong data-i18n="registry.submit.toolBoundaryTitle">{t.registry.submit.toolBoundaryTitle}</strong>
-        <span data-i18n="registry.submit.toolBoundaryBody">{t.registry.submit.toolBoundaryBody}</span>
-      </aside>
+      <nav class="registry-manual-index" aria-label={t.registry.submit.manualLabel}>
+        <ol>
+          <li><a href="#registry-submit-form"><span aria-hidden="true">1</span><strong data-i18n="registry.submit.detailsLabel">{t.registry.submit.detailsLabel}</strong></a></li>
+          <li><a href="#registry-preflight-stage"><span aria-hidden="true">2</span><strong data-i18n="registry.submit.preflightTitle">{t.registry.submit.preflightTitle}</strong></a></li>
+          <li><a href="#registry-authorisation-stage"><span aria-hidden="true">3</span><strong data-i18n="registry.submit.walletLabel">{t.registry.submit.walletLabel}</strong></a></li>
+        </ol>
+      </nav>
 
     <form class="registry-builder" id="registry-submit-form" data-submit-form novalidate>
       <div class="registry-builder-heading">
@@ -208,7 +217,7 @@ const apiOrigin = registryRuntime.apiOrigin;
       </details>
     </form>
 
-    <section class="registry-submit-preflight" aria-labelledby="registry-preflight-heading">
+    <section class="registry-submit-preflight" id="registry-preflight-stage" aria-labelledby="registry-preflight-heading">
       <div class="registry-step-copy">
         <h2 id="registry-preflight-heading" data-i18n="registry.submit.preflightTitle">{t.registry.submit.preflightTitle}</h2>
         <p data-i18n="registry.submit.preflightBody">{t.registry.submit.preflightBody}</p>
@@ -226,7 +235,7 @@ const apiOrigin = registryRuntime.apiOrigin;
       </div>
     </section>
 
-    <section class="registry-authorisation-card" data-authorisation-card aria-labelledby="registry-wallet-heading">
+    <section class="registry-authorisation-card" id="registry-authorisation-stage" data-authorisation-card aria-labelledby="registry-wallet-heading">
       <header class="registry-authorisation-head">
         <div>
           <h2 id="registry-wallet-heading" data-i18n="registry.submit.walletTitle">{t.registry.submit.walletTitle}</h2>
