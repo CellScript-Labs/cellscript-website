@@ -66,20 +66,44 @@
   --accent-quiet: oklch(0.61 0.09 158);
   --accent-line: oklch(0.72 0.1 158 / 0.42);
   --accent-surface: oklch(0.2 0.035 158 / 0.36);
-  /* Secondary accent: warm amber for CTAs / hovers / state highlights.
-     Deliberately off the green so it reads as a distinct signal. */
+  /* Decorative warm accent. Status meaning uses the semantic tokens below. */
   --accent-warm: oklch(0.8 0.13 70);
-  --accent-warm-surface: oklch(0.24 0.05 70 / 0.34);
-  --accent-warm-line: oklch(0.74 0.11 70 / 0.4);
   /* Status palette: encoded semantics for registry state. */
   --status-active: oklch(0.78 0.14 158);
   --status-active-surface: oklch(0.22 0.04 158 / 0.34);
   --status-info: oklch(0.78 0.1 230);
   --status-info-surface: oklch(0.22 0.04 230 / 0.34);
+  --status-warning-text: oklch(0.8 0.13 70);
+  --status-warning-surface: oklch(0.24 0.05 70 / 0.34);
+  --status-warning-line: oklch(0.74 0.11 70 / 0.4);
+  --status-danger-text: oklch(0.76 0.14 28);
+  --status-danger-surface: oklch(0.22 0.05 28 / 0.34);
+  --status-danger-line: oklch(0.68 0.13 28 / 0.44);
   --status-stable: oklch(0.78 0.08 100);
   --status-stable-surface: oklch(0.22 0.035 100 / 0.3);
   --status-source: oklch(0.7 0.012 0);
   --status-source-surface: oklch(0.2 0 0 / 0.42);
+  --sandbox-marker: oklch(0.78 0.14 72);
+  --sandbox-text: oklch(0.8 0.11 72);
+  --sandbox-surface: oklch(0.21 0.035 72 / 0.36);
+  --sandbox-line: oklch(0.68 0.1 72 / 0.42);
+  /* Mermaid accepts hex values only. Keep its complete palette semantic and
+     theme-bound here instead of scattering literals through the renderer. */
+  --diagram-background: #101714;
+  --diagram-primary: #0f1d18;
+  --diagram-primary-text: #eff8f4;
+  --diagram-primary-border: #4fc294;
+  --diagram-secondary: #17211e;
+  --diagram-secondary-text: #e3eee9;
+  --diagram-secondary-border: #568b75;
+  --diagram-tertiary: #151a18;
+  --diagram-tertiary-text: #d6e2dd;
+  --diagram-tertiary-border: #4d655b;
+  --diagram-line: #74d8ad;
+  --diagram-edge-label: #101713;
+  --diagram-note: #272215;
+  --diagram-note-text: #f1e3c3;
+  --diagram-note-border: #cfa55c;
   --primary-contrast: oklch(0.08 0 0);
   --brand-mark-bg: oklch(0.16 0 0);
   --brand-mark-inner: var(--accent-line);
@@ -145,6 +169,7 @@
   --panel-pad: 22px;
   /* Modular type scale (1.125 ratio). Use these for new copy;
      --text-body is applied to <body> as the site default. */
+  --text-micro: 0.7rem;
   --text-xs: 0.75rem;
   --text-sm: 0.875rem;
   --text-body: 1.0625rem;
@@ -221,16 +246,39 @@
   --accent-line: oklch(0.54 0.1 158 / 0.36);
   --accent-surface: oklch(0.87 0.045 158 / 0.38);
   --accent-warm: oklch(0.62 0.14 65);
-  --accent-warm-surface: oklch(0.9 0.05 65 / 0.42);
-  --accent-warm-line: oklch(0.68 0.11 65 / 0.4);
   --status-active: oklch(0.48 0.13 158);
   --status-active-surface: oklch(0.9 0.04 158 / 0.42);
   --status-info: oklch(0.5 0.11 230);
   --status-info-surface: oklch(0.9 0.04 230 / 0.4);
+  --status-warning-text: oklch(0.44 0.12 70);
+  --status-warning-surface: oklch(0.93 0.04 70 / 0.58);
+  --status-warning-line: oklch(0.58 0.11 70 / 0.44);
+  --status-danger-text: oklch(0.44 0.15 28);
+  --status-danger-surface: oklch(0.91 0.04 28 / 0.48);
+  --status-danger-line: oklch(0.56 0.14 28 / 0.42);
   --status-stable: oklch(0.5 0.1 100);
   --status-stable-surface: oklch(0.9 0.04 100 / 0.38);
   --status-source: oklch(0.45 0.012 0);
   --status-source-surface: oklch(0.92 0 0 / 0.55);
+  --sandbox-marker: oklch(0.56 0.14 72);
+  --sandbox-text: oklch(0.43 0.1 72);
+  --sandbox-surface: oklch(0.92 0.04 72 / 0.55);
+  --sandbox-line: oklch(0.58 0.11 72 / 0.42);
+  --diagram-background: #f7faf8;
+  --diagram-primary: #eef8f3;
+  --diagram-primary-text: #13231e;
+  --diagram-primary-border: #087c57;
+  --diagram-secondary: #f5f8f6;
+  --diagram-secondary-text: #263d35;
+  --diagram-secondary-border: #7aa392;
+  --diagram-tertiary: #e8f0ec;
+  --diagram-tertiary-text: #2f463d;
+  --diagram-tertiary-border: #8ba79b;
+  --diagram-line: #087c57;
+  --diagram-edge-label: #f7faf8;
+  --diagram-note: #fff7e6;
+  --diagram-note-text: #50390f;
+  --diagram-note-border: #9a6a13;
   --primary-contrast: oklch(0.98 0.004 175);
   --brand-mark-bg: oklch(0.965 0.006 175);
   --brand-mark-inner: var(--accent-line);
@@ -1635,10 +1683,14 @@ body.home-body {
   background: var(--accent-surface);
 }
 
-.docs-callout-warning,
+.docs-callout-warning {
+  border-left-color: var(--status-warning-line);
+  background: var(--status-warning-surface);
+}
+
 .docs-callout-caution {
-  border-left-color: var(--accent-warm);
-  background: var(--accent-warm-surface);
+  border-left-color: var(--status-danger-line);
+  background: var(--status-danger-surface);
 }
 
 .docs-callout-important {
@@ -4195,7 +4247,7 @@ tr:last-child td {
 
 .pg-example-lesson span {
   font-family: var(--font-mono);
-  font-size: 0.58rem;
+  font-size: var(--text-micro);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -4358,7 +4410,7 @@ tr:last-child td {
   white-space: nowrap;
   color: var(--text-soft);
   font-family: var(--font-mono);
-  font-size: 0.66rem;
+  font-size: var(--text-micro);
   letter-spacing: 0;
   text-transform: none;
 }
@@ -4434,7 +4486,7 @@ tr:last-child td {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  font-size: 0.64rem;
+  font-size: var(--text-micro);
 }
 
 .pg-workspace-actions {
@@ -4546,7 +4598,9 @@ tr:last-child td {
 }
 
 .pg-file-delete:disabled {
-  opacity: 0.35;
+  border-color: var(--line-soft);
+  background: var(--panel-soft);
+  color: var(--line-number);
   cursor: not-allowed;
 }
 
@@ -4569,7 +4623,7 @@ tr:last-child td {
   border-radius: 4px;
   background: var(--panel-chip);
   color: var(--substrate-accent);
-  font-size: 0.58rem;
+  font-size: var(--text-micro);
   font-weight: 700;
   text-transform: uppercase;
 }
@@ -4588,7 +4642,7 @@ tr:last-child td {
 .pg-example-group h2 {
   margin: 0;
   color: var(--dim);
-  font-size: 0.62rem;
+  font-size: var(--text-micro);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -4685,7 +4739,7 @@ tr:last-child td {
   background: var(--panel-chip);
   color: var(--substrate-accent);
   font-family: var(--font-mono);
-  font-size: 0.6rem;
+  font-size: var(--text-micro);
   font-weight: 600;
   letter-spacing: 0;
   line-height: 1;
@@ -5066,7 +5120,7 @@ tr:last-child td {
   padding: 2px 8px;
   border-radius: 4px;
   font-family: var(--font-mono);
-  font-size: 0.64rem;
+  font-size: var(--text-micro);
   font-weight: 600;
   letter-spacing: 0.04em;
 }
@@ -5187,7 +5241,7 @@ tr:last-child td {
 
 .pg-type-kind {
   font-family: var(--font-mono);
-  font-size: 0.64rem;
+  font-size: var(--text-micro);
   color: var(--accent);
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -5204,14 +5258,14 @@ tr:last-child td {
   border-radius: 3px;
   background: var(--panel-chip);
   font-family: var(--font-mono);
-  font-size: 0.64rem;
+  font-size: var(--text-micro);
   color: var(--text-soft);
 }
 
 .pg-type-size {
   margin-top: 5px;
   font-family: var(--font-mono);
-  font-size: 0.66rem;
+  font-size: var(--text-micro);
   color: var(--substrate-accent-dim);
 }
 
@@ -5312,7 +5366,7 @@ tr:last-child td {
   border-radius: 999px;
   color: var(--substrate-dim);
   font-family: var(--font-mono);
-  font-size: 0.64rem;
+  font-size: var(--text-micro);
   font-weight: 700;
   line-height: 1;
 }
@@ -5393,7 +5447,7 @@ tr:last-child td {
   display: block;
   margin: 0 0 8px;
   font-family: var(--font-mono);
-  font-size: 0.64rem;
+  font-size: var(--text-micro);
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
@@ -5469,7 +5523,7 @@ tr:last-child td {
   border: 1px solid var(--color-transparent);
   border-radius: 4px;
   background: var(--color-transparent);
-  font-size: 0.62rem;
+  font-size: var(--text-micro);
 }
 
 .pg-rail-action-detail {
@@ -5485,7 +5539,7 @@ tr:last-child td {
   grid-template-columns: 54px minmax(0, 1fr);
   gap: 8px;
   font-family: var(--font-mono);
-  font-size: 0.66rem;
+  font-size: var(--text-micro);
   color: var(--substrate-dim);
 }
 
@@ -5522,7 +5576,7 @@ tr:last-child td {
 
 .pg-rail-type-kind {
   font-family: var(--font-mono);
-  font-size: 0.62rem;
+  font-size: var(--text-micro);
   color: var(--substrate-dim);
 }
 

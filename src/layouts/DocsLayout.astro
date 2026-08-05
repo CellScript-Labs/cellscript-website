@@ -131,28 +131,54 @@ const title = `${page.title} — CellScript Docs`;
 
     <script>
       let mermaidModule: typeof import("mermaid") | undefined;
+      let mermaidRenderVersion = 0;
 
       const renderMermaid = async () => {
-        if (!document.querySelector(".docs-content pre.mermaid")) return;
+        const blocks = Array.from(document.querySelectorAll<HTMLElement>(".docs-content pre.mermaid"));
+        if (!blocks.length) return;
+        blocks.forEach((block) => {
+          block.dataset.mermaidSource ||= block.textContent || "";
+        });
+
+        const renderVersion = ++mermaidRenderVersion;
         mermaidModule ??= await import("mermaid");
+        if (renderVersion !== mermaidRenderVersion) return;
+
         const mermaid = mermaidModule.default;
-        const theme = document.documentElement.dataset.theme === "dark" ? "dark" : "default";
+        const root = document.documentElement;
+        const styles = getComputedStyle(root);
+        const token = (name: string) => styles.getPropertyValue(name).trim();
+        const darkMode = root.dataset.theme === "dark";
         mermaid.initialize({
           startOnLoad: false,
           securityLevel: "strict",
-          theme,
+          theme: "base",
           themeVariables: {
-            primaryColor: theme === "dark" ? "#0f1d18" : "#eef8f3",
-            primaryTextColor: theme === "dark" ? "#eff8f4" : "#13231e",
-            primaryBorderColor: "#0a8f63",
-            lineColor: theme === "dark" ? "#74d8ad" : "#087c57",
+            darkMode,
+            background: token("--diagram-background"),
+            primaryColor: token("--diagram-primary"),
+            primaryTextColor: token("--diagram-primary-text"),
+            primaryBorderColor: token("--diagram-primary-border"),
+            secondaryColor: token("--diagram-secondary"),
+            secondaryTextColor: token("--diagram-secondary-text"),
+            secondaryBorderColor: token("--diagram-secondary-border"),
+            tertiaryColor: token("--diagram-tertiary"),
+            tertiaryTextColor: token("--diagram-tertiary-text"),
+            tertiaryBorderColor: token("--diagram-tertiary-border"),
+            lineColor: token("--diagram-line"),
+            textColor: token("--diagram-primary-text"),
+            edgeLabelBackground: token("--diagram-edge-label"),
+            noteBkgColor: token("--diagram-note"),
+            noteTextColor: token("--diagram-note-text"),
+            noteBorderColor: token("--diagram-note-border"),
             fontFamily: "Outfit, system-ui, sans-serif",
           },
         });
-        document.querySelectorAll<HTMLElement>(".docs-content pre.mermaid").forEach((block) => {
+        blocks.forEach((block) => {
+          block.textContent = block.dataset.mermaidSource || "";
           block.removeAttribute("data-processed");
         });
-        mermaid.run({ querySelector: ".docs-content pre.mermaid" }).catch(() => {});
+        await mermaid.run({ nodes: blocks }).catch(() => {});
       };
 
       renderMermaid().catch(() => {});
