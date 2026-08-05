@@ -24,6 +24,20 @@ const title = `CellScript — ${t.notFound.eyebrow}`;
     <link rel="icon" type="image/png" media="(prefers-color-scheme: dark)" href={`${import.meta.env.BASE_URL}cellscript-logo-dark.png`} />
     <title>{title}</title>
     <SitePreferencesBootstrap />
+    <script is:inline>
+      (() => {
+        const match = window.location.pathname.match(/^\/registry\/package\/([^/]+)\/([^/]+)\/?$/);
+        if (!match) return;
+        try {
+          const target = new URL("/registry/package/", window.location.origin);
+          target.searchParams.set("namespace", decodeURIComponent(match[1]));
+          target.searchParams.set("name", decodeURIComponent(match[2]));
+          window.location.replace(target);
+        } catch {
+          // Malformed path escapes stay on the normal 404 page.
+        }
+      })();
+    </script>
     <ClientRouter />
   </head>
   <body class="not-found-body">

@@ -60,24 +60,48 @@ function readToml(candidate) {
 }
 
 function git(args, cwd) {
-  const result = spawnSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] });
-  return result.status === 0 ? result.stdout.trim() : "";
+  const result = spawnSync("git", args, { cwd, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+  return result.status === 0
+    ? { ok: true, output: result.stdout.trim() }
+    : { ok: false, output: "", error: result.stderr.trim() || `git exited with status ${result.status ?? "unknown"}` };
 }
 
-function gitRevision(candidate) {
-  const root = git(["-C", dirname(candidate), "rev-parse", "--show-toplevel"], REPO_ROOT);
-  if (!root) return null;
-  const revision = git(["rev-parse", "HEAD"], root);
-  if (revision) return revision;
-  const rel = posixRelative(realpathSync(root), realpathSync(candidate));
-  const logged = git(["log", "-1", "--no-merges", "--format=%H", "--", rel], root);
-  if (logged) return logged;
-  const mergeHeads = git(["rev-parse", "-q", "--verify", "MERGE_HEAD"], root).split("\n").filter(Boolean);
-  for (const head of mergeHeads) {
-    const merged = git(["log", "-1", "--no-merges", "--format=%H", head, "--", rel], root);
-    if (merged) return merged;
+function gitSource(candidate) {
+  const rootResult = git(["-C", dirname(candidate), "rev-parse", "--show-toplevel"], REPO_ROOT);
+  if (!rootResult.ok || !rootResult.output) {
+    throw new Error(`cannot resolve the git repository for ${posixRelative(REPO_ROOT, candidate)}: ${rootResult.error || "empty git output"}`);
   }
-  return null;
+  const root = rootResult.output;
+  const revisionResult = git(["rev-parse", "HEAD"], root);
+  if (!revisionResult.ok || !revisionResult.output) {
+    throw new Error(
+      `cannot record a source revision for ${posixRelative(REPO_ROOT, candidate)}: ${revisionResult.error || "git returned no revision"}`,
+    );
+  }
+  const remoteResult = git(["remote", "get-url", "origin"], root);
+  if (!remoteResult.ok || !remoteResult.output) {
+    throw new Error(`cannot record the source repository for ${posixRelative(REPO_ROOT, candidate)}: ${remoteResult.error || "origin is missing"}`);
+  }
+  const remote = remoteResult.output
+    .replace(/^git@github[.]com:/, "https://github.com/")
+    .replace(/^ssh:\/\/git@github[.]com\//, "https://github.com/")
+    .replace(/[.]git$/, "");
+  let remoteUrl;
+  try {
+    remoteUrl = new URL(remote);
+  } catch {
+    throw new Error(`source repository for ${posixRelative(REPO_ROOT, candidate)} must have an HTTPS browser URL`);
+  }
+  if (remoteUrl.protocol !== "https:" || remoteUrl.username || remoteUrl.password || remoteUrl.search || remoteUrl.hash) {
+    throw new Error(`source repository for ${posixRelative(REPO_ROOT, candidate)} must use a credential-free HTTPS browser URL`);
+  }
+  const resolvedRoot = realpathSync(root);
+  return {
+    revision: revisionResult.output,
+    repository: `${remoteUrl.origin}${remoteUrl.pathname.replace(/\/$/, "")}`,
+    package_path: posixRelative(resolvedRoot, realpathSync(dirname(candidate))),
+    registry_path: posixRelative(resolvedRoot, realpathSync(candidate)),
+  };
 }
 
 function latestVersion(versions) {
@@ -164,15 +188,25 @@ function packageRecord(registryPath) {
   const latest = latestVersion(registry.versions);
   const deployment = deploymentSummary(deployed);
   const latestValue = String(latest?.version || packageManifest.version || "");
-  const status = deployment.active_count ? "active" : String(metadata.status || "source-only");
+  const status = deployment.active_count ? "deployed" : String(latest?.status || "source_published");
   const packagePath = posixRelative(REPO_ROOT, packageDir);
+  const source = gitSource(registryPath);
+  const artifact = {
+    kind: typeof metadata.profile === "string" && metadata.profile.trim() ? "profile_library" : "source_library",
+    profile: "cellscript_source",
+    consumption_mode: "dependency",
+    language: "cellscript",
+  };
   return {
     coordinate: `${namespace}/${name}`,
     namespace,
     name,
     path: packagePath,
     registry_path: posixRelative(REPO_ROOT, registryPath),
-    source_revision: gitRevision(registryPath),
+    source_revision: source.revision,
+    source_repository: source.repository,
+    source_package_path: source.package_path,
+    source_registry_path: source.registry_path,
     description: packageManifest.description || "",
     license: latest?.license || packageManifest.license || "",
     repository: packageManifest.repository || "",
@@ -181,6 +215,7 @@ function packageRecord(registryPath) {
     keywords: packageManifest.keywords || [],
     categories: packageManifest.categories || [],
     production: Boolean(policy.production || false),
+    artifact,
     policy,
     metadata,
     latest_version: latestValue,
@@ -222,9 +257,10 @@ function sortJson(value) {
 }
 
 const registryPaths = await findRegistryFiles(REPO_ROOT);
-if (!registryPaths.length && existsSync(OUT)) {
-  console.log(`no registry.json sources found under ${REPO_ROOT}; keeping committed ${posixRelative(WEBSITE_ROOT, OUT)}`);
-  process.exit(0);
+if (!registryPaths.length) {
+  throw new Error(
+    `no registry.json sources found under ${REPO_ROOT}; refusing to publish or retain a potentially stale ${posixRelative(WEBSITE_ROOT, OUT)}`,
+  );
 }
 const records = registryPaths.map(packageRecord).filter(Boolean).sort((left, right) => left.coordinate.localeCompare(right.coordinate));
 const payload = {

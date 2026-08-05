@@ -90,7 +90,14 @@ The site includes generated registry metadata at:
 src/data/registry-packages.json
 ```
 
-When this repository is checked out as a submodule inside the main CellScript repository, the generator can scan the parent checkout for package metadata. When this repository is used standalone and no package sources are present, the generator keeps the committed registry data instead of erasing it.
+When this repository is checked out as a submodule inside the main CellScript
+repository, the generator scans the parent checkout for package metadata. It
+fails closed when no `registry.json` source exists, when the source has no git
+revision, or when its origin is not a credential-free HTTPS URL; it never
+silently retains an older generated file. Build-time CellScript packages are
+classified as `profile_library` when `Cell.toml` declares `metadata.profile`,
+otherwise as `source_library`. Source links are pinned to the package
+repository revision rather than a moving branch.
 
 Manual regeneration:
 

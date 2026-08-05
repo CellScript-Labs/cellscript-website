@@ -16,11 +16,11 @@ interface Props {
 }
 
 const { pkg } = Astro.props;
-const description = pkg.description || `CellScript registry package ${pkg.coordinate}`;
+const description = pkg.description || `CellScript registry artifact ${pkg.coordinate}`;
 ---
 
 <RegistryLayout
-  title={`CellScript Registry: ${pkg.coordinate}`}
+  title={`CellScript Artifact Registry: ${pkg.coordinate}`}
   description={description}
   active="package"
   showHeader={false}

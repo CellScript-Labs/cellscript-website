@@ -880,11 +880,12 @@
 }
 
 .registry-submit-intro { order: 0; }
-.registry-authorisation-card { order: 1; }
+.registry-submit-boundary { order: 1; }
 .registry-builder { order: 2; }
 .registry-submit-preflight { order: 3; }
-.registry-publish-step { order: 4; }
-.registry-wallet-dialog { order: 5; }
+.registry-authorisation-card { order: 4; }
+.registry-publish-step { order: 5; }
+.registry-wallet-dialog { order: 6; }
 
 .registry-builder[hidden],
 .registry-submit-preflight[hidden] {
@@ -959,8 +960,25 @@
   transform: translateY(1px);
 }
 
+.registry-submit-boundary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+  align-items: baseline;
+  padding: 18px 0;
+  border-bottom: 1px solid var(--line-soft);
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.registry-submit-boundary strong {
+  color: var(--text);
+  font-weight: 700;
+}
+
 .registry-builder {
-  padding: 0 0 30px;
+  padding: 30px 0;
   border: 0;
   border-bottom: 1px solid var(--line-soft);
   border-radius: 0;
@@ -1134,17 +1152,13 @@
 
 .registry-authorisation-card {
   position: relative;
-  margin: 24px 0 38px;
+  margin: 30px 0 38px;
   padding: clamp(24px, 3.2vw, 34px);
   overflow: hidden;
   border: 1px solid var(--line-soft);
   border-radius: 14px;
   background: color-mix(in oklch, var(--panel-soft) 92%, var(--bg));
   box-shadow: inset 0 1px 0 var(--line-inner);
-}
-
-.registry-flow:not(:has(.registry-submit-intro:not([hidden]))) .registry-authorisation-card {
-  margin-top: 0;
 }
 
 .registry-authorisation-card::before {
@@ -1204,6 +1218,138 @@
   display: grid;
   gap: 15px;
   padding-top: 16px;
+}
+
+.registry-signer[hidden] {
+  display: none;
+}
+
+.registry-authorisation-paths {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+  margin-top: 26px;
+}
+
+.registry-authorisation-paths button {
+  display: grid;
+  gap: 5px;
+  min-width: 0;
+  min-height: 86px;
+  padding: 15px 16px;
+  border: 1px solid var(--line-soft);
+  border-radius: 9px;
+  background: var(--panel-strong);
+  color: var(--text);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard),
+    opacity var(--duration-fast) var(--ease-standard);
+}
+
+.registry-authorisation-paths button:hover:not(:disabled) {
+  border-color: var(--accent-line);
+}
+
+.registry-authorisation-paths button[aria-pressed="true"] {
+  border-color: var(--accent);
+  background: var(--accent-surface);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.registry-authorisation-paths button:disabled {
+  cursor: not-allowed;
+  opacity: 0.46;
+}
+
+.registry-authorisation-paths span {
+  font-size: 0.88rem;
+  font-weight: 720;
+}
+
+.registry-authorisation-paths small {
+  color: var(--muted);
+  font-size: 0.75rem;
+  line-height: 1.45;
+}
+
+.registry-existing-capability-panel {
+  display: grid;
+  gap: 18px;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line-soft);
+  animation: registry-panel-enter 220ms var(--ease-quick) both;
+}
+
+.registry-existing-capability-panel[hidden] {
+  display: none;
+}
+
+.registry-existing-capability-panel h3 {
+  margin: 0;
+  color: var(--text);
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+}
+
+.registry-existing-capability-panel > div:first-child p {
+  max-width: 68ch;
+  margin: 6px 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.registry-existing-capability-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 12px;
+  align-items: end;
+}
+
+.registry-existing-capability-control .registry-button {
+  min-height: 42px;
+}
+
+.registry-capability-check-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  margin: 0;
+  overflow: hidden;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  background: var(--line-soft);
+}
+
+.registry-capability-check-summary[hidden] {
+  display: none;
+}
+
+.registry-capability-check-summary > div {
+  min-width: 0;
+  padding: 12px 14px;
+  background: var(--panel-strong);
+}
+
+.registry-capability-check-summary dt {
+  color: var(--dim);
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.registry-capability-check-summary dd {
+  margin: 5px 0 0;
+  overflow-wrap: anywhere;
+  color: var(--text-soft);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  line-height: 1.45;
 }
 
 .registry-signer-principal {
@@ -1336,6 +1482,23 @@
   display: none;
 }
 
+.registry-workflow-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding-top: 18px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.registry-workflow-actions:has(> [hidden]:only-child),
+.registry-workflow-actions:not(:has(> :not([hidden]))) {
+  display: none;
+}
+
+.registry-workflow-actions .registry-workflow-primary {
+  width: auto;
+  min-width: min(100%, 220px);
+}
+
 .registry-workflow-primary {
   width: 100%;
   min-width: 0;
@@ -1356,6 +1519,23 @@
 
 .registry-capability-command {
   max-width: 920px;
+}
+
+.registry-capability-create-intro {
+  display: grid;
+  gap: 4px;
+}
+
+.registry-capability-create-intro strong {
+  color: var(--text);
+  font-size: 0.82rem;
+}
+
+.registry-capability-create-intro span {
+  max-width: 72ch;
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.5;
 }
 
 .registry-signer-status {
@@ -1512,6 +1692,7 @@
 
 .registry-wallet-dialog {
   width: min(660px, calc(100vw - 32px));
+  height: min(780px, calc(100dvh - 32px));
   max-height: min(780px, calc(100dvh - 32px));
   padding: 0;
   overflow: hidden;
@@ -1533,8 +1714,11 @@
 
 .registry-wallet-dialog-shell {
   display: grid;
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
   gap: 16px;
+  height: 100%;
   padding: 26px;
+  box-sizing: border-box;
 }
 
 .registry-wallet-dialog-head {
@@ -1652,7 +1836,7 @@
 .registry-wallet-options {
   display: grid;
   gap: 18px;
-  max-height: min(440px, 56dvh);
+  min-height: 0;
   overflow-y: auto;
   padding-right: 7px;
   overscroll-behavior: contain;
@@ -2053,6 +2237,14 @@
     justify-content: center;
   }
 
+  .registry-workflow-actions {
+    justify-content: stretch;
+  }
+
+  .registry-workflow-actions .registry-workflow-primary {
+    width: 100%;
+  }
+
   .registry-inline-control {
     grid-template-columns: 1fr;
   }
@@ -2189,6 +2381,31 @@
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
   padding: 6px 0 22px;
+}
+
+.registry-manage-remote-status {
+  display: block;
+  margin: -12px 0 0;
+  padding: 10px 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: 8px;
+  color: var(--dim);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.registry-manage-remote-status[data-tone="success"] {
+  border-color: var(--accent-line);
+  color: var(--accent);
+}
+
+.registry-manage-remote-status[data-tone="error"] {
+  border-color: var(--accent-warm-line);
+  color: var(--accent-warm);
+}
+
+.registry-manage-remote-status[hidden] {
+  display: none;
 }
 
 .registry-task-picker {
@@ -2435,11 +2652,35 @@
   color: var(--accent-warm);
 }
 
+.registry-maintainer-command[data-valid="false"] .registry-command-line code {
+  color: var(--dim);
+  opacity: 0.72;
+}
+
 .registry-manage-help {
   margin: 0;
   color: var(--muted);
   font-size: 0.9rem;
   line-height: 1.55;
+}
+
+.registry-manage-validation {
+  display: grid;
+  gap: 5px;
+  padding: 11px 12px;
+  border: 1px solid var(--accent-warm-line);
+  border-radius: 8px;
+  color: var(--accent-warm);
+  font-size: 0.78rem;
+  line-height: 1.45;
+}
+
+.registry-manage-validation p {
+  margin: 0;
+}
+
+.registry-manage-validation[hidden] {
+  display: none;
 }
 
 .registry-manage-note {
@@ -3240,6 +3481,19 @@
     grid-template-columns: 1fr;
   }
 
+  .registry-authorisation-paths,
+  .registry-capability-check-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .registry-existing-capability-control {
+    grid-template-columns: 1fr;
+  }
+
+  .registry-existing-capability-control .registry-button {
+    width: 100%;
+  }
+
   .registry-authorisation-progress {
     grid-template-columns: 1fr;
   }
@@ -3256,6 +3510,7 @@
 
   .registry-wallet-dialog {
     width: calc(100vw - 16px);
+    height: calc(100dvh - 16px);
     max-height: calc(100dvh - 16px);
     border-radius: 16px;
   }
@@ -3298,7 +3553,6 @@
   }
 
   .registry-wallet-options {
-    max-height: min(430px, 48dvh);
     gap: 16px;
   }
 

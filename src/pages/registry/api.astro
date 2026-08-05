@@ -11,6 +11,7 @@ const readEndpoints = [
   { method: "GET", path: "/v1/artifacts/:namespace/:name", description: t.registry.api.artifactDetail, key: "artifactDetail" },
   { method: "GET", path: "/v1/artifacts/:namespace/:name/releases/:release/evidence", description: t.registry.api.releaseEvidence, key: "releaseEvidence" },
   { method: "GET", path: "/v1/artifacts/:namespace/:name/releases/:release/commitment", description: t.registry.api.releaseCommitment, key: "releaseCommitment" },
+  { method: "GET", path: "/v1/capabilities/:key_id/check?namespace=:namespace&name=:name", description: t.registry.api.capabilityCheck, key: "capabilityCheck" },
 ];
 const writeEndpoints = [
   { method: "POST", path: "/v1/artifacts/:namespace/:name/releases", description: t.registry.api.publishRelease, key: "publishRelease" },

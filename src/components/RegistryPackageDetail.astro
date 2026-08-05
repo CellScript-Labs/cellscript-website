@@ -1,6 +1,9 @@
 ---
 import { defaultLocale, translations } from "../i18n/translations";
 import {
+  registryDateLabel,
+  registryOutPointLabel,
+  registryPackageDetailView,
   registryStatusTone,
   shortHash,
   type RegistryPackageView,
@@ -17,32 +20,12 @@ const statusLabel = (status?: string) =>
   (t.registry.statuses as Record<string, string>)[status ?? ""]
   ?? status?.replaceAll("_", " ")
   ?? t.registry.package.notRecorded;
-const dateLabel = (value?: string) => value?.split("T")[0] || t.registry.package.notRecorded;
 const kindLabel = (value?: string) => value?.replaceAll("_", " ") || t.registry.package.notRecorded;
-const outPointLabel = (value?: string | { tx_hash: string; index: number }) => typeof value === "string"
-  ? value
-  : value
-    ? `${value.tx_hash}:${value.index}`
-    : undefined;
-const firstRelease = pkg?.releases[0];
-const allEvidence = (pkg?.releases.flatMap((release) => release.evidence ?? []) ?? pkg?.evidence ?? []).map((item) => ({
-  ...(item.evidence && typeof item.evidence === "object" ? item.evidence : {}),
-  kind: item.kind,
-  evidence_hash: item.evidence_hash,
-})) as any[];
-const deploymentEvidence = allEvidence.filter((item) => item.kind === "deployed" && item.chain_verification);
-const profileContract = firstRelease?.profile_contract;
-const cliApiArg = ` --api-url ${apiOrigin.replace(/\/$/, "")}`;
-const releaseNetwork = firstRelease?.network || "mainnet";
-const consumerCommand = pkg && firstRelease
-  ? pkg.artifact.consumption_mode === "copy"
-    ? `cellc artifact copy ${pkg.coordinate}@${firstRelease.release} --destination . --accept-hash-bound${cliApiArg}`
-    : pkg.artifact.consumption_mode === "deployment" && firstRelease.deployment_status === "chain_verified"
-      ? `cellc artifact cell-dep ${pkg.coordinate}@${firstRelease.release} --output CellDep.json --accept-hash-bound${cliApiArg}`
-      : pkg.artifact.consumption_mode === "deployment"
-        ? `cellc artifact pin ${pkg.coordinate}@${firstRelease.release} --output Artifacts.lock --accept-hash-bound${cliApiArg}\ncellc artifact record-deployment ${pkg.coordinate}@${firstRelease.release} --network ${releaseNetwork} --code-hash <code_hash> --hash-type ${profileContract?.ckb?.hash_type || "data1"} --dep-type ${profileContract?.ckb?.dep_type || "code"} --tx-hash <tx_hash> --index <index> --capability-key-id <key_id>${cliApiArg}`
-        : `cellc artifact pin ${pkg.coordinate}@${firstRelease.release} --output Artifacts.lock --accept-hash-bound${cliApiArg}`
-  : "";
+const detail = pkg ? registryPackageDetailView(pkg, apiOrigin) : undefined;
+const firstRelease = detail?.firstRelease;
+const allEvidence = detail?.evidence ?? [];
+const deploymentEvidence = detail?.deployments ?? [];
+const profileContract = detail?.profileContract;
 ---
 
 <section
@@ -56,7 +39,7 @@ const consumerCommand = pkg && firstRelease
     <div class="registry-package-skeleton" aria-hidden="true"><span></span><span></span><span></span></div>
   </div>
 
-  <div class="registry-empty registry-package-error" data-package-error hidden>
+  <div class="registry-empty registry-package-error" data-package-error hidden role="alert" aria-live="assertive">
     <h2 data-i18n="registry.package.loadFailedTitle">{t.registry.package.loadFailedTitle}</h2>
     <p data-package-error-copy>{t.registry.package.loadFailedBody}</p>
     <div class="registry-empty-actions">
@@ -105,20 +88,21 @@ const consumerCommand = pkg && firstRelease
                 <th data-i18n="registry.package.thReleased">{t.registry.package.thReleased}</th>
               </tr></thead>
               <tbody data-package-releases>
-                {pkg?.releases.map((release) => (
+                {detail?.releases.map((release) => (
                   <tr>
                     <td data-label={t.registry.package.thRelease}>{release.release}</td>
-                    <td data-label={t.registry.package.thSourceHash}><code>{shortHash(release.source_hash)}</code></td>
-                    <td data-label={t.registry.package.thArtifactHash}><code>{shortHash(release.artifact_hash)}</code></td>
+                    <td data-label={t.registry.package.thSourceHash}><code>{shortHash(release.source_hash, 12, t.registry.package.notRecorded)}</code></td>
+                    <td data-label={t.registry.package.thArtifactHash}><code>{shortHash(release.artifact_hash, 12, t.registry.package.notRecorded)}</code></td>
                     <td data-label={t.registry.package.thVerification}><span class="registry-status" data-state={registryStatusTone(release.verification_status)}>{statusLabel(release.verification_status)}</span></td>
                     <td data-label={t.registry.package.thDeployment}><span class="registry-status" data-state={registryStatusTone(release.deployment_status)}>{statusLabel(release.deployment_status)}</span></td>
                     <td data-label={t.registry.package.thAvailability}><span class="registry-status" data-state={registryStatusTone(release.availability_status)}>{statusLabel(release.availability_status)}</span></td>
-                    <td data-label={t.registry.package.thReleased}>{dateLabel(release.created_at)}</td>
+                    <td data-label={t.registry.package.thReleased} data-package-date data-date-value={release.created_at}>{registryDateLabel(release.created_at, t.registry.package.notRecorded, defaultLocale)}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           </div>
+          <p class="registry-body-copy" data-package-no-releases hidden={(detail?.releases.length ?? 0) > 0} data-i18n="registry.package.noReleases">{t.registry.package.noReleases}</p>
         </section>
 
         <section class="registry-panel registry-section-block" aria-labelledby="deployments-title">
@@ -137,9 +121,9 @@ const consumerCommand = pkg && firstRelease
                 {deploymentEvidence.map((item) => (
                   <tr>
                     <td data-label={t.registry.package.thNetwork}>{item.network || "mainnet"}</td>
-                    <td data-label={t.registry.package.thOutPoint}><code>{shortHash(outPointLabel(item.out_point))}</code></td>
-                    <td data-label={t.registry.package.thCodeHash}><code>{shortHash(item.code_hash)}</code></td>
-                    <td data-label={t.registry.package.thDeployment}><span class="registry-status" data-state="active">{statusLabel("chain_verified")}</span></td>
+                    <td data-label={t.registry.package.thOutPoint}><code>{shortHash(registryOutPointLabel(item.out_point), 12, t.registry.package.notRecorded)}</code></td>
+                    <td data-label={t.registry.package.thCodeHash}><code>{shortHash(item.code_hash, 12, t.registry.package.notRecorded)}</code></td>
+                    <td data-label={t.registry.package.thDeployment}><span class="registry-status" data-state={registryStatusTone(item.chain_verification ? "chain_verified" : "deployed")}>{statusLabel(item.chain_verification ? "chain_verified" : "deployed")}</span></td>
                   </tr>
                 ))}
               </tbody>
@@ -156,7 +140,7 @@ const consumerCommand = pkg && firstRelease
               <div class="registry-evidence-row">
                 <strong>{kindLabel(item.kind)}</strong>
                 <span>{item.producer || t.registry.package.notRecorded}</span>
-                <code>{shortHash(item.evidence_hash)}</code>
+                <code>{shortHash(item.evidence_hash, 12, t.registry.package.notRecorded)}</code>
               </div>
             ))}
           </div>
@@ -165,8 +149,8 @@ const consumerCommand = pkg && firstRelease
       </div>
 
       <aside class="registry-pkg-aside">
-        <section class="registry-panel registry-section-block">
-          <p class="registry-label" data-i18n="registry.package.artifactFacts">{t.registry.package.artifactFacts}</p>
+        <section class="registry-panel registry-section-block" aria-labelledby="artifact-facts-title">
+          <h2 id="artifact-facts-title" class="registry-label" data-i18n="registry.package.artifactFacts">{t.registry.package.artifactFacts}</h2>
           <dl class="registry-facts">
             <div><dt data-i18n="registry.package.factKind">{t.registry.package.factKind}</dt><dd data-package-fact-kind>{kindLabel(pkg?.artifact.kind)}</dd></div>
             <div><dt data-i18n="registry.package.factProfile">{t.registry.package.factProfile}</dt><dd data-package-fact-profile>{kindLabel(pkg?.artifact.profile)}</dd></div>
@@ -177,21 +161,22 @@ const consumerCommand = pkg && firstRelease
             <div data-package-fact-verifier-wrap hidden={!profileContract?.verifier?.verifier_id}><dt data-i18n="registry.package.factVerifier">{t.registry.package.factVerifier}</dt><dd data-package-fact-verifier>{profileContract?.verifier?.verifier_id}</dd></div>
           </dl>
         </section>
-        <section class="registry-panel registry-section-block" data-package-resolver hidden={pkg?.artifact.consumption_mode !== "dependency"}>
-          <p class="registry-label" data-i18n="registry.package.installTitle">{t.registry.package.installTitle}</p>
+        <section class="registry-panel registry-section-block" data-package-resolver hidden={pkg?.artifact.consumption_mode !== "dependency"} aria-labelledby="artifact-install-title">
+          <h2 id="artifact-install-title" class="registry-label" data-i18n="registry.package.installTitle">{t.registry.package.installTitle}</h2>
           <p data-i18n="registry.package.installBody">{t.registry.package.installBody}</p>
-          <div class="registry-step-code"><code data-package-install>{pkg?.install_command}</code></div>
+          <div class="registry-step-code"><code data-package-install>{detail?.installCommand}</code></div>
         </section>
-        <section class="registry-panel registry-section-block" data-package-consumer hidden={pkg?.artifact.consumption_mode === "dependency"}>
-          <p class="registry-label" data-i18n="registry.package.consumeTitle">{t.registry.package.consumeTitle}</p>
+        <section class="registry-panel registry-section-block" data-package-consumer hidden={pkg?.artifact.consumption_mode === "dependency"} aria-labelledby="artifact-consume-title">
+          <h2 id="artifact-consume-title" class="registry-label" data-i18n="registry.package.consumeTitle">{t.registry.package.consumeTitle}</h2>
           <p data-i18n="registry.package.consumeBody">{t.registry.package.consumeBody}</p>
-          <div class="registry-step-code"><code data-package-consume>{consumerCommand}</code></div>
+          <div class="registry-step-code"><code data-package-consume>{detail?.consumerCommand}</code></div>
         </section>
-        <section class="registry-panel registry-section-block">
-          <p class="registry-label" data-i18n="registry.package.linksTitle">{t.registry.package.linksTitle}</p>
+        <section class="registry-panel registry-section-block" aria-labelledby="artifact-links-title">
+          <h2 id="artifact-links-title" class="registry-label" data-i18n="registry.package.linksTitle">{t.registry.package.linksTitle}</h2>
           <div class="registry-link-list">
-            <a data-package-record href={pkg?.registry_json_url || firstRelease?.immutable_bundle?.url || "#"} data-i18n="registry.package.linkRegistryJson">{t.registry.package.linkRegistryJson}</a>
+            <a data-package-record href={detail?.recordUrl || "#"} data-i18n="registry.package.linkRegistryJson">{t.registry.package.linkRegistryJson}</a>
             <a data-package-repository href={pkg?.repository || "#"} hidden={!pkg?.repository} data-i18n="registry.package.linkRepository">{t.registry.package.linkRepository}</a>
+            <a data-package-maintain href={detail?.maintainUrl || "#"} data-i18n="registry.package.linkMaintain">{t.registry.package.linkMaintain}</a>
           </div>
         </section>
       </aside>
@@ -199,6 +184,16 @@ const consumerCommand = pkg && firstRelease
   </article>
 
   <script>
+    import {
+      registryDateLabel,
+      registryOutPointLabel,
+      registryPackageDetailView,
+      registryPackageViewFromApi,
+      registryStatusTone,
+      shortHash,
+      type RegistryPackageView,
+    } from "../lib/registry";
+
     const app = document.querySelector<HTMLElement>("[data-package-detail]");
     const lifecycle = new AbortController();
     const { signal } = lifecycle;
@@ -206,10 +201,15 @@ const consumerCommand = pkg && firstRelease
       const locale = document.documentElement.dataset.locale === "zh" ? "zh" : "en";
       return path.split(".").reduce<any>((value, key) => value?.[key], (window as any).__CELLSCRIPT_I18N__?.[locale]) || path;
     };
-    const short = (value?: string) => {
-      if (!value) return message("registry.package.notRecorded");
-      const clean = value.startsWith("0x") ? value.slice(2) : value;
-      return clean.length > 24 ? `${value.startsWith("0x") ? "0x" : ""}${clean.slice(0, 12)}…${clean.slice(-12)}` : value;
+    const activeLocale = (): "en" | "zh" => document.documentElement.dataset.locale === "zh" ? "zh" : "en";
+    const formatPackageDates = () => {
+      app?.querySelectorAll<HTMLElement>("[data-package-date]").forEach((node) => {
+        node.textContent = registryDateLabel(
+          node.dataset.dateValue,
+          message("registry.package.notRecorded"),
+          activeLocale(),
+        );
+      });
     };
     const expiryOutput = app?.querySelector<HTMLElement>("[data-package-expiry]");
     const renderExpiry = (expiresAt?: string) => {
@@ -238,34 +238,32 @@ const consumerCommand = pkg && firstRelease
     const label = (value?: string) => message(`registry.statuses.${value}`) !== `registry.statuses.${value}`
       ? message(`registry.statuses.${value}`)
       : String(value || message("registry.package.notRecorded")).replaceAll("_", " ");
-    const tone = (value?: string) => {
-      if (["active", "verified", "deployed", "chain_verified"].includes(value || "")) return "active";
-      if (["hash_bound", "evidence_required"].includes(value || "")) return "info";
-      if (["pending", "undeployed", "deprecated"].includes(value || "")) return "warning";
-      if (["rejected", "yanked", "quarantined"].includes(value || "")) return "danger";
-      return "source";
-    };
     const setState = (selector: string, value: string) => {
       const node = app?.querySelector<HTMLElement>(selector);
       if (!node) return;
       node.textContent = label(value);
-      node.dataset.state = tone(value);
+      node.dataset.state = registryStatusTone(value);
     };
-    const cell = (row: HTMLTableRowElement, title: string, value: string, code = false) => {
+    const cell = (row: HTMLTableRowElement, title: string, value?: string, code = false): HTMLTableCellElement => {
       const td = document.createElement("td");
       td.dataset.label = title;
       const child = document.createElement(code ? "code" : "span");
-      child.textContent = code ? short(value) : value;
+      child.textContent = code
+        ? shortHash(value, 12, message("registry.package.notRecorded"))
+        : value || message("registry.package.notRecorded");
       td.append(child);
       row.append(td);
+      return td;
     };
-    const render = (artifact: any) => {
+    const render = (artifact: RegistryPackageView) => {
+      const detail = registryPackageDetailView(artifact, app?.dataset.apiOrigin || "https://api.registry.cellscript.dev");
       app?.querySelector<HTMLElement>("[data-package-loading]")?.setAttribute("hidden", "");
       app?.querySelector<HTMLElement>("[data-package-error]")?.setAttribute("hidden", "");
       const content = app?.querySelector<HTMLElement>("[data-package-content]");
       if (content) content.hidden = false;
       const text = (selector: string, value: string) => { const node = app?.querySelector<HTMLElement>(selector); if (node) node.textContent = value; };
       text("[data-package-coordinate]", artifact.coordinate);
+      document.title = `${message("registry.eyebrow")}: ${artifact.coordinate}`;
       text("[data-package-kind]", String(artifact.artifact.kind).replaceAll("_", " "));
       text("[data-package-consumption]", String(artifact.artifact.consumption_mode).replaceAll("_", " "));
       text("[data-package-release]", artifact.latest_release || message("registry.package.notRecorded"));
@@ -277,7 +275,7 @@ const consumerCommand = pkg && firstRelease
       text("[data-package-fact-profile]", String(artifact.artifact.profile).replaceAll("_", " "));
       text("[data-package-fact-consumption]", String(artifact.artifact.consumption_mode).replaceAll("_", " "));
       text("[data-package-fact-language]", artifact.artifact.language);
-      const profileContract = artifact.releases?.[0]?.profile_contract;
+      const profileContract = detail.profileContract;
       const fact = (name: string, value?: string) => {
         const wrap = app?.querySelector<HTMLElement>(`[data-package-fact-${name}-wrap]`);
         if (wrap) wrap.hidden = !value;
@@ -287,15 +285,7 @@ const consumerCommand = pkg && firstRelease
       fact("security", profileContract?.security?.status);
       fact("verifier", profileContract?.verifier?.verifier_id);
 
-      const releases = Array.isArray(artifact.releases) ? artifact.releases.map((release: any) => ({
-        ...release,
-        evidence: Array.isArray(release.evidence) ? release.evidence.map((item: any) => ({
-          ...(item?.evidence && typeof item.evidence === "object" ? item.evidence : {}),
-          kind: item?.kind,
-          evidence_hash: item?.evidence_hash,
-          producer: item?.evidence?.producer,
-        })) : [],
-      })) : [];
+      const releases = detail.releases;
       const releaseBody = app?.querySelector<HTMLTableSectionElement>("[data-package-releases]");
       releaseBody?.replaceChildren();
       for (const release of releases) {
@@ -312,16 +302,24 @@ const consumerCommand = pkg && firstRelease
           td.dataset.label = message(`registry.package.${titleKey}`);
           const badge = document.createElement("span");
           badge.className = "registry-status";
-          badge.dataset.state = tone(state);
+          badge.dataset.state = registryStatusTone(state);
           badge.textContent = label(state);
           td.append(badge);
           row.append(td);
         }
-        cell(row, message("registry.package.thReleased"), release.created_at?.split("T")[0] || message("registry.package.notRecorded"));
+        const released = cell(
+          row,
+          message("registry.package.thReleased"),
+          registryDateLabel(release.created_at, message("registry.package.notRecorded"), activeLocale()),
+        );
+        released.dataset.packageDate = "";
+        if (release.created_at) released.dataset.dateValue = release.created_at;
         releaseBody?.append(row);
       }
+      const noReleases = app?.querySelector<HTMLElement>("[data-package-no-releases]");
+      if (noReleases) noReleases.hidden = releases.length > 0;
 
-      const evidence = releases.flatMap((release: any) => Array.isArray(release.evidence) ? release.evidence : []);
+      const evidence = detail.evidence;
       const evidenceList = app?.querySelector<HTMLElement>("[data-package-evidence]");
       evidenceList?.replaceChildren();
       for (const item of evidence) {
@@ -329,23 +327,27 @@ const consumerCommand = pkg && firstRelease
         row.className = "registry-evidence-row";
         const kind = document.createElement("strong"); kind.textContent = String(item.kind || "evidence").replaceAll("_", " ");
         const producer = document.createElement("span"); producer.textContent = item.producer || message("registry.package.notRecorded");
-        const hash = document.createElement("code"); hash.textContent = short(item.evidence_hash);
+        const hash = document.createElement("code"); hash.textContent = shortHash(item.evidence_hash, 12, message("registry.package.notRecorded"));
         row.append(kind, producer, hash);
         evidenceList?.append(row);
       }
       if (evidenceList) evidenceList.hidden = evidence.length === 0;
       const noEvidence = app?.querySelector<HTMLElement>("[data-package-no-evidence]");
       if (noEvidence) noEvidence.hidden = evidence.length > 0;
-      const deployments = evidence.filter((item: any) => item.kind === "deployed" && item.chain_verification);
+      const deployments = detail.deployments;
       const deploymentBody = app?.querySelector<HTMLTableSectionElement>("[data-package-deployments]");
       deploymentBody?.replaceChildren();
       for (const item of deployments) {
         const row = document.createElement("tr");
         cell(row, message("registry.package.thNetwork"), item.network || "mainnet");
-        const outPoint = item.out_point ? `${item.out_point.tx_hash}:${item.out_point.index}` : "";
-        cell(row, message("registry.package.thOutPoint"), outPoint, true);
+        cell(row, message("registry.package.thOutPoint"), registryOutPointLabel(item.out_point), true);
         cell(row, message("registry.package.thCodeHash"), item.code_hash || "", true);
-        cell(row, message("registry.package.thDeployment"), label("chain_verified"));
+        const deploymentState = item.chain_verification ? "chain_verified" : "deployed";
+        const stateCell = cell(row, message("registry.package.thDeployment"), label(deploymentState));
+        stateCell.firstElementChild?.classList.add("registry-status");
+        if (stateCell.firstElementChild instanceof HTMLElement) {
+          stateCell.firstElementChild.dataset.state = registryStatusTone(deploymentState);
+        }
         deploymentBody?.append(row);
       }
       const deploymentWrap = app?.querySelector<HTMLElement>("[data-package-deployments-wrap]");
@@ -354,55 +356,77 @@ const consumerCommand = pkg && firstRelease
       if (noDeployment) noDeployment.hidden = deployments.length > 0;
       const resolver = app?.querySelector<HTMLElement>("[data-package-resolver]");
       if (resolver) resolver.hidden = artifact.artifact.consumption_mode !== "dependency";
-      text("[data-package-install]", `cellc install ${artifact.coordinate}@${artifact.latest_release || "<release>"}`);
+      text("[data-package-install]", detail.installCommand);
       const consumer = app?.querySelector<HTMLElement>("[data-package-consumer]");
       if (consumer) consumer.hidden = artifact.artifact.consumption_mode === "dependency";
-      const selected = releases[0];
+      const selected = detail.firstRelease;
       renderExpiry(selected?.expires_at);
-      const apiOrigin = app?.dataset.apiOrigin || "https://api.registry.cellscript.dev";
-      const apiArg = ` --api-url ${apiOrigin}`;
-      const releaseNetwork = selected?.network || artifact.network || "mainnet";
-      const consumerCommand = artifact.artifact.consumption_mode === "copy"
-        ? `cellc artifact copy ${artifact.coordinate}@${artifact.latest_release} --destination . --accept-hash-bound${apiArg}`
-        : artifact.artifact.consumption_mode === "deployment" && selected?.deployment_status === "chain_verified"
-          ? `cellc artifact cell-dep ${artifact.coordinate}@${artifact.latest_release} --output CellDep.json --accept-hash-bound${apiArg}`
-          : artifact.artifact.consumption_mode === "deployment"
-            ? `cellc artifact pin ${artifact.coordinate}@${artifact.latest_release} --output Artifacts.lock --accept-hash-bound${apiArg}\ncellc artifact record-deployment ${artifact.coordinate}@${artifact.latest_release} --network ${releaseNetwork} --code-hash <code_hash> --hash-type ${profileContract?.ckb?.hash_type || "data1"} --dep-type ${profileContract?.ckb?.dep_type || "code"} --tx-hash <tx_hash> --index <index> --capability-key-id <key_id>${apiArg}`
-            : `cellc artifact pin ${artifact.coordinate}@${artifact.latest_release} --output Artifacts.lock --accept-hash-bound${apiArg}`;
-      text("[data-package-consume]", consumerCommand);
+      text("[data-package-consume]", detail.consumerCommand);
       const record = app?.querySelector<HTMLAnchorElement>("[data-package-record]");
-      if (record) record.href = releases[0]?.direct_url || releases[0]?.immutable_bundle?.url || "#";
+      if (record) record.href = detail.recordUrl;
       const repository = app?.querySelector<HTMLAnchorElement>("[data-package-repository]");
       if (repository) { repository.hidden = !artifact.repository; repository.href = artifact.repository || "#"; }
+      const maintain = app?.querySelector<HTMLAnchorElement>("[data-package-maintain]");
+      if (maintain) maintain.href = detail.maintainUrl;
+      formatPackageDates();
     };
+    let requestInFlight = false;
     const load = async () => {
-      if (!app || !app.querySelector("[data-package-content][hidden]")) return;
+      if (!app || !app.querySelector("[data-package-content][hidden]") || requestInFlight) return;
+      const loading = app.querySelector<HTMLElement>("[data-package-loading]");
+      const errorPanel = app.querySelector<HTMLElement>("[data-package-error]");
+      const errorCopy = app.querySelector<HTMLElement>("[data-package-error-copy]");
+      requestInFlight = true;
+      app.setAttribute("aria-busy", "true");
+      if (loading) loading.hidden = false;
+      if (errorPanel) errorPanel.hidden = true;
       const params = new URLSearchParams(window.location.search);
       const namespace = params.get("namespace")?.trim();
       const name = params.get("name")?.trim();
       if (!namespace || !name) {
-        const error = app.querySelector<HTMLElement>("[data-package-error]");
-        if (error) error.hidden = false;
-        app.querySelector<HTMLElement>("[data-package-loading]")?.setAttribute("hidden", "");
+        if (errorPanel) errorPanel.hidden = false;
+        if (errorCopy) errorCopy.textContent = message("registry.package.invalidCoordinate");
+        if (loading) loading.hidden = true;
+        app.setAttribute("aria-busy", "false");
+        requestInFlight = false;
         return;
       }
+      const requestController = new AbortController();
+      let timedOut = false;
+      const cancelForNavigation = () => requestController.abort();
+      signal.addEventListener("abort", cancelForNavigation, { once: true });
+      const timeout = window.setTimeout(() => {
+        timedOut = true;
+        requestController.abort();
+      }, 10_000);
       try {
-        const response = await fetch(`${app.dataset.apiOrigin}/v1/artifacts/${encodeURIComponent(namespace)}/${encodeURIComponent(name)}`, { headers: { accept: "application/json" }, signal });
+        const response = await fetch(`${app.dataset.apiOrigin}/v1/artifacts/${encodeURIComponent(namespace)}/${encodeURIComponent(name)}`, {
+          headers: { accept: "application/json" },
+          signal: requestController.signal,
+        });
         if (!response.ok) throw new Error(response.status === 404 ? message("registry.package.notFound") : message("registry.package.loadFailedBody"));
         const payload = await response.json();
-        if (payload?.schema !== "cellscript-registry-artifact") throw new Error(message("registry.package.loadFailedBody"));
-        render(payload);
+        const artifact = registryPackageViewFromApi(payload);
+        if (!artifact) throw new Error(message("registry.package.invalidResponse"));
+        render(artifact);
       } catch (error) {
-        if ((error as Error).name === "AbortError") return;
-        app.querySelector<HTMLElement>("[data-package-loading]")?.setAttribute("hidden", "");
-        const errorPanel = app.querySelector<HTMLElement>("[data-package-error]");
+        if (signal.aborted) return;
         if (errorPanel) errorPanel.hidden = false;
-        const copy = app.querySelector<HTMLElement>("[data-package-error-copy]");
-        if (copy) copy.textContent = error instanceof Error ? error.message : message("registry.package.loadFailedBody");
+        if (errorCopy) errorCopy.textContent = timedOut
+          ? message("registry.package.loadTimedOut")
+          : error instanceof Error ? error.message : message("registry.package.loadFailedBody");
+      } finally {
+        window.clearTimeout(timeout);
+        signal.removeEventListener("abort", cancelForNavigation);
+        if (loading) loading.hidden = true;
+        app.setAttribute("aria-busy", "false");
+        requestInFlight = false;
       }
     };
     app?.querySelector<HTMLButtonElement>("[data-package-retry]")?.addEventListener("click", load, { signal });
+    window.addEventListener("cellscript:locale-change", formatPackageDates, { signal });
     document.addEventListener("astro:before-swap", () => lifecycle.abort(), { once: true, signal });
+    formatPackageDates();
     load();
   </script>
 </section>

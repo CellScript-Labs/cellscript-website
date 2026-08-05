@@ -8,7 +8,7 @@ const description = t.registry.submit.description;
 const apiOrigin = registryRuntime.apiOrigin;
 ---
 
-<RegistryLayout title="CellScript Registry: Submit" description={description} headingKey="registry.shellTitle" descriptionKey="registry.shellDescription" active="submit" showSubmitCta={false}>
+<RegistryLayout title="CellScript Artifact Registry: Submit" description={description} headingKey="registry.shellTitle" descriptionKey="registry.shellDescription" active="submit" showSubmitCta={false}>
   <section class="registry-flow" aria-label={t.registry.nav.submit} data-i18n-aria-label="registry.nav.submit">
     <aside class="registry-submit-intro" data-submit-intro hidden aria-labelledby="submit-intro-title">
       <div class="registry-submit-intro-copy">
@@ -19,7 +19,12 @@ const apiOrigin = registryRuntime.apiOrigin;
       <button class="registry-intro-dismiss" type="button" data-submit-intro-dismiss data-i18n="registry.submit.introDismiss">{t.registry.submit.introDismiss}</button>
     </aside>
 
-    <form class="registry-builder" id="registry-submit-form" data-submit-form data-submit-workspace hidden novalidate>
+    <aside class="registry-submit-boundary" aria-label={t.registry.submit.toolBoundaryTitle}>
+      <strong data-i18n="registry.submit.toolBoundaryTitle">{t.registry.submit.toolBoundaryTitle}</strong>
+      <span data-i18n="registry.submit.toolBoundaryBody">{t.registry.submit.toolBoundaryBody}</span>
+    </aside>
+
+    <form class="registry-builder" id="registry-submit-form" data-submit-form novalidate>
       <div class="registry-builder-heading">
         <p class="registry-label" data-i18n="registry.submit.detailsLabel">{t.registry.submit.detailsLabel}</p>
         <h2 data-i18n="registry.submit.detailsTitle">{t.registry.submit.detailsTitle}</h2>
@@ -62,7 +67,7 @@ const apiOrigin = registryRuntime.apiOrigin;
             required
             minlength="1"
             maxlength="64"
-            pattern="[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?"
+            pattern="[a-z0-9](?:(?:[a-z0-9_]|-){0,62}[a-z0-9])?"
             aria-describedby="submit-coordinate-help submit-coordinate-error"
           />
         </label>
@@ -76,7 +81,7 @@ const apiOrigin = registryRuntime.apiOrigin;
             required
             minlength="1"
             maxlength="64"
-            pattern="[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?"
+            pattern="[a-z0-9](?:(?:[a-z0-9_]|-){0,62}[a-z0-9])?"
             aria-describedby="submit-coordinate-help submit-coordinate-error"
           />
         </label>
@@ -87,7 +92,7 @@ const apiOrigin = registryRuntime.apiOrigin;
         <summary data-i18n="registry.submit.profileContractTitle">{t.registry.submit.profileContractTitle}</summary>
         <p class="registry-field-hint" data-i18n="registry.submit.profileContractBody">{t.registry.submit.profileContractBody}</p>
         <div class="registry-builder-grid registry-builder-grid-compact" data-profile-group="identity">
-          <label class="registry-builder-field"><span data-i18n="registry.submit.release">{t.registry.submit.release}</span><input class="registry-input" name="artifact_release" placeholder="1.0.0" pattern="[0-9]+\.[0-9]+\.[0-9]+(?:[-+][0-9A-Za-z.-]+)?" /></label>
+          <label class="registry-builder-field"><span data-i18n="registry.submit.release">{t.registry.submit.release}</span><input class="registry-input" name="artifact_release" placeholder="1.0.0" pattern="[0-9]+[.][0-9]+[.][0-9]+(?:(?:-|[+])(?:[0-9A-Za-z.]|-)+)?" /></label>
         </div>
         <div class="registry-builder-grid registry-builder-grid-compact" data-profile-group="build">
           <label class="registry-builder-field"><span data-i18n="registry.submit.buildTarget">{t.registry.submit.buildTarget}</span><input class="registry-input" name="build_target" value="riscv64imac-unknown-none-elf" /></label>
@@ -126,7 +131,7 @@ const apiOrigin = registryRuntime.apiOrigin;
       </details>
     </form>
 
-    <section class="registry-submit-preflight" data-submit-workspace hidden aria-labelledby="registry-preflight-heading">
+    <section class="registry-submit-preflight" aria-labelledby="registry-preflight-heading">
       <div class="registry-step-copy">
         <h2 id="registry-preflight-heading" data-i18n="registry.submit.preflightTitle">{t.registry.submit.preflightTitle}</h2>
         <p data-i18n="registry.submit.preflightBody">{t.registry.submit.preflightBody}</p>
@@ -152,15 +157,25 @@ const apiOrigin = registryRuntime.apiOrigin;
         </div>
         <div class="registry-authorisation-controls">
           <span class="registry-network-badge"><i aria-hidden="true"></i>CKB {registryRuntime.network}</span>
-          <output class="registry-signer-status" data-capability-status role="status" aria-live="polite" data-i18n="registry.submit.walletIdle">{t.registry.submit.walletIdle}</output>
+          <output class="registry-signer-status" data-capability-status role="status" aria-live="polite" data-i18n="registry.submit.authorisationIdle">{t.registry.submit.authorisationIdle}</output>
           <div class="registry-signer-actions">
-            <button class="registry-button primary registry-workflow-primary" type="button" data-capability-primary data-i18n="registry.submit.continueConnect">{t.registry.submit.continueConnect}</button>
             <button class="registry-text-button registry-change-wallet" type="button" data-capability-change-wallet hidden data-i18n="registry.submit.changeWallet">{t.registry.submit.changeWallet}</button>
           </div>
         </div>
       </header>
 
-      <div class="registry-signer" data-capability-signer data-api-origin={apiOrigin}>
+      <div class="registry-authorisation-paths" role="group" aria-label={t.registry.submit.authorisationPathLabel} data-i18n-aria-label="registry.submit.authorisationPathLabel">
+        <button type="button" data-authorisation-mode="new" aria-pressed="false">
+          <span data-i18n="registry.submit.newCapabilityTitle">{t.registry.submit.newCapabilityTitle}</span>
+          <small data-i18n="registry.submit.newCapabilityBody">{t.registry.submit.newCapabilityBody}</small>
+        </button>
+        <button type="button" data-authorisation-mode="existing" aria-pressed="false">
+          <span data-i18n="registry.submit.existingCapabilityTitle">{t.registry.submit.existingCapabilityTitle}</span>
+          <small data-i18n="registry.submit.existingCapabilityBody">{t.registry.submit.existingCapabilityBody}</small>
+        </button>
+      </div>
+
+      <div class="registry-signer" data-capability-signer data-new-capability-flow data-api-origin={apiOrigin} hidden>
         <ol class="registry-authorisation-progress" aria-label={t.registry.submit.progressLabel} data-i18n-aria-label="registry.submit.progressLabel">
           <li data-workflow-stage="wallet"><span>01</span><strong data-i18n="registry.submit.stageConnect">{t.registry.submit.stageConnect}</strong></li>
           <li data-workflow-stage="scope"><span>02</span><strong data-i18n="registry.submit.stageScope">{t.registry.submit.stageScope}</strong></li>
@@ -182,6 +197,14 @@ const apiOrigin = registryRuntime.apiOrigin;
         </label>
 
         <div class="registry-progressive-panel" data-payload-panel hidden>
+          <div class="registry-capability-create-intro">
+            <strong data-i18n="registry.submit.createLocalKeyTitle">{t.registry.submit.createLocalKeyTitle}</strong>
+            <span data-i18n="registry.submit.createLocalKeyBody">{t.registry.submit.createLocalKeyBody}</span>
+          </div>
+          <div class="registry-step-code registry-capability-command">
+            <code data-submit-create-capability>cellc auth capability create --principal-type &lt;principal_type&gt; --principal-id &lt;principal_id&gt; --scope publish:&lt;namespace&gt;/&lt;name&gt; --expires 90d --json &gt; capability-payload.json</code>
+            <button class="registry-copy" type="button" data-submit-create-capability-copy data-copy-text="" data-revert-label={t.registry.submit.copyCreateCommand} data-i18n="registry.submit.copyCreateCommand">{t.registry.submit.copyCreateCommand}</button>
+          </div>
           <label class="registry-builder-field">
             <span data-i18n="registry.submit.payload">{t.registry.submit.payload}</span>
             <textarea
@@ -205,6 +228,13 @@ const apiOrigin = registryRuntime.apiOrigin;
           <button class="registry-copy" type="button" data-capability-copy-signature data-copy-text="" data-revert-label={t.registry.submit.copySignature} data-i18n="registry.submit.copySignature">{t.registry.submit.copySignature}</button>
         </div>
 
+        <div class="registry-workflow-actions" data-capability-actions>
+          <button class="registry-button primary registry-workflow-primary" type="button" data-capability-action="connect" data-i18n="registry.submit.continueConnect" hidden>{t.registry.submit.continueConnect}</button>
+          <button class="registry-button primary registry-workflow-primary" type="button" data-capability-action="sign" data-i18n="registry.submit.continueSign" hidden>{t.registry.submit.continueSign}</button>
+          <button class="registry-button primary registry-workflow-primary" type="button" data-capability-action="submit" data-i18n="registry.submit.continueSubmit" hidden>{t.registry.submit.continueSubmit}</button>
+          <button class="registry-button primary registry-workflow-primary" type="button" data-capability-action="claim" data-i18n="registry.submit.continueClaim" hidden>{t.registry.submit.continueClaim}</button>
+        </div>
+
         <details class="registry-technical-details" data-capability-details hidden>
           <summary data-i18n="registry.submit.technicalDetails">{t.registry.submit.technicalDetails}</summary>
           <pre class="registry-signer-response" data-capability-response></pre>
@@ -219,8 +249,27 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
             <button class="registry-copy" type="button" data-submit-copy data-copy-text="" data-revert-label={t.registry.submit.copyAddCommand} data-i18n="registry.submit.copyAddCommand">{t.registry.submit.copyAddCommand}</button>
           </div>
         </details>
-        <button class="registry-text-button registry-existing-capability" type="button" data-existing-capability data-i18n="registry.submit.alreadyAuthorised">{t.registry.submit.alreadyAuthorised}</button>
       </div>
+
+      <section class="registry-existing-capability-panel" data-existing-capability-panel hidden aria-labelledby="registry-existing-capability-heading">
+        <div>
+          <h3 id="registry-existing-capability-heading" data-i18n="registry.submit.existingCheckTitle">{t.registry.submit.existingCheckTitle}</h3>
+          <p data-i18n="registry.submit.existingCheckBody">{t.registry.submit.existingCheckBody}</p>
+        </div>
+        <div class="registry-existing-capability-control">
+          <label class="registry-builder-field">
+            <span data-i18n="registry.submit.capabilityKeyId">{t.registry.submit.capabilityKeyId}</span>
+            <input class="registry-input" data-existing-capability-key autocomplete="off" spellcheck="false" placeholder="cap_0123456789abcdef0123456789abcdef" />
+          </label>
+          <button class="registry-button primary" type="button" data-existing-capability-check data-i18n="registry.submit.checkCapability">{t.registry.submit.checkCapability}</button>
+        </div>
+        <dl class="registry-capability-check-summary" data-capability-check-summary hidden>
+          <div><dt data-i18n="registry.submit.checkStatus">{t.registry.submit.checkStatus}</dt><dd data-capability-check-status></dd></div>
+          <div><dt data-i18n="registry.submit.checkExpiry">{t.registry.submit.checkExpiry}</dt><dd data-capability-check-expiry></dd></div>
+          <div><dt data-i18n="registry.submit.checkNamespace">{t.registry.submit.checkNamespace}</dt><dd data-capability-check-namespace></dd></div>
+          <div><dt data-i18n="registry.submit.checkScopes">{t.registry.submit.checkScopes}</dt><dd data-capability-check-scopes></dd></div>
+        </dl>
+      </section>
     </section>
 
     <section class="registry-publish-step" data-publish-step data-state="locked" aria-labelledby="registry-publish-heading" hidden>
@@ -229,8 +278,8 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
         <p data-i18n="registry.submit.prBody">{t.registry.submit.prBody}</p>
       </div>
       <div class="registry-step-code">
-        <code data-submit-publish>cellc publish</code>
-        <button class="registry-copy" type="button" data-submit-publish-copy data-copy-text="cellc publish" data-revert-label={t.registry.copy} data-i18n="registry.copy" disabled>{t.registry.copy}</button>
+        <code data-submit-publish>cellc publish --capability-key-id &lt;server-confirmed-key-id&gt;</code>
+        <button class="registry-copy" type="button" data-submit-publish-copy data-copy-text="" data-revert-label={t.registry.copy} data-i18n="registry.copy" disabled>{t.registry.copy}</button>
       </div>
     </section>
 
@@ -250,7 +299,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
             <span class="sr-only" data-i18n="registry.submit.walletSearchPlaceholder">{t.registry.submit.walletSearchPlaceholder}</span>
             <input type="search" autocomplete="off" placeholder={t.registry.submit.walletSearchPlaceholder} data-i18n-placeholder="registry.submit.walletSearchPlaceholder" data-wallet-search />
           </label>
-          <span data-wallet-count>{t.registry.submit.walletCount.replace("{count}", "12")}</span>
+          <span data-wallet-count aria-live="polite"></span>
         </div>
         <div class="registry-wallet-options" data-wallet-options role="list"></div>
         <p class="registry-wallet-dialog-note" data-i18n="registry.submit.walletPrivacy">{t.registry.submit.walletPrivacy}</p>
@@ -279,6 +328,17 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     type WalletSelection =
       | { kind: "signer"; signer: any }
       | { kind: "external"; wallet: WalletCatalogEntry };
+    type AuthorisationMode = "new" | "existing";
+    type CapabilityCheck = {
+      key_id: string;
+      status: "active" | "expired" | "revoked";
+      scopes: string[];
+      expires_at: string;
+      namespace: { name: string; status: string; owned_by_capability_principal: boolean };
+      allows: { publish: boolean; deployment: boolean; availability: boolean };
+      usable_for_publish: boolean;
+      reasons: string[];
+    };
 
     class WorkflowError extends Error {
       constructor(readonly key: string, technical?: string) {
@@ -289,7 +349,6 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     const lifecycle = new AbortController();
     const { signal } = lifecycle;
     const form = document.querySelector<HTMLFormElement>("[data-submit-form]");
-    const submissionWorkspace = Array.from(document.querySelectorAll<HTMLElement>("[data-submit-workspace]"));
     const intro = document.querySelector<HTMLElement>("[data-submit-intro]");
     const introDismiss = document.querySelector<HTMLButtonElement>("[data-submit-intro-dismiss]");
     const namespaceInput = form?.elements.namedItem("namespace") as HTMLInputElement | null;
@@ -307,13 +366,23 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     const coordinateError = document.querySelector<HTMLElement>("[data-coordinate-error]");
     const preflight = document.querySelector<HTMLElement>("[data-submit-preflight]");
     const preflightCopy = document.querySelector<HTMLButtonElement>("[data-submit-preflight-copy]");
+    const capabilityCreateCommand = document.querySelector<HTMLElement>("[data-submit-create-capability]");
+    const capabilityCreateCopy = document.querySelector<HTMLButtonElement>("[data-submit-create-capability-copy]");
     const capabilityCommand = document.querySelector<HTMLElement>("[data-submit-add]");
     const capabilityCopy = document.querySelector<HTMLButtonElement>("[data-submit-copy]");
     const publish = document.querySelector<HTMLElement>("[data-submit-publish]");
     const publishCopy = document.querySelector<HTMLButtonElement>("[data-submit-publish-copy]");
     const publishStep = document.querySelector<HTMLElement>("[data-publish-step]");
-    const publishLock = document.querySelector<HTMLElement>("[data-publish-lock]");
-    const existingCapability = document.querySelector<HTMLButtonElement>("[data-existing-capability]");
+    const authorisationModes = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-authorisation-mode]"));
+    const newCapabilityFlow = document.querySelector<HTMLElement>("[data-new-capability-flow]");
+    const existingCapabilityPanel = document.querySelector<HTMLElement>("[data-existing-capability-panel]");
+    const existingCapabilityKey = document.querySelector<HTMLInputElement>("[data-existing-capability-key]");
+    const existingCapabilityCheck = document.querySelector<HTMLButtonElement>("[data-existing-capability-check]");
+    const capabilityCheckSummary = document.querySelector<HTMLElement>("[data-capability-check-summary]");
+    const capabilityCheckStatus = document.querySelector<HTMLElement>("[data-capability-check-status]");
+    const capabilityCheckExpiry = document.querySelector<HTMLElement>("[data-capability-check-expiry]");
+    const capabilityCheckNamespace = document.querySelector<HTMLElement>("[data-capability-check-namespace]");
+    const capabilityCheckScopes = document.querySelector<HTMLElement>("[data-capability-check-scopes]");
     const signerRoot = document.querySelector<HTMLElement>("[data-capability-signer]");
     const principalPanel = document.querySelector<HTMLElement>("[data-principal-panel]");
     const principalInput = document.querySelector<HTMLInputElement>("[data-capability-principal]");
@@ -322,7 +391,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     const signaturePanel = document.querySelector<HTMLElement>("[data-signature-panel]");
     const signatureOutput = document.querySelector<HTMLTextAreaElement>("[data-capability-signature]");
     const signatureHint = document.querySelector<HTMLElement>("[data-signature-hint]");
-    const primaryButton = document.querySelector<HTMLButtonElement>("[data-capability-primary]");
+    const capabilityActionButtons = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-capability-action]"));
     const changeWalletButton = document.querySelector<HTMLButtonElement>("[data-capability-change-wallet]");
     const copyPrincipalButton = document.querySelector<HTMLButtonElement>("[data-capability-copy-principal]");
     const copySignatureButton = document.querySelector<HTMLButtonElement>("[data-capability-copy-signature]");
@@ -340,7 +409,6 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     const stages = Array.from(document.querySelectorAll<HTMLElement>("[data-workflow-stage]"));
     const appLogo = `${window.location.origin}${import.meta.env.BASE_URL}cellscript-logo.png`;
     const registryNetwork = document.documentElement.dataset.registryNetwork === "testnet" ? "testnet" : "mainnet";
-    const walletStorageKey = `cellscript-registry-wallet-connection:${registryNetwork}`;
     const joyidPrincipalContext = "cellscript-registry-joyid-ckb-principal-v1";
     const ckbPrincipalContext = "cellscript-registry-ckb-secp256k1-principal-v1";
     const coordinatePattern = /^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$/;
@@ -368,11 +436,15 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     let activeWalletSigner: any | null = null;
     let activeWalletIdentity: WalletIdentity | null = null;
     let activeExternalWallet: WalletCatalogEntry | null = null;
+    let authorisationMode: AuthorisationMode | null = null;
     let capabilitySubmitted = false;
+    let submittedCapabilityKeyId = "";
     let namespaceClaimed = false;
-    let authorisedOverride = false;
+    let namespaceReviewPending = false;
+    let confirmedCapabilityKeyId = "";
+    let lastCapabilityCheck: CapabilityCheck | null = null;
     let busy = false;
-    let statusKey = "walletIdle";
+    let statusKey = "authorisationIdle";
     let statusTone: "idle" | "ok" | "error" = "idle";
     let statusSuffix = "";
     let lastCoordinate = "";
@@ -383,13 +455,14 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       return typeof messages?.[key] === "string" ? messages[key] : key;
     };
     const introStorageKey = "cellscript-registry-submit-intro-v1";
+    const introDismissAnimationMs = 180;
     const hideIntro = () => {
       if (!intro || intro.hidden) return;
       intro.classList.add("is-leaving");
       window.setTimeout(() => {
         intro.hidden = true;
         intro.classList.remove("is-leaving");
-      }, 180);
+      }, introDismissAnimationMs);
     };
     try {
       if (intro && localStorage.getItem(introStorageKey) !== "seen") {
@@ -523,16 +596,20 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       const preflightCommand = isCellScript
         ? `${commandPrefix()}cellc package verify --json && cellc publish${cellscriptKindFlag}${apiFlag} --dry-run`
         : `${commandPrefix()}cellc publish --artifact-manifest Artifact.toml${apiFlag} --dry-run`;
-      const authCommand = `cellc auth capability create --registry-origin ${shellQuote(registryApi)} --principal-type ${shellQuote(principalType)} --principal-id ${shellQuote(principalId)} --scope ${shellQuote(`publish:${namespace}/${name}`)} --expires 90d --json > capability-payload.json\ncellc auth capability submit${apiFlag} --payload capability-payload.json --wallet-signature wallet-signature.json\ncellc auth namespace claim${apiFlag} --namespace ${shellQuote(namespace)} --payload capability-payload.json --wallet-signature wallet-signature.json`;
+      const createCapabilityCommand = `cellc auth capability create --registry-origin ${shellQuote(registryApi)} --principal-type ${shellQuote(principalType)} --principal-id ${shellQuote(principalId)} --scope ${shellQuote(`publish:${namespace}/${name}`)} --expires 90d --json > capability-payload.json`;
+      const authCommand = `${createCapabilityCommand}\ncellc auth capability submit${apiFlag} --payload capability-payload.json --wallet-signature wallet-signature.json\ncellc auth namespace claim${apiFlag} --namespace ${shellQuote(namespace)} --payload capability-payload.json --wallet-signature wallet-signature.json`;
+      const capabilityFlag = ` --capability-key-id ${shellQuote(confirmedCapabilityKeyId || "<server-confirmed-key-id>")}`;
       const publishCommand = isCellScript
-        ? `${commandPrefix()}cellc publish${cellscriptKindFlag}${apiFlag}`
-        : `${commandPrefix()}cellc publish --artifact-manifest Artifact.toml${apiFlag}`;
+        ? `${commandPrefix()}cellc publish${cellscriptKindFlag}${apiFlag}${capabilityFlag}`
+        : `${commandPrefix()}cellc publish --artifact-manifest Artifact.toml${apiFlag}${capabilityFlag}`;
       if (preflight) preflight.textContent = preflightCommand;
       if (preflightCopy) preflightCopy.dataset.copyText = preflightCommand;
+      if (capabilityCreateCommand) capabilityCreateCommand.textContent = createCapabilityCommand;
+      if (capabilityCreateCopy) capabilityCreateCopy.dataset.copyText = createCapabilityCommand;
       if (capabilityCommand) capabilityCommand.textContent = authCommand;
       if (capabilityCopy) capabilityCopy.dataset.copyText = authCommand;
       if (publish) publish.textContent = publishCommand;
-      if (publishCopy) publishCopy.dataset.copyText = namespaceClaimed || authorisedOverride ? publishCommand : "";
+      if (publishCopy) publishCopy.dataset.copyText = confirmedCapabilityKeyId ? publishCommand : "";
     };
 
     const stageState = (name: string, complete: boolean, active: boolean) => {
@@ -540,47 +617,61 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       if (stage) stage.dataset.state = complete ? "complete" : active ? "active" : "pending";
     };
     const syncWorkflow = () => {
+      const coordinateReady = coordinateValid();
+      const newMode = authorisationMode === "new";
+      const existingMode = authorisationMode === "existing";
       const directSignerConnected = Boolean(activeWalletSigner && activeWalletIdentity);
       const manualSignatureMode = Boolean(activeExternalWallet);
       const signingRouteSelected = directSignerConnected || manualSignatureMode;
-      const workflowUnlocked = signingRouteSelected || authorisedOverride;
-      const coordinateReady = coordinateValid();
-      const payloadReady = signingRouteSelected && hasValidPayload();
+      const payloadReady = newMode && signingRouteSelected && hasValidPayload();
       const signatureReady = payloadReady && Boolean(signatureOutput?.value.trim());
-      for (const section of submissionWorkspace) section.hidden = !workflowUnlocked;
-      stageState("wallet", signingRouteSelected, !signingRouteSelected);
-      stageState("scope", signatureReady, signingRouteSelected && !signatureReady);
-      stageState("authorise", namespaceClaimed, signatureReady && !namespaceClaimed);
+      if (newCapabilityFlow) newCapabilityFlow.hidden = !newMode;
+      if (existingCapabilityPanel) existingCapabilityPanel.hidden = !existingMode;
+      for (const button of authorisationModes) {
+        const selected = button.dataset.authorisationMode === authorisationMode;
+        button.setAttribute("aria-pressed", String(selected));
+        button.disabled = busy || !coordinateReady;
+      }
+      stageState("wallet", newMode && signingRouteSelected, newMode && !signingRouteSelected);
+      stageState("scope", newMode && signatureReady, newMode && signingRouteSelected && !signatureReady);
+      stageState("authorise", Boolean(confirmedCapabilityKeyId), newMode && signatureReady && !confirmedCapabilityKeyId);
       if (principalPanel) principalPanel.hidden = !directSignerConnected && !(manualSignatureMode && principalInput?.value.trim());
-      if (payloadPanel) payloadPanel.hidden = !signingRouteSelected;
-      if (signaturePanel) signaturePanel.hidden = !signatureReady && !manualSignatureMode;
+      if (payloadPanel) payloadPanel.hidden = !newMode || !signingRouteSelected;
+      if (signaturePanel) signaturePanel.hidden = !newMode || (!signatureReady && !manualSignatureMode);
       if (signatureHint) {
         const key = activeExternalWallet ? "signatureExternalHint" : "signatureReady";
         signatureHint.dataset.i18n = `registry.submit.${key}`;
         signatureHint.textContent = message(key);
       }
-      if (changeWalletButton) changeWalletButton.hidden = !signingRouteSelected;
-      const canPublish = namespaceClaimed || authorisedOverride;
+      if (changeWalletButton) changeWalletButton.hidden = !newMode || !signingRouteSelected;
+      const canPublish = Boolean(confirmedCapabilityKeyId);
       if (publishStep) {
         publishStep.dataset.state = canPublish ? "ready" : "locked";
         publishStep.hidden = !canPublish;
       }
-      if (publishLock) publishLock.hidden = canPublish;
-      if (existingCapability) existingCapability.hidden = canPublish;
       if (publishCopy) publishCopy.disabled = !canPublish;
 
-      let primaryKey = "continueConnect";
-      if (signingRouteSelected && !coordinateReady) primaryKey = "continueCoordinate";
-      else if (signingRouteSelected && !payloadReady) primaryKey = "continuePayload";
-      else if (payloadReady && !signatureReady) primaryKey = activeExternalWallet ? "continueExternalSignature" : "continueSign";
-      else if (signatureReady && !capabilitySubmitted) primaryKey = "continueSubmit";
-      else if (capabilitySubmitted && !namespaceClaimed) primaryKey = "continueClaim";
-      else if (namespaceClaimed) primaryKey = "continueDone";
-      if (primaryButton) {
-        primaryButton.dataset.i18n = `registry.submit.${primaryKey}`;
-        primaryButton.textContent = message(primaryKey);
-        primaryButton.disabled = busy || namespaceClaimed || authorisedOverride;
-        primaryButton.setAttribute("aria-busy", String(busy));
+      for (const button of capabilityActionButtons) {
+        const action = button.dataset.capabilityAction;
+        const visible = action === "connect"
+          ? newMode && !signingRouteSelected
+          : action === "sign"
+            ? newMode && directSignerConnected && payloadReady && !signatureReady
+            : action === "submit"
+              ? newMode && signatureReady && !capabilitySubmitted
+              : action === "claim"
+                ? newMode && capabilitySubmitted && !namespaceClaimed && !namespaceReviewPending
+                : false;
+        button.hidden = !visible;
+        button.disabled = busy || !coordinateReady;
+        button.setAttribute("aria-busy", String(busy && visible));
+      }
+      if (existingCapabilityCheck) {
+        existingCapabilityCheck.disabled = busy
+          || !existingMode
+          || !coordinateReady
+          || !/^cap_[0-9a-f]{32}$/.test(existingCapabilityKey?.value.trim().toLowerCase() ?? "");
+        existingCapabilityCheck.setAttribute("aria-busy", String(busy && existingMode));
       }
       const valid = coordinateValid();
       for (const input of [namespaceInput, nameInput]) {
@@ -1013,11 +1104,23 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       });
     };
 
+    const clearCapabilityConfirmation = () => {
+      confirmedCapabilityKeyId = "";
+      lastCapabilityCheck = null;
+      if (capabilityCheckSummary) capabilityCheckSummary.hidden = true;
+      if (capabilityCheckStatus) capabilityCheckStatus.textContent = "";
+      if (capabilityCheckExpiry) capabilityCheckExpiry.textContent = "";
+      if (capabilityCheckNamespace) capabilityCheckNamespace.textContent = "";
+      if (capabilityCheckScopes) capabilityCheckScopes.textContent = "";
+    };
     const clearSignature = () => {
       if (signatureOutput) signatureOutput.value = "";
       if (copySignatureButton) copySignatureButton.dataset.copyText = "";
       capabilitySubmitted = false;
+      submittedCapabilityKeyId = "";
       namespaceClaimed = false;
+      namespaceReviewPending = false;
+      clearCapabilityConfirmation();
     };
     const resetWallet = async (disconnect = false) => {
       if (disconnect && typeof activeWalletSigner?.disconnect === "function") {
@@ -1033,7 +1136,6 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       }
       if (copyPrincipalButton) copyPrincipalButton.dataset.copyText = "";
       clearSignature();
-      localStorage.removeItem(walletStorageKey);
       clearTechnical();
       setStatus("walletIdle");
       window.dispatchEvent(new CustomEvent("cellscript:wallet-disconnected"));
@@ -1054,12 +1156,6 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
         if (copyPrincipalButton) copyPrincipalButton.dataset.copyText = "";
         clearSignature();
         signatureOutput?.removeAttribute("readonly");
-        localStorage.setItem(walletStorageKey, JSON.stringify({
-          wallet: selection.wallet.name,
-          connection: "external_signature",
-          network: registryNetwork,
-          selectedAt: new Date().toISOString(),
-        }));
         setStatus("walletExternalReady", "idle", `: ${selection.wallet.name}`);
         syncWorkflow();
         return null;
@@ -1077,12 +1173,6 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
         principalInput.dataset.principalType = activeWalletIdentity.principalType;
       }
       if (copyPrincipalButton) copyPrincipalButton.dataset.copyText = principalId;
-      localStorage.setItem(walletStorageKey, JSON.stringify({
-        principalType: activeWalletIdentity.principalType,
-        address,
-        network: registryNetwork,
-        connectedAt: new Date().toISOString(),
-      }));
       setStatus("walletConnected", "ok", address ? `: ${address}` : "");
       window.dispatchEvent(new CustomEvent("cellscript:wallet-connected", { detail: { principalType: activeWalletIdentity.principalType, address } }));
       return activeWalletSigner;
@@ -1172,6 +1262,63 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       showTechnical({ status: response.status, response: parsed });
       return parsed;
     };
+    const renderCapabilityCheck = (check: CapabilityCheck) => {
+      lastCapabilityCheck = check;
+      const locale = document.documentElement.dataset.locale === "zh" ? "zh-CN" : "en-GB";
+      if (capabilityCheckStatus) capabilityCheckStatus.textContent = message(`capabilityStatus${check.status[0]?.toUpperCase()}${check.status.slice(1)}`);
+      if (capabilityCheckExpiry) capabilityCheckExpiry.textContent = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(check.expires_at));
+      if (capabilityCheckNamespace) {
+        const ownership = check.namespace.owned_by_capability_principal ? message("capabilityOwnerMatch") : message("capabilityOwnerMismatch");
+        capabilityCheckNamespace.textContent = `${check.namespace.name} · ${check.namespace.status} · ${ownership}`;
+      }
+      if (capabilityCheckScopes) capabilityCheckScopes.textContent = check.scopes.join(" · ");
+      if (capabilityCheckSummary) capabilityCheckSummary.hidden = false;
+    };
+    const checkCapabilityKey = async (rawKeyId: string, successKey: string) => {
+      const keyId = rawKeyId.trim().toLowerCase();
+      if (!/^cap_[0-9a-f]{32}$/.test(keyId)) throw new WorkflowError("errorCapabilityKeyId");
+      if (!coordinateValid()) throw new WorkflowError("invalidCoordinate");
+      setStatus("checkingCapability");
+      clearCapabilityConfirmation();
+      const query = new URLSearchParams({ namespace: fieldValue("namespace"), name: fieldValue("name") });
+      const timeout = new AbortController();
+      const relayAbort = () => timeout.abort();
+      const timer = window.setTimeout(() => timeout.abort(), 10_000);
+      signal.addEventListener("abort", relayAbort, { once: true });
+      let response: Response;
+      try {
+        response = await fetch(`${signerRoot?.dataset.apiOrigin}/v1/capabilities/${encodeURIComponent(keyId)}/check?${query}`, {
+          signal: timeout.signal,
+          headers: { accept: "application/json" },
+        });
+      } catch (error) {
+        if (timeout.signal.aborted && !signal.aborted) throw new WorkflowError("errorCapabilityCheckTimeout");
+        throw error;
+      } finally {
+        window.clearTimeout(timer);
+        signal.removeEventListener("abort", relayAbort);
+      }
+      const parsed = await readApiResponse(response);
+      if (!response.ok) throw new WorkflowError("errorCapabilityCheck", JSON.stringify({ status: response.status, response: parsed }, null, 2));
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new WorkflowError("errorCapabilityCheckResponse");
+      const check = parsed as Partial<CapabilityCheck>;
+      if (
+        check.key_id !== keyId
+        || !Array.isArray(check.scopes)
+        || typeof check.expires_at !== "string"
+        || !check.namespace
+        || !check.allows
+        || typeof check.usable_for_publish !== "boolean"
+        || !Array.isArray(check.reasons)
+      ) throw new WorkflowError("errorCapabilityCheckResponse");
+      renderCapabilityCheck(check as CapabilityCheck);
+      if (!check.usable_for_publish) {
+        throw new WorkflowError("errorCapabilityNotUsable", JSON.stringify({ reasons: check.reasons }, null, 2));
+      }
+      confirmedCapabilityKeyId = keyId;
+      setStatus(successKey, "ok");
+      syncWorkflow();
+    };
     const submitCapability = async () => {
       const payload = parsePayload();
       const signature = await signatureForPayload(payload);
@@ -1183,7 +1330,13 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       });
       const parsed = await readApiResponse(response);
       if (!response.ok) throw new WorkflowError("errorCapabilityRejected", JSON.stringify({ status: response.status, response: parsed }, null, 2));
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed) || typeof (parsed as Record<string, unknown>).key_id !== "string") {
+        throw new WorkflowError("errorCapabilityCheckResponse");
+      }
+      const keyId = String((parsed as Record<string, unknown>).key_id).trim().toLowerCase();
+      if (!/^cap_[0-9a-f]{32}$/.test(keyId)) throw new WorkflowError("errorCapabilityCheckResponse");
       capabilitySubmitted = true;
+      submittedCapabilityKeyId = keyId;
       setStatus("submitted", "ok");
     };
     const claimNamespace = async () => {
@@ -1192,7 +1345,9 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       if (!namespace) throw new WorkflowError("errorNamespaceRequired");
       const payload = parsePayload();
       const scopes = Array.isArray(payload.requested_scopes) ? payload.requested_scopes.filter((scope): scope is string => typeof scope === "string") : [];
-      if (!scopes.includes(`publish:${namespace}/${name}`)) throw new WorkflowError("errorScope");
+      if (!scopes.includes(`publish:${namespace}/${name}`) && !scopes.includes(`publish:${namespace}/*`)) {
+        throw new WorkflowError("errorScope");
+      }
       const signature = await signatureForPayload(payload);
       const response = await fetch(`${signerRoot?.dataset.apiOrigin}/v1/namespaces/claim`, {
         method: "POST",
@@ -1202,44 +1357,57 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       });
       const parsed = await readApiResponse(response);
       if (!response.ok) throw new WorkflowError("errorClaimRejected", JSON.stringify({ status: response.status, response: parsed }, null, 2));
+      const claimStatus = parsed && typeof parsed === "object" && !Array.isArray(parsed)
+        ? (parsed as Record<string, unknown>).status
+        : undefined;
+      if (claimStatus !== "active") {
+        namespaceClaimed = false;
+        namespaceReviewPending = true;
+        setStatus("namespaceReviewPending", "idle");
+        return;
+      }
       namespaceClaimed = true;
-      setStatus("continueDone", "ok");
+      namespaceReviewPending = false;
+      await checkCapabilityKey(submittedCapabilityKeyId, "capabilityConfirmed");
     };
 
-    primaryButton?.addEventListener("click", async () => {
-      busy = true;
-      clearTechnical();
-      syncWorkflow();
-      try {
-        const walletSelected = Boolean((activeWalletSigner && activeWalletIdentity) || activeExternalWallet);
-        if (!walletSelected) {
-          await ensureWalletSigner();
-        } else if (!coordinateValid()) {
-          coordinateError?.removeAttribute("hidden");
-          (namespaceInput?.validity.valid ? nameInput : namespaceInput)?.focus();
-          setStatus("invalidCoordinate", "error");
-        }
-        else if (!hasValidPayload()) {
-          payloadInput?.focus();
-          parsePayload();
-        } else if (!signatureOutput?.value.trim()) {
-          if (activeExternalWallet) {
-            signatureOutput?.focus();
-            setStatus("walletExternalAwaiting", "idle", `: ${activeExternalWallet.name}`);
-          } else {
-            writeSignature(await signCapabilityPayload());
-            setStatus("signed", "ok");
+    for (const button of capabilityActionButtons) {
+      button.addEventListener("click", () => {
+        void (async () => {
+          busy = true;
+          clearTechnical();
+          syncWorkflow();
+          const action = button.dataset.capabilityAction;
+          try {
+            if (!coordinateValid()) throw new WorkflowError("invalidCoordinate");
+            if (authorisationMode !== "new") throw new WorkflowError("chooseAuthorisationPath");
+            if (action === "connect") {
+              await ensureWalletSigner();
+            } else if (action === "sign") {
+              parsePayload();
+              writeSignature(await signCapabilityPayload());
+              setStatus("signed", "ok");
+            } else if (action === "submit") {
+              await submitCapability();
+            } else if (action === "claim") {
+              await claimNamespace();
+            }
+          } catch (error) {
+            const fallback = action === "connect"
+              ? "errorWallet"
+              : action === "sign"
+                ? "errorSigning"
+                : action === "submit"
+                  ? "errorSubmit"
+                  : "errorClaim";
+            setError(error, fallback);
+          } finally {
+            busy = false;
+            syncWorkflow();
           }
-        } else if (!capabilitySubmitted) await submitCapability();
-        else if (!namespaceClaimed) await claimNamespace();
-      } catch (error) {
-        const fallback = !(activeWalletSigner || activeExternalWallet) ? "errorWallet" : !signatureOutput?.value.trim() ? "errorSigning" : !capabilitySubmitted ? "errorSubmit" : "errorClaim";
-        setError(error, fallback);
-      } finally {
-        busy = false;
-        syncWorkflow();
-      }
-    }, { signal });
+        })();
+      }, { signal });
+    }
     changeWalletButton?.addEventListener("click", () => {
       void (async () => {
         busy = true;
@@ -1249,6 +1417,39 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
           await ensureWalletSigner();
         } catch (error) {
           setError(error, "errorWallet");
+        } finally {
+          busy = false;
+          syncWorkflow();
+        }
+      })();
+    }, { signal });
+    for (const button of authorisationModes) {
+      button.addEventListener("click", () => {
+        if (!coordinateValid()) {
+          coordinateError?.removeAttribute("hidden");
+          (namespaceInput?.validity.valid ? nameInput : namespaceInput)?.focus();
+          setStatus("invalidCoordinate", "error");
+          return;
+        }
+        authorisationMode = button.dataset.authorisationMode === "existing" ? "existing" : "new";
+        clearTechnical();
+        if (confirmedCapabilityKeyId) setStatus("capabilityConfirmed", "ok");
+        else if (authorisationMode === "existing") setStatus("existingCapabilityIdle");
+        else if (activeWalletSigner || activeExternalWallet) setStatus(activeExternalWallet ? "walletExternalReady" : "walletConnected", "ok");
+        else setStatus("walletIdle");
+        syncWorkflow();
+        if (authorisationMode === "existing") existingCapabilityKey?.focus();
+      }, { signal });
+    }
+    existingCapabilityCheck?.addEventListener("click", () => {
+      void (async () => {
+        busy = true;
+        clearTechnical();
+        syncWorkflow();
+        try {
+          await checkCapabilityKey(existingCapabilityKey?.value ?? "", "existingCapabilityConfirmed");
+        } catch (error) {
+          setError(error, "errorCapabilityCheck");
         } finally {
           busy = false;
           syncWorkflow();
@@ -1265,10 +1466,10 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       }
       walletPicker = null;
     }, { signal });
-    existingCapability?.addEventListener("click", () => {
-      authorisedOverride = true;
+    existingCapabilityKey?.addEventListener("input", () => {
+      if (existingCapabilityKey.value.trim().toLowerCase() !== confirmedCapabilityKeyId) clearCapabilityConfirmation();
       clearTechnical();
-      setStatus("alreadyAuthorised", "ok");
+      setStatus("existingCapabilityIdle");
       syncWorkflow();
     }, { signal });
     payloadInput?.addEventListener("input", () => {
@@ -1280,7 +1481,10 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     signatureOutput?.addEventListener("input", () => {
       if (!activeExternalWallet) return;
       capabilitySubmitted = false;
+      submittedCapabilityKeyId = "";
       namespaceClaimed = false;
+      namespaceReviewPending = false;
+      clearCapabilityConfirmation();
       clearTechnical();
       syncWorkflow();
     }, { signal });
@@ -1288,7 +1492,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       const coordinate = `${fieldValue("namespace")}/${fieldValue("name")}`;
       if (lastCoordinate && coordinate !== lastCoordinate && event.target !== pathInput) {
         clearSignature();
-        authorisedOverride = false;
+        if (authorisationMode === "existing") setStatus("existingCapabilityIdle");
       }
       lastCoordinate = coordinate;
       syncArtifactKind();
@@ -1297,6 +1501,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     pathInput?.addEventListener("input", syncWorkflow, { signal });
     window.addEventListener("cellscript:locale-change", () => {
       setStatus(statusKey, statusTone, statusSuffix);
+      if (lastCapabilityCheck) renderCapabilityCheck(lastCapabilityCheck);
       if (walletDialog?.open) renderWalletChoices();
       syncArtifactKind();
       syncWorkflow();

@@ -1,6 +1,6 @@
 ---
 import RegistryLayout from "../../layouts/RegistryLayout.astro";
-import { registryPackages, registryStatusTone } from "../../lib/registry";
+import { registryPackages, registryStatusTone, registryStatusTones } from "../../lib/registry";
 import { defaultLocale, translations } from "../../i18n/translations";
 import { registryRuntime } from "../../lib/registry-runtime";
 
@@ -15,7 +15,7 @@ const apiOrigin = registryRuntime.apiOrigin;
 ---
 
 <RegistryLayout
-  title="CellScript Registry: Package maintenance"
+  title="CellScript Artifact Registry: Maintenance"
   description={description}
   headingKey="registry.manage.title"
   descriptionKey="registry.manage.description"
@@ -64,7 +64,7 @@ const apiOrigin = registryRuntime.apiOrigin;
                 data-i18n-placeholder="registry.manage.packagePlaceholder"
                 autocomplete="off"
                 required
-                pattern="[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?/[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?"
+                pattern="[a-z0-9](?:(?:[a-z0-9_]|-){0,62}[a-z0-9])?/[a-z0-9](?:(?:[a-z0-9_]|-){0,62}[a-z0-9])?"
                 aria-describedby="manage-coordinate-error"
                 data-manage-package
               />
@@ -80,6 +80,7 @@ const apiOrigin = registryRuntime.apiOrigin;
             </label>
           </div>
         </details>
+        <output class="registry-manage-remote-status" data-manage-remote-status role="status" aria-live="polite" hidden></output>
 
         <fieldset class="registry-task-picker">
           <legend data-i18n="registry.manage.chooseTask">{t.registry.manage.chooseTask}</legend>
@@ -216,6 +217,7 @@ const apiOrigin = registryRuntime.apiOrigin;
           <span class="registry-command-kind" data-manage-kind>{t.registry.manage.kindRegistryWrite}</span>
         </div>
         <p class="registry-manage-help" data-manage-help>{t.registry.manage.helpPublish}</p>
+        <div class="registry-manage-validation" data-manage-validation role="alert" hidden></div>
         <div class="registry-command-line">
           <code data-manage-command>cellc package verify --json &amp;&amp; cellc publish --dry-run &amp;&amp; cellc publish</code>
           <button
@@ -232,7 +234,7 @@ const apiOrigin = registryRuntime.apiOrigin;
     </div>
   </section>
 
-  <script is:inline define:vars={{ packages: registryPackages }}>
+  <script is:inline define:vars={{ packages: registryPackages, statusTones: registryStatusTones }}>
     (() => {
       const previous = window.__cellscriptRegistryManageAbort;
       previous?.abort();
@@ -263,9 +265,14 @@ const apiOrigin = registryRuntime.apiOrigin;
       const reasonInput = form?.elements.namedItem("note");
       const capabilityInput = form?.elements.namedItem("capability");
       const versionOptions = app?.querySelector("[data-manage-version-options]");
+      const remoteStatus = app?.querySelector("[data-manage-remote-status]");
+      const validation = app?.querySelector("[data-manage-validation]");
       const coordinatePattern = /^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?\/[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$/;
       const params = new URLSearchParams(window.location.search);
       const allowedTasks = new Set(["publish", "yank", "package", "live", "reproduce", "deployment", "commitment"]);
+      const remoteLoadDebounceMs = 260;
+      const mobileLayoutMedia = "(max-width: 900px)";
+      const mobileScrollDelayMs = 80;
       const requestedCoordinate = params.get("package")?.trim() || "";
       const requestedTask = params.get("task")?.trim() || "";
       let remotePackage = null;
@@ -277,19 +284,19 @@ const apiOrigin = registryRuntime.apiOrigin;
       const getMessage = (path) => path.split(".").reduce((value, key) => value?.[key], i18n?.[locale()]);
       const g = (path) => getMessage(path) || "";
       const statusLabel = (status) => g(`registry.statuses.${status}`) || String(status || "").replaceAll("_", " ");
-      const statusTone = (status) => {
-        if (["active", "deployed", "on_chain_committed"].includes(status)) return "active";
-        if (status === "verified_build") return "info";
-        if (["indexed_pending", "deprecated"].includes(status)) return "warning";
-        if (["yanked", "quarantined"].includes(status)) return "danger";
-        return "source";
-      };
+      const statusTone = (status) => statusTones[status] || "source";
       const coordinate = () => coordinateInput?.value.trim() || "";
       const field = (name) => {
         const input = form?.elements.namedItem(name);
         return input instanceof HTMLInputElement || input instanceof HTMLSelectElement || input instanceof HTMLTextAreaElement
           ? input.value.trim()
           : "";
+      };
+      const setFieldInvalid = (name, invalid) => {
+        const input = form?.elements.namedItem(name);
+        if (input instanceof HTMLInputElement || input instanceof HTMLSelectElement || input instanceof HTMLTextAreaElement) {
+          input.setAttribute("aria-invalid", String(invalid));
+        }
       };
       const selectedTask = () => form?.querySelector("input[name='action']:checked")?.value || "publish";
       const shellArg = (value) => `'${String(value).replace(/'/g, "'\\''")}'`;
@@ -348,7 +355,7 @@ const apiOrigin = registryRuntime.apiOrigin;
 
       const render = () => {
         const valid = coordinatePattern.test(coordinate());
-        coordinateInput?.setAttribute("aria-invalid", String(!valid));
+        coordinateInput?.setAttribute("aria-invalid", String(Boolean(coordinate()) && !valid));
         if (coordinateError) coordinateError.hidden = valid || !coordinate();
         syncPackage();
         const task = selectedTask();
@@ -404,7 +411,7 @@ const apiOrigin = registryRuntime.apiOrigin;
           helpKey = "registry.manage.helpReproduce";
           noteKey = "registry.manage.noteReproduce";
           kindKey = "registry.manage.kindLocalChange";
-          tone = "read";
+          tone = "write";
         } else if (task === "deployment") {
           const selectedVersion = field("artifact_version") || pkg?.latest_version || "<version>";
           const network = app?.dataset.registryNetwork || "mainnet";
@@ -418,62 +425,132 @@ const apiOrigin = registryRuntime.apiOrigin;
           next = `cellc artifact commitment ${shellArg(`${coordinate()}@${selectedVersion}`)} --output registry-commitment.json`;
           helpKey = "registry.manage.helpCommitment";
           noteKey = "registry.manage.noteCommitment";
-          kindKey = "registry.manage.kindLiveCheck";
-          tone = "read";
+          kindKey = "registry.manage.kindWalletIntent";
+          tone = "write";
         }
-        const yankReady = !isYank || Boolean(field("version") && field("note") && /^cap_[0-9a-f]{32}$/.test(field("capability")));
-        const artifactReady = !isArtifactTask || Boolean(field("artifact_version"))
-          && (task !== "reproduce" || (() => {
-            const reportCount = field("reports").split(/\r?\n/).map((path) => path.trim()).filter(Boolean).length;
-            return reportCount >= 2 && reportCount <= 16;
-          })())
-          && (task !== "deployment" || Boolean(
-            /^0x[0-9a-fA-F]{64}$/.test(field("code_hash"))
-            && /^0x[0-9a-fA-F]{64}$/.test(field("tx_hash"))
-            && /^[0-9]+$/.test(field("output_index"))
-            && /^cap_[0-9a-f]{32}$/.test(field("deployment_capability")),
-          ));
+        const issues = [];
+        for (const name of ["version", "note", "capability", "artifact_version", "reports", "code_hash", "tx_hash", "output_index", "deployment_capability"]) {
+          setFieldInvalid(name, false);
+        }
+        const requireField = (name, accepted, messageKey) => {
+          if (accepted) return;
+          issues.push(g(messageKey));
+          setFieldInvalid(name, true);
+        };
+        if (!valid) issues.push(g("registry.manage.validationCoordinate"));
+        if (isYank) {
+          requireField("version", Boolean(field("version")), "registry.manage.validationVersion");
+          requireField("note", Boolean(field("note")), "registry.manage.validationReason");
+          requireField("capability", /^cap_[0-9a-f]{32}$/.test(field("capability")), "registry.manage.validationCapability");
+        }
+        if (isArtifactTask) {
+          requireField("artifact_version", Boolean(field("artifact_version")), "registry.manage.validationVersion");
+        }
+        if (task === "reproduce") {
+          const reportCount = field("reports").split(/\r?\n/).map((path) => path.trim()).filter(Boolean).length;
+          requireField("reports", reportCount >= 2 && reportCount <= 16, "registry.manage.validationReports");
+        }
+        if (task === "deployment") {
+          requireField("code_hash", /^0x[0-9a-fA-F]{64}$/.test(field("code_hash")), "registry.manage.validationCodeHash");
+          requireField("tx_hash", /^0x[0-9a-fA-F]{64}$/.test(field("tx_hash")), "registry.manage.validationTxHash");
+          requireField("output_index", /^[0-9]+$/.test(field("output_index")), "registry.manage.validationOutputIndex");
+          requireField("deployment_capability", /^cap_[0-9a-f]{32}$/.test(field("deployment_capability")), "registry.manage.validationCapability");
+        }
+        if (validation) {
+          validation.replaceChildren(...issues.map((issue) => {
+            const item = document.createElement("p");
+            item.textContent = issue;
+            return item;
+          }));
+          validation.hidden = issues.length === 0;
+        }
         if (command) command.textContent = valid ? next : g("registry.manage.invalidPackage");
         if (help) help.textContent = g(helpKey);
         if (note) note.textContent = g(noteKey);
         if (kind) kind.textContent = g(kindKey);
         if (output) output.dataset.tone = tone;
+        if (output) output.dataset.valid = String(issues.length === 0);
         if (copy) {
-          copy.disabled = !valid || !yankReady || !artifactReady;
-          copy.dataset.copyText = valid && yankReady && artifactReady ? next : "";
+          copy.disabled = issues.length > 0;
+          copy.dataset.copyText = issues.length === 0 ? next : "";
         }
         syncUrl();
       };
 
+      const showRemoteStatus = (messageKey, tone = "info") => {
+        if (!remoteStatus) return;
+        remoteStatus.hidden = !messageKey;
+        remoteStatus.dataset.tone = tone;
+        remoteStatus.textContent = messageKey ? g(messageKey) : "";
+      };
+
       const loadRemote = async () => {
         remoteRequest?.abort();
-        remoteRequest = new AbortController();
+        const request = new AbortController();
+        remoteRequest = request;
         const current = coordinate();
-        if (!coordinatePattern.test(current) || localPackage()) return;
+        if (!coordinatePattern.test(current) || localPackage()) {
+          showRemoteStatus("");
+          return;
+        }
         const [namespace, name] = current.split("/");
+        showRemoteStatus("registry.manage.remoteLoading");
+        let timedOut = false;
+        const timeout = window.setTimeout(() => {
+          timedOut = true;
+          request.abort();
+        }, 10_000);
         try {
           const response = await fetch(`${app?.dataset.apiOrigin}/v1/artifacts/${encodeURIComponent(namespace)}/${encodeURIComponent(name)}`, {
             headers: { accept: "application/json" },
-            signal: remoteRequest.signal,
+            signal: request.signal,
           });
-          if (!response.ok) return;
+          if (!response.ok) {
+            throw new Error(response.status === 404 ? g("registry.manage.remoteNotFound") : g("registry.manage.remoteFailed"));
+          }
           const payload = await response.json();
-          if (payload?.schema !== "cellscript-public-registry-package-v1" || coordinate() !== current) return;
+          if (coordinate() !== current) return;
+          if (
+            payload?.schema !== "cellscript-registry-artifact"
+            || payload.coordinate !== current
+            || !payload.artifact
+            || !Array.isArray(payload.releases)
+          ) throw new Error(g("registry.manage.remoteInvalid"));
+          const projectedStatus = payload.availability_status && payload.availability_status !== "active"
+            ? payload.availability_status
+            : payload.deployment_status === "chain_verified"
+              ? payload.deployment_status
+              : payload.verification_status || "pending";
           remotePackage = {
             coordinate: current,
             latest_version: payload.latest_release || payload.releases?.[0]?.release || "",
             versions: Array.isArray(payload.releases) ? payload.releases.map((release) => ({
               ...release,
               version: release.release,
-              status: release.availability_status || release.verification_status || "pending",
+              status: release.availability_status && release.availability_status !== "active"
+                ? release.availability_status
+                : release.deployment_status === "chain_verified"
+                  ? release.deployment_status
+                  : release.verification_status || "pending",
             })) : [],
-            status: payload.availability_status || payload.verification_status || "pending",
+            status: projectedStatus,
             artifact: payload.artifact,
-            deployment: { networks: [] },
+            deployment: { networks: payload.network ? [payload.network] : [] },
           };
+          showRemoteStatus("registry.manage.remoteLoaded", "success");
           render();
         } catch (error) {
-          if (error?.name !== "AbortError") render();
+          if (error?.name === "AbortError" && !timedOut) return;
+          remotePackage = null;
+          showRemoteStatus(timedOut ? "registry.manage.remoteTimedOut" : "", "error");
+          if (!timedOut && remoteStatus) {
+            remoteStatus.hidden = false;
+            remoteStatus.dataset.tone = "error";
+            remoteStatus.textContent = error instanceof Error ? error.message : g("registry.manage.remoteFailed");
+          }
+          render();
+        } finally {
+          window.clearTimeout(timeout);
         }
       };
 
@@ -486,12 +563,12 @@ const apiOrigin = registryRuntime.apiOrigin;
         remotePackage = null;
         render();
         window.clearTimeout(remoteTimer);
-        remoteTimer = window.setTimeout(loadRemote, 260);
+        remoteTimer = window.setTimeout(loadRemote, remoteLoadDebounceMs);
       }, { signal });
       for (const action of form?.querySelectorAll("input[name='action']") || []) {
         action.addEventListener("change", () => {
-          if (window.matchMedia("(max-width: 900px)").matches) {
-            window.setTimeout(() => output?.scrollIntoView({ behavior: "smooth", block: "nearest" }), 80);
+          if (window.matchMedia(mobileLayoutMedia).matches) {
+            window.setTimeout(() => output?.scrollIntoView({ behavior: "smooth", block: "nearest" }), mobileScrollDelayMs);
           }
         }, { signal });
       }

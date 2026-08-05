@@ -15,7 +15,6 @@ export const registryRuntime = environmentValue === "testnet-sandbox"
       staticOrigin: (import.meta.env.PUBLIC_STATIC_REGISTRY_ORIGIN || "https://objects.testnet.registry.cellscript.dev").replace(/\/$/, ""),
       siteOrigin: (import.meta.env.PUBLIC_REGISTRY_SITE_ORIGIN || "https://testnet.registry.cellscript.dev").replace(/\/$/, ""),
       alternateOrigin: "https://cellscript.dev/registry",
-      ttlHours: 72,
     }
   : {
       environment: "production" as const,
@@ -25,7 +24,6 @@ export const registryRuntime = environmentValue === "testnet-sandbox"
       staticOrigin: (import.meta.env.PUBLIC_STATIC_REGISTRY_ORIGIN || "https://registry.cellscript.dev").replace(/\/$/, ""),
       siteOrigin: (import.meta.env.PUBLIC_REGISTRY_SITE_ORIGIN || "https://cellscript.dev").replace(/\/$/, ""),
       alternateOrigin: "https://testnet.registry.cellscript.dev/registry",
-      ttlHours: null,
     };
 
 export const isTestnetSandbox = registryRuntime.environment === "testnet-sandbox";

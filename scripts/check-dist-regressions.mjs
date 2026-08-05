@@ -36,6 +36,7 @@ const distDocsIndex = resolve(dist, "docs", "index.html");
 const distPlaygroundIndex = resolve(dist, "playground", "index.html");
 const distRegistryIndex = resolve(dist, "registry", "index.html");
 const distRegistrySubmitIndex = resolve(dist, "registry", "submit", "index.html");
+const distRegistryManageIndex = resolve(dist, "registry", "manage", "index.html");
 const distPlaygroundWorker = resolve(dist, "playground-worker.js");
 const distWasm = resolve(dist, "wasm", "cellscript_wasm_bg.wasm");
 const docsSource = resolve(root, "src", "lib", "docs.ts");
@@ -50,6 +51,7 @@ expectFile(distDocsIndex);
 expectFile(distPlaygroundIndex);
 expectFile(distRegistryIndex);
 expectFile(distRegistrySubmitIndex);
+expectFile(distRegistryManageIndex);
 expectFile(distPlaygroundWorker);
 expectFile(distWasm);
 expectFile(docsSource);
@@ -60,6 +62,7 @@ const docsHtml = existsSync(distDocsIndex) ? read(distDocsIndex) : "";
 const playgroundHtml = existsSync(distPlaygroundIndex) ? read(distPlaygroundIndex) : "";
 const registryHtml = existsSync(distRegistryIndex) ? read(distRegistryIndex) : "";
 const registrySubmitHtml = existsSync(distRegistrySubmitIndex) ? read(distRegistrySubmitIndex) : "";
+const registryManageHtml = existsSync(distRegistryManageIndex) ? read(distRegistryManageIndex) : "";
 const playgroundWorker = existsSync(distPlaygroundWorker) ? read(distPlaygroundWorker) : "";
 const docsSourceText = existsSync(docsSource) ? read(docsSource) : "";
 
@@ -85,6 +88,9 @@ expectContains("home", indexHtml, `href="https://github.com/CellScript-Labs/Cell
 expectContains("home", indexHtml, `<strong>${expectedReleaseTag}</strong>`);
 expectNotContains("home", indexHtml, '<div class="hero-release-tag"');
 expectNotContains("home", indexHtml, "v0.20.0");
+expectContains("404", notFoundHtml, "/registry/package/");
+expectContains("404", notFoundHtml, 'target.searchParams.set("namespace"');
+expectContains("404", notFoundHtml, 'target.searchParams.set("name"');
 
 for (const [name, html] of [
   ["home", indexHtml],
@@ -103,19 +109,40 @@ for (const [name, html] of [
   ["registry", registryHtml],
   ["registry submit", registrySubmitHtml],
 ]) {
-  expectContains(name, html, ">Registry</h1>");
-  expectContains(name, html, "Discover verified CKB artifacts, deployment records and CellScript packages, or publish with scoped wallet authorisation.");
+  expectContains(name, html, ">Artifact Registry</h1>");
+  expectContains(name, html, "Discover verified CKB artifacts and deployment records, or publish with scoped wallet authorisation.");
   expectContains(name, html, 'data-astro-transition-persist="registry-header"');
   expectContains(name, html, 'data-astro-transition-persist="registry-environment"');
   expectContains(name, html, 'data-astro-transition-persist="registry-tabs"');
   expectContains(name, html, 'data-i18n-aria-label="nav.registryBrowse"');
 }
 
-const walletButton = registrySubmitHtml.match(/<button[^>]*data-capability-primary[^>]*>/)?.[0] ?? "";
-if (!walletButton) fail("registry submit: missing primary wallet action");
-else if (/\sdisabled(?:\s|=|>)/.test(walletButton)) fail("registry submit: primary wallet action must be enabled before package coordinates are entered");
+for (const action of ["connect", "sign", "submit", "claim"]) {
+  const actionButton = registrySubmitHtml.match(new RegExp(`<button[^>]*data-capability-action="${action}"[^>]*>`))?.[0] ?? "";
+  if (!actionButton) fail(`registry submit: missing ${action} capability action`);
+  else if (!/\shidden(?:\s|=|>)/.test(actionButton)) fail(`registry submit: ${action} action must be progressive`);
+}
+expectNotContains("registry submit", registrySubmitHtml, "data-capability-primary");
 expectNotContains("registry submit", registrySubmitHtml, "data-capability-network");
-expectContains("registry submit", registrySubmitHtml, "data-submit-workspace hidden");
+expectNotContains("registry submit", registrySubmitHtml, "data-submit-workspace");
+for (const [name, html] of [
+  ["registry submit", registrySubmitHtml],
+  ["registry manage", registryManageHtml],
+]) {
+  const patterns = [...html.matchAll(/\spattern="([^"]*)"/g)].map((match) => match[1]);
+  if (patterns.some((pattern) => pattern.includes("[a-z0-9_-]"))) {
+    fail(`${name}: HTML pattern contains an unescaped Unicode-v hyphen`);
+  }
+}
+expectContains("registry submit", registrySubmitHtml, "data-submit-form novalidate");
+expectContains("registry submit", registrySubmitHtml, 'data-authorisation-mode="new"');
+expectContains("registry submit", registrySubmitHtml, 'data-authorisation-mode="existing"');
+expectContains("registry submit", registrySubmitHtml, "data-submit-create-capability");
+expectContains("registry submit", registrySubmitHtml, "data-existing-capability-check");
+expectContains("registry submit", registrySubmitHtml, "entering a key ID alone never unlocks anything.");
+expectContains("registry submit bundle", jsText, "/v1/capabilities/");
+expectContains("registry submit bundle", jsText, "/check?");
+expectContains("registry submit bundle", jsText, "--capability-key-id");
 expectContains("registry", registryHtml, "/v1/artifacts");
 expectNotContains("registry", registryHtml, "/v1/packages");
 expectContains("registry", registryHtml, 'data-state="loading" data-source="loading"');
@@ -143,7 +170,7 @@ for (const wallet of [
 ]) {
   expectContains("registry wallet bundle", jsText, wallet);
 }
-expectContains("registry wallet bundle", jsText, "external_signature");
+expectContains("registry wallet bundle", jsText, "errorExternalSignature");
 expectContains("registry wallet bundle", jsText, "wallet-signature.json");
 expectContains("registry wallet bundle", jsText, "/wallets/");
 
