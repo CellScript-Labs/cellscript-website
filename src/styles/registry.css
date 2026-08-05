@@ -7,6 +7,7 @@
 }
 
 .registry-app {
+  --registry-route-start: 28px;
   width: min(var(--max), calc(100% - var(--site-gutter)));
   margin: 0 auto;
   padding: 18px 0 88px;
@@ -228,10 +229,28 @@
   mix-blend-mode: normal;
 }
 
+::view-transition-old(registry-route) {
+  animation: registry-route-out 110ms var(--ease-standard) both;
+  mix-blend-mode: normal;
+}
+
+::view-transition-new(registry-route) {
+  animation: registry-route-in 170ms var(--ease-quick) both;
+  mix-blend-mode: normal;
+}
+
+@keyframes registry-route-out {
+  to { opacity: 0; transform: translateY(-3px); }
+}
+
+@keyframes registry-route-in {
+  from { opacity: 0; transform: translateY(4px); }
+}
+
 .registry-api {
   display: grid;
   gap: 38px;
-  padding-top: 34px;
+  padding-top: var(--registry-route-start);
 }
 
 .registry-api-intro {
@@ -375,7 +394,7 @@
 }
 
 .registry-browse {
-  padding-top: 24px;
+  padding-top: var(--registry-route-start);
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 18px;
@@ -907,8 +926,7 @@
   align-items: start;
   width: min(100%, 1040px);
   min-height: 0;
-  padding: 30px 0 46px;
-  animation: registry-panel-enter 260ms var(--ease-quick) both;
+  padding: var(--registry-route-start) 0 46px;
 }
 
 .registry-session-approval {
@@ -4061,7 +4079,8 @@
   }
 
   .registry-tabs {
-    position: static;
+    position: sticky;
+    top: 68px;
     overflow-x: auto;
   }
 
@@ -4396,14 +4415,18 @@
 }
 
 @media (max-width: 620px) {
+  .registry-app {
+    --registry-route-start: 20px;
+  }
+
   .registry-flow {
-    padding-top: 8px;
+    padding-top: 0;
   }
 
   .registry-publish-entry,
   .registry-session-approval {
     gap: 30px;
-    padding: 32px 0 44px;
+    padding: var(--registry-route-start) 0 44px;
   }
 
   .registry-publish-entry h2,
@@ -4707,6 +4730,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(registry-route),
+  ::view-transition-new(registry-route),
   .registry-package-skeleton span,
   .registry-browse-skeleton span,
   .registry-session-approval[data-state="loading"] [data-session-coordinate],

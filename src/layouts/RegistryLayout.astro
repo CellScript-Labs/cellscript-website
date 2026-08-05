@@ -17,6 +17,7 @@ interface Props {
   // package coordinate) that should not be localized.
   headingKey?: string;
   descriptionKey?: string;
+  titleKey?: string;
   active: "search" | "submit" | "api" | "manage" | "package";
   compactHeader?: boolean;
   showSubmitCta?: boolean;
@@ -29,6 +30,7 @@ const {
   description,
   headingKey,
   descriptionKey,
+  titleKey,
   active,
   compactHeader = false,
   showSubmitCta = true,
@@ -56,7 +58,7 @@ const activeHref =
 ---
 
 <!doctype html>
-<html lang={locale} data-theme="light" data-locale={locale} data-registry-environment={registryRuntime.environment} data-registry-network={registryRuntime.network} data-registry-title-suffix={titleSuffix}>
+<html lang={locale} data-theme="light" data-locale={locale} data-registry-environment={registryRuntime.environment} data-registry-network={registryRuntime.network} data-registry-title-key={titleKey} data-registry-title-suffix={titleSuffix}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -112,7 +114,7 @@ const activeHref =
         ))}
       </nav>}
 
-      <div class="registry-route">
+      <div class="registry-route" transition:name="registry-route">
         <slot />
       </div>
     </main>
@@ -164,7 +166,12 @@ const activeHref =
         const desc = document.querySelector<HTMLElement>("[data-registry-description]");
         const descKey = desc?.dataset.registryDescriptionKey;
         if (desc && descKey) desc.textContent = getMessage(descKey, nextLocale) ?? desc.textContent;
-        if (headingKey) document.title = `${getMessage("registry.eyebrow", nextLocale)}: ${getMessage(headingKey, nextLocale)}`;
+        const titleKey = document.documentElement.dataset.registryTitleKey;
+        if (titleKey) {
+          const pageTitle = getMessage(titleKey, nextLocale);
+          const shellTitle = getMessage("registry.shellTitle", nextLocale);
+          document.title = pageTitle === shellTitle ? shellTitle : `${pageTitle} · ${shellTitle}`;
+        } else if (headingKey) document.title = `${getMessage("registry.eyebrow", nextLocale)}: ${getMessage(headingKey, nextLocale)}`;
         else if (document.documentElement.dataset.registryTitleSuffix) {
           document.title = `${getMessage("registry.eyebrow", nextLocale)}: ${document.documentElement.dataset.registryTitleSuffix}`;
         }
@@ -204,6 +211,7 @@ const activeHref =
       // updating <html data-locale>) and after Astro swaps page content.
       if (!(window as any).__cellscriptRegistryLayoutLocaleBound) {
         window.addEventListener("cellscript:locale-change", reapplyRegistryLocale);
+        document.addEventListener("astro:after-swap", syncRegistryTabs);
         document.addEventListener("astro:page-load", syncRegistryShell);
         (window as any).__cellscriptRegistryLayoutLocaleBound = true;
       }

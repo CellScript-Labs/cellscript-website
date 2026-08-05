@@ -8,7 +8,7 @@ const description = t.registry.submit.description;
 const apiOrigin = registryRuntime.apiOrigin;
 ---
 
-<RegistryLayout title="CellScript Artifact Registry: Publish" description={description} headingKey="registry.shellTitle" descriptionKey="registry.shellDescription" active="submit" showSubmitCta={false}>
+<RegistryLayout title="CellScript Artifact Registry: Publish" description={description} headingKey="registry.shellTitle" descriptionKey="registry.shellDescription" titleKey="registry.nav.submit" active="submit" showSubmitCta={false}>
   <section class="registry-flow" aria-label={t.registry.nav.submit} data-i18n-aria-label="registry.nav.submit">
     <section class="registry-publish-entry" data-publish-entry aria-labelledby="registry-publish-entry-title">
       <div class="registry-publish-entry-main">
@@ -403,6 +403,12 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
 
   <script>
     import { clearAuthorisationSession, readAuthorisationSession } from "../../lib/authorisation-session-storage.mjs";
+    import {
+      readRegistrySubmitDraft,
+      registrySubmitDraftFieldNames,
+      registrySubmitDraftKey,
+      writeRegistrySubmitDraft,
+    } from "../../lib/registry-submit-draft.mjs";
 
     type PrincipalType = "joyid_ckb" | "ckb_secp256k1";
     type WalletIdentity = {
@@ -451,9 +457,14 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       }
     }
 
-    const lifecycle = new AbortController();
-    const { signal } = lifecycle;
+    const setupSubmitPage = () => {
     const form = document.querySelector<HTMLFormElement>("[data-submit-form]");
+    if (!form) return;
+    const previousLifecycle = (window as any).__cellscriptRegistrySubmitAbort as AbortController | undefined;
+    previousLifecycle?.abort();
+    const lifecycle = new AbortController();
+    (window as any).__cellscriptRegistrySubmitAbort = lifecycle;
+    const { signal } = lifecycle;
     const publishEntry = document.querySelector<HTMLElement>("[data-publish-entry]");
     const manualPublish = document.querySelector<HTMLElement>("[data-manual-publish]");
     const openManualPublish = document.querySelector<HTMLButtonElement>("[data-open-manual-publish]");
@@ -553,6 +564,10 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     const authorisationSessionId = recoveredAuthorisationSession.sessionId;
     const authorisationBrowserToken = recoveredAuthorisationSession.browserToken;
     const authorisationSessionMode = recoveredAuthorisationSession.sessionMode;
+    const submitDraftStorageKey = registrySubmitDraftKey(
+      document.documentElement.dataset.registryEnvironment ?? "production",
+      registryNetwork,
+    );
     if (recoveredAuthorisationSession.cleanedUrl) {
       history.replaceState(history.state, "", recoveredAuthorisationSession.cleanedUrl);
     }
@@ -636,6 +651,32 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       return input instanceof HTMLInputElement || input instanceof HTMLSelectElement ? input.value.trim() : "";
     };
     const coordinateValid = () => coordinatePattern.test(fieldValue("namespace")) && coordinatePattern.test(fieldValue("name"));
+    const persistSubmitDraft = () => {
+      if (authorisationSessionMode) return;
+      const fields: Record<string, string> = {};
+      for (const name of registrySubmitDraftFieldNames) fields[name] = fieldValue(name);
+      writeRegistrySubmitDraft(sessionStorage, submitDraftStorageKey, {
+        fields,
+        manualOpen: Boolean(manualPublish && !manualPublish.hidden),
+        profileOpen: profileBuilder?.open === true,
+        authorisationMode,
+      });
+    };
+    const restoreSubmitDraft = () => {
+      if (authorisationSessionMode) return;
+      const draft = readRegistrySubmitDraft(sessionStorage, submitDraftStorageKey);
+      if (!draft) return;
+      for (const [name, value] of Object.entries(draft.fields)) {
+        const input = form.elements.namedItem(name);
+        if (input instanceof HTMLSelectElement) {
+          if (Array.from(input.options).some((option) => option.value === value)) input.value = value;
+        } else if (input instanceof HTMLInputElement) input.value = value;
+      }
+      if (profileBuilder) profileBuilder.open = draft.profileOpen;
+      if (manualPublish) manualPublish.hidden = !draft.manualOpen;
+      if (publishEntry) publishEntry.hidden = draft.manualOpen;
+      if (draft.authorisationMode && coordinateValid()) authorisationMode = draft.authorisationMode;
+    };
     const shellQuote = (text: string) => /[\s"'$]/.test(text) ? `'${text.replace(/'/g, "'\\''")}'` : text;
     const commandPrefix = () => fieldValue("path") ? `cd ${shellQuote(fieldValue("path"))} && ` : "";
 
@@ -1787,12 +1828,14 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     openManualPublish?.addEventListener("click", () => {
       if (publishEntry) publishEntry.hidden = true;
       if (manualPublish) manualPublish.hidden = false;
+      persistSubmitDraft();
       closeManualPublish?.focus({ preventScroll: true });
       manualPublish?.scrollIntoView({ behavior: preferredScrollBehavior, block: "start" });
     }, { signal });
     closeManualPublish?.addEventListener("click", () => {
       if (manualPublish) manualPublish.hidden = true;
       if (publishEntry) publishEntry.hidden = false;
+      persistSubmitDraft();
       publishEntry?.scrollIntoView({ behavior: preferredScrollBehavior, block: "start" });
       openManualPublish?.focus({ preventScroll: true });
     }, { signal });
@@ -1829,6 +1872,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
         else if (activeWalletSigner || activeExternalWallet) setStatus(activeExternalWallet ? "walletExternalReady" : "walletConnected", "ok");
         else setStatus("walletIdle");
         syncWorkflow();
+        persistSubmitDraft();
         if (authorisationMode === "existing") existingCapabilityKey?.focus();
       }, { signal });
     }
@@ -1888,8 +1932,13 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       lastCoordinate = coordinate;
       syncArtifactKind();
       syncWorkflow();
+      persistSubmitDraft();
     }, { signal });
-    pathInput?.addEventListener("input", syncWorkflow, { signal });
+    pathInput?.addEventListener("input", () => {
+      syncWorkflow();
+      persistSubmitDraft();
+    }, { signal });
+    profileBuilder?.addEventListener("toggle", persistSubmitDraft, { signal });
     window.addEventListener("cellscript:locale-change", () => {
       setStatus(statusKey, statusTone, statusSuffix);
       if (lastCapabilityCheck) renderCapabilityCheck(lastCapabilityCheck);
@@ -1906,11 +1955,13 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       walletDialog?.close();
       walletController?.disconnect?.();
       lifecycle.abort();
-    }, { once: true });
+    }, { once: true, signal });
 
+    restoreSubmitDraft();
     lastCoordinate = `${fieldValue("namespace")}/${fieldValue("name")}`;
     syncArtifactKind();
     syncWorkflow();
+    persistSubmitDraft();
     if (authorisationSessionMode) {
       void loadAuthorisationSession().catch((error) => {
         if (sessionPanel) sessionPanel.dataset.state = "error";
@@ -1919,5 +1970,8 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
         syncWorkflow();
       });
     }
+    };
+
+    document.addEventListener("astro:page-load", setupSubmitPage);
   </script>
 </RegistryLayout>

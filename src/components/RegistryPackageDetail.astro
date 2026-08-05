@@ -223,8 +223,13 @@ const initialNextAction = packageTranslations[`${initialNextKey}Action`] ?? "";
       type RegistryPackageView,
     } from "../lib/registry";
 
+    const setupRegistryPackageDetail = () => {
     const app = document.querySelector<HTMLElement>("[data-package-detail]");
+    if (!app) return;
+    const previousLifecycle = (window as any).__cellscriptRegistryPackageDetailAbort as AbortController | undefined;
+    previousLifecycle?.abort();
     const lifecycle = new AbortController();
+    (window as any).__cellscriptRegistryPackageDetailAbort = lifecycle;
     const { signal } = lifecycle;
     const message = (path: string): string => {
       const locale = document.documentElement.dataset.locale === "zh" ? "zh" : "en";
@@ -505,5 +510,8 @@ const initialNextAction = packageTranslations[`${initialNextKey}Action`] ?? "";
     document.addEventListener("astro:before-swap", () => lifecycle.abort(), { once: true, signal });
     formatPackageDates();
     load();
+    };
+
+    document.addEventListener("astro:page-load", setupRegistryPackageDetail);
   </script>
 </section>

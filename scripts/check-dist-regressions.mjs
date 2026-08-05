@@ -36,11 +36,15 @@ const distDocsIndex = resolve(dist, "docs", "index.html");
 const distPlaygroundIndex = resolve(dist, "playground", "index.html");
 const distRegistryIndex = resolve(dist, "registry", "index.html");
 const distRegistrySubmitIndex = resolve(dist, "registry", "submit", "index.html");
+const distRegistryApiIndex = resolve(dist, "registry", "api", "index.html");
 const distRegistryManageIndex = resolve(dist, "registry", "manage", "index.html");
 const distPlaygroundWorker = resolve(dist, "playground-worker.js");
 const distWasm = resolve(dist, "wasm", "cellscript_wasm_bg.wasm");
 const docsSource = resolve(root, "src", "lib", "docs.ts");
 const registrySubmitSource = resolve(root, "src", "pages", "registry", "submit.astro");
+const registryBrowseSource = resolve(root, "src", "pages", "registry.astro");
+const registryLayoutSource = resolve(root, "src", "layouts", "RegistryLayout.astro");
+const registryPackageDetailSource = resolve(root, "src", "components", "RegistryPackageDetail.astro");
 const wikiRoot = resolve(root, "..", "docs", "wiki");
 const expectedReleaseTag = "v0.22.0";
 const expectedCompilerAssetVersion = "20260731-v0.22.0-9bb2d765";
@@ -52,11 +56,15 @@ expectFile(distDocsIndex);
 expectFile(distPlaygroundIndex);
 expectFile(distRegistryIndex);
 expectFile(distRegistrySubmitIndex);
+expectFile(distRegistryApiIndex);
 expectFile(distRegistryManageIndex);
 expectFile(distPlaygroundWorker);
 expectFile(distWasm);
 expectFile(docsSource);
 expectFile(registrySubmitSource);
+expectFile(registryBrowseSource);
+expectFile(registryLayoutSource);
+expectFile(registryPackageDetailSource);
 
 const indexHtml = existsSync(distIndex) ? read(distIndex) : "";
 const notFoundHtml = existsSync(dist404) ? read(dist404) : "";
@@ -64,10 +72,14 @@ const docsHtml = existsSync(distDocsIndex) ? read(distDocsIndex) : "";
 const playgroundHtml = existsSync(distPlaygroundIndex) ? read(distPlaygroundIndex) : "";
 const registryHtml = existsSync(distRegistryIndex) ? read(distRegistryIndex) : "";
 const registrySubmitHtml = existsSync(distRegistrySubmitIndex) ? read(distRegistrySubmitIndex) : "";
+const registryApiHtml = existsSync(distRegistryApiIndex) ? read(distRegistryApiIndex) : "";
 const registryManageHtml = existsSync(distRegistryManageIndex) ? read(distRegistryManageIndex) : "";
 const playgroundWorker = existsSync(distPlaygroundWorker) ? read(distPlaygroundWorker) : "";
 const docsSourceText = existsSync(docsSource) ? read(docsSource) : "";
 const registrySubmitSourceText = existsSync(registrySubmitSource) ? read(registrySubmitSource) : "";
+const registryBrowseSourceText = existsSync(registryBrowseSource) ? read(registryBrowseSource) : "";
+const registryLayoutSourceText = existsSync(registryLayoutSource) ? read(registryLayoutSource) : "";
+const registryPackageDetailSourceText = existsSync(registryPackageDetailSource) ? read(registryPackageDetailSource) : "";
 
 const cssDir = resolve(dist, "_astro");
 const cssText = existsSync(cssDir)
@@ -111,6 +123,7 @@ for (const [name, html] of [
 for (const [name, html] of [
   ["registry", registryHtml],
   ["registry submit", registrySubmitHtml],
+  ["registry api", registryApiHtml],
 ]) {
   expectContains(name, html, ">Artifact Registry</h1>");
   expectContains(name, html, "Discover verified CKB artifacts and deployment records, or publish with scoped wallet authorisation.");
@@ -118,6 +131,20 @@ for (const [name, html] of [
   expectContains(name, html, 'data-astro-transition-persist="registry-environment"');
   expectContains(name, html, 'data-astro-transition-persist="registry-tabs"');
   expectContains(name, html, 'data-i18n-aria-label="nav.registryBrowse"');
+}
+
+expectContains("registry", registryHtml, 'data-registry-title-key="registry.nav.browse"');
+expectContains("registry submit", registrySubmitHtml, 'data-registry-title-key="registry.nav.submit"');
+expectContains("registry api", registryApiHtml, 'data-registry-title-key="registry.nav.api"');
+const registryStylesheets = (html) => [...html.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)]
+  .map((match) => match[1])
+  .sort();
+const registryStyleSignature = JSON.stringify(registryStylesheets(registryHtml));
+if (registryStyleSignature !== JSON.stringify(registryStylesheets(registrySubmitHtml))) {
+  fail("registry submit: stylesheet set differs from Registry");
+}
+if (registryStyleSignature !== JSON.stringify(registryStylesheets(registryApiHtml))) {
+  fail("registry API: stylesheet set differs from Registry");
 }
 
 for (const action of ["connect", "sign", "submit", "claim"]) {
@@ -163,6 +190,9 @@ expectContains("registry submit source", registrySubmitSourceText, "? !authorisa
 expectContains("registry submit source", registrySubmitSourceText, "readAuthorisationSession(window.location.href, sessionStorage)");
 expectContains("registry submit source", registrySubmitSourceText, "clearAuthorisationSession(sessionStorage, authorisationSessionId)");
 expectContains("registry submit source", registrySubmitSourceText, "clearStoredAuthorisationSession();");
+expectContains("registry submit source", registrySubmitSourceText, "const setupSubmitPage = () =>");
+expectContains("registry submit source", registrySubmitSourceText, 'document.addEventListener("astro:page-load", setupSubmitPage)');
+expectContains("registry submit source", registrySubmitSourceText, "registrySubmitDraftFieldNames");
 expectContains("registry submit", registrySubmitHtml, "data-workflow-guide");
 expectContains("registry", registryHtml, "/v1/artifacts");
 expectNotContains("registry", registryHtml, "/v1/packages");
@@ -171,6 +201,12 @@ expectContains("registry", registryHtml, 'data-registry-empty role="status" aria
 expectContains("registry", registryHtml, "data-registry-empty-submit");
 expectContains("registry", registryHtml, "data-registry-clear");
 expectContains("registry", registryHtml, "const setViewState");
+expectContains("registry source", registryBrowseSourceText, "__cellscriptRegistryBrowseCache");
+expectContains("registry layout", registryLayoutSourceText, 'document.addEventListener("astro:after-swap", syncRegistryTabs)');
+expectContains("registry package detail", registryPackageDetailSourceText, "const setupRegistryPackageDetail = () =>");
+expectContains("registry package detail", registryPackageDetailSourceText, 'document.addEventListener("astro:page-load", setupRegistryPackageDetail)');
+expectContains("registry CSS", cssText, "::view-transition-old(registry-route)");
+expectContains("registry CSS", cssText, "::view-transition-new(registry-route)");
 expectContains("registry", registryHtml, '"no-results"');
 expectContains("registry", registryHtml, '"mirror-empty"');
 expectNotContains("registry", registryHtml, "Live production index");

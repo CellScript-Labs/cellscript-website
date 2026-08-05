@@ -26,6 +26,7 @@ const fallbackStatus = (status: string) =>
   description={t.registry.browse.description}
   headingKey="registry.shellTitle"
   descriptionKey="registry.shellDescription"
+  titleKey="registry.nav.browse"
   active="search"
   showSubmitCta={false}
 >
@@ -152,6 +153,8 @@ const fallbackStatus = (status: string) =>
       let searchTimer = 0;
       let query = params.get("q")?.trim() || "";
       let kind = params.get("kind")?.trim() || "";
+      const cache = window.__cellscriptRegistryBrowseCache ??= new Map();
+      const cacheKey = () => `${apiOrigin}|${query}|${kind}`;
       if (queryInput) queryInput.value = query;
       if (kindInput) kindInput.value = kind;
 
@@ -277,11 +280,14 @@ const fallbackStatus = (status: string) =>
         setServiceState("mirror");
         renderRows();
       };
-      const load = async ({ append = false } = {}) => {
+      const load = async ({ append = false, background = false } = {}) => {
         request?.abort();
         request = new AbortController();
+        const requestedQuery = query;
+        const requestedKind = kind;
+        const requestedCacheKey = cacheKey();
         const offset = append && nextOffset != null ? nextOffset : 0;
-        if (!append) {
+        if (!append && !background) {
           app.setAttribute("aria-busy", "true");
           setViewState("loading");
           skeleton.hidden = false;
@@ -293,13 +299,14 @@ const fallbackStatus = (status: string) =>
           more.textContent = message("registry.browse.loadingMore");
         }
         const search = new URLSearchParams({ limit: "50", offset: String(offset) });
-        if (query) search.set("q", query);
-        if (kind) search.set("kind", kind);
+        if (requestedQuery) search.set("q", requestedQuery);
+        if (requestedKind) search.set("kind", requestedKind);
         try {
           const response = await fetch(`${apiOrigin}/v1/artifacts?${search}`, { headers: { accept: "application/json" }, signal: request.signal });
           if (!response.ok) throw new Error("unavailable");
           const payload = await response.json();
           if (payload?.schema !== "cellscript-registry-artifact-index" || !Array.isArray(payload.artifacts)) throw new Error("unsupported_schema");
+          if (requestedQuery !== query || requestedKind !== kind) return;
           const incoming = payload.artifacts.map((pkg) => ({ ...pkg, source: "live" }));
           if (append) {
             const merged = new Map(packages.map((pkg) => [pkg.coordinate, pkg]));
@@ -311,9 +318,14 @@ const fallbackStatus = (status: string) =>
           nextOffset = Number.isInteger(payload.next_offset) ? payload.next_offset : null;
           setServiceState("live");
           renderRows();
+          cache.set(requestedCacheKey, {
+            packages: packages.map((pkg) => ({ ...pkg })),
+            nextOffset,
+            updatedAt: Date.now(),
+          });
         } catch (cause) {
           if (cause?.name === "AbortError") return;
-          localMirror();
+          if (!background) localMirror();
         } finally {
           if (more) {
             more.disabled = false;
@@ -325,6 +337,7 @@ const fallbackStatus = (status: string) =>
       queryInput?.addEventListener("input", () => {
         query = queryInput.value.trim();
         updateUrl();
+        request?.abort();
         window.clearTimeout(searchTimer);
         searchTimer = window.setTimeout(() => source === "mirror" ? localMirror() : load(), 240);
       }, { signal });
@@ -348,7 +361,16 @@ const fallbackStatus = (status: string) =>
         renderRows();
       }, { signal });
       signal.addEventListener("abort", () => request?.abort(), { once: true });
-      load();
+      const cached = cache.get(cacheKey());
+      if (cached && Date.now() - cached.updatedAt < 300_000 && Array.isArray(cached.packages)) {
+        packages = cached.packages.map((pkg) => ({ ...pkg }));
+        nextOffset = Number.isInteger(cached.nextOffset) ? cached.nextOffset : null;
+        setServiceState("live");
+        renderRows();
+        load({ background: true });
+      } else {
+        load();
+      }
     })();
   </script>
 </RegistryLayout>
