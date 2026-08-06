@@ -75,4 +75,21 @@ if (/color:\s*var\(--accent-warm\)/.test(`${globalCss}\n${registryCss}`)) {
   throw new Error("decorative --accent-warm must not carry status text meaning");
 }
 
+if (!globalCss.includes("--frame-max: 1440px;\n  --max: var(--frame-max);")) {
+  throw new Error("global navigation and page shells must share the 1440px alignment frame");
+}
+const docsShell = globalCss.match(/\.docs-shell\s*\{(?<body>[\s\S]*?)\n\}/)?.groups?.body || "";
+if (!docsShell.includes("width: min(var(--max), calc(100% - var(--site-gutter)));")) {
+  throw new Error("Docs shell must use the same frame as the topbar");
+}
+if (docsShell.includes("justify-content: space-between")) {
+  throw new Error("Docs rails must not absorb wide-screen space into unbounded gaps");
+}
+if (!docsShell.includes("minmax(0, var(--docs-reading-max))")) {
+  throw new Error("Docs shell must preserve the centred reading axis");
+}
+if (!globalCss.includes("padding-inline: max(var(--page-pad-inline), calc((100% - var(--max)) / 2));")) {
+  throw new Error("Playground toolbar controls must align with the global frame");
+}
+
 console.log("visual token and readability contract ok");
