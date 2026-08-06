@@ -9,10 +9,14 @@ import SiteHeader from "../components/SiteHeader.astro";
 import SitePreferencesBootstrap from "../components/SitePreferencesBootstrap.astro";
 import BrandMark from "../components/BrandMark.astro";
 import { ClientRouter } from "astro:transitions";
-import { ArrowRight, Box, Check, ClipboardList, Cpu, FileArchive, FileCode2 } from "lucide-astro";
 import arrowRightIcon from "@phosphor-icons/core/regular/arrow-right.svg?raw";
 import checkIcon from "@phosphor-icons/core/regular/check.svg?raw";
+import clipboardTextIcon from "@phosphor-icons/core/regular/clipboard-text.svg?raw";
 import copyIcon from "@phosphor-icons/core/regular/copy.svg?raw";
+import cpuIcon from "@phosphor-icons/core/regular/cpu.svg?raw";
+import cubeIcon from "@phosphor-icons/core/regular/cube.svg?raw";
+import fileArchiveIcon from "@phosphor-icons/core/regular/file-archive.svg?raw";
+import fileCodeIcon from "@phosphor-icons/core/regular/file-code.svg?raw";
 
 const locale = defaultLocale;
 const t = translations[locale];
@@ -68,11 +72,11 @@ const exampleCardImages = {
   },
 } as const;
 const workflowIconComponents = {
-  source: FileCode2,
-  parse: Box,
-  metadata: ClipboardList,
-  riscv: Cpu,
-  elf: FileArchive,
+  source: fileCodeIcon,
+  parse: cubeIcon,
+  metadata: clipboardTextIcon,
+  riscv: cpuIcon,
+  elf: fileArchiveIcon,
 } as const;
 ---
 
@@ -234,20 +238,16 @@ const workflowIconComponents = {
         <div class="workflow-board">
           <div class="workflow-flow" aria-label={t.workflow.aria} data-i18n-aria-label="workflow.aria">
             {workflowSteps.map(({ id, icon }, index) => {
-              const StepIcon = workflowIconComponents[icon as keyof typeof workflowIconComponents];
+              const stepIcon = workflowIconComponents[icon as keyof typeof workflowIconComponents];
               return (
                 <>
                   <article class="workflow-step">
-                    <div class:list={["workflow-icon", `workflow-icon-${icon}`]} aria-hidden="true">
-                      <StepIcon />
-                    </div>
+                    <div class:list={["workflow-icon", `workflow-icon-${icon}`]} aria-hidden="true" set:html={stepIcon}></div>
                     <h3 data-i18n={`workflow.steps.${id}.0`}>{t.workflow.steps[id][0]}</h3>
                     {t.workflow.steps[id][1] && <p data-i18n={`workflow.steps.${id}.1`}>{t.workflow.steps[id][1]}</p>}
                   </article>
                   {index < workflowSteps.length - 1 && (
-                    <span class="workflow-arrow" aria-hidden="true">
-                      <ArrowRight />
-                    </span>
+                    <span class="workflow-arrow" aria-hidden="true" set:html={arrowRightIcon}></span>
                   )}
                 </>
               );
@@ -258,7 +258,7 @@ const workflowIconComponents = {
             <ul>
               {t.workflow.checks.map((check, index) => (
                 <li>
-                  <Check aria-hidden="true" />
+                  <span class="workflow-check-icon" aria-hidden="true" set:html={checkIcon}></span>
                   <span data-i18n={`workflow.checks.${index}`}>{check}</span>
                 </li>
               ))}

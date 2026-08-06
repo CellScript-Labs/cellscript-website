@@ -5,6 +5,13 @@ const root = resolve(".");
 const globalCss = readFileSync(resolve(root, "src/styles/global.css"), "utf8");
 const registryCss = readFileSync(resolve(root, "src/styles/registry.css"), "utf8");
 const playgroundPage = readFileSync(resolve(root, "src/pages/playground.astro"), "utf8");
+const visualSources = [
+  "src/pages/index.astro",
+  "src/pages/registry.astro",
+  "src/pages/registry/submit.astro",
+  "src/pages/registry/manage.astro",
+  "src/components/HeroStatus.astro",
+].map((path) => readFileSync(resolve(root, path), "utf8")).join("\n");
 const lightMarker = ':root[data-theme="light"] {';
 const lightStart = globalCss.indexOf(lightMarker);
 if (lightStart < 0) throw new Error("missing light-theme token block");
@@ -84,6 +91,27 @@ for (const controlToken of [
   "--control-height-workflow: 48px;",
 ]) {
   if (!darkTokens.includes(controlToken)) throw new Error(`shared control system is missing ${controlToken}`);
+}
+for (const geometryToken of [
+  "--radius-data: 4px;",
+  "--radius-control: 6px;",
+  "--radius-panel: 8px;",
+  "--radius-overlay: 12px;",
+  "--radius-dialog: 16px;",
+]) {
+  if (!darkTokens.includes(geometryToken)) throw new Error(`shared geometry system is missing ${geometryToken}`);
+}
+if (visualSources.includes("lucide-astro")) {
+  throw new Error("interactive site visuals must use the shared Phosphor icon family");
+}
+if (/\.textContent\s*=\s*["'][→←↗✓✕×]["']|>[→←↗✓✕×]</.test(visualSources)) {
+  throw new Error("interactive controls must not use Unicode glyphs as icons");
+}
+if (!globalCss.includes(".hero-aurora span:nth-child(2) {\n  display: none;")) {
+  throw new Error("the landing hero must keep one ambient visual layer instead of stacked auroras");
+}
+if (!registryCss.includes(".registry-artifact-mark i {\n  display: none;")) {
+  throw new Error("artifact identity marks must not reuse the network status-dot language");
 }
 if (registryCss.includes("--line-strong")) {
   throw new Error("Registry controls must use defined shared border tokens");

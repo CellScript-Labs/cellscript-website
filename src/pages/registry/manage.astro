@@ -3,6 +3,7 @@ import RegistryLayout from "../../layouts/RegistryLayout.astro";
 import { registryPackages, registryStatusTone, registryStatusTones } from "../../lib/registry";
 import { defaultLocale, translations } from "../../i18n/translations";
 import { registryRuntime } from "../../lib/registry-runtime";
+import arrowLeftIcon from "@phosphor-icons/core/regular/arrow-left.svg?raw";
 
 const t = translations[defaultLocale];
 const description = t.registry.manage.description;
@@ -33,7 +34,7 @@ const apiOrigin = registryRuntime.apiOrigin;
     data-registry-network={registryRuntime.network}
   >
     <a class="registry-maintainer-back" href="/registry" data-manage-back>
-      <span aria-hidden="true">←</span>
+      <span aria-hidden="true" set:html={arrowLeftIcon}></span>
       <span data-i18n="registry.manage.backToPackage">{t.registry.manage.backToPackage}</span>
     </a>
 

@@ -3,6 +3,7 @@ import RegistryLayout from "../../layouts/RegistryLayout.astro";
 import { defaultLocale, translations } from "../../i18n/translations";
 import { registryRuntime } from "../../lib/registry-runtime";
 import arrowLeftIcon from "@phosphor-icons/core/regular/arrow-left.svg?raw";
+import checkIcon from "@phosphor-icons/core/regular/check.svg?raw";
 import xIcon from "@phosphor-icons/core/regular/x.svg?raw";
 
 const t = translations[defaultLocale];
@@ -25,11 +26,7 @@ const apiOrigin = registryRuntime.apiOrigin;
           <button class="registry-button primary" type="button" data-copy-text="cellc publish --authorise" data-revert-label={t.registry.submit.entryCopyCommand} data-i18n="registry.submit.entryCopyCommand">{t.registry.submit.entryCopyCommand}</button>
         </div>
         <p class="registry-publish-entry-note">
-          <span class="registry-assurance-mark" aria-hidden="true">
-            <svg viewBox="0 0 16 16" fill="none">
-              <path d="m4 8.25 2.35 2.35L12.25 4.7" />
-            </svg>
-          </span>
+          <span class="registry-assurance-mark" aria-hidden="true" set:html={checkIcon}></span>
           <span data-i18n="registry.submit.entryNote">{t.registry.submit.entryNote}</span>
         </p>
         <button class="registry-text-button registry-publish-advanced" type="button" data-open-manual-publish data-i18n="registry.submit.entryAdvanced">{t.registry.submit.entryAdvanced}</button>
@@ -404,6 +401,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
   </section>
 
   <script>
+    import walletArrowIcon from "@phosphor-icons/core/regular/arrow-right.svg?raw";
     import { clearAuthorisationSession, readAuthorisationSession } from "../../lib/authorisation-session-storage.mjs";
     import {
       readRegistrySubmitDraft,
@@ -1109,7 +1107,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       const arrow = document.createElement("span");
       arrow.className = "registry-wallet-option-arrow";
       arrow.setAttribute("aria-hidden", "true");
-      arrow.textContent = "→";
+      arrow.innerHTML = walletArrowIcon;
       button.append(copy, arrow);
       button.addEventListener("click", onClick, { signal });
       return button;

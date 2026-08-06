@@ -4,6 +4,7 @@ import RegistryFilterMenu from "../components/RegistryFilterMenu.astro";
 import { packageHref, registryDateLabel, registryPackageDetailView, registryPackages, toRegistryPackageView } from "../lib/registry";
 import { defaultLocale, translations } from "../i18n/translations";
 import searchIcon from "@phosphor-icons/core/regular/magnifying-glass.svg?raw";
+import arrowRightIcon from "@phosphor-icons/core/regular/arrow-right.svg?raw";
 import { isTestnetSandbox, registryRuntime } from "../lib/registry-runtime";
 
 const t = translations[defaultLocale];
@@ -118,7 +119,7 @@ const intentFilters = [
               <time datetime={pkg.latest_release_at}>{t.registry.browse.released} {registryDateLabel(pkg.latest_release_at, t.registry.package.notRecorded, defaultLocale)}</time>
             </div>
           </div>
-          <span class="registry-row-arrow" aria-hidden="true">→</span>
+          <span class="registry-row-arrow" aria-hidden="true" set:html={arrowRightIcon}></span>
         </a>
       ))}
     </div>
@@ -148,6 +149,7 @@ const intentFilters = [
   <script>
     import { deriveArtifactGuidance, registryDateLabel, type RegistryArtifactGuidance } from "../lib/registry";
     import { readRegistryBrowseState, registryBrowseStateUrl } from "../lib/registry-browse-state.mjs";
+    import rowArrowIcon from "@phosphor-icons/core/regular/arrow-right.svg?raw";
 
     interface BrowsePackage {
       coordinate: string;
@@ -448,7 +450,7 @@ const intentFilters = [
           const arrow = document.createElement("span");
           arrow.className = "registry-row-arrow";
           arrow.setAttribute("aria-hidden", "true");
-          arrow.textContent = "→";
+          arrow.innerHTML = rowArrowIcon;
           row.append(mark, body, arrow);
           list.append(row);
         }
