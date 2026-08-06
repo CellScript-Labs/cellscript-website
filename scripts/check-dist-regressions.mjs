@@ -227,6 +227,11 @@ expectContains("site header", siteHeaderSourceText, 'role="dialog"');
 expectContains("site header", siteHeaderSourceText, "closeDrawer({ restoreFocus: true })");
 expectContains("site header", siteHeaderSourceText, "event.key === \"Escape\"");
 expectContains("site header", siteHeaderSourceText, "data-theme-current");
+expectContains("site header", siteHeaderSourceText, 'class="nav-tooltip"');
+expectContains("site header", siteHeaderSourceText, 'class="language-short"');
+expectContains("site header styles", cssText, ".nav-source:hover .nav-tooltip");
+expectContains("site header styles", cssText, ".nav-source:focus-visible .nav-tooltip");
+expectContains("site header styles", cssText, "@media(min-width:841px)and (max-width:960px)");
 expectNotContains("site header", siteHeaderSourceText, "theme-toggle-track");
 
 for (const wallet of [

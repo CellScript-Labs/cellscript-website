@@ -39,6 +39,7 @@ const t = translations[defaultLocale];
     <div class="nav-utilities">
       <a class="nav-utility nav-source" href={links.source} target="_blank" rel="noopener noreferrer" aria-label={t.nav.source} data-i18n-aria-label="nav.source">
         <span class="nav-icon" aria-hidden="true" set:html={githubIcon}></span>
+        <span class="nav-tooltip" aria-hidden="true" data-i18n="nav.source">{t.nav.source}</span>
       </a>
       <button class="language-toggle" type="button" data-language-toggle aria-label={t.language.aria}>
         <span data-language-label>{t.language.switchTo}</span>
