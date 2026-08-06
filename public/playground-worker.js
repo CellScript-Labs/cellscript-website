@@ -3,30 +3,48 @@ let wasmModule;
 const COMPILER_ASSET_VERSION = "20260731-v0.22.0-9bb2d765";
 const CELLSCRIPT_EDITION = "2026";
 const COMPILER_LOAD_TIMEOUT_MS = 12_000;
+let latestCompileId = 0;
+const latestLanguageIdByIntent = {
+  hover: 0,
+  completion: 0,
+  definition: 0,
+};
 
 const loadCompiler = async () => {
   if (!wasmModulePromise) {
     wasmModulePromise = (async () => {
       const controller = new AbortController();
       let timedOut = false;
+      let rejectDeadline;
+      const deadline = new Promise((_, reject) => {
+        rejectDeadline = reject;
+      });
       const timeout = setTimeout(() => {
         timedOut = true;
         controller.abort();
+        const timeoutError = new Error("compiler download timed out");
+        timeoutError.code = "compiler_load_timeout";
+        rejectDeadline(timeoutError);
       }, COMPILER_LOAD_TIMEOUT_MS);
 
       try {
-        const mod = await import(`/wasm/cellscript_wasm.js?v=${COMPILER_ASSET_VERSION}`);
-        const response = await fetch(`/wasm/cellscript_wasm_bg.wasm?v=${COMPILER_ASSET_VERSION}`, {
-          cache: "force-cache",
-          signal: controller.signal,
-        });
+        const [mod, response] = await Promise.race([
+          Promise.all([
+            import(`/wasm/cellscript_wasm.js?v=${COMPILER_ASSET_VERSION}`),
+            fetch(`/wasm/cellscript_wasm_bg.wasm?v=${COMPILER_ASSET_VERSION}`, {
+              cache: "force-cache",
+              signal: controller.signal,
+            }),
+          ]),
+          deadline,
+        ]);
         if (!response.ok) throw new Error(`compiler download failed with HTTP ${response.status}`);
-        await mod.default({ module_or_path: response });
+        await Promise.race([mod.default({ module_or_path: response }), deadline]);
         wasmModule = mod;
         return mod;
       } catch (error) {
         wasmModulePromise = undefined;
-        if (timedOut) {
+        if (timedOut && error?.code !== "compiler_load_timeout") {
           const timeoutError = new Error("compiler download timed out");
           timeoutError.code = "compiler_load_timeout";
           throw timeoutError;
@@ -41,11 +59,19 @@ const loadCompiler = async () => {
 };
 
 self.addEventListener("message", async (event) => {
-  const { id, type, source, sources, entryPath, target, line, character } = event.data || {};
+  const { id, type, intent, source, sources, entryPath, target, line, character } = event.data || {};
   if (type !== "compile" && type !== "language") return;
+  if (type === "compile") latestCompileId = Math.max(latestCompileId, id || 0);
+  if (type === "language" && intent in latestLanguageIdByIntent) {
+    latestLanguageIdByIntent[intent] = Math.max(latestLanguageIdByIntent[intent], id || 0);
+  }
+  const requestIsCurrent = () => type === "compile"
+    ? id === latestCompileId
+    : intent in latestLanguageIdByIntent && id === latestLanguageIdByIntent[intent];
 
   try {
     const mod = await loadCompiler();
+    if (!requestIsCurrent()) return;
     if (type === "language") {
       const query = mod.language_service_json;
       if (!query) {
@@ -79,6 +105,7 @@ self.addEventListener("message", async (event) => {
       raw = compile(source || "", CELLSCRIPT_EDITION, target || null);
     }
     const payload = JSON.parse(raw);
+    if (!requestIsCurrent()) return;
     self.postMessage({
       id,
       type: "result",
@@ -87,6 +114,7 @@ self.addEventListener("message", async (event) => {
       payload,
     });
   } catch (error) {
+    if (!requestIsCurrent()) return;
     if (!wasmModule) {
       self.postMessage({
         id,

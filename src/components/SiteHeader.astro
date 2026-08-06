@@ -29,10 +29,10 @@ const t = translations[defaultLocale];
       <a class:list={["nav-link", page === "docs" && "active"]} href={links.docs} aria-label={t.nav.docs} data-i18n-aria-label="nav.docs" aria-current={page === "docs" ? "page" : undefined}>
         <span data-i18n="nav.docs">{t.nav.docs}</span>
       </a>
-      <a class:list={["nav-link", page === "playground" && "active"]} href="/playground" aria-label={t.nav.playground} data-i18n-aria-label="nav.playground" aria-current={page === "playground" ? "page" : undefined}>
+      <a class:list={["nav-link", page === "playground" && "active"]} href="/playground/" aria-label={t.nav.playground} data-i18n-aria-label="nav.playground" aria-current={page === "playground" ? "page" : undefined}>
         <span data-i18n="nav.playground">{t.nav.playground}</span>
       </a>
-      <a class:list={["nav-link", page === "registry" && "active"]} href="/registry" aria-label={t.nav.registryBrowse} data-i18n-aria-label="nav.registryBrowse" aria-current={page === "registry" ? "page" : undefined}>
+      <a class:list={["nav-link", page === "registry" && "active"]} href="/registry/" aria-label={t.nav.registryBrowse} data-i18n-aria-label="nav.registryBrowse" aria-current={page === "registry" ? "page" : undefined}>
         <span data-i18n="nav.registryBrowse">{t.nav.registryBrowse}</span>
       </a>
     </div>
@@ -88,11 +88,11 @@ const t = translations[defaultLocale];
           <span class="nav-icon" aria-hidden="true" set:html={bookOpenIcon}></span>
           <span data-i18n="nav.docs">{t.nav.docs}</span>
         </a>
-        <a class:list={["nav-drawer-link", page === "playground" && "active"]} href="/playground" aria-current={page === "playground" ? "page" : undefined}>
+        <a class:list={["nav-drawer-link", page === "playground" && "active"]} href="/playground/" aria-current={page === "playground" ? "page" : undefined}>
           <span class="nav-icon" aria-hidden="true" set:html={terminalIcon}></span>
           <span data-i18n="nav.playground">{t.nav.playground}</span>
         </a>
-        <a class:list={["nav-drawer-link", page === "registry" && "active"]} href="/registry" aria-current={page === "registry" ? "page" : undefined}>
+        <a class:list={["nav-drawer-link", page === "registry" && "active"]} href="/registry/" aria-current={page === "registry" ? "page" : undefined}>
           <span class="nav-icon" aria-hidden="true" set:html={packageIcon}></span>
           <span data-i18n="nav.registryBrowse">{t.nav.registryBrowse}</span>
         </a>

@@ -47,6 +47,8 @@ const registryBrowseSource = resolve(root, "src", "pages", "registry.astro");
 const registryLayoutSource = resolve(root, "src", "layouts", "RegistryLayout.astro");
 const registryPackageDetailSource = resolve(root, "src", "components", "RegistryPackageDetail.astro");
 const siteHeaderSource = resolve(root, "src", "components", "SiteHeader.astro");
+const playgroundSource = resolve(root, "src", "pages", "playground.astro");
+const brandMarkSource = resolve(root, "src", "components", "BrandMark.astro");
 const wikiRoot = resolve(root, "..", "docs", "wiki");
 const expectedReleaseTag = "v0.22.0";
 const expectedCompilerAssetVersion = "20260731-v0.22.0-9bb2d765";
@@ -68,6 +70,8 @@ expectFile(registryBrowseSource);
 expectFile(registryLayoutSource);
 expectFile(registryPackageDetailSource);
 expectFile(siteHeaderSource);
+expectFile(playgroundSource);
+expectFile(brandMarkSource);
 
 const indexHtml = existsSync(distIndex) ? read(distIndex) : "";
 const notFoundHtml = existsSync(dist404) ? read(dist404) : "";
@@ -84,6 +88,8 @@ const registryBrowseSourceText = existsSync(registryBrowseSource) ? read(registr
 const registryLayoutSourceText = existsSync(registryLayoutSource) ? read(registryLayoutSource) : "";
 const registryPackageDetailSourceText = existsSync(registryPackageDetailSource) ? read(registryPackageDetailSource) : "";
 const siteHeaderSourceText = existsSync(siteHeaderSource) ? read(siteHeaderSource) : "";
+const playgroundSourceText = existsSync(playgroundSource) ? read(playgroundSource) : "";
+const brandMarkSourceText = existsSync(brandMarkSource) ? read(brandMarkSource) : "";
 
 const cssDir = resolve(dist, "_astro");
 const cssText = existsSync(cssDir)
@@ -318,9 +324,21 @@ expectContains("playground session bundle", jsText, "cellscript-playground-sessi
 expectContains("playground guide bundle", jsText, "cellscript-playground-guide-v1");
 expectContains("playground worker recovery bundle", jsText, "retryCompiler");
 expectContains("playground worker", playgroundWorker, "COMPILER_LOAD_TIMEOUT_MS = 12_000");
+expectContains("playground worker", playgroundWorker, "Promise.race");
+expectContains("playground worker", playgroundWorker, "latestCompileId");
+expectContains("playground worker", playgroundWorker, "latestLanguageIdByIntent");
 expectContains("playground worker", playgroundWorker, 'type: "compiler-error"');
 expectContains("playground worker", playgroundWorker, 'cache: "force-cache"');
 expectContains("playground worker recovery bundle", jsText, "compiler_load_timeout");
+expectContains("playground source", playgroundSourceText, "cellscript:playground-module-ready");
+expectContains("playground source", playgroundSourceText, "COMPILE_TIMEOUT_MS = 12_000");
+expectContains("playground source", playgroundSourceText, 'import("fflate")');
+expectContains("playground source", playgroundSourceText, "requestId !== compileRequestId");
+expectNotContains("playground source", playgroundSourceText, "attempts < 60");
+expectNotContains("brand mark", brandMarkSourceText, "<img");
+expectContains("brand mark", brandMarkSourceText, "--brand-logo-light");
+expectContains("site header", siteHeaderSourceText, 'href="/playground/"');
+expectContains("site header", siteHeaderSourceText, 'href="/registry/"');
 expectNotContains("playground", playgroundHtml.toLowerCase(), "command palette");
 
 const playgroundI18nAssignments = countContains(playgroundHtml, "window.__CELLSCRIPT_I18N__ =");

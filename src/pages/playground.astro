@@ -341,7 +341,6 @@ if (ungroupedPlaygroundExamples.length > 0) {
     <script is:inline type="application/json" data-example-meta set:html={JSON.stringify(playgroundExampleMeta)} />
 
     <script>
-      import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
       import { renderSource } from "../lib/highlight";
       import { createPlaygroundFocusController } from "../lib/playground-focus.mjs";
       import {
@@ -415,7 +414,10 @@ if (ungroupedPlaygroundExamples.length > 0) {
       };
 
       const compilerAssetVersion = "20260731-v0.22.0-9bb2d765";
+      const COMPILE_TIMEOUT_MS = 12_000;
       const workerUrl = new URL(`/playground-worker.js?v=${compilerAssetVersion}`, window.location.href);
+      const previousPlaygroundCleanup = (window as any).__cellscriptCleanupPlayground as (() => void) | undefined;
+      previousPlaygroundCleanup?.();
       const previousPlaygroundAbort = (window as any).__cellscriptPlaygroundAbort as AbortController | undefined;
       previousPlaygroundAbort?.abort();
       const playgroundAbort = new AbortController();
@@ -423,7 +425,6 @@ if (ungroupedPlaygroundExamples.length > 0) {
       const { signal } = playgroundAbort;
       let compileWorker: Worker | null = null;
       let compileRequestId = 0;
-      let latestAppliedRequestId = 0;
       let languageRequestId = 0;
       const languageIntents = new Map<number, LanguageIntent>();
       const latestLanguageRequestByIntent: Record<LanguageIntent, number> = {
@@ -523,6 +524,8 @@ if (ungroupedPlaygroundExamples.length > 0) {
       let entryPath = "";
       let sessionHydrated = false;
       let lastSuccessfulData: any = null;
+      let compileRevision = 0;
+      const panelRenderedRevision = new Map<string, number>();
       let inspectorSelection: { kind: "action" | "type"; name: string } | null = null;
       let guideStep = 0;
 
@@ -534,8 +537,10 @@ if (ungroupedPlaygroundExamples.length > 0) {
       );
       const outputTabs = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-output-tab]"));
       let compileTimer: number | undefined;
+      let compileWatchdog: number | undefined;
       let currentDiagnostics: CompileDiagnostic[] = [];
       let highlightFrame: number | undefined;
+      let gutterSignature = "";
       let repositionFloatingTools = () => {};
       const sessionLimits = { maxFiles: MAX_WORKSPACE_FILES, maxBytes: MAX_WORKSPACE_BYTES };
       const updateSaveStatus = (state: "dirty" | "saved" | "unavailable") => {
@@ -854,8 +859,12 @@ if (ungroupedPlaygroundExamples.length > 0) {
         const source = textarea.value;
         // Pad so the last line's highlight extends to the textarea height.
         if (highlight) {
-          highlight.innerHTML =
-            (source.length > LARGE_SOURCE_HIGHLIGHT_LIMIT ? escapeHtml(source) : renderSource(source)) + "\n";
+          if (source.length > LARGE_SOURCE_HIGHLIGHT_LIMIT) {
+            const plainSource = `${source}\n`;
+            if (highlight.textContent !== plainSource) highlight.textContent = plainSource;
+          } else {
+            highlight.innerHTML = `${renderSource(source)}\n`;
+          }
         }
         if (gutter) {
           const lineCount = source.split("\n").length;
@@ -868,6 +877,9 @@ if (ungroupedPlaygroundExamples.length > 0) {
             if (previous === "error") return;
             diagnosticLines.set(line, isBlockingDiagnostic(diagnostic) ? "error" : "warning");
           });
+          const nextGutterSignature = `${lineCount}:${activeLine}:${Array.from(diagnosticLines.entries()).join("|")}`;
+          if (nextGutterSignature === gutterSignature) return;
+          gutterSignature = nextGutterSignature;
           let nums = "";
           for (let i = 1; i <= lineCount; i++) {
             const classes = [
@@ -878,9 +890,8 @@ if (ungroupedPlaygroundExamples.length > 0) {
             const label = escapeHtml(fmt(pg("lineAria"), { n: String(i) }) || `${pg("line")} ${i}`);
             nums += `<span${classes ? ` class="${classes}"` : ""} data-gutter-line="${i}" title="${label}">${i}</span>`;
           }
-          if (gutter.innerHTML !== nums) gutter.innerHTML = nums;
+          gutter.innerHTML = nums;
         }
-        renderDiagnosticLayer();
       };
 
       const scheduleHighlight = () => {
@@ -1180,7 +1191,7 @@ source_roots = ["src"]
         };
       };
 
-      const exportWorkspace = () => {
+      const exportWorkspace = async () => {
         const payload = workspaceExportPayload();
         if (payload.files.length <= 1) {
           const file = payload.files[0] ?? { path: "main.cell", source: "" };
@@ -1188,6 +1199,7 @@ source_roots = ["src"]
           if (status) status.textContent = pg("workspaceExported");
           return;
         }
+        const { strToU8, zipSync } = await import("fflate");
         const usedZipPaths = new Set<string>();
         const zipEntries: Record<string, Uint8Array> = {};
         const exportedFiles = payload.files.map((file) => {
@@ -1200,7 +1212,7 @@ source_roots = ["src"]
           exportedFiles[0]?.zipPath ??
           "src/main.cell";
         zipEntries["Cell.toml"] = strToU8(buildCellToml(entryZipPath));
-        const zipBytes = zipSync(zipEntries, { level: 9 });
+        const zipBytes = zipSync(zipEntries, { level: 6 });
         downloadBlob(new Blob([zipBytes], { type: "application/zip" }), "cellscript-playground-project.zip");
         if (status) status.textContent = pg("workspaceExported");
       };
@@ -1219,6 +1231,7 @@ source_roots = ["src"]
       };
 
       const importZipWorkspace = async (file: File) => {
+        const { strFromU8, unzipSync } = await import("fflate");
         const unzipped = unzipSync(new Uint8Array(await file.arrayBuffer()));
         const zipPaths = Object.keys(unzipped)
           .map((path) => normalizePortablePath(path, ""))
@@ -1659,9 +1672,14 @@ source_roots = ["src"]
       };
 
       let hoverTimer: number | undefined;
+      const clearCompileWatchdog = () => {
+        window.clearTimeout(compileWatchdog);
+        compileWatchdog = undefined;
+      };
       const cleanupPlayground = () => {
         window.clearTimeout(compileTimer);
         window.clearTimeout(hoverTimer);
+        clearCompileWatchdog();
         sessionWriter.flush();
         sessionWriter.cancel();
         if (highlightFrame !== undefined) {
@@ -1673,8 +1691,12 @@ source_roots = ["src"]
         if ((window as any).__cellscriptPlaygroundAbort === playgroundAbort) {
           delete (window as any).__cellscriptPlaygroundAbort;
         }
+        if ((window as any).__cellscriptCleanupPlayground === cleanupPlayground) {
+          delete (window as any).__cellscriptCleanupPlayground;
+        }
         playgroundAbort.abort();
       };
+      (window as any).__cellscriptCleanupPlayground = cleanupPlayground;
       document.addEventListener("astro:before-swap", cleanupPlayground, { once: true, signal });
 
       const requestLanguage = (intent: LanguageIntent) => {
@@ -1688,6 +1710,7 @@ source_roots = ["src"]
         compileWorker?.postMessage({
           id,
           type: "language",
+          intent,
           source: textarea.value,
           line: position.line,
           character: position.character,
@@ -1881,6 +1904,18 @@ source_roots = ["src"]
         }).join("")}</ul>`;
       };
 
+      const activeOutputTarget = () =>
+        outputTabs.find((tab) => tab.classList.contains("active"))?.dataset.outputTab ?? "flow";
+
+      const renderOutputPanel = (target: string, data = lastSuccessfulData, reveal = false, force = false) => {
+        if (!data || (!force && panelRenderedRevision.get(target) === compileRevision)) return;
+        if (target === "metadata") renderMetadata(data);
+        else if (target === "actions") renderActions(data);
+        else if (target === "types") renderTypes(data);
+        else renderCellFlow(data, reveal);
+        panelRenderedRevision.set(target, compileRevision);
+      };
+
       const updateErrorBadge = (diagnostics: CompileDiagnostic[]) => {
         if (!errorBadge) return;
         if (!diagnostics.length) {
@@ -1992,8 +2027,8 @@ source_roots = ["src"]
       };
 
       const applyCompileResult = (requestId: number, result: WorkerCompileResult, elapsed: number, versionText = "") => {
-        if (requestId < latestAppliedRequestId) return;
-        latestAppliedRequestId = requestId;
+        if (requestId !== compileRequestId) return;
+        clearCompileWatchdog();
         lastElapsed = elapsed;
         if (versionEl && versionText) versionEl.textContent = `cellc v${versionText}`;
         if (loading) loading.hidden = true;
@@ -2026,11 +2061,10 @@ source_roots = ["src"]
         }
 
         lastSuccessfulData = data;
+        compileRevision += 1;
+        panelRenderedRevision.clear();
         clearOutputsStale();
-        renderMetadata(data);
-        renderCellFlow(data, true);
-        renderActions(data);
-        renderTypes(data);
+        renderOutputPanel(activeOutputTarget(), data, true);
         renderErrors(diagnostics);
         renderRail(data);
         if (status) {
@@ -2045,6 +2079,7 @@ source_roots = ["src"]
 
       const doCompile = () => {
         if (!workerReady || !textarea) return;
+        clearCompileWatchdog();
         syncActiveFileFromEditor();
         setCompileState("compiling");
         const id = ++compileRequestId;
@@ -2061,15 +2096,22 @@ source_roots = ["src"]
           entryPath,
           target: null,
         });
+        compileWatchdog = window.setTimeout(() => {
+          if (id !== compileRequestId || !workerReady) return;
+          showWorkerFailure({ code: "compiler_compile_timeout" });
+        }, COMPILE_TIMEOUT_MS);
       };
 
       const showWorkerFailure = (failure: { code?: string; message?: string }) => {
+        clearCompileWatchdog();
         workerReady = false;
         compileWorker?.terminate();
         compileWorker = null;
         const cause = failure.code === "compiler_load_timeout"
           ? pg("compilerLoadTimedOut")
-          : failure.message || "worker error";
+          : failure.code === "compiler_compile_timeout"
+            ? pg("compilerCompileTimedOut")
+            : failure.message || "worker error";
         const message = fmt(pg("loadFailed"), { error: cause });
         if (status) status.textContent = message;
         if (loading && !lastSuccessfulData) {
@@ -2090,6 +2132,7 @@ source_roots = ["src"]
       const handleWorkerMessage = (event: MessageEvent) => {
         const { id, type, payload, elapsed, version, code, message } = event.data || {};
         if (type === "compiler-error") {
+          if (typeof id === "number" && id !== compileRequestId) return;
           showWorkerFailure({ code, message });
           return;
         }
@@ -2148,6 +2191,8 @@ source_roots = ["src"]
       }, { signal });
 
       const scheduleCompile = () => {
+        compileRequestId += 1;
+        clearCompileWatchdog();
         setCompileState("idle");
         window.clearTimeout(compileTimer);
         compileTimer = window.setTimeout(doCompile, 300);
@@ -2155,9 +2200,10 @@ source_roots = ["src"]
 
       const markEditorChanged = () => {
         syncActiveFileFromEditor();
-        renderFileTree();
+        updateWorkspaceChrome();
         scheduleHighlight();
-        updateExampleLesson(sourceMatchesExample(currentExampleId) ? currentExampleId : null);
+        const nextExampleId = sourceMatchesExample(currentExampleId) ? currentExampleId : null;
+        if (nextExampleId !== currentExampleId) updateExampleLesson(nextExampleId);
         scheduleCompile();
         persistSession();
       };
@@ -2369,6 +2415,7 @@ source_roots = ["src"]
           panel.hidden = key !== target;
           panel.classList.toggle("active", key === target);
         });
+        renderOutputPanel(target);
         persistSession();
       };
 
@@ -2566,9 +2613,8 @@ source_roots = ["src"]
       const selectInspectorItem = (kind: "action" | "type", name: string, jump = true) => {
         inspectorSelection = { kind, name };
         if (lastSuccessfulData) {
-          renderCellFlow(lastSuccessfulData);
-          renderActions(lastSuccessfulData);
-          renderTypes(lastSuccessfulData);
+          panelRenderedRevision.clear();
+          renderOutputPanel(activeOutputTarget(), lastSuccessfulData, false, true);
           renderInspector(lastSuccessfulData);
         }
         if (jump) jumpToSemanticSource(kind, name);
@@ -2593,9 +2639,8 @@ source_roots = ["src"]
         if (target?.closest("[data-inspector-clear]")) {
           inspectorSelection = null;
           if (lastSuccessfulData) {
-            renderCellFlow(lastSuccessfulData);
-            renderActions(lastSuccessfulData);
-            renderTypes(lastSuccessfulData);
+            panelRenderedRevision.clear();
+            renderOutputPanel(activeOutputTarget(), lastSuccessfulData, false, true);
             renderInspector(lastSuccessfulData);
           }
         }
@@ -2716,15 +2761,15 @@ source_roots = ["src"]
         const pageTitle = pg("pageTitle");
         if (pageTitle) document.title = pageTitle;
         focusController?.syncCopy();
+        gutterSignature = "";
+        scheduleHighlight();
         renderFileTree();
         updateWorkspaceChrome();
         updateExampleLesson(currentExampleId);
         if (saveStatus) updateSaveStatus((saveStatus.dataset.state as "dirty" | "saved" | "unavailable") || "saved");
         if (lastSuccessfulData) {
-          renderMetadata(lastSuccessfulData);
-          renderCellFlow(lastSuccessfulData);
-          renderActions(lastSuccessfulData);
-          renderTypes(lastSuccessfulData);
+          panelRenderedRevision.clear();
+          renderOutputPanel(activeOutputTarget(), lastSuccessfulData, false, true);
           renderInspector(lastSuccessfulData);
         }
         if (guide && !guide.hidden) renderGuide();
@@ -2736,22 +2781,33 @@ source_roots = ["src"]
       applyLocaleStrings();
 
       updateHighlight();
+      syncScroll();
       createCompileWorker();
       window.clearTimeout(compileTimer);
       doCompile();
       };
+      window.dispatchEvent(new Event("cellscript:playground-module-ready"));
     </script>
     <script is:inline type="module" data-astro-rerun>
-      let attempts = 0;
+      const playgroundInitAbort = new AbortController();
       const runPlaygroundInit = () => {
         if (typeof window.__cellscriptInitPlayground === "function") {
+          playgroundInitAbort.abort();
           window.__cellscriptInitPlayground();
-          return;
+          return true;
         }
-        attempts += 1;
-        if (attempts < 60) window.setTimeout(runPlaygroundInit, 0);
+        return false;
       };
-      runPlaygroundInit();
+      if (!runPlaygroundInit()) {
+        document.addEventListener("astro:before-swap", () => playgroundInitAbort.abort(), {
+          once: true,
+          signal: playgroundInitAbort.signal,
+        });
+        window.addEventListener("cellscript:playground-module-ready", runPlaygroundInit, {
+          once: true,
+          signal: playgroundInitAbort.signal,
+        });
+      }
     </script>
   </body>
 </html>
