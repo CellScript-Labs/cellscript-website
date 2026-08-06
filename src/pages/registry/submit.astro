@@ -96,13 +96,13 @@ const apiOrigin = registryRuntime.apiOrigin;
           <h2 id="registry-manual-publish-title" data-i18n="registry.submit.manualTitle">{t.registry.submit.manualTitle}</h2>
           <p data-i18n="registry.submit.manualBody">{t.registry.submit.manualBody}</p>
         </div>
-        <aside class="registry-submit-boundary" aria-label={t.registry.submit.toolBoundaryTitle}>
+        <aside class="registry-submit-boundary" aria-label={t.registry.submit.toolBoundaryTitle} data-i18n-aria-label="registry.submit.toolBoundaryTitle">
           <strong data-i18n="registry.submit.toolBoundaryTitle">{t.registry.submit.toolBoundaryTitle}</strong>
           <span data-i18n="registry.submit.toolBoundaryBody">{t.registry.submit.toolBoundaryBody}</span>
         </aside>
       </header>
 
-      <nav class="registry-manual-index" aria-label={t.registry.submit.manualLabel}>
+      <nav class="registry-manual-index" aria-label={t.registry.submit.manualLabel} data-i18n-aria-label="registry.submit.manualLabel">
         <ol>
           <li><a href="#registry-submit-form"><span aria-hidden="true">1</span><strong data-i18n="registry.submit.detailsLabel">{t.registry.submit.detailsLabel}</strong></a></li>
           <li><a href="#registry-preflight-stage"><span aria-hidden="true">2</span><strong data-i18n="registry.submit.preflightTitle">{t.registry.submit.preflightTitle}</strong></a></li>
@@ -1354,7 +1354,8 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       if (capabilityCheckNamespace) capabilityCheckNamespace.textContent = "";
       if (capabilityCheckScopes) capabilityCheckScopes.textContent = "";
     };
-    const clearSignature = () => {
+    const clearSignature = (notifyRequestChange = false) => {
+      const hadSignature = Boolean(signatureOutput?.value.trim() || authorisationChallengeToken || capabilitySubmitted);
       if (signatureOutput) signatureOutput.value = "";
       if (copySignatureButton) copySignatureButton.dataset.copyText = "";
       authorisationChallengeToken = "";
@@ -1363,6 +1364,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       namespaceClaimed = false;
       namespaceReviewPending = false;
       clearCapabilityConfirmation();
+      if (notifyRequestChange && hadSignature) setStatus("errorPayloadChanged", "error");
     };
     const resetWallet = async (disconnect = false) => {
       if (disconnect && typeof activeWalletSigner?.disconnect === "function") {
@@ -1664,22 +1666,35 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
       setStatus("checkingCapability");
       clearCapabilityConfirmation();
       const query = new URLSearchParams({ namespace: fieldValue("namespace"), name: fieldValue("name") });
-      const timeout = new AbortController();
-      const relayAbort = () => timeout.abort();
-      const timer = window.setTimeout(() => timeout.abort(), 10_000);
-      signal.addEventListener("abort", relayAbort, { once: true });
+      const endpoint = `${signerRoot?.dataset.apiOrigin}/v1/capabilities/${encodeURIComponent(keyId)}/check?${query}`;
+      const attempt = async (deadlineMs: number): Promise<Response> => {
+        const timeout = new AbortController();
+        const relayAbort = () => timeout.abort();
+        const timer = window.setTimeout(() => timeout.abort(), deadlineMs);
+        signal.addEventListener("abort", relayAbort, { once: true });
+        try {
+          return await fetch(endpoint, { signal: timeout.signal, headers: { accept: "application/json" } });
+        } catch (error) {
+          if (timeout.signal.aborted && !signal.aborted) throw new WorkflowError("errorCapabilityCheckTimeout");
+          throw error;
+        } finally {
+          window.clearTimeout(timer);
+          signal.removeEventListener("abort", relayAbort);
+        }
+      };
       let response: Response;
       try {
-        response = await fetch(`${signerRoot?.dataset.apiOrigin}/v1/capabilities/${encodeURIComponent(keyId)}/check?${query}`, {
-          signal: timeout.signal,
-          headers: { accept: "application/json" },
-        });
+        response = await attempt(6_500);
+        if (response.status >= 500) {
+          setStatus("retryingCapability");
+          await new Promise((resolve) => window.setTimeout(resolve, 220));
+          response = await attempt(4_000);
+        }
       } catch (error) {
-        if (timeout.signal.aborted && !signal.aborted) throw new WorkflowError("errorCapabilityCheckTimeout");
-        throw error;
-      } finally {
-        window.clearTimeout(timer);
-        signal.removeEventListener("abort", relayAbort);
+        if (signal.aborted || navigator.onLine === false) throw error;
+        setStatus("retryingCapability");
+        await new Promise((resolve) => window.setTimeout(resolve, 220));
+        response = await attempt(4_000);
       }
       const parsed = await readApiResponse(response);
       if (!response.ok) throw new WorkflowError("errorCapabilityCheck", JSON.stringify({ status: response.status, response: parsed }, null, 2));
@@ -1791,7 +1806,9 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
               } catch {
                 // Keep the original signing or submission error.
               }
-              if (!recovered) clearSignature();
+              // Preserve an unchanged signed request when the terminal state is
+              // temporarily unreachable. A retry must never require a new
+              // signature unless the coordinate, scope or payload changes.
             }
             const fallback = action === "connect"
               ? "errorWallet"
@@ -1909,7 +1926,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     }, { signal });
     payloadInput?.addEventListener("input", () => {
       syncExternalPrincipal();
-      clearSignature();
+      clearSignature(true);
       clearTechnical();
       syncWorkflow();
     }, { signal });
@@ -1926,7 +1943,7 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     form?.addEventListener("input", (event) => {
       const coordinate = `${fieldValue("namespace")}/${fieldValue("name")}`;
       if (lastCoordinate && coordinate !== lastCoordinate && event.target !== pathInput) {
-        clearSignature();
+        clearSignature(true);
         if (authorisationMode === "existing") setStatus("existingCapabilityIdle");
       }
       lastCoordinate = coordinate;

@@ -26,15 +26,15 @@ const firstRelease = detail?.firstRelease;
 const allEvidence = detail?.evidence ?? [];
 const deploymentEvidence = detail?.deployments ?? [];
 const profileContract = detail?.profileContract;
-const nextAction = detail?.nextAction;
-const nextActionKey = (kind?: string) => kind
-  ? `next${kind.split("_").map((part) => `${part[0]?.toUpperCase()}${part.slice(1)}`).join("")}`
-  : "nextFetch";
-const initialNextKey = nextActionKey(nextAction?.kind);
 const packageTranslations = t.registry.package as unknown as Record<string, string>;
-const initialNextTitle = packageTranslations[`${initialNextKey}Title`] ?? "";
-const initialNextBody = packageTranslations[`${initialNextKey}Body`] ?? "";
-const initialNextAction = packageTranslations[`${initialNextKey}Action`] ?? "";
+const pascalKey = (value?: string) => value
+  ? value.split("_").map((part) => `${part[0]?.toUpperCase()}${part.slice(1)}`).join("")
+  : "";
+const guidance = detail?.guidance;
+const initialGuidanceKey = `guidance${pascalKey(guidance?.summaryKey)}`;
+const initialConsumerKey = `consumer${pascalKey(guidance?.consumerAction.kind)}`;
+const initialMaintainerKey = `maintainer${pascalKey(guidance?.maintainerAction?.kind)}`;
+const evidenceKey = (kind?: string) => `evidence${pascalKey(kind)}`;
 ---
 
 <section
@@ -72,12 +72,20 @@ const initialNextAction = packageTranslations[`${initialNextKey}Action`] ?? "";
         <p class="registry-pkg-desc" data-package-description>{pkg?.description || t.registry.browse.noDescription}</p>
         <p class="registry-sandbox-expiry" data-package-expiry hidden={!firstRelease?.expires_at} data-expires-at={firstRelease?.expires_at}></p>
       </div>
-      <div class="registry-state-cluster" aria-label={t.registry.package.stateSummary}>
+      <div class="registry-state-cluster" aria-label={t.registry.package.stateSummary} data-i18n-aria-label="registry.package.stateSummary">
         <span class="registry-status" data-package-verification data-state={registryStatusTone(pkg?.verification_status)}>{statusLabel(pkg?.verification_status)}</span>
         <span class="registry-status" data-package-deployment data-state={registryStatusTone(pkg?.deployment_status)}>{statusLabel(pkg?.deployment_status)}</span>
         <span class="registry-status" data-package-availability data-state={registryStatusTone(pkg?.availability_status)}>{statusLabel(pkg?.availability_status)}</span>
       </div>
     </header>
+
+    <section class="registry-use-summary" data-package-guidance data-guidance-key={guidance?.summaryKey} data-usage-state={guidance?.usageState} aria-live="polite">
+      <p class="registry-label" data-i18n="registry.package.guidanceLabel">{t.registry.package.guidanceLabel}</p>
+      <div>
+        <h2 data-package-guidance-title>{packageTranslations[`${initialGuidanceKey}Title`] ?? ""}</h2>
+        <p data-package-guidance-body>{packageTranslations[`${initialGuidanceKey}Body`] ?? ""}</p>
+      </div>
+    </section>
 
     <div class="registry-pkg-body">
       <div class="registry-pkg-main">
@@ -146,11 +154,20 @@ const initialNextAction = packageTranslations[`${initialNextKey}Action`] ?? "";
           <h2 id="evidence-title" data-i18n="registry.package.evidenceTitle">{t.registry.package.evidenceTitle}</h2>
           <div class="registry-evidence-list" data-package-evidence hidden={allEvidence.length === 0}>
             {allEvidence.map((item) => (
-              <div class="registry-evidence-row">
-                <strong>{kindLabel(item.kind)}</strong>
-                <span>{item.producer || t.registry.package.notRecorded}</span>
-                <code>{shortHash(item.evidence_hash, 12, t.registry.package.notRecorded)}</code>
-              </div>
+              <article class="registry-evidence-row" data-evidence-kind={item.kind}>
+                <div class="registry-evidence-copy">
+                  <strong>{packageTranslations[`${evidenceKey(item.kind)}Title`] ?? kindLabel(item.kind)}</strong>
+                  <p>{packageTranslations[`${evidenceKey(item.kind)}Body`] ?? ""}</p>
+                </div>
+                <dl class="registry-evidence-meta">
+                  <div><dt>{t.registry.package.evidenceProducer}</dt><dd>{item.producer || t.registry.package.notRecorded}</dd></div>
+                  <div><dt>{t.registry.package.evidenceHash}</dt><dd><code title={item.evidence_hash}>{shortHash(item.evidence_hash, 12, t.registry.package.notRecorded)}</code></dd></div>
+                </dl>
+                <div class="registry-evidence-actions">
+                  <button class="registry-copy" type="button" data-copy-text={item.evidence_hash || ""} data-revert-label={t.registry.package.copyEvidenceHash} disabled={!item.evidence_hash}>{t.registry.package.copyEvidenceHash}</button>
+                  <a href={detail?.evidenceUrl || "#"} target="_blank" rel="noreferrer">{t.registry.package.openEvidenceJson}</a>
+                </div>
+              </article>
             ))}
           </div>
           <p class="registry-body-copy" data-package-no-evidence hidden={allEvidence.length > 0} data-i18n="registry.package.noEvidence">{t.registry.package.noEvidence}</p>
@@ -158,25 +175,31 @@ const initialNextAction = packageTranslations[`${initialNextKey}Action`] ?? "";
       </div>
 
       <aside class="registry-pkg-aside">
-        <section class="registry-panel registry-next-action" data-package-next data-next-kind={nextAction?.kind} aria-labelledby="artifact-next-title">
-          <p class="registry-label" data-i18n="registry.package.nextLabel">{t.registry.package.nextLabel}</p>
-          <h2 id="artifact-next-title" data-package-next-title>{initialNextTitle}</h2>
-          <p data-package-next-body>{initialNextBody}</p>
+        <section class="registry-panel registry-next-action" data-package-consumer-action data-action-kind={guidance?.consumerAction.kind} aria-labelledby="artifact-next-title">
+          <p class="registry-label" data-i18n="registry.package.consumerLabel">{t.registry.package.consumerLabel}</p>
+          <h2 id="artifact-next-title" data-package-consumer-title>{packageTranslations[`${initialConsumerKey}Title`] ?? ""}</h2>
+          <p data-package-consumer-body>{packageTranslations[`${initialConsumerKey}Body`] ?? ""}</p>
           <a
             class="registry-button primary"
-            data-package-next-link
-            href={nextAction?.action === "link" ? nextAction.value : "#"}
-            hidden={nextAction?.action !== "link"}
-          >{initialNextAction}</a>
+            data-package-consumer-link
+            href={guidance?.consumerAction.action === "link" ? guidance.consumerAction.value : "#"}
+            hidden={guidance?.consumerAction.action !== "link"}
+          >{packageTranslations[`${initialConsumerKey}Action`] ?? ""}</a>
           <button
             class="registry-button primary"
             type="button"
-            data-package-next-button
-            data-next-action={nextAction?.action}
-            data-next-value={nextAction?.value}
-            hidden={nextAction?.action === "link"}
-          >{initialNextAction}</button>
-          <output data-package-next-feedback role="status" aria-live="polite"></output>
+            data-package-consumer-button
+            data-consumer-action={guidance?.consumerAction.action}
+            data-consumer-value={guidance?.consumerAction.action === "copy" ? guidance.consumerAction.value : ""}
+            hidden={guidance?.consumerAction.action === "link" || guidance?.consumerAction.action === "none"}
+          >{packageTranslations[`${initialConsumerKey}Action`] ?? ""}</button>
+          <output data-package-consumer-feedback role="status" aria-live="polite"></output>
+        </section>
+        <section class="registry-maintainer-next" data-package-maintainer-action data-action-kind={guidance?.maintainerAction?.kind} hidden={!guidance?.maintainerAction}>
+          <p class="registry-label" data-i18n="registry.package.maintainerLabel">{t.registry.package.maintainerLabel}</p>
+          <strong data-package-maintainer-title>{packageTranslations[`${initialMaintainerKey}Title`] ?? ""}</strong>
+          <span data-package-maintainer-body>{packageTranslations[`${initialMaintainerKey}Body`] ?? ""}</span>
+          <a data-package-maintainer-link href={guidance?.maintainerAction?.value || detail?.maintainUrl || "#"}>{packageTranslations[`${initialMaintainerKey}Action`] ?? ""}</a>
         </section>
         <section class="registry-panel registry-section-block" aria-labelledby="artifact-facts-title">
           <h2 id="artifact-facts-title" class="registry-label" data-i18n="registry.package.artifactFacts">{t.registry.package.artifactFacts}</h2>
@@ -189,16 +212,6 @@ const initialNextAction = packageTranslations[`${initialNextKey}Action`] ?? "";
             <div data-package-fact-security-wrap hidden={!profileContract?.security?.status}><dt data-i18n="registry.package.factSecurity">{t.registry.package.factSecurity}</dt><dd data-package-fact-security>{kindLabel(profileContract?.security?.status)}</dd></div>
             <div data-package-fact-verifier-wrap hidden={!profileContract?.verifier?.verifier_id}><dt data-i18n="registry.package.factVerifier">{t.registry.package.factVerifier}</dt><dd data-package-fact-verifier>{profileContract?.verifier?.verifier_id}</dd></div>
           </dl>
-        </section>
-        <section class="registry-panel registry-section-block" data-package-resolver hidden={pkg?.artifact.consumption_mode !== "dependency"} aria-labelledby="artifact-install-title">
-          <h2 id="artifact-install-title" class="registry-label" data-i18n="registry.package.installTitle">{t.registry.package.installTitle}</h2>
-          <p data-i18n="registry.package.installBody">{t.registry.package.installBody}</p>
-          <div class="registry-step-code"><code data-package-install>{detail?.installCommand}</code></div>
-        </section>
-        <section class="registry-panel registry-section-block" data-package-consumer hidden={pkg?.artifact.consumption_mode === "dependency"} aria-labelledby="artifact-consume-title">
-          <h2 id="artifact-consume-title" class="registry-label" data-i18n="registry.package.consumeTitle">{t.registry.package.consumeTitle}</h2>
-          <p data-i18n="registry.package.consumeBody">{t.registry.package.consumeBody}</p>
-          <div class="registry-step-code"><code data-package-consume>{detail?.consumerCommand}</code></div>
         </section>
         <section class="registry-panel registry-section-block" aria-labelledby="artifact-links-title">
           <h2 id="artifact-links-title" class="registry-label" data-i18n="registry.package.linksTitle">{t.registry.package.linksTitle}</h2>
@@ -278,36 +291,66 @@ const initialNextAction = packageTranslations[`${initialNextKey}Action`] ?? "";
       node.textContent = label(value);
       node.dataset.state = registryStatusTone(value);
     };
-    const nextPanel = app?.querySelector<HTMLElement>("[data-package-next]");
-    const nextTitle = app?.querySelector<HTMLElement>("[data-package-next-title]");
-    const nextBody = app?.querySelector<HTMLElement>("[data-package-next-body]");
-    const nextLink = app?.querySelector<HTMLAnchorElement>("[data-package-next-link]");
-    const nextButton = app?.querySelector<HTMLButtonElement>("[data-package-next-button]");
-    const nextFeedback = app?.querySelector<HTMLOutputElement>("[data-package-next-feedback]");
-    const nextKey = (kind: string) => `next${kind.split("_").map((part) => `${part[0]?.toUpperCase()}${part.slice(1)}`).join("")}`;
-    const renderNextText = () => {
-      const kind = nextPanel?.dataset.nextKind;
-      if (!kind) return;
-      const key = nextKey(kind);
-      if (nextTitle) nextTitle.textContent = message(`registry.package.${key}Title`);
-      if (nextBody) nextBody.textContent = message(`registry.package.${key}Body`);
-      if (nextLink) nextLink.textContent = message(`registry.package.${key}Action`);
-      if (nextButton) nextButton.textContent = message(`registry.package.${key}Action`);
+    const guidancePanel = app?.querySelector<HTMLElement>("[data-package-guidance]");
+    const guidanceTitle = app?.querySelector<HTMLElement>("[data-package-guidance-title]");
+    const guidanceBody = app?.querySelector<HTMLElement>("[data-package-guidance-body]");
+    const consumerPanel = app?.querySelector<HTMLElement>("[data-package-consumer-action]");
+    const consumerTitle = app?.querySelector<HTMLElement>("[data-package-consumer-title]");
+    const consumerBody = app?.querySelector<HTMLElement>("[data-package-consumer-body]");
+    const consumerLink = app?.querySelector<HTMLAnchorElement>("[data-package-consumer-link]");
+    const consumerButton = app?.querySelector<HTMLButtonElement>("[data-package-consumer-button]");
+    const consumerFeedback = app?.querySelector<HTMLOutputElement>("[data-package-consumer-feedback]");
+    const maintainerPanel = app?.querySelector<HTMLElement>("[data-package-maintainer-action]");
+    const maintainerTitle = app?.querySelector<HTMLElement>("[data-package-maintainer-title]");
+    const maintainerBody = app?.querySelector<HTMLElement>("[data-package-maintainer-body]");
+    const maintainerLink = app?.querySelector<HTMLAnchorElement>("[data-package-maintainer-link]");
+    const pascalKey = (value: string) => value.split("_").map((part) => `${part[0]?.toUpperCase()}${part.slice(1)}`).join("");
+    const renderGuidanceText = () => {
+      const summaryKey = guidancePanel?.dataset.guidanceKey;
+      const consumerKind = consumerPanel?.dataset.actionKind;
+      const maintainerKind = maintainerPanel?.dataset.actionKind;
+      if (summaryKey) {
+        const key = `guidance${pascalKey(summaryKey)}`;
+        if (guidanceTitle) guidanceTitle.textContent = message(`registry.package.${key}Title`);
+        if (guidanceBody) guidanceBody.textContent = message(`registry.package.${key}Body`);
+      }
+      if (consumerKind) {
+        const key = `consumer${pascalKey(consumerKind)}`;
+        if (consumerTitle) consumerTitle.textContent = message(`registry.package.${key}Title`);
+        if (consumerBody) consumerBody.textContent = message(`registry.package.${key}Body`);
+        if (consumerLink) consumerLink.textContent = message(`registry.package.${key}Action`);
+        if (consumerButton) consumerButton.textContent = message(`registry.package.${key}Action`);
+      }
+      if (maintainerKind) {
+        const key = `maintainer${pascalKey(maintainerKind)}`;
+        if (maintainerTitle) maintainerTitle.textContent = message(`registry.package.${key}Title`);
+        if (maintainerBody) maintainerBody.textContent = message(`registry.package.${key}Body`);
+        if (maintainerLink) maintainerLink.textContent = message(`registry.package.${key}Action`);
+      }
     };
-    const renderNextAction = (detail: ReturnType<typeof registryPackageDetailView>) => {
-      const next = detail.nextAction;
-      if (nextPanel) nextPanel.dataset.nextKind = next.kind;
-      if (nextLink) {
-        nextLink.hidden = next.action !== "link";
-        nextLink.href = next.action === "link" ? next.value || "#" : "#";
+    const renderGuidance = (detail: ReturnType<typeof registryPackageDetailView>) => {
+      const { guidance } = detail;
+      if (guidancePanel) {
+        guidancePanel.dataset.guidanceKey = guidance.summaryKey;
+        guidancePanel.dataset.usageState = guidance.usageState;
       }
-      if (nextButton) {
-        nextButton.hidden = next.action === "link";
-        nextButton.dataset.nextAction = next.action;
-        nextButton.dataset.nextValue = next.value || "";
+      if (consumerPanel) consumerPanel.dataset.actionKind = guidance.consumerAction.kind;
+      if (consumerLink) {
+        consumerLink.hidden = guidance.consumerAction.action !== "link";
+        consumerLink.href = guidance.consumerAction.action === "link" ? guidance.consumerAction.value : "#";
       }
-      if (nextFeedback) nextFeedback.textContent = "";
-      renderNextText();
+      if (consumerButton) {
+        consumerButton.hidden = guidance.consumerAction.action === "link" || guidance.consumerAction.action === "none";
+        consumerButton.dataset.consumerAction = guidance.consumerAction.action;
+        consumerButton.dataset.consumerValue = guidance.consumerAction.action === "copy" ? guidance.consumerAction.value : "";
+      }
+      if (consumerFeedback) consumerFeedback.textContent = "";
+      if (maintainerPanel) {
+        maintainerPanel.hidden = !guidance.maintainerAction;
+        maintainerPanel.dataset.actionKind = guidance.maintainerAction?.kind || "";
+      }
+      if (maintainerLink) maintainerLink.href = guidance.maintainerAction?.value || detail.maintainUrl;
+      renderGuidanceText();
     };
     const cell = (row: HTMLTableRowElement, title: string, value?: string, code = false): HTMLTableCellElement => {
       const td = document.createElement("td");
@@ -320,7 +363,9 @@ const initialNextAction = packageTranslations[`${initialNextKey}Action`] ?? "";
       row.append(td);
       return td;
     };
+    let currentArtifact: RegistryPackageView | undefined;
     const render = (artifact: RegistryPackageView) => {
+      currentArtifact = artifact;
       const detail = registryPackageDetailView(artifact, app?.dataset.apiOrigin || "https://api.registry.cellscript.dev");
       app?.querySelector<HTMLElement>("[data-package-loading]")?.setAttribute("hidden", "");
       app?.querySelector<HTMLElement>("[data-package-error]")?.setAttribute("hidden", "");
@@ -388,12 +433,47 @@ const initialNextAction = packageTranslations[`${initialNextKey}Action`] ?? "";
       const evidenceList = app?.querySelector<HTMLElement>("[data-package-evidence]");
       evidenceList?.replaceChildren();
       for (const item of evidence) {
-        const row = document.createElement("div");
+        const row = document.createElement("article");
         row.className = "registry-evidence-row";
-        const kind = document.createElement("strong"); kind.textContent = String(item.kind || "evidence").replaceAll("_", " ");
-        const producer = document.createElement("span"); producer.textContent = item.producer || message("registry.package.notRecorded");
-        const hash = document.createElement("code"); hash.textContent = shortHash(item.evidence_hash, 12, message("registry.package.notRecorded"));
-        row.append(kind, producer, hash);
+        row.dataset.evidenceKind = item.kind;
+        const key = `evidence${pascalKey(item.kind)}`;
+        const copy = document.createElement("div");
+        copy.className = "registry-evidence-copy";
+        const kind = document.createElement("strong"); kind.textContent = message(`registry.package.${key}Title`);
+        const explanation = document.createElement("p"); explanation.textContent = message(`registry.package.${key}Body`);
+        copy.append(kind, explanation);
+        const meta = document.createElement("dl");
+        meta.className = "registry-evidence-meta";
+        const addFact = (term: string, value: HTMLElement | string) => {
+          const wrapper = document.createElement("div");
+          const dt = document.createElement("dt"); dt.textContent = term;
+          const dd = document.createElement("dd");
+          if (typeof value === "string") dd.textContent = value;
+          else dd.append(value);
+          wrapper.append(dt, dd);
+          meta.append(wrapper);
+        };
+        addFact(message("registry.package.evidenceProducer"), item.producer || message("registry.package.notRecorded"));
+        const hash = document.createElement("code");
+        hash.textContent = shortHash(item.evidence_hash, 12, message("registry.package.notRecorded"));
+        if (item.evidence_hash) hash.title = item.evidence_hash;
+        addFact(message("registry.package.evidenceHash"), hash);
+        const actions = document.createElement("div");
+        actions.className = "registry-evidence-actions";
+        const copyHash = document.createElement("button");
+        copyHash.className = "registry-copy";
+        copyHash.type = "button";
+        copyHash.textContent = message("registry.package.copyEvidenceHash");
+        copyHash.dataset.copyText = item.evidence_hash || "";
+        copyHash.dataset.revertLabel = message("registry.package.copyEvidenceHash");
+        copyHash.disabled = !item.evidence_hash;
+        const raw = document.createElement("a");
+        raw.href = detail.evidenceUrl;
+        raw.target = "_blank";
+        raw.rel = "noreferrer";
+        raw.textContent = message("registry.package.openEvidenceJson");
+        actions.append(copyHash, raw);
+        row.append(copy, meta, actions);
         evidenceList?.append(row);
       }
       if (evidenceList) evidenceList.hidden = evidence.length === 0;
@@ -419,21 +499,15 @@ const initialNextAction = packageTranslations[`${initialNextKey}Action`] ?? "";
       const noDeployment = app?.querySelector<HTMLElement>("[data-package-no-deployment]");
       if (deploymentWrap) deploymentWrap.hidden = deployments.length === 0;
       if (noDeployment) noDeployment.hidden = deployments.length > 0;
-      const resolver = app?.querySelector<HTMLElement>("[data-package-resolver]");
-      if (resolver) resolver.hidden = artifact.artifact.consumption_mode !== "dependency";
-      text("[data-package-install]", detail.installCommand);
-      const consumer = app?.querySelector<HTMLElement>("[data-package-consumer]");
-      if (consumer) consumer.hidden = artifact.artifact.consumption_mode === "dependency";
       const selected = detail.firstRelease;
       renderExpiry(selected?.expires_at);
-      text("[data-package-consume]", detail.consumerCommand);
       const record = app?.querySelector<HTMLAnchorElement>("[data-package-record]");
       if (record) record.href = detail.recordUrl;
       const repository = app?.querySelector<HTMLAnchorElement>("[data-package-repository]");
       if (repository) { repository.hidden = !artifact.repository; repository.href = artifact.repository || "#"; }
       const maintain = app?.querySelector<HTMLAnchorElement>("[data-package-maintain]");
       if (maintain) maintain.href = detail.maintainUrl;
-      renderNextAction(detail);
+      renderGuidance(detail);
       formatPackageDates();
     };
     let requestInFlight = false;
@@ -490,25 +564,29 @@ const initialNextAction = packageTranslations[`${initialNextKey}Action`] ?? "";
       }
     };
     app?.querySelector<HTMLButtonElement>("[data-package-retry]")?.addEventListener("click", () => void load(), { signal });
-    nextButton?.addEventListener("click", () => {
-      if (nextButton.dataset.nextAction === "refresh") {
+    consumerButton?.addEventListener("click", () => {
+      if (consumerButton.dataset.consumerAction === "refresh") {
         void load(true);
         return;
       }
-      const value = nextButton.dataset.nextValue;
+      const value = consumerButton.dataset.consumerValue;
       if (!value) return;
       void navigator.clipboard.writeText(value).then(() => {
-        if (nextFeedback) nextFeedback.textContent = message("registry.package.nextCopied");
+        if (consumerFeedback) consumerFeedback.textContent = message("registry.package.nextCopied");
       }).catch(() => {
-        if (nextFeedback) nextFeedback.textContent = message("registry.package.nextCopyFailed");
+        if (consumerFeedback) consumerFeedback.textContent = message("registry.package.nextCopyFailed");
       });
     }, { signal });
     window.addEventListener("cellscript:locale-change", () => {
-      formatPackageDates();
-      renderNextText();
+      if (currentArtifact) render(currentArtifact);
+      else {
+        formatPackageDates();
+        renderGuidanceText();
+      }
     }, { signal });
     document.addEventListener("astro:before-swap", () => lifecycle.abort(), { once: true, signal });
     formatPackageDates();
+    renderGuidanceText();
     load();
     };
 

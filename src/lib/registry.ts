@@ -1,4 +1,16 @@
 import registryDataJson from "../data/registry-packages.json";
+import {
+  deriveArtifactGuidance,
+  type RegistryArtifactGuidance,
+} from "./registry-guidance";
+
+export {
+  deriveArtifactGuidance,
+  type RegistryArtifactGuidance,
+  type RegistryConsumerAction,
+  type RegistryMaintainerAction,
+  type RegistryUsageState,
+} from "./registry-guidance";
 
 export const registryEntryStatuses = [
   "source_published",
@@ -127,23 +139,9 @@ export interface RegistryPackageDetailView {
   installCommand: string;
   consumerCommand: string;
   recordUrl: string;
+  evidenceUrl: string;
   maintainUrl: string;
-  nextAction: RegistryPackageNextAction;
-}
-
-export interface RegistryPackageNextAction {
-  kind:
-    | "unavailable"
-    | "deprecated"
-    | "verification_rejected"
-    | "verification_pending"
-    | "reproducibility_evidence"
-    | "deployment_evidence"
-    | "chain_verification"
-    | "install"
-    | "fetch";
-  action: "link" | "copy" | "refresh";
-  value?: string;
+  guidance: RegistryArtifactGuidance;
 }
 
 export interface RegistryPackageView {
@@ -437,7 +435,6 @@ export function registryPackageDetailView(pkg: RegistryPackageView, apiOrigin: s
   const apiArg = ` --api-url ${cleanApiOrigin}`;
   const release = firstRelease?.release ?? pkg.latest_release ?? "<release>";
   const coordinate = `${pkg.coordinate}@${release}`;
-  const releaseNetwork = firstRelease?.network || "mainnet";
   const consumerCommand = pkg.artifact.consumption_mode === "dependency"
     ? ""
     : pkg.artifact.consumption_mode === "copy"
@@ -445,30 +442,22 @@ export function registryPackageDetailView(pkg: RegistryPackageView, apiOrigin: s
       : pkg.artifact.consumption_mode === "deployment" && firstRelease?.deployment_status === "chain_verified"
         ? `cellc artifact cell-dep ${coordinate} --output CellDep.json --accept-hash-bound${apiArg}`
         : pkg.artifact.consumption_mode === "deployment"
-          ? `cellc artifact pin ${coordinate} --output Artifacts.lock --accept-hash-bound${apiArg}\ncellc artifact record-deployment ${coordinate} --network ${releaseNetwork} --code-hash <code_hash> --hash-type ${profileContract?.ckb?.hash_type || "data1"} --dep-type ${profileContract?.ckb?.dep_type || "code"} --tx-hash <tx_hash> --index <index> --capability-key-id <key_id>${apiArg}`
+          ? `cellc artifact pin ${coordinate} --output Artifacts.lock --accept-hash-bound${apiArg}`
           : `cellc artifact pin ${coordinate} --output Artifacts.lock --accept-hash-bound${apiArg}`;
   const recordUrl = firstRelease?.direct_url || firstRelease?.immutable_bundle?.url || pkg.registry_json_url || "#";
   const maintainUrl = `/registry/manage?package=${encodeURIComponent(pkg.coordinate)}`;
-  let nextAction: RegistryPackageNextAction;
-  if (pkg.availability_status === "deprecated") {
-    nextAction = { kind: "deprecated", action: "link", value: recordUrl };
-  } else if (pkg.availability_status !== "active") {
-    nextAction = { kind: "unavailable", action: "link", value: recordUrl };
-  } else if (pkg.verification_status === "rejected") {
-    nextAction = { kind: "verification_rejected", action: "link", value: maintainUrl };
-  } else if (pkg.verification_status === "pending") {
-    nextAction = { kind: "verification_pending", action: "refresh" };
-  } else if (pkg.verification_status === "evidence_required") {
-    nextAction = { kind: "reproducibility_evidence", action: "link", value: maintainUrl };
-  } else if (pkg.artifact.consumption_mode === "deployment" && pkg.deployment_status === "undeployed") {
-    nextAction = { kind: "deployment_evidence", action: "link", value: maintainUrl };
-  } else if (pkg.artifact.consumption_mode === "deployment" && pkg.deployment_status === "deployed") {
-    nextAction = { kind: "chain_verification", action: "link", value: maintainUrl };
-  } else if (pkg.artifact.consumption_mode === "dependency") {
-    nextAction = { kind: "install", action: "copy", value: pkg.install_command || `cellc install ${coordinate}` };
-  } else {
-    nextAction = { kind: "fetch", action: "copy", value: consumerCommand };
-  }
+  const installCommand = pkg.install_command || `cellc install ${coordinate}`;
+  const evidenceUrl = `${cleanApiOrigin}/v1/artifacts/${encodeURIComponent(pkg.namespace)}/${encodeURIComponent(pkg.name)}/releases/${encodeURIComponent(release)}/evidence`;
+  const guidance = deriveArtifactGuidance({
+    availabilityStatus: pkg.availability_status,
+    verificationStatus: pkg.verification_status,
+    deploymentStatus: pkg.deployment_status,
+    consumptionMode: pkg.artifact.consumption_mode,
+    installCommand,
+    consumerCommand,
+    recordUrl,
+    maintainUrl,
+  });
 
   return {
     pkg,
@@ -477,11 +466,12 @@ export function registryPackageDetailView(pkg: RegistryPackageView, apiOrigin: s
     evidence,
     deployments,
     profileContract,
-    installCommand: pkg.install_command || `cellc install ${coordinate}`,
+    installCommand,
     consumerCommand,
     recordUrl,
+    evidenceUrl,
     maintainUrl,
-    nextAction,
+    guidance,
   };
 }
 

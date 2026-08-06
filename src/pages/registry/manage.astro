@@ -82,9 +82,17 @@ const apiOrigin = registryRuntime.apiOrigin;
         </details>
         <output class="registry-manage-remote-status" data-manage-remote-status role="status" aria-live="polite" hidden></output>
 
-        <fieldset class="registry-task-picker">
-          <legend data-i18n="registry.manage.chooseTask">{t.registry.manage.chooseTask}</legend>
-          <div class="registry-task-options">
+        <section class="registry-current-task" aria-live="polite">
+          <span class="registry-label" data-i18n="registry.manage.nextTask">{t.registry.manage.nextTask}</span>
+          <strong data-manage-current-title>{t.registry.manage.taskPublish}</strong>
+          <p data-manage-current-body>{t.registry.manage.taskPublishBody}</p>
+        </section>
+
+        <details class="registry-maintainer-task-menu" data-manage-task-menu open>
+          <summary data-i18n="registry.manage.changeTask">{t.registry.manage.changeTask}</summary>
+          <fieldset class="registry-task-picker">
+            <legend data-i18n="registry.manage.chooseTask">{t.registry.manage.chooseTask}</legend>
+            <div class="registry-task-options">
             <div class="registry-task-cluster" data-task-tone="primary">
               <span class="registry-task-cluster-label" data-i18n="registry.manage.primaryAction">{t.registry.manage.primaryAction}</span>
               <div class="registry-task-option">
@@ -157,8 +165,9 @@ const apiOrigin = registryRuntime.apiOrigin;
                 </label>
               </div>
             </div>
-          </div>
-        </fieldset>
+            </div>
+          </fieldset>
+        </details>
 
         <div class="registry-yank-fields" data-manage-yank-fields hidden>
           <div class="registry-yank-grid">
@@ -267,6 +276,9 @@ const apiOrigin = registryRuntime.apiOrigin;
       const versionOptions = app?.querySelector("[data-manage-version-options]");
       const remoteStatus = app?.querySelector("[data-manage-remote-status]");
       const validation = app?.querySelector("[data-manage-validation]");
+      const taskMenu = app?.querySelector("[data-manage-task-menu]");
+      const currentTaskTitle = app?.querySelector("[data-manage-current-title]");
+      const currentTaskBody = app?.querySelector("[data-manage-current-body]");
       const coordinatePattern = /^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?\/[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$/;
       const params = new URLSearchParams(window.location.search);
       const allowedTasks = new Set(["publish", "yank", "package", "live", "reproduce", "deployment", "commitment"]);
@@ -299,6 +311,15 @@ const apiOrigin = registryRuntime.apiOrigin;
         }
       };
       const selectedTask = () => form?.querySelector("input[name='action']:checked")?.value || "publish";
+      const taskKeys = {
+        publish: "Publish",
+        yank: "Yank",
+        package: "VerifyPackage",
+        live: "VerifyLive",
+        reproduce: "Reproduce",
+        deployment: "Deployment",
+        commitment: "Commitment",
+      };
       const shellArg = (value) => `'${String(value).replace(/'/g, "'\\''")}'`;
       const prefix = () => field("path") ? `cd ${shellArg(field("path"))} && ` : "";
       const localPackage = () => packages.find((pkg) => pkg.coordinate === coordinate());
@@ -359,6 +380,9 @@ const apiOrigin = registryRuntime.apiOrigin;
         if (coordinateError) coordinateError.hidden = valid || !coordinate();
         syncPackage();
         const task = selectedTask();
+        const taskKey = taskKeys[task] || "Publish";
+        if (currentTaskTitle) currentTaskTitle.textContent = g(`registry.manage.task${taskKey}`);
+        if (currentTaskBody) currentTaskBody.textContent = g(`registry.manage.task${taskKey}Body`);
         const isYank = task === "yank";
         const isArtifactTask = ["reproduce", "deployment", "commitment"].includes(task);
         if (yankFields) yankFields.hidden = !isYank;
@@ -558,6 +582,7 @@ const apiOrigin = registryRuntime.apiOrigin;
       if (allowedTasks.has(requestedTask)) {
         const input = form?.querySelector(`input[name='action'][value='${requestedTask}']`);
         if (input instanceof HTMLInputElement) input.checked = true;
+        if (taskMenu instanceof HTMLDetailsElement) taskMenu.open = false;
       }
       form?.addEventListener("input", () => {
         remotePackage = null;
@@ -567,6 +592,7 @@ const apiOrigin = registryRuntime.apiOrigin;
       }, { signal });
       for (const action of form?.querySelectorAll("input[name='action']") || []) {
         action.addEventListener("change", () => {
+          if (taskMenu instanceof HTMLDetailsElement) taskMenu.open = false;
           if (window.matchMedia(mobileLayoutMedia).matches) {
             window.setTimeout(() => output?.scrollIntoView({ behavior: "smooth", block: "nearest" }), mobileScrollDelayMs);
           }

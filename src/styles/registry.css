@@ -500,7 +500,11 @@
 }
 
 .registry-browse-filter {
-  width: 230px;
+  width: 190px;
+}
+
+.registry-browse-filter.registry-browse-intent {
+  width: 205px;
 }
 
 .registry-browse-filter select {
@@ -794,10 +798,44 @@
   overflow-wrap: anywhere;
 }
 
-.registry-package-row p {
+.registry-row-coordinate span {
+  color: var(--dim);
+  font-weight: 560;
+}
+
+.registry-package-row .registry-row-conclusion {
   margin: 6px 0 0;
+  color: var(--text-soft);
+  font-size: 0.9rem;
+  font-weight: 620;
+  line-height: 1.4;
+}
+
+.registry-package-row .registry-row-description {
+  margin: 4px 0 0;
   color: var(--muted);
+  font-size: 0.82rem;
   line-height: 1.5;
+}
+
+.registry-row-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 10px 18px;
+  margin-top: 11px;
+}
+
+.registry-row-meta .registry-badges {
+  margin-top: 0;
+}
+
+.registry-row-meta time {
+  color: var(--dim);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  white-space: nowrap;
 }
 
 .registry-badges {
@@ -840,6 +878,28 @@
   border-color: var(--status-info);
   color: var(--status-info);
   background: var(--status-info-surface);
+}
+
+.registry-badge[data-kind="usage"] {
+  border-color: var(--accent-line);
+  color: var(--accent);
+}
+
+.registry-badge[data-kind="usage"][data-usage-state="needs_evidence"],
+.registry-badge[data-kind="usage"][data-usage-state="source_only"] {
+  border-color: var(--status-warning-line);
+  color: var(--status-warning-text);
+}
+
+.registry-badge[data-kind="usage"][data-usage-state="unavailable"] {
+  border-color: var(--status-danger-line);
+  color: var(--status-danger-text);
+}
+
+.registry-badge[data-kind="usage"][data-usage-state="hash_bound"],
+.registry-badge[data-kind="usage"][data-usage-state="deprecated"] {
+  border-color: var(--status-info);
+  color: var(--status-info);
 }
 
 .registry-badge[data-kind="license"] {
@@ -3114,11 +3174,20 @@
 
   .registry-browse-filter-row {
     gap: 8px;
+    flex-wrap: wrap;
+  }
+
+  .registry-browse-filter,
+  .registry-browse-filter.registry-browse-intent {
+    width: 100%;
+    flex: 1 1 100%;
   }
 
   .registry-browse-count {
-    min-width: 76px;
+    width: 100%;
+    min-width: 0;
     font-size: 0.7rem;
+    text-align: right;
   }
 
   .registry-empty {
@@ -3273,12 +3342,12 @@
 
 .registry-maintainer-package > h1 {
   display: block;
-  max-width: 18ch;
+  max-width: 24ch;
   margin: 0;
   color: var(--text);
-  font-size: clamp(2rem, 4.2vw, 3.8rem);
+  font-size: clamp(2rem, 3.4vw, 3.2rem);
   font-weight: 720;
-  line-height: 0.98;
+  line-height: 1.02;
   letter-spacing: -0.045em;
   overflow-wrap: anywhere;
   text-wrap: balance;
@@ -3378,6 +3447,68 @@
 
 .registry-manage-remote-status[hidden] {
   display: none;
+}
+
+.registry-current-task {
+  display: grid;
+  gap: 6px;
+  padding: 0 0 20px 16px;
+  border-bottom: 1px solid var(--line-soft);
+  border-left: 3px solid var(--accent);
+}
+
+.registry-current-task .registry-label {
+  margin: 0;
+}
+
+.registry-current-task strong {
+  color: var(--text);
+  font-size: 1.04rem;
+}
+
+.registry-current-task p {
+  max-width: 64ch;
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.5;
+}
+
+.registry-maintainer-task-menu {
+  border-bottom: 1px solid var(--line-soft);
+}
+
+.registry-maintainer-task-menu > summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  color: var(--muted);
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 650;
+  list-style: none;
+}
+
+.registry-maintainer-task-menu > summary::-webkit-details-marker {
+  display: none;
+}
+
+.registry-maintainer-task-menu > summary::after {
+  content: "+";
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  transition: transform var(--duration-fast) var(--ease-quick);
+}
+
+.registry-maintainer-task-menu[open] > summary::after {
+  transform: rotate(45deg);
+}
+
+.registry-maintainer-task-menu .registry-task-picker {
+  padding: 12px 0 24px;
 }
 
 .registry-task-picker {
@@ -3746,6 +3877,51 @@
   line-height: 1.6;
 }
 
+.registry-use-summary {
+  display: grid;
+  grid-template-columns: minmax(120px, 0.22fr) minmax(0, 1fr);
+  gap: clamp(18px, 4vw, 52px);
+  margin-top: 24px;
+  padding: 18px 0 20px 18px;
+  border-top: 1px solid var(--line-soft);
+  border-bottom: 1px solid var(--line-soft);
+  border-left: 3px solid var(--accent);
+}
+
+.registry-use-summary[data-usage-state="needs_evidence"],
+.registry-use-summary[data-usage-state="source_only"] {
+  border-left-color: var(--status-warning-line);
+}
+
+.registry-use-summary[data-usage-state="unavailable"] {
+  border-left-color: var(--status-danger-line);
+}
+
+.registry-use-summary[data-usage-state="deprecated"],
+.registry-use-summary[data-usage-state="hash_bound"] {
+  border-left-color: var(--status-info);
+}
+
+.registry-use-summary .registry-label {
+  margin: 3px 0 0;
+}
+
+.registry-use-summary h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: clamp(1.15rem, 2vw, 1.45rem);
+  line-height: 1.2;
+  letter-spacing: -0.022em;
+}
+
+.registry-use-summary div > p {
+  max-width: 72ch;
+  margin: 7px 0 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.58;
+}
+
 .registry-state-cluster {
   display: flex;
   flex-wrap: wrap;
@@ -3806,6 +3982,37 @@
   margin-top: 7px;
   color: var(--muted);
   font-size: 0.72rem;
+}
+
+.registry-maintainer-next {
+  display: grid;
+  gap: 6px;
+  padding: 16px 2px 2px;
+  border-top: 1px solid var(--line-soft);
+}
+
+.registry-maintainer-next[hidden] {
+  display: none;
+}
+
+.registry-maintainer-next strong {
+  color: var(--text);
+  font-size: 0.9rem;
+}
+
+.registry-maintainer-next > span {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1.5;
+}
+
+.registry-maintainer-next a {
+  width: fit-content;
+  margin-top: 4px;
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 650;
+  text-underline-offset: 3px;
 }
 
 .registry-facts {
@@ -4394,23 +4601,71 @@
 
 .registry-evidence-row {
   display: grid;
-  grid-template-columns: minmax(150px, 0.5fr) minmax(0, 1fr) auto;
-  gap: 14px;
-  align-items: center;
-  padding: 12px 0;
+  grid-template-columns: minmax(0, 1.15fr) minmax(210px, 0.62fr) auto;
+  gap: 20px;
+  align-items: start;
+  padding: 18px 0;
   border-top: 1px solid var(--line-soft);
   color: var(--muted);
   font-size: 0.8rem;
 }
 
-.registry-evidence-row strong {
+.registry-evidence-copy strong {
   color: var(--text);
-  text-transform: capitalize;
+  font-size: 0.88rem;
 }
 
-.registry-evidence-row code {
+.registry-evidence-copy p {
+  max-width: 62ch;
+  margin: 5px 0 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.registry-evidence-meta {
+  display: grid;
+  gap: 7px;
+  margin: 0;
+}
+
+.registry-evidence-meta > div {
+  display: grid;
+  grid-template-columns: minmax(72px, auto) minmax(0, 1fr);
+  gap: 10px;
+}
+
+.registry-evidence-meta dt {
+  color: var(--dim);
+  font-size: 0.7rem;
+}
+
+.registry-evidence-meta dd {
+  min-width: 0;
+  margin: 0;
+  color: var(--text-soft);
+  text-align: right;
+}
+
+.registry-evidence-meta code {
   color: var(--text-soft);
   overflow-wrap: anywhere;
+}
+
+.registry-evidence-actions {
+  display: grid;
+  justify-items: end;
+  gap: 8px;
+}
+
+.registry-evidence-actions .registry-copy {
+  min-height: 36px;
+  white-space: nowrap;
+}
+
+.registry-evidence-actions a {
+  color: var(--accent);
+  font-size: 0.74rem;
+  text-underline-offset: 3px;
 }
 
 .registry-evidence-card {
@@ -4435,6 +4690,12 @@
 }
 
 @media (max-width: 720px) {
+  .registry-use-summary {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding-left: 14px;
+  }
+
   .registry-responsive-table {
     min-width: 0;
     table-layout: fixed;
@@ -4502,6 +4763,21 @@
 
   .registry-evidence-card {
     grid-template-columns: 1fr;
+  }
+
+  .registry-evidence-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .registry-evidence-meta dd {
+    text-align: left;
+  }
+
+  .registry-evidence-actions {
+    grid-template-columns: auto 1fr;
+    align-items: center;
+    justify-items: start;
   }
 }
 
