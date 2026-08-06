@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 const root = resolve(".");
 const globalCss = readFileSync(resolve(root, "src/styles/global.css"), "utf8");
 const registryCss = readFileSync(resolve(root, "src/styles/registry.css"), "utf8");
+const playgroundPage = readFileSync(resolve(root, "src/pages/playground.astro"), "utf8");
 const lightMarker = ':root[data-theme="light"] {';
 const lightStart = globalCss.indexOf(lightMarker);
 if (lightStart < 0) throw new Error("missing light-theme token block");
@@ -88,8 +89,28 @@ if (docsShell.includes("justify-content: space-between")) {
 if (!docsShell.includes("minmax(0, var(--docs-reading-max))")) {
   throw new Error("Docs shell must preserve the centred reading axis");
 }
-if (!globalCss.includes("padding-inline: max(var(--page-pad-inline), calc((100% - var(--max)) / 2));")) {
-  throw new Error("Playground toolbar controls must align with the global frame");
+if (!globalCss.includes("--workbench-max: 1920px;")) {
+  throw new Error("Playground workbench must have an explicit wide-screen frame");
+}
+const playgroundStage = globalCss.match(/\.pg-stage\s*\{(?<body>[\s\S]*?)\n\}/)?.groups?.body || "";
+const playgroundStudio = globalCss.match(/\.pg-studio-frame\s*\{(?<body>[\s\S]*?)\n\}/)?.groups?.body || "";
+if (!playgroundStage.includes("padding: 12px var(--page-pad-inline) 14px;")) {
+  throw new Error("Playground stage must preserve a deliberate inset around the workbench");
+}
+if (!playgroundStudio.includes("width: min(100%, var(--workbench-max));")) {
+  throw new Error("Playground workbench must be centred inside its dedicated frame");
+}
+if (!playgroundStudio.includes("max-width: var(--workbench-max);")) {
+  throw new Error("Playground workbench must not outgrow its wide-screen frame");
+}
+if (!playgroundStudio.includes("view-transition-name: playground-studio;")) {
+  throw new Error("Playground focus changes must keep a stable transition surface");
+}
+if (!globalCss.includes(':root[data-playground-focus="true"] .playground-body .site-header')) {
+  throw new Error("Playground focus mode must remove the site chrome on desktop");
+}
+for (const contract of ["data-pg-studio", "data-focus-toggle", "cellscript-playground-focus-mode", "createPlaygroundFocusController"]) {
+  if (!playgroundPage.includes(contract)) throw new Error(`Playground page is missing ${contract}`);
 }
 
 console.log("visual token and readability contract ok");

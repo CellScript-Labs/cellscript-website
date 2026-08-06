@@ -165,6 +165,7 @@
      Reading measures remain narrower inside the frame. */
   --frame-max: 1440px;
   --max: var(--frame-max);
+  --workbench-max: 1920px;
   --narrow: 900px;
   --page-pad-inline: clamp(20px, 2.5vw, 40px);
   --site-gutter: calc(var(--page-pad-inline) * 2);
@@ -4357,8 +4358,9 @@ tr:last-child td {
 
 /* =========================================================================
    Playground page (/playground)
-   Three-column IDE: source editor | compile output | provenance rail.
-   No body padding-right here (the rail is a column, not a fixed overlay).
+   The global header keeps the shared site frame. The compiler workbench uses
+   a wider, centred studio frame and becomes truly edge-to-edge only in the
+   explicit focus mode.
    ========================================================================= */
 
 .playground-body {
@@ -4366,10 +4368,36 @@ tr:last-child td {
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  background: var(--bg);
 }
 
 .playground-body .site-header {
   flex-shrink: 0;
+}
+
+.pg-stage {
+  flex: 1 1 auto;
+  display: flex;
+  min-width: 0;
+  min-height: 0;
+  padding: 12px var(--page-pad-inline) 14px;
+}
+
+.pg-studio-frame {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  width: min(100%, var(--workbench-max));
+  max-width: var(--workbench-max);
+  min-width: 0;
+  min-height: 0;
+  margin-inline: auto;
+  overflow: hidden;
+  border: 1px solid var(--line-soft);
+  border-radius: 10px;
+  background: var(--panel-strong);
+  box-shadow: var(--elev-1), inset 0 1px 0 var(--line-inner-soft);
+  view-transition-name: playground-studio;
 }
 
 .pg-toolbar {
@@ -4381,8 +4409,7 @@ tr:last-child td {
   align-items: center;
   column-gap: 18px;
   min-height: 52px;
-  padding-block: 0;
-  padding-inline: max(var(--page-pad-inline), calc((100% - var(--max)) / 2));
+  padding: 0 14px;
   border-bottom: 1px solid var(--line-soft);
   background: var(--surface-header);
   backdrop-filter: blur(18px);
@@ -4391,14 +4418,26 @@ tr:last-child td {
 .pg-toolbar-title {
   min-width: 0;
   margin: 0;
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-  color: var(--dim);
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  font-family: var(--font-sans);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: var(--text-soft);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.pg-toolbar-title::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
 }
 
 .pg-toolbar-actions {
@@ -4426,6 +4465,75 @@ tr:last-child td {
 .pg-action-btn:hover {
   background: var(--accent);
   color: var(--primary-contrast);
+}
+
+.pg-action-btn:active {
+  transform: translateY(1px);
+}
+
+.pg-focus-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border-color: var(--line-soft);
+  background: var(--surface-button);
+  color: var(--muted);
+}
+
+.pg-focus-toggle:hover {
+  border-color: var(--accent-line);
+  background: var(--accent-surface);
+  color: var(--accent-strong);
+}
+
+.pg-focus-icon {
+  display: inline-flex;
+  width: 15px;
+  height: 15px;
+  flex: 0 0 auto;
+}
+
+.pg-focus-icon svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.pg-focus-icon-exit {
+  display: none;
+}
+
+:root[data-playground-focus="true"] .pg-focus-icon-enter {
+  display: none;
+}
+
+:root[data-playground-focus="true"] .pg-focus-icon-exit {
+  display: inline-flex;
+}
+
+@media (min-width: 820px) {
+  :root[data-playground-focus="true"] .playground-body .site-header {
+    display: none;
+  }
+
+  :root[data-playground-focus="true"] .pg-stage {
+    padding: 0;
+  }
+
+  :root[data-playground-focus="true"] .pg-studio-frame {
+    width: 100%;
+    max-width: none;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
+  }
+}
+
+::view-transition-old(playground-studio),
+::view-transition-new(playground-studio) {
+  animation-duration: 180ms;
+  animation-timing-function: var(--ease-quick);
+  mix-blend-mode: normal;
 }
 
 .pg-example-menu {
@@ -5975,19 +6083,14 @@ tr:last-child td {
   }
 }
 
-@media (min-width: 820px) and (max-width: 1320px) {
-  .pg-toolbar {
-    grid-template-columns: 1fr;
-    align-items: start;
-    row-gap: 8px;
-    min-height: 0;
-    padding-top: 8px;
-    padding-bottom: 8px;
+@media (min-width: 820px) and (max-width: 1040px) {
+  .pg-focus-toggle {
+    width: 36px;
+    padding-inline: 9px;
   }
 
-  .pg-toolbar-actions {
-    flex-wrap: wrap;
-    justify-content: flex-start;
+  .pg-focus-label {
+    display: none;
   }
 }
 
@@ -5995,6 +6098,17 @@ tr:last-child td {
   .playground-body {
     height: auto;
     min-height: 100dvh;
+  }
+
+  .pg-stage {
+    padding: 0;
+  }
+
+  .pg-studio-frame {
+    width: 100%;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
   }
 
   .pg-toolbar {
@@ -6010,6 +6124,10 @@ tr:last-child td {
     flex-wrap: wrap;
     justify-content: flex-start;
     gap: 8px;
+  }
+
+  .pg-focus-toggle {
+    display: none;
   }
 
   .pg-example-menu {

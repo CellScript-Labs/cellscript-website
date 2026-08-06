@@ -23,6 +23,8 @@ import SiteHeader from "../components/SiteHeader.astro";
 import SitePreferencesBootstrap from "../components/SitePreferencesBootstrap.astro";
 import { ClientRouter } from "astro:transitions";
 import { BookOpen, Check, ChevronDown, Copy, Download, FilePlus, Play, Trash2, Upload } from "lucide-astro";
+import arrowsInSimpleIcon from "@phosphor-icons/core/regular/arrows-in-simple.svg?raw";
+import arrowsOutSimpleIcon from "@phosphor-icons/core/regular/arrows-out-simple.svg?raw";
 
 // The locale is resolved client-side from localStorage (see the inline
 // init script below), so the server renders the English fallback and
@@ -63,6 +65,16 @@ if (ungroupedPlaygroundExamples.length > 0) {
     <link rel="icon" type="image/png" media="(prefers-color-scheme: light)" href={`${import.meta.env.BASE_URL}cellscript-logo-light.png`} />
     <link rel="icon" type="image/png" media="(prefers-color-scheme: dark)" href={`${import.meta.env.BASE_URL}cellscript-logo-dark.png`} />
     <SitePreferencesBootstrap />
+    <script is:inline data-astro-rerun>
+      (() => {
+        try {
+          document.documentElement.dataset.playgroundFocus =
+            localStorage.getItem("cellscript-playground-focus-mode") === "true" ? "true" : "false";
+        } catch {
+          document.documentElement.dataset.playgroundFocus = "false";
+        }
+      })();
+    </script>
     <ClientRouter />
   </head>
   <body class="playground-body">
@@ -77,55 +89,62 @@ if (ungroupedPlaygroundExamples.length > 0) {
     <template data-file-delete-icon>
       <Trash2 class="pg-file-delete-icon" aria-hidden="true" />
     </template>
-    <div class="pg-toolbar">
-      <h1 class="pg-toolbar-title" data-i18n="playground.title">{t.playground.title}</h1>
-      <div class="pg-toolbar-actions">
-        <details class="pg-example-menu" data-example-menu>
-          <summary class="pg-action-btn pg-example-menu-trigger" data-i18n-aria-label="playground.examplesDrawer" aria-label={t.playground.examplesDrawer}>
-            <BookOpen aria-hidden="true" />
-            <span data-i18n="playground.examplesDrawer">{t.playground.examplesDrawer}</span>
-            <ChevronDown class="pg-example-menu-chevron" aria-hidden="true" />
-          </summary>
-          <div class="pg-example-menu-panel">
-            <aside class="pg-example-lesson" data-example-lesson aria-live="polite">
-              <span data-i18n="playground.lessonLabel">{t.playground.lessonLabel}</span>
-              <strong data-example-title data-i18n={`playground.examples.${initialExample.id}.title`}>
-                {getPlaygroundExampleCopy(initialExample.id)?.title ?? initialExample.label}
-              </strong>
-              <p data-example-summary data-i18n={`playground.examples.${initialExample.id}.summary`}>
-                {getPlaygroundExampleCopy(initialExample.id)?.summary}
-              </p>
-            </aside>
-            <div class="pg-example-list">
-              {playgroundSelectGroups.map((group) => (
-                <section class="pg-example-group">
-                  <h2 data-i18n={`playground.exampleGroups.${group.id}`}>{group.label}</h2>
-                  <div class="pg-example-buttons">
-                    {group.items.map((ex) => (
-                      <button class="pg-example-item" type="button" data-example-button data-example-id={ex.id} data-i18n-aria-label="playground.loadExample" aria-label={t.playground.loadExample.replace("{name}", getPlaygroundExampleCopy(ex.id)?.title ?? ex.label)}>
-                        <span data-i18n={`playground.examples.${ex.id}.title`}>{getPlaygroundExampleCopy(ex.id)?.title ?? ex.label}</span>
-                      </button>
-                    ))}
-                  </div>
-                </section>
-              ))}
-            </div>
+    <div class="pg-stage">
+      <section class="pg-studio-frame" data-pg-studio aria-label={t.playground.title}>
+        <div class="pg-toolbar">
+          <h1 class="pg-toolbar-title" data-i18n="playground.title">{t.playground.title}</h1>
+          <div class="pg-toolbar-actions">
+            <details class="pg-example-menu" data-example-menu>
+              <summary class="pg-action-btn pg-example-menu-trigger" data-i18n-aria-label="playground.examplesDrawer" aria-label={t.playground.examplesDrawer}>
+                <BookOpen aria-hidden="true" />
+                <span data-i18n="playground.examplesDrawer">{t.playground.examplesDrawer}</span>
+                <ChevronDown class="pg-example-menu-chevron" aria-hidden="true" />
+              </summary>
+              <div class="pg-example-menu-panel">
+                <aside class="pg-example-lesson" data-example-lesson aria-live="polite">
+                  <span data-i18n="playground.lessonLabel">{t.playground.lessonLabel}</span>
+                  <strong data-example-title data-i18n={`playground.examples.${initialExample.id}.title`}>
+                    {getPlaygroundExampleCopy(initialExample.id)?.title ?? initialExample.label}
+                  </strong>
+                  <p data-example-summary data-i18n={`playground.examples.${initialExample.id}.summary`}>
+                    {getPlaygroundExampleCopy(initialExample.id)?.summary}
+                  </p>
+                </aside>
+                <div class="pg-example-list">
+                  {playgroundSelectGroups.map((group) => (
+                    <section class="pg-example-group">
+                      <h2 data-i18n={`playground.exampleGroups.${group.id}`}>{group.label}</h2>
+                      <div class="pg-example-buttons">
+                        {group.items.map((ex) => (
+                          <button class="pg-example-item" type="button" data-example-button data-example-id={ex.id} data-i18n-aria-label="playground.loadExample" aria-label={t.playground.loadExample.replace("{name}", getPlaygroundExampleCopy(ex.id)?.title ?? ex.label)}>
+                            <span data-i18n={`playground.examples.${ex.id}.title`}>{getPlaygroundExampleCopy(ex.id)?.title ?? ex.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </section>
+                  ))}
+                </div>
+              </div>
+            </details>
+            <button class="pg-action-btn pg-compile-btn" type="button" data-compile data-i18n-aria-label="playground.compileAria" aria-label={t.playground.compileAria}>
+              <Play class="pg-compile-icon" aria-hidden="true" />
+              <span class="pg-compile-label" data-compile-label data-i18n="playground.compile">{t.playground.compile}</span>
+            </button>
+            <button class="pg-action-btn pg-focus-toggle" type="button" data-focus-toggle aria-pressed="false" aria-label={t.playground.focusMode} title={t.playground.focusMode}>
+              <span class="pg-focus-icon pg-focus-icon-enter" aria-hidden="true" set:html={arrowsOutSimpleIcon}></span>
+              <span class="pg-focus-icon pg-focus-icon-exit" aria-hidden="true" set:html={arrowsInSimpleIcon}></span>
+              <span class="pg-focus-label" data-focus-label>{t.playground.focusMode}</span>
+            </button>
           </div>
-        </details>
-        <button class="pg-action-btn pg-compile-btn" type="button" data-compile data-i18n-aria-label="playground.compileAria" aria-label={t.playground.compileAria}>
-          <Play class="pg-compile-icon" aria-hidden="true" />
-          <span class="pg-compile-label" data-compile-label data-i18n="playground.compile">{t.playground.compile}</span>
-        </button>
-      </div>
-    </div>
+        </div>
 
-    <nav class="pg-mobile-switch" aria-label={t.playground.mobileSwitchAria}>
-      <button class="active" type="button" data-mobile-view-btn="source" aria-pressed="true" data-i18n="playground.source">{t.playground.source}</button>
-      <button type="button" data-mobile-view-btn="output" aria-pressed="false" data-i18n="playground.output">{t.playground.output}</button>
-      <button type="button" data-mobile-view-btn="rail" aria-pressed="false" data-i18n="playground.provenance">{t.playground.provenance}</button>
-    </nav>
+        <nav class="pg-mobile-switch" aria-label={t.playground.mobileSwitchAria}>
+          <button class="active" type="button" data-mobile-view-btn="source" aria-pressed="true" data-i18n="playground.source">{t.playground.source}</button>
+          <button type="button" data-mobile-view-btn="output" aria-pressed="false" data-i18n="playground.output">{t.playground.output}</button>
+          <button type="button" data-mobile-view-btn="rail" aria-pressed="false" data-i18n="playground.provenance">{t.playground.provenance}</button>
+        </nav>
 
-    <main class="pg-main" data-pg-main data-mobile-view="source">
+        <main class="pg-main" data-pg-main data-mobile-view="source">
       <!-- Left: source editor -->
       <section class="pg-col pg-source" id="playground-editor" aria-label={t.playground.source} data-i18n-aria-label="playground.source" tabindex="-1">
         <div class="pg-col-head pg-source-head">
@@ -271,12 +290,14 @@ if (ungroupedPlaygroundExamples.length > 0) {
           </div>
         </div>
       </aside>
-    </main>
+        </main>
 
-    <footer class="pg-statusbar">
-      <span class="pg-status" data-status role="status" aria-live="polite">{t.playground.loading}</span>
-      <span class="pg-version" data-version></span>
-    </footer>
+        <footer class="pg-statusbar">
+          <span class="pg-status" data-status role="status" aria-live="polite">{t.playground.loading}</span>
+          <span class="pg-version" data-version></span>
+        </footer>
+      </section>
+    </div>
 
     <script is:inline type="application/json" data-example-sources set:html={JSON.stringify(exampleFullSources)} />
     <script is:inline type="application/json" data-example-meta set:html={JSON.stringify(playgroundExampleMeta)} />
@@ -292,6 +313,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
     <script>
       import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
       import { renderSource } from "../lib/highlight";
+      import { createPlaygroundFocusController } from "../lib/playground-focus.mjs";
 
       (window as any).__cellscriptInitPlayground = () => {
       type CompileDiagnosticPosition = {
@@ -425,6 +447,8 @@ if (ungroupedPlaygroundExamples.length > 0) {
       const mobileViewBtns = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-mobile-view-btn]"));
       const compileBtn = document.querySelector<HTMLButtonElement>("[data-compile]");
       const compileLabel = document.querySelector<HTMLElement>("[data-compile-label]");
+      const focusToggle = document.querySelector<HTMLButtonElement>("[data-focus-toggle]");
+      const focusLabel = document.querySelector<HTMLElement>("[data-focus-label]");
       const railBody = document.querySelector<HTMLElement>("[data-rail-body]");
       const railLoading = railBody?.querySelector<HTMLElement>('[data-rail-view="loading"]');
       const railReady = railBody?.querySelector<HTMLElement>('[data-rail-view="ready"]');
@@ -456,6 +480,30 @@ if (ungroupedPlaygroundExamples.length > 0) {
       let currentDiagnostics: CompileDiagnostic[] = [];
       let highlightFrame: number | undefined;
       let repositionFloatingTools = () => {};
+      const focusController = focusToggle
+        ? createPlaygroundFocusController({
+            root: document.documentElement,
+            toggle: focusToggle,
+            label: focusLabel,
+            storage: window.localStorage,
+            signal,
+            getCopy: (active: boolean) => pg(active ? "exitFocusMode" : "focusMode"),
+            transition: (commit: () => void) => {
+              const transitionDocument = document as Document & {
+                startViewTransition?: (update: () => void) => unknown;
+              };
+              if (
+                !window.matchMedia("(prefers-reduced-motion: reduce)").matches &&
+                typeof transitionDocument.startViewTransition === "function"
+              ) {
+                transitionDocument.startViewTransition(commit);
+              } else {
+                commit();
+              }
+            },
+            onChange: () => window.requestAnimationFrame(() => repositionFloatingTools()),
+          })
+        : null;
       const columnResizers = Array.from(document.querySelectorAll<HTMLElement>("[data-column-resizer]"));
       const panelColumnStorageKey = "cellscript-playground-columns";
       const columnMinimums = { source: 420, output: 250, rail: 210 };
@@ -2334,6 +2382,7 @@ source_roots = ["src"]
         });
         const pageTitle = pg("pageTitle");
         if (pageTitle) document.title = pageTitle;
+        focusController?.syncCopy();
         renderFileTree();
         updateWorkspaceChrome();
         updateExampleLesson(currentExampleId);

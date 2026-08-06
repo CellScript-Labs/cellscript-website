@@ -305,6 +305,10 @@ expectContains("playground bundle", jsText, expectedCompilerAssetVersion);
 expectContains("playground bundle", jsText, 'cellscript_version = "0.22.0"');
 expectNotContains("playground bundle", jsText, 'cellscript_version = "0.20.0-rc.1"');
 expectContains("playground worker", playgroundWorker, `const COMPILER_ASSET_VERSION = "${expectedCompilerAssetVersion}"`);
+expectContains("playground", playgroundHtml, "data-pg-studio");
+expectContains("playground", playgroundHtml, "data-focus-toggle");
+expectContains("playground", playgroundHtml, "cellscript-playground-focus-mode");
+expectContains("playground focus bundle", jsText, "cellscript-playground-focus-mode");
 
 if (existsSync(distWasm)) {
   const wasmSha256 = createHash("sha256").update(readFileSync(distWasm)).digest("hex");
