@@ -26,6 +26,9 @@ for (const [value, label] of [
 
 requireText(nginx, "server_tokens off", "server-token suppression");
 requireText(nginx, "absolute_redirect off", "proxy-safe relative directory redirects");
+requireText(nginx, "gzip_types application/wasm", "WASM response compression");
+requireText(nginx, "location ~* \\.wasm$", "dedicated WASM asset policy");
+requireText(nginx, "public, max-age=31536000, immutable", "versioned WASM immutable caching");
 for (const header of [
   "Permissions-Policy",
   "Referrer-Policy",
@@ -35,8 +38,8 @@ for (const header of [
   "X-Permitted-Cross-Domain-Policies",
 ]) {
   const occurrences = nginx.split(`add_header ${header} `).length - 1;
-  if (occurrences < 2) {
-    throw new Error(`production nginx must preserve ${header} on HTML and static assets`);
+  if (occurrences < 3) {
+    throw new Error(`production nginx must preserve ${header} on HTML, WASM, and static assets`);
   }
 }
 

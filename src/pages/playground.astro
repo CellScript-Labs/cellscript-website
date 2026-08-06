@@ -340,14 +340,6 @@ if (ungroupedPlaygroundExamples.length > 0) {
     <script is:inline type="application/json" data-example-sources set:html={JSON.stringify(exampleFullSources)} />
     <script is:inline type="application/json" data-example-meta set:html={JSON.stringify(playgroundExampleMeta)} />
 
-    <!-- Full i18n message table, embedded so the language toggle can
-         swap every playground string at runtime without a reload. The
-         SiteHeader's language toggle reads window.__CELLSCRIPT_I18N__. -->
-    <script is:inline define:vars={{ i18n: translations }}>
-      window.__CELLSCRIPT_I18N__ = i18n;
-      window.__CELLSCRIPT_DEFAULT_LOCALE__ = "en";
-    </script>
-
     <script>
       import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
       import { renderSource } from "../lib/highlight";
@@ -2071,8 +2063,36 @@ source_roots = ["src"]
         });
       };
 
+      const showWorkerFailure = (failure: { code?: string; message?: string }) => {
+        workerReady = false;
+        compileWorker?.terminate();
+        compileWorker = null;
+        const cause = failure.code === "compiler_load_timeout"
+          ? pg("compilerLoadTimedOut")
+          : failure.message || "worker error";
+        const message = fmt(pg("loadFailed"), { error: cause });
+        if (status) status.textContent = message;
+        if (loading && !lastSuccessfulData) {
+          loading.hidden = false;
+          loading.innerHTML = `<div class="pg-worker-failure"><span class="pg-error-inline">${escapeHtml(message)}</span><button type="button" data-worker-retry-inline>${escapeHtml(pg("retryCompiler"))}</button></div>`;
+        } else if (loading) {
+          loading.hidden = true;
+        }
+        if (railLoading) railLoading.hidden = false;
+        if (railLoadingLabel) railLoadingLabel.textContent = message;
+        if (workerRetry) workerRetry.hidden = false;
+        if (lastSuccessfulData) setOutputsStale(pg("workerStaleOutput"), true);
+        else if (railReady) railReady.hidden = true;
+        renderErrors([{ message, severity: "error" }]);
+        setCompileState("error");
+      };
+
       const handleWorkerMessage = (event: MessageEvent) => {
-        const { id, type, payload, elapsed, version } = event.data || {};
+        const { id, type, payload, elapsed, version, code, message } = event.data || {};
+        if (type === "compiler-error") {
+          showWorkerFailure({ code, message });
+          return;
+        }
         if (type === "language-result" && typeof id === "number") {
           const intent = languageIntents.get(id);
           languageIntents.delete(id);
@@ -2098,22 +2118,7 @@ source_roots = ["src"]
       };
 
       const handleWorkerError = (event: ErrorEvent) => {
-        workerReady = false;
-        const message = fmt(pg("loadFailed"), { error: event.message || "worker error" });
-        if (status) status.textContent = message;
-        if (loading && !lastSuccessfulData) {
-          loading.hidden = false;
-          loading.innerHTML = `<div class="pg-worker-failure"><span class="pg-error-inline">${escapeHtml(message)}</span><button type="button" data-worker-retry-inline>${escapeHtml(pg("retryCompiler"))}</button></div>`;
-        } else if (loading) {
-          loading.hidden = true;
-        }
-        if (railLoading) railLoading.hidden = false;
-        if (railLoadingLabel) railLoadingLabel.textContent = message;
-        if (workerRetry) workerRetry.hidden = false;
-        if (lastSuccessfulData) setOutputsStale(pg("workerStaleOutput"), true);
-        else if (railReady) railReady.hidden = true;
-        renderErrors([{ message, severity: "error" }]);
-        setCompileState("error");
+        showWorkerFailure({ message: event.message || "worker error" });
       };
 
       const createCompileWorker = () => {

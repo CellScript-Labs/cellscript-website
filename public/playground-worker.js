@@ -2,14 +2,40 @@ let wasmModulePromise;
 let wasmModule;
 const COMPILER_ASSET_VERSION = "20260731-v0.22.0-9bb2d765";
 const CELLSCRIPT_EDITION = "2026";
+const COMPILER_LOAD_TIMEOUT_MS = 12_000;
 
 const loadCompiler = async () => {
   if (!wasmModulePromise) {
-    wasmModulePromise = import(`/wasm/cellscript_wasm.js?v=${COMPILER_ASSET_VERSION}`).then(async (mod) => {
-      await mod.default({ module_or_path: `/wasm/cellscript_wasm_bg.wasm?v=${COMPILER_ASSET_VERSION}` });
-      wasmModule = mod;
-      return mod;
-    });
+    wasmModulePromise = (async () => {
+      const controller = new AbortController();
+      let timedOut = false;
+      const timeout = setTimeout(() => {
+        timedOut = true;
+        controller.abort();
+      }, COMPILER_LOAD_TIMEOUT_MS);
+
+      try {
+        const mod = await import(`/wasm/cellscript_wasm.js?v=${COMPILER_ASSET_VERSION}`);
+        const response = await fetch(`/wasm/cellscript_wasm_bg.wasm?v=${COMPILER_ASSET_VERSION}`, {
+          cache: "force-cache",
+          signal: controller.signal,
+        });
+        if (!response.ok) throw new Error(`compiler download failed with HTTP ${response.status}`);
+        await mod.default({ module_or_path: response });
+        wasmModule = mod;
+        return mod;
+      } catch (error) {
+        wasmModulePromise = undefined;
+        if (timedOut) {
+          const timeoutError = new Error("compiler download timed out");
+          timeoutError.code = "compiler_load_timeout";
+          throw timeoutError;
+        }
+        throw error;
+      } finally {
+        clearTimeout(timeout);
+      }
+    })();
   }
   return wasmModulePromise;
 };
@@ -61,6 +87,15 @@ self.addEventListener("message", async (event) => {
       payload,
     });
   } catch (error) {
+    if (!wasmModule) {
+      self.postMessage({
+        id,
+        type: "compiler-error",
+        code: error?.code || "compiler_load_failed",
+        message: error instanceof Error ? error.message : String(error),
+      });
+      return;
+    }
     self.postMessage({
       id,
       type: "result",

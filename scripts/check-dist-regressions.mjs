@@ -1,6 +1,7 @@
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { basename, resolve } from "node:path";
 import { createHash } from "node:crypto";
+import { gzipSync } from "node:zlib";
 
 const failures = [];
 
@@ -316,7 +317,20 @@ expectContains("playground", playgroundHtml, "data-guide");
 expectContains("playground session bundle", jsText, "cellscript-playground-session-v1");
 expectContains("playground guide bundle", jsText, "cellscript-playground-guide-v1");
 expectContains("playground worker recovery bundle", jsText, "retryCompiler");
+expectContains("playground worker", playgroundWorker, "COMPILER_LOAD_TIMEOUT_MS = 12_000");
+expectContains("playground worker", playgroundWorker, 'type: "compiler-error"');
+expectContains("playground worker", playgroundWorker, 'cache: "force-cache"');
+expectContains("playground worker recovery bundle", jsText, "compiler_load_timeout");
 expectNotContains("playground", playgroundHtml.toLowerCase(), "command palette");
+
+const playgroundI18nAssignments = countContains(playgroundHtml, "window.__CELLSCRIPT_I18N__ =");
+if (playgroundI18nAssignments !== 1) {
+  fail(`playground: expected one i18n payload, found ${playgroundI18nAssignments}`);
+}
+const playgroundHtmlGzipBytes = gzipSync(playgroundHtml).byteLength;
+if (playgroundHtmlGzipBytes > 70_000) {
+  fail(`playground: compressed HTML ${playgroundHtmlGzipBytes} bytes exceeds the 70000-byte startup budget`);
+}
 
 if (existsSync(distWasm)) {
   const wasmSha256 = createHash("sha256").update(readFileSync(distWasm)).digest("hex");
