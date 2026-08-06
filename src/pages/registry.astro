@@ -69,8 +69,15 @@ const fallbackStatus = (status: string) =>
       <button class="registry-service-retry" type="button" data-registry-retry hidden data-i18n="registry.browse.retry">{t.registry.browse.retry}</button>
     </div>
 
-    <div class="registry-browse-skeleton" data-registry-skeleton aria-hidden="true">
-      <span></span><span></span><span></span>
+    <div class="registry-browse-skeleton" data-registry-skeleton aria-hidden="true" hidden>
+      <div class="registry-skeleton-row">
+        <span class="registry-skeleton-mark"></span>
+        <span class="registry-skeleton-copy"><i></i><i></i><i></i></span>
+      </div>
+      <div class="registry-skeleton-row">
+        <span class="registry-skeleton-mark"></span>
+        <span class="registry-skeleton-copy"><i></i><i></i><i></i></span>
+      </div>
     </div>
 
     <div class="registry-package-list" data-registry-list hidden>
@@ -81,7 +88,8 @@ const fallbackStatus = (status: string) =>
           data-registry-row
           data-registry-search={`${pkg.coordinate} ${pkg.description || ""} ${pkg.latest_release || ""} ${pkg.artifact.kind} ${pkg.verification_status} ${pkg.deployment_status} ${pkg.keywords.join(" ")} ${pkg.categories.join(" ")}`.toLowerCase()}
         >
-          <div>
+          <span class="registry-artifact-mark" data-kind={pkg.artifact.kind} aria-hidden="true"><i></i></span>
+          <div class="registry-row-copy">
             <strong>{pkg.coordinate}</strong>
             <p>{pkg.description || t.registry.browse.noDescription}</p>
             <div class="registry-badges">
@@ -153,6 +161,12 @@ const fallbackStatus = (status: string) =>
       let searchTimer = 0;
       let query = params.get("q")?.trim() || "";
       let kind = params.get("kind")?.trim() || "";
+      let requestGeneration = 0;
+      const SKELETON_DELAY_MS = 250;
+      const SLOW_NOTICE_MS = 3000;
+      const PRIMARY_DEADLINE_MS = 5400;
+      const RETRY_DELAY_MS = 220;
+      const RETRY_DEADLINE_MS = 1900;
       const cache = window.__cellscriptRegistryBrowseCache ??= new Map();
       const cacheKey = () => `${apiOrigin}|${query}|${kind}`;
       if (queryInput) queryInput.value = query;
@@ -197,11 +211,23 @@ const fallbackStatus = (status: string) =>
       const setServiceState = (next) => {
         source = next;
         app.dataset.source = next;
-        if (service) service.hidden = next !== "mirror";
-        if (retry) retry.hidden = next !== "mirror";
+        const serviceKeys = {
+          mirror: "registry.browse.mirrorStatus",
+          slow: "registry.browse.slowStatus",
+          retrying: "registry.browse.retryingStatus",
+          error: "registry.browse.errorStatus",
+          stale: "registry.browse.staleStatus",
+        };
+        const serviceKey = serviceKeys[next];
+        if (service) {
+          service.hidden = !serviceKey;
+          service.dataset.mode = next;
+        }
+        if (retry) retry.hidden = !["mirror", "slow", "error", "stale"].includes(next);
         if (serviceCopy) {
-          serviceCopy.textContent = message("registry.browse.mirrorStatus") || "";
-          serviceCopy.dataset.i18n = "registry.browse.mirrorStatus";
+          serviceCopy.textContent = serviceKey ? message(serviceKey) || "" : "";
+          if (serviceKey) serviceCopy.dataset.i18n = serviceKey;
+          else delete serviceCopy.dataset.i18n;
         }
       };
       const setViewState = (next) => {
@@ -214,7 +240,13 @@ const fallbackStatus = (status: string) =>
           const row = document.createElement("a");
           row.className = "registry-package-row";
           row.href = detailHref(pkg);
+          const mark = document.createElement("span");
+          mark.className = "registry-artifact-mark";
+          mark.dataset.kind = pkg.artifact?.kind || "artifact";
+          mark.setAttribute("aria-hidden", "true");
+          mark.append(document.createElement("i"));
           const body = document.createElement("div");
+          body.className = "registry-row-copy";
           const title = document.createElement("strong");
           title.textContent = pkg.coordinate;
           const description = document.createElement("p");
@@ -246,7 +278,7 @@ const fallbackStatus = (status: string) =>
           arrow.className = "registry-row-arrow";
           arrow.setAttribute("aria-hidden", "true");
           arrow.textContent = "→";
-          row.append(body, arrow);
+          row.append(mark, body, arrow);
           list.append(row);
         }
         const visible = packages.length;
@@ -280,9 +312,31 @@ const fallbackStatus = (status: string) =>
         setServiceState("mirror");
         renderRows();
       };
+      const showTerminalFailure = ({ background = false } = {}) => {
+        skeleton.hidden = true;
+        app.setAttribute("aria-busy", "false");
+        if (background && packages.length) {
+          setServiceState("stale");
+          setViewState("ready");
+          list.hidden = false;
+          return;
+        }
+        if (fallbackPackages.length) {
+          localMirror();
+          return;
+        }
+        packages = [];
+        nextOffset = null;
+        if (count) count.textContent = "";
+        if (list) list.hidden = true;
+        if (empty) empty.hidden = true;
+        if (more) more.hidden = true;
+        setServiceState("error");
+        setViewState("error");
+      };
       const load = async ({ append = false, background = false } = {}) => {
         request?.abort();
-        request = new AbortController();
+        const generation = ++requestGeneration;
         const requestedQuery = query;
         const requestedKind = kind;
         const requestedCacheKey = cacheKey();
@@ -290,7 +344,7 @@ const fallbackStatus = (status: string) =>
         if (!append && !background) {
           app.setAttribute("aria-busy", "true");
           setViewState("loading");
-          skeleton.hidden = false;
+          skeleton.hidden = true;
           list.hidden = true;
           empty.hidden = true;
           setServiceState("loading");
@@ -301,12 +355,49 @@ const fallbackStatus = (status: string) =>
         const search = new URLSearchParams({ limit: "50", offset: String(offset) });
         if (requestedQuery) search.set("q", requestedQuery);
         if (requestedKind) search.set("kind", requestedKind);
+        const skeletonTimer = !append && !background ? window.setTimeout(() => {
+          if (generation !== requestGeneration) return;
+          skeleton.hidden = false;
+        }, SKELETON_DELAY_MS) : 0;
+        const slowTimer = !append && !background ? window.setTimeout(() => {
+          if (generation !== requestGeneration) return;
+          setServiceState("slow");
+        }, SLOW_NOTICE_MS) : 0;
+        const fetchAttempt = async (deadlineMs) => {
+          const controller = new AbortController();
+          request = controller;
+          let timedOut = false;
+          const deadline = window.setTimeout(() => {
+            timedOut = true;
+            controller.abort();
+          }, deadlineMs);
+          try {
+            const response = await fetch(`${apiOrigin}/v1/artifacts?${search}`, { headers: { accept: "application/json" }, signal: controller.signal });
+            if (!response.ok) throw new Error("unavailable");
+            return await response.json();
+          } catch (cause) {
+            if (cause?.name === "AbortError" && !timedOut) throw cause;
+            const error = new Error(timedOut ? "timeout" : "unavailable");
+            error.cause = cause;
+            throw error;
+          } finally {
+            window.clearTimeout(deadline);
+          }
+        };
         try {
-          const response = await fetch(`${apiOrigin}/v1/artifacts?${search}`, { headers: { accept: "application/json" }, signal: request.signal });
-          if (!response.ok) throw new Error("unavailable");
-          const payload = await response.json();
+          let payload;
+          try {
+            payload = await fetchAttempt(PRIMARY_DEADLINE_MS);
+          } catch (cause) {
+            if (cause?.name === "AbortError" || generation !== requestGeneration) throw cause;
+            if (navigator.onLine === false) throw cause;
+            setServiceState("retrying");
+            await new Promise((resolve) => window.setTimeout(resolve, RETRY_DELAY_MS + Math.floor(Math.random() * 90)));
+            if (generation !== requestGeneration) return;
+            payload = await fetchAttempt(RETRY_DEADLINE_MS);
+          }
           if (payload?.schema !== "cellscript-registry-artifact-index" || !Array.isArray(payload.artifacts)) throw new Error("unsupported_schema");
-          if (requestedQuery !== query || requestedKind !== kind) return;
+          if (generation !== requestGeneration || requestedQuery !== query || requestedKind !== kind) return;
           const incoming = payload.artifacts.map((pkg) => ({ ...pkg, source: "live" }));
           if (append) {
             const merged = new Map(packages.map((pkg) => [pkg.coordinate, pkg]));
@@ -325,8 +416,10 @@ const fallbackStatus = (status: string) =>
           });
         } catch (cause) {
           if (cause?.name === "AbortError") return;
-          if (!background) localMirror();
+          if (generation === requestGeneration) showTerminalFailure({ background: background || append });
         } finally {
+          window.clearTimeout(skeletonTimer);
+          window.clearTimeout(slowTimer);
           if (more) {
             more.disabled = false;
             more.textContent = message("registry.browse.loadMore");
@@ -347,7 +440,7 @@ const fallbackStatus = (status: string) =>
         source === "mirror" ? localMirror() : load();
       }, { signal });
       more?.addEventListener("click", () => load({ append: true }), { signal });
-      retry?.addEventListener("click", () => load(), { signal });
+      retry?.addEventListener("click", () => load({ background: packages.length > 0 }), { signal });
       clearFilters?.addEventListener("click", () => {
         query = "";
         kind = "";
@@ -359,6 +452,12 @@ const fallbackStatus = (status: string) =>
       window.addEventListener("cellscript:locale-change", () => {
         setServiceState(source);
         renderRows();
+      }, { signal });
+      window.addEventListener("online", () => {
+        if (["mirror", "error", "stale"].includes(source)) load({ background: packages.length > 0 });
+      }, { signal });
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "visible" && source === "stale") load({ background: true });
       }, { signal });
       signal.addEventListener("abort", () => request?.abort(), { once: true });
       const cached = cache.get(cacheKey());

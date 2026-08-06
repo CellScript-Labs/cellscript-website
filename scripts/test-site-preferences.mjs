@@ -28,6 +28,8 @@ class FakeElement {
     this.lang = "";
     this.selectors = new Set(selectors);
     this.textContent = "";
+    this.hidden = false;
+    this.focused = false;
   }
 
   closest(selector) {
@@ -36,6 +38,32 @@ class FakeElement {
 
   setAttribute(name, value) {
     this.attributes.set(name, String(value));
+  }
+
+  removeAttribute(name) {
+    this.attributes.delete(name);
+    if (name.startsWith("data-")) {
+      const key = name.slice(5).replace(/-([a-z])/g, (_, letter) => letter.toUpperCase());
+      delete this.dataset[key];
+    }
+  }
+
+  toggleAttribute(name, force) {
+    if (force) this.attributes.set(name, "");
+    else this.attributes.delete(name);
+  }
+
+  querySelector() {
+    return null;
+  }
+
+  querySelectorAll() {
+    return [];
+  }
+
+  focus() {
+    this.focused = true;
+    document.activeElement = this;
   }
 }
 
@@ -75,10 +103,30 @@ documentRoot.dataset.theme = "light";
 documentRoot.dataset.locale = "en";
 documentRoot.lang = "en";
 const themeButton = new FakeElement(["[data-theme-toggle]"]);
+const menuButton = new FakeElement(["[data-menu-toggle]"]);
+menuButton.setAttribute("aria-expanded", "false");
+const drawerLink = new FakeElement(["[data-nav-drawer] a"]);
+const drawerClose = new FakeElement(["[data-menu-close]"]);
+const drawer = new FakeElement();
+drawer.querySelector = () => drawerLink;
+drawer.querySelectorAll = () => [drawerLink, drawerClose];
+const backdrop = new FakeElement(["[data-nav-drawer-backdrop]"]);
+backdrop.hidden = true;
+const header = new FakeElement();
+const body = new FakeElement();
 
 const document = {
+  body,
+  activeElement: null,
   get documentElement() {
     return documentRoot;
+  },
+  querySelector(selector) {
+    if (selector === "[data-nav-drawer-backdrop]") return backdrop;
+    if (selector === "[data-nav-drawer]") return drawer;
+    if (selector === "[data-menu-toggle]") return menuButton;
+    if (selector === ".site-header") return header;
+    return null;
   },
   querySelectorAll(selector) {
     if (selector === "[data-theme-toggle]") return [themeButton];
@@ -90,15 +138,27 @@ const document = {
 };
 
 const window = {
+  scrollY: 0,
   addEventListener(type, listener) {
     addListener(windowListeners, type, listener);
   },
   dispatchEvent() {},
+  matchMedia() {
+    return { matches: false, addEventListener() {} };
+  },
+  requestAnimationFrame(callback) {
+    callback();
+  },
+  setTimeout(callback) {
+    callback();
+    return 1;
+  },
 };
 
 vm.runInNewContext(pageScripts[0], {
   CustomEvent: FakeCustomEvent,
   Element: FakeElement,
+  HTMLElement: FakeElement,
   document,
   localStorage,
   window,
@@ -108,6 +168,18 @@ assert(window.__cellscriptTopbarDelegationBound === true, "site preference contr
 assert((listeners.get("click") || []).length === 1, "theme click delegation was not registered exactly once");
 assert((listeners.get("astro:before-swap") || []).length === 1, "Astro swap preservation was not registered");
 assert((listeners.get("astro:page-load") || []).length === 1, "Astro page-load synchronisation was not registered");
+assert((listeners.get("keydown") || []).length === 1, "drawer keyboard handling was not registered exactly once");
+
+dispatch(listeners, "click", { target: menuButton, preventDefault() {} });
+assert(backdrop.hidden === false, "navigation drawer did not open");
+assert(menuButton.attributes.get("aria-expanded") === "true", "navigation toggle did not expose its open state");
+assert(body.dataset.menuOpen === "true", "open navigation drawer did not lock page scrolling");
+assert(drawerLink.focused, "navigation drawer did not move focus to its first action");
+
+dispatch(listeners, "keydown", { key: "Escape", preventDefault() {} });
+assert(backdrop.hidden === true, "Escape did not close the navigation drawer");
+assert(menuButton.attributes.get("aria-expanded") === "false", "navigation toggle did not expose its closed state");
+assert(menuButton.focused, "closing the navigation drawer did not restore focus");
 
 let prevented = false;
 dispatch(listeners, "click", {

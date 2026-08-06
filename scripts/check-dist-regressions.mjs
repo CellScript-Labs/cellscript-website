@@ -45,6 +45,7 @@ const registrySubmitSource = resolve(root, "src", "pages", "registry", "submit.a
 const registryBrowseSource = resolve(root, "src", "pages", "registry.astro");
 const registryLayoutSource = resolve(root, "src", "layouts", "RegistryLayout.astro");
 const registryPackageDetailSource = resolve(root, "src", "components", "RegistryPackageDetail.astro");
+const siteHeaderSource = resolve(root, "src", "components", "SiteHeader.astro");
 const wikiRoot = resolve(root, "..", "docs", "wiki");
 const expectedReleaseTag = "v0.22.0";
 const expectedCompilerAssetVersion = "20260731-v0.22.0-9bb2d765";
@@ -65,6 +66,7 @@ expectFile(registrySubmitSource);
 expectFile(registryBrowseSource);
 expectFile(registryLayoutSource);
 expectFile(registryPackageDetailSource);
+expectFile(siteHeaderSource);
 
 const indexHtml = existsSync(distIndex) ? read(distIndex) : "";
 const notFoundHtml = existsSync(dist404) ? read(dist404) : "";
@@ -80,6 +82,7 @@ const registrySubmitSourceText = existsSync(registrySubmitSource) ? read(registr
 const registryBrowseSourceText = existsSync(registryBrowseSource) ? read(registryBrowseSource) : "";
 const registryLayoutSourceText = existsSync(registryLayoutSource) ? read(registryLayoutSource) : "";
 const registryPackageDetailSourceText = existsSync(registryPackageDetailSource) ? read(registryPackageDetailSource) : "";
+const siteHeaderSourceText = existsSync(siteHeaderSource) ? read(siteHeaderSource) : "";
 
 const cssDir = resolve(dist, "_astro");
 const cssText = existsSync(cssDir)
@@ -197,11 +200,17 @@ expectContains("registry submit", registrySubmitHtml, "data-workflow-guide");
 expectContains("registry", registryHtml, "/v1/artifacts");
 expectNotContains("registry", registryHtml, "/v1/packages");
 expectContains("registry", registryHtml, 'data-state="loading" data-source="loading"');
+expectContains("registry", registryHtml, 'data-registry-skeleton aria-hidden="true" hidden');
 expectContains("registry", registryHtml, 'data-registry-empty role="status" aria-live="polite" aria-atomic="true"');
 expectContains("registry", registryHtml, "data-registry-empty-submit");
 expectContains("registry", registryHtml, "data-registry-clear");
 expectContains("registry", registryHtml, "const setViewState");
 expectContains("registry source", registryBrowseSourceText, "__cellscriptRegistryBrowseCache");
+expectContains("registry source", registryBrowseSourceText, "const SKELETON_DELAY_MS = 250");
+expectContains("registry source", registryBrowseSourceText, "const PRIMARY_DEADLINE_MS = 5400");
+expectContains("registry source", registryBrowseSourceText, "const RETRY_DEADLINE_MS = 1900");
+expectContains("registry source", registryBrowseSourceText, "requestGeneration");
+expectContains("registry source", registryBrowseSourceText, "showTerminalFailure");
 expectContains("registry layout", registryLayoutSourceText, 'document.addEventListener("astro:after-swap", syncRegistryTabs)');
 expectContains("registry package detail", registryPackageDetailSourceText, "const setupRegistryPackageDetail = () =>");
 expectContains("registry package detail", registryPackageDetailSourceText, 'document.addEventListener("astro:page-load", setupRegistryPackageDetail)');
@@ -210,6 +219,15 @@ expectContains("registry CSS", cssText, "::view-transition-new(registry-route)")
 expectContains("registry", registryHtml, '"no-results"');
 expectContains("registry", registryHtml, '"mirror-empty"');
 expectNotContains("registry", registryHtml, "Live production index");
+
+expectContains("site header", siteHeaderSourceText, "@phosphor-icons/core/regular");
+expectContains("site header", siteHeaderSourceText, "data-menu-toggle");
+expectContains("site header", siteHeaderSourceText, "data-nav-drawer");
+expectContains("site header", siteHeaderSourceText, 'role="dialog"');
+expectContains("site header", siteHeaderSourceText, "closeDrawer({ restoreFocus: true })");
+expectContains("site header", siteHeaderSourceText, "event.key === \"Escape\"");
+expectContains("site header", siteHeaderSourceText, "data-theme-current");
+expectNotContains("site header", siteHeaderSourceText, "theme-toggle-track");
 
 for (const wallet of [
   "Neuron",
@@ -282,7 +300,9 @@ for (const token of [
   ".value-card-copy",
   ".landing-example-copy",
   "@media(max-width:840px)",
-  ".theme-toggle,.language-toggle,.nav-link{width:44px;min-width:44px;padding:0}",
+  ".nav-drawer-backdrop",
+  ".nav-menu-toggle",
+  ".registry-skeleton-row",
   ".registry-wallet-dialog-head:has(.registry-wallet-back[hidden])",
   "@keyframes registry-empty-surface",
   "@keyframes registry-empty-blueprint",

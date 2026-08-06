@@ -2,7 +2,14 @@
 import { defaultLocale, translations } from "../i18n/translations";
 import { links } from "../data/site";
 import BrandMark from "./BrandMark.astro";
-import { BookOpen, Github, House, PackageCheck, SquareCode } from "lucide-astro";
+import bookOpenIcon from "@phosphor-icons/core/regular/book-open.svg?raw";
+import arrowSquareOutIcon from "@phosphor-icons/core/regular/arrow-square-out.svg?raw";
+import circleHalfIcon from "@phosphor-icons/core/regular/circle-half.svg?raw";
+import githubIcon from "@phosphor-icons/core/regular/github-logo.svg?raw";
+import listIcon from "@phosphor-icons/core/regular/list.svg?raw";
+import packageIcon from "@phosphor-icons/core/regular/package.svg?raw";
+import terminalIcon from "@phosphor-icons/core/regular/terminal-window.svg?raw";
+import xIcon from "@phosphor-icons/core/regular/x.svg?raw";
 
 interface Props {
   page?: "home" | "docs" | "playground" | "registry";
@@ -14,40 +21,99 @@ const t = translations[defaultLocale];
 
 <header class="site-header landing-header">
   <nav class="nav" aria-label={t.nav.primary}>
-    <a class="brand" href="/" aria-label={t.nav.home}>
+    <a class="brand" href="/" aria-label={t.nav.home} aria-current={page === "home" ? "page" : undefined}>
       <BrandMark />
       <span>CellScript</span>
     </a>
-    <div class="nav-links">
-      <a class:list={["nav-link", "nav-home", page === "home" && "active"]} href="/" aria-label={t.nav.overview} data-i18n-aria-label="nav.overview" aria-current={page === "home" ? "page" : undefined}>
-        <House aria-hidden="true" />
-        <span data-i18n="nav.overview">{t.nav.overview}</span>
-      </a>
+    <div class="nav-primary" aria-label={t.nav.primary}>
       <a class:list={["nav-link", page === "docs" && "active"]} href={links.docs} aria-label={t.nav.docs} data-i18n-aria-label="nav.docs" aria-current={page === "docs" ? "page" : undefined}>
-        <BookOpen aria-hidden="true" />
         <span data-i18n="nav.docs">{t.nav.docs}</span>
       </a>
       <a class:list={["nav-link", page === "playground" && "active"]} href="/playground" aria-label={t.nav.playground} data-i18n-aria-label="nav.playground" aria-current={page === "playground" ? "page" : undefined}>
-        <SquareCode aria-hidden="true" />
         <span data-i18n="nav.playground">{t.nav.playground}</span>
       </a>
       <a class:list={["nav-link", page === "registry" && "active"]} href="/registry" aria-label={t.nav.registryBrowse} data-i18n-aria-label="nav.registryBrowse" aria-current={page === "registry" ? "page" : undefined}>
-        <PackageCheck aria-hidden="true" />
         <span data-i18n="nav.registryBrowse">{t.nav.registryBrowse}</span>
       </a>
-      <a class="nav-link nav-source" href={links.source} target="_blank" rel="noopener noreferrer" aria-label={t.nav.source} data-i18n-aria-label="nav.source">
-        <Github aria-hidden="true" />
-        <span data-i18n="nav.source">{t.nav.source}</span>
+    </div>
+    <div class="nav-utilities">
+      <a class="nav-utility nav-source" href={links.source} target="_blank" rel="noopener noreferrer" aria-label={t.nav.source} data-i18n-aria-label="nav.source">
+        <span class="nav-icon" aria-hidden="true" set:html={githubIcon}></span>
       </a>
       <button class="language-toggle" type="button" data-language-toggle aria-label={t.language.aria}>
         <span data-language-label>{t.language.switchTo}</span>
         <span class="language-short" data-i18n="language.shortSwitch">{t.language.shortSwitch}</span>
       </button>
       <button class="theme-toggle" type="button" data-theme-toggle aria-label={t.theme.switchToDark} aria-pressed="false">
-        <span class="theme-toggle-track" aria-hidden="true"><span class="theme-toggle-thumb"></span></span>
+        <span class="nav-icon" aria-hidden="true" set:html={circleHalfIcon}></span>
+      </button>
+      <button
+        class="nav-menu-toggle"
+        type="button"
+        data-menu-toggle
+        aria-label={t.nav.openMenu}
+        data-i18n-aria-label="nav.openMenu"
+        aria-controls="site-navigation-drawer"
+        aria-expanded="false"
+      >
+        <span class="nav-menu-open-icon nav-icon" aria-hidden="true" set:html={listIcon}></span>
+        <span class="nav-menu-close-icon nav-icon" aria-hidden="true" set:html={xIcon}></span>
       </button>
     </div>
   </nav>
+
+  <div class="nav-drawer-backdrop" data-nav-drawer-backdrop hidden>
+    <section
+      class="nav-drawer"
+      id="site-navigation-drawer"
+      data-nav-drawer
+      role="dialog"
+      aria-modal="true"
+      aria-label={t.nav.primary}
+      tabindex="-1"
+    >
+      <div class="nav-drawer-head">
+        <span data-i18n="nav.navigate">{t.nav.navigate}</span>
+        <button class="nav-drawer-close" type="button" data-menu-close aria-label={t.nav.closeMenu} data-i18n-aria-label="nav.closeMenu">
+          <span class="nav-icon" aria-hidden="true" set:html={xIcon}></span>
+        </button>
+      </div>
+      <nav class="nav-drawer-links" aria-label={t.nav.primary}>
+        <a class:list={["nav-drawer-link", page === "home" && "active"]} href="/" aria-current={page === "home" ? "page" : undefined}>
+          <span class="nav-icon nav-drawer-brand-icon" aria-hidden="true"><BrandMark /></span>
+          <span data-i18n="nav.overview">{t.nav.overview}</span>
+        </a>
+        <a class:list={["nav-drawer-link", page === "docs" && "active"]} href={links.docs} aria-current={page === "docs" ? "page" : undefined}>
+          <span class="nav-icon" aria-hidden="true" set:html={bookOpenIcon}></span>
+          <span data-i18n="nav.docs">{t.nav.docs}</span>
+        </a>
+        <a class:list={["nav-drawer-link", page === "playground" && "active"]} href="/playground" aria-current={page === "playground" ? "page" : undefined}>
+          <span class="nav-icon" aria-hidden="true" set:html={terminalIcon}></span>
+          <span data-i18n="nav.playground">{t.nav.playground}</span>
+        </a>
+        <a class:list={["nav-drawer-link", page === "registry" && "active"]} href="/registry" aria-current={page === "registry" ? "page" : undefined}>
+          <span class="nav-icon" aria-hidden="true" set:html={packageIcon}></span>
+          <span data-i18n="nav.registryBrowse">{t.nav.registryBrowse}</span>
+        </a>
+        <a class="nav-drawer-link" href={links.source} target="_blank" rel="noopener noreferrer">
+          <span class="nav-icon" aria-hidden="true" set:html={githubIcon}></span>
+          <span data-i18n="nav.source">{t.nav.source}</span>
+          <span class="nav-external-mark nav-icon" aria-hidden="true" set:html={arrowSquareOutIcon}></span>
+        </a>
+      </nav>
+      <div class="nav-drawer-preferences">
+        <span class="nav-drawer-section-label" data-i18n="nav.preferences">{t.nav.preferences}</span>
+        <button type="button" data-language-toggle aria-label={t.language.aria}>
+          <span data-i18n="language.label">{t.language.label}</span>
+          <strong data-language-label>{t.language.switchTo}</strong>
+        </button>
+        <button type="button" data-theme-toggle aria-label={t.theme.switchToDark} aria-pressed="false">
+          <span data-i18n="theme.appearance">{t.theme.appearance}</span>
+          <strong data-theme-current>{t.theme.light}</strong>
+        </button>
+      </div>
+    </section>
+  </div>
 </header>
 
 <script is:inline define:vars={{ i18n: translations, initialLocale: defaultLocale }}>
@@ -82,6 +148,9 @@ const t = translations[defaultLocale];
       document.querySelectorAll("[data-theme-toggle]").forEach((button) => {
         button.setAttribute("aria-pressed", String(theme === "dark"));
         button.setAttribute("aria-label", getMessage(switchKey) || "");
+      });
+      document.querySelectorAll("[data-theme-current]").forEach((label) => {
+        label.textContent = getMessage(theme === "light" ? "theme.light" : "theme.dark") || "";
       });
     };
 
@@ -149,11 +218,72 @@ const t = translations[defaultLocale];
         document.documentElement.lang = storedLocale;
       }
       syncLocalizedStrings(readLocale());
+      syncHeaderScroll();
+    };
+
+    const drawerElements = () => ({
+      backdrop: document.querySelector("[data-nav-drawer-backdrop]"),
+      drawer: document.querySelector("[data-nav-drawer]"),
+      toggle: document.querySelector("[data-menu-toggle]"),
+    });
+
+    const closeDrawer = ({ restoreFocus = false, immediate = false } = {}) => {
+      const { backdrop, drawer, toggle } = drawerElements();
+      if (!backdrop || backdrop.hidden) return;
+      if (window.__cellscriptDrawerCloseTimer) window.clearTimeout(window.__cellscriptDrawerCloseTimer);
+      drawer?.removeAttribute("data-open");
+      backdrop.removeAttribute("data-open");
+      toggle?.setAttribute("aria-expanded", "false");
+      document.body.removeAttribute("data-menu-open");
+      const finish = () => {
+        backdrop.hidden = true;
+        if (restoreFocus && toggle instanceof HTMLElement) toggle.focus();
+      };
+      if (immediate || window.matchMedia?.("(prefers-reduced-motion: reduce)").matches) finish();
+      else window.__cellscriptDrawerCloseTimer = window.setTimeout(finish, 180);
+    };
+
+    const openDrawer = () => {
+      const { backdrop, drawer, toggle } = drawerElements();
+      if (!backdrop || !drawer || !toggle) return;
+      if (window.__cellscriptDrawerCloseTimer) window.clearTimeout(window.__cellscriptDrawerCloseTimer);
+      backdrop.hidden = false;
+      document.body.dataset.menuOpen = "true";
+      toggle.setAttribute("aria-expanded", "true");
+      window.requestAnimationFrame(() => {
+        backdrop.setAttribute("data-open", "true");
+        drawer.setAttribute("data-open", "true");
+        drawer.querySelector("a, button")?.focus();
+      });
+    };
+
+    const syncHeaderScroll = () => {
+      const header = document.querySelector(".site-header");
+      if (header) header.toggleAttribute("data-scrolled", window.scrollY > 12);
     };
 
     if (!window.__cellscriptTopbarDelegationBound) {
       document.addEventListener("click", (event) => {
         if (!(event.target instanceof Element)) return;
+        const menuButton = event.target.closest("[data-menu-toggle]");
+        if (menuButton) {
+          event.preventDefault();
+          const { backdrop } = drawerElements();
+          if (backdrop?.hidden) openDrawer();
+          else closeDrawer({ restoreFocus: true });
+          return;
+        }
+        if (event.target.closest("[data-menu-close]")) {
+          event.preventDefault();
+          closeDrawer({ restoreFocus: true });
+          return;
+        }
+        const backdrop = event.target.closest("[data-nav-drawer-backdrop]");
+        if (backdrop && event.target === backdrop) {
+          closeDrawer({ restoreFocus: true });
+          return;
+        }
+        if (event.target.closest("[data-nav-drawer] a")) closeDrawer({ immediate: true });
         const themeButton = event.target.closest("[data-theme-toggle]");
         if (themeButton) {
           event.preventDefault();
@@ -166,7 +296,30 @@ const t = translations[defaultLocale];
           setLocale(readLocale() === "en" ? "zh" : "en");
         }
       });
+      document.addEventListener("keydown", (event) => {
+        const { backdrop, drawer } = drawerElements();
+        if (!backdrop || backdrop.hidden || !drawer) return;
+        if (event.key === "Escape") {
+          event.preventDefault();
+          closeDrawer({ restoreFocus: true });
+          return;
+        }
+        if (event.key !== "Tab") return;
+        const focusable = [...drawer.querySelectorAll("a[href], button:not([disabled]), [tabindex]:not([tabindex='-1'])")]
+          .filter((element) => element instanceof HTMLElement && !element.hidden);
+        if (!focusable.length) return;
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      });
       document.addEventListener("astro:before-swap", (event) => {
+        closeDrawer({ immediate: true });
         const nextRoot = event.newDocument?.documentElement;
         if (!nextRoot) return;
         const theme = readTheme();
@@ -186,6 +339,10 @@ const t = translations[defaultLocale];
           document.documentElement.lang = locale;
         }
         syncLocalizedStrings(readLocale());
+      });
+      window.addEventListener("scroll", syncHeaderScroll, { passive: true });
+      window.matchMedia?.("(min-width: 841px)").addEventListener?.("change", (event) => {
+        if (event.matches) closeDrawer({ immediate: true });
       });
       window.__cellscriptTopbarDelegationBound = true;
     }
