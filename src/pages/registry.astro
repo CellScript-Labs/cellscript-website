@@ -1,5 +1,6 @@
 ---
 import RegistryLayout from "../layouts/RegistryLayout.astro";
+import RegistryFilterMenu from "../components/RegistryFilterMenu.astro";
 import { packageHref, registryDateLabel, registryPackageDetailView, registryPackages, toRegistryPackageView } from "../lib/registry";
 import { defaultLocale, translations } from "../i18n/translations";
 import { ArrowRight, Search } from "lucide-astro";
@@ -25,6 +26,24 @@ const pascalKey = (value: string) => value.split("_").map((part) => `${part[0]?.
 const guidanceTitle = (key: string) => packageTranslations[`guidance${pascalKey(key)}Title`] ?? key;
 const usageLabel = (state: string) => (t.registry.browse.usageStates as Record<string, string>)[state] ?? state.replaceAll("_", " ");
 const fallbackPayload = JSON.stringify(fallbackPackages).replaceAll("<", "\\u003c");
+const kindFilters = [
+  { value: "", label: t.registry.browse.allKinds, i18nKey: "registry.browse.allKinds" },
+  { value: "source_library", label: t.registry.browse.kindSourceLibrary, i18nKey: "registry.browse.kindSourceLibrary" },
+  { value: "profile_library", label: t.registry.browse.kindProfileLibrary, i18nKey: "registry.browse.kindProfileLibrary" },
+  { value: "runtime_verifier", label: t.registry.browse.kindRuntimeVerifier, i18nKey: "registry.browse.kindRuntimeVerifier" },
+  { value: "deployable_contract", label: t.registry.browse.kindDeployableContract, i18nKey: "registry.browse.kindDeployableContract" },
+  { value: "reproducible_binary", label: t.registry.browse.kindReproducibleBinary, i18nKey: "registry.browse.kindReproducibleBinary" },
+  { value: "template", label: t.registry.browse.kindTemplate, i18nKey: "registry.browse.kindTemplate" },
+];
+const intentFilters = [
+  { value: "", label: t.registry.browse.allIntents, i18nKey: "registry.browse.allIntents" },
+  { value: "ready", label: t.registry.browse.intentReady, i18nKey: "registry.browse.intentReady" },
+  { value: "chain_verified", label: t.registry.browse.intentChainVerified, i18nKey: "registry.browse.intentChainVerified" },
+  { value: "verified", label: t.registry.browse.intentVerified, i18nKey: "registry.browse.intentVerified" },
+  { value: "source_only", label: t.registry.browse.intentSourceOnly, i18nKey: "registry.browse.intentSourceOnly" },
+  { value: "needs_evidence", label: t.registry.browse.intentNeedsEvidence, i18nKey: "registry.browse.intentNeedsEvidence" },
+  { value: "deprecated", label: t.registry.browse.intentDeprecated, i18nKey: "registry.browse.intentDeprecated" },
+];
 ---
 
 <RegistryLayout
@@ -54,30 +73,8 @@ const fallbackPayload = JSON.stringify(fallbackPackages).replaceAll("<", "\\u003
         />
       </label>
       <div class="registry-browse-filter-row">
-        <label class="registry-browse-filter">
-          <span class="sr-only" data-i18n="registry.browse.filterKind">{t.registry.browse.filterKind}</span>
-          <select data-registry-kind aria-label={t.registry.browse.filterKind} data-i18n-aria-label="registry.browse.filterKind">
-            <option value="" data-i18n="registry.browse.allKinds">{t.registry.browse.allKinds}</option>
-            <option value="source_library" data-i18n="registry.browse.kindSourceLibrary">{t.registry.browse.kindSourceLibrary}</option>
-            <option value="profile_library" data-i18n="registry.browse.kindProfileLibrary">{t.registry.browse.kindProfileLibrary}</option>
-            <option value="runtime_verifier" data-i18n="registry.browse.kindRuntimeVerifier">{t.registry.browse.kindRuntimeVerifier}</option>
-            <option value="deployable_contract" data-i18n="registry.browse.kindDeployableContract">{t.registry.browse.kindDeployableContract}</option>
-            <option value="reproducible_binary" data-i18n="registry.browse.kindReproducibleBinary">{t.registry.browse.kindReproducibleBinary}</option>
-            <option value="template" data-i18n="registry.browse.kindTemplate">{t.registry.browse.kindTemplate}</option>
-          </select>
-        </label>
-        <label class="registry-browse-filter registry-browse-intent">
-          <span class="sr-only" data-i18n="registry.browse.filterIntent">{t.registry.browse.filterIntent}</span>
-          <select data-registry-intent aria-label={t.registry.browse.filterIntent} data-i18n-aria-label="registry.browse.filterIntent">
-            <option value="" data-i18n="registry.browse.allIntents">{t.registry.browse.allIntents}</option>
-            <option value="ready" data-i18n="registry.browse.intentReady">{t.registry.browse.intentReady}</option>
-            <option value="chain_verified" data-i18n="registry.browse.intentChainVerified">{t.registry.browse.intentChainVerified}</option>
-            <option value="verified" data-i18n="registry.browse.intentVerified">{t.registry.browse.intentVerified}</option>
-            <option value="source_only" data-i18n="registry.browse.intentSourceOnly">{t.registry.browse.intentSourceOnly}</option>
-            <option value="needs_evidence" data-i18n="registry.browse.intentNeedsEvidence">{t.registry.browse.intentNeedsEvidence}</option>
-            <option value="deprecated" data-i18n="registry.browse.intentDeprecated">{t.registry.browse.intentDeprecated}</option>
-          </select>
-        </label>
+        <RegistryFilterMenu name="kind" label={t.registry.browse.filterKind} labelKey="registry.browse.filterKind" options={kindFilters} />
+        <RegistryFilterMenu name="intent" label={t.registry.browse.filterIntent} labelKey="registry.browse.filterIntent" options={intentFilters} />
         <span class="registry-browse-count" data-registry-count aria-live="polite"></span>
       </div>
     </div>
@@ -192,6 +189,7 @@ const fallbackPayload = JSON.stringify(fallbackPackages).replaceAll("<", "\\u003
       const queryInput = app.querySelector<HTMLInputElement>("[data-registry-query]");
       const kindInput = app.querySelector<HTMLSelectElement>("[data-registry-kind]");
       const intentInput = app.querySelector<HTMLSelectElement>("[data-registry-intent]");
+      const filterRoots = Array.from(app.querySelectorAll<HTMLElement>("[data-registry-filter-root]"));
       const count = app.querySelector<HTMLElement>("[data-registry-count]");
       const empty = app.querySelector<HTMLElement>("[data-registry-empty]");
       const emptyTitle = app.querySelector<HTMLElement>("[data-registry-empty-title]");
@@ -222,9 +220,103 @@ const fallbackPayload = JSON.stringify(fallbackPackages).replaceAll("<", "\\u003
       const RETRY_DEADLINE_MS = 1900;
       const cache = ((window as any).__cellscriptRegistryBrowseCache ??= new Map()) as Map<string, { packages: BrowsePackage[]; nextOffset: number | null; updatedAt: number }>;
       const cacheKey = () => `${apiOrigin}|${query}|${kind}|${intent}`;
+      const filterParts = (root: HTMLElement) => ({
+        select: root.querySelector<HTMLSelectElement>("[data-registry-filter-select]"),
+        trigger: root.querySelector<HTMLButtonElement>("[data-registry-filter-trigger]"),
+        menu: root.querySelector<HTMLElement>("[data-registry-filter-menu]"),
+        value: root.querySelector<HTMLElement>("[data-registry-filter-value]"),
+        options: Array.from(root.querySelectorAll<HTMLButtonElement>("[data-registry-filter-option]")),
+      });
+      const closeFilterMenu = (root: HTMLElement, restoreFocus = false) => {
+        const { trigger, menu } = filterParts(root);
+        if (!trigger || !menu) return;
+        menu.hidden = true;
+        trigger.setAttribute("aria-expanded", "false");
+        delete root.dataset.open;
+        if (restoreFocus) trigger.focus();
+      };
+      const closeFilterMenus = (except?: HTMLElement) => {
+        for (const root of filterRoots) {
+          if (root !== except) closeFilterMenu(root);
+        }
+      };
+      const syncFilterMenu = (root: HTMLElement) => {
+        const { select, value, options } = filterParts(root);
+        if (!select) return;
+        const selected = options.find((option) => option.dataset.value === select.value) ?? options[0];
+        const selectedLabel = selected?.querySelector<HTMLElement>("[data-registry-filter-option-label]");
+        if (value) value.textContent = selectedLabel?.textContent?.trim() || select.selectedOptions[0]?.textContent?.trim() || "";
+        for (const option of options) {
+          const active = option === selected;
+          option.setAttribute("aria-checked", String(active));
+          option.tabIndex = active ? 0 : -1;
+        }
+      };
+      const syncFilterMenus = () => filterRoots.forEach(syncFilterMenu);
+      const openFilterMenu = (root: HTMLElement, focus: "selected" | "first" | "last" = "selected") => {
+        const { trigger, menu, options } = filterParts(root);
+        if (!trigger || !menu || options.length === 0) return;
+        closeFilterMenus(root);
+        menu.hidden = false;
+        trigger.setAttribute("aria-expanded", "true");
+        root.dataset.open = "true";
+        const target = focus === "first"
+          ? options[0]
+          : focus === "last"
+            ? options.at(-1)
+            : options.find((option) => option.getAttribute("aria-checked") === "true") ?? options[0];
+        window.requestAnimationFrame(() => target?.focus());
+      };
       if (queryInput) queryInput.value = query;
       if (kindInput) kindInput.value = kind;
       if (intentInput) intentInput.value = intent;
+      syncFilterMenus();
+
+      for (const root of filterRoots) {
+        const { select, trigger, menu, options } = filterParts(root);
+        trigger?.addEventListener("click", () => {
+          if (menu?.hidden) openFilterMenu(root);
+          else closeFilterMenu(root, true);
+        }, { signal });
+        trigger?.addEventListener("keydown", (event) => {
+          if (["ArrowDown", "ArrowUp", "Home", "End"].includes(event.key)) {
+            event.preventDefault();
+            openFilterMenu(root, event.key === "ArrowUp" || event.key === "End" ? "last" : "first");
+          } else if (event.key === "Escape") {
+            closeFilterMenu(root);
+          }
+        }, { signal });
+        options.forEach((option) => option.addEventListener("click", () => {
+          if (!select) return;
+          select.value = option.dataset.value || "";
+          syncFilterMenu(root);
+          closeFilterMenu(root, true);
+          select.dispatchEvent(new Event("change", { bubbles: true }));
+        }, { signal }));
+        menu?.addEventListener("keydown", (event) => {
+          const active = options.indexOf(document.activeElement as HTMLButtonElement);
+          let next = active;
+          if (event.key === "ArrowDown") next = (active + 1 + options.length) % options.length;
+          else if (event.key === "ArrowUp") next = (active - 1 + options.length) % options.length;
+          else if (event.key === "Home") next = 0;
+          else if (event.key === "End") next = options.length - 1;
+          else if (event.key === "Escape") {
+            event.preventDefault();
+            closeFilterMenu(root, true);
+            return;
+          } else if (event.key === "Tab") {
+            window.requestAnimationFrame(() => closeFilterMenu(root));
+            return;
+          } else {
+            return;
+          }
+          event.preventDefault();
+          options[next]?.focus();
+        }, { signal });
+      }
+      document.addEventListener("pointerdown", (event) => {
+        if (event.target instanceof Node && !filterRoots.some((root) => root.contains(event.target as Node))) closeFilterMenus();
+      }, { signal });
 
       const messages = () => (window as any).__CELLSCRIPT_I18N__;
       const locale = () => document.documentElement.dataset.locale === "zh" ? "zh" : "en";
@@ -537,12 +629,14 @@ const fallbackPayload = JSON.stringify(fallbackPackages).replaceAll("<", "\\u003
         if (queryInput) queryInput.value = "";
         if (kindInput) kindInput.value = "";
         if (intentInput) intentInput.value = "";
+        syncFilterMenus();
         updateUrl();
         source === "mirror" ? localMirror() : load();
       }, { signal });
       window.addEventListener("cellscript:locale-change", () => {
         setServiceState(source);
         renderRows();
+        window.requestAnimationFrame(syncFilterMenus);
       }, { signal });
       window.addEventListener("online", () => {
         if (["mirror", "error", "stale"].includes(source)) load({ background: packages.length > 0 });

@@ -1,0 +1,77 @@
+---
+import { Check, ChevronDown } from "lucide-astro";
+
+interface FilterOption {
+  value: string;
+  label: string;
+  i18nKey: string;
+}
+
+interface Props {
+  name: "kind" | "intent";
+  label: string;
+  labelKey: string;
+  options: FilterOption[];
+}
+
+const { name, label, labelKey, options } = Astro.props;
+const labelId = `registry-filter-${name}-label`;
+const valueId = `registry-filter-${name}-value`;
+const triggerId = `registry-filter-${name}-trigger`;
+const menuId = `registry-filter-${name}-menu`;
+const initialOption = options[0];
+---
+
+<div
+  class:list={["registry-browse-filter", { "registry-browse-intent": name === "intent" }]}
+  data-registry-filter-root
+>
+  <span class="sr-only" id={labelId} data-i18n={labelKey}>{label}</span>
+  <select
+    hidden
+    tabindex="-1"
+    aria-hidden="true"
+    data-registry-filter-select
+    data-registry-kind={name === "kind" ? "" : undefined}
+    data-registry-intent={name === "intent" ? "" : undefined}
+  >
+    {options.map((option) => (
+      <option value={option.value} data-i18n={option.i18nKey}>{option.label}</option>
+    ))}
+  </select>
+  <button
+    class="registry-filter-trigger"
+    id={triggerId}
+    type="button"
+    aria-haspopup="menu"
+    aria-expanded="false"
+    aria-controls={menuId}
+    aria-labelledby={`${labelId} ${valueId}`}
+    data-registry-filter-trigger
+  >
+    <span id={valueId} data-registry-filter-value>{initialOption?.label}</span>
+    <ChevronDown aria-hidden="true" />
+  </button>
+  <div
+    class="registry-filter-menu"
+    id={menuId}
+    role="menu"
+    aria-labelledby={triggerId}
+    data-registry-filter-menu
+    hidden
+  >
+    {options.map((option, index) => (
+      <button
+        type="button"
+        role="menuitemradio"
+        aria-checked={index === 0 ? "true" : "false"}
+        tabindex={index === 0 ? "0" : "-1"}
+        data-registry-filter-option
+        data-value={option.value}
+      >
+        <Check aria-hidden="true" />
+        <span data-registry-filter-option-label data-i18n={option.i18nKey}>{option.label}</span>
+      </button>
+    ))}
+  </div>
+</div>

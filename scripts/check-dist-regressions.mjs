@@ -209,6 +209,8 @@ expectContains("registry", registryHtml, 'data-registry-empty role="status" aria
 expectContains("registry", registryHtml, "data-registry-empty-submit");
 expectContains("registry", registryHtml, "data-registry-clear");
 expectContains("registry", registryHtml, "data-registry-intent");
+expectContains("registry", registryHtml, "data-registry-filter-trigger");
+expectContains("registry", registryHtml, "data-registry-filter-menu");
 expectContains("registry", registryHtml, "Any use state");
 expectContains("registry source", registryBrowseSourceText, "const setViewState");
 expectContains("registry source", registryBrowseSourceText, "__cellscriptRegistryBrowseCache");
@@ -219,6 +221,8 @@ expectContains("registry source", registryBrowseSourceText, "requestGeneration")
 expectContains("registry source", registryBrowseSourceText, "showTerminalFailure");
 expectContains("registry source", registryBrowseSourceText, "registryBrowseStateUrl");
 expectContains("registry source", registryBrowseSourceText, "matchesIntent");
+expectContains("registry source", registryBrowseSourceText, "closeFilterMenus");
+expectContains("registry source", registryBrowseSourceText, '["ArrowDown", "ArrowUp", "Home", "End"]');
 expectContains("registry source", registryBrowseSourceText, 'document.addEventListener("astro:page-load", setupRegistryBrowse)');
 expectContains("registry source", registryBrowseSourceText, 'search.set("availability", "deprecated")');
 expectContains("registry layout", registryLayoutSourceText, 'document.addEventListener("astro:after-swap", syncRegistryTabs)');
