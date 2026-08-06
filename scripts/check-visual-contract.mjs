@@ -109,8 +109,25 @@ if (!playgroundStudio.includes("view-transition-name: playground-studio;")) {
 if (!globalCss.includes(':root[data-playground-focus="true"] .playground-body .site-header')) {
   throw new Error("Playground focus mode must remove the site chrome on desktop");
 }
-for (const contract of ["data-pg-studio", "data-focus-toggle", "cellscript-playground-focus-mode", "createPlaygroundFocusController"]) {
+for (const contract of [
+  "data-pg-studio",
+  "data-focus-toggle",
+  "cellscript-playground-focus-mode",
+  "createPlaygroundFocusController",
+  "data-output-panel=\"flow\"",
+  "data-inspector",
+  "data-output-stale",
+  "data-guide",
+  "createPlaygroundSessionWriter",
+  "deriveCellFlow",
+]) {
   if (!playgroundPage.includes(contract)) throw new Error(`Playground page is missing ${contract}`);
+}
+if (playgroundPage.toLowerCase().includes("command palette")) {
+  throw new Error("Playground must not introduce a command palette");
+}
+if (!globalCss.includes(".pg-cell-flow") || !globalCss.includes(".pg-inspector")) {
+  throw new Error("Playground Cell Flow and Inspector must have explicit visual contracts");
 }
 
 console.log("visual token and readability contract ok");

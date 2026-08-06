@@ -309,6 +309,14 @@ expectContains("playground", playgroundHtml, "data-pg-studio");
 expectContains("playground", playgroundHtml, "data-focus-toggle");
 expectContains("playground", playgroundHtml, "cellscript-playground-focus-mode");
 expectContains("playground focus bundle", jsText, "cellscript-playground-focus-mode");
+expectContains("playground", playgroundHtml, 'data-output-panel="flow"');
+expectContains("playground", playgroundHtml, "data-inspector");
+expectContains("playground", playgroundHtml, "data-output-stale");
+expectContains("playground", playgroundHtml, "data-guide");
+expectContains("playground session bundle", jsText, "cellscript-playground-session-v1");
+expectContains("playground guide bundle", jsText, "cellscript-playground-guide-v1");
+expectContains("playground worker recovery bundle", jsText, "retryCompiler");
+expectNotContains("playground", playgroundHtml.toLowerCase(), "command palette");
 
 if (existsSync(distWasm)) {
   const wasmSha256 = createHash("sha256").update(readFileSync(distWasm)).digest("hex");

@@ -22,7 +22,7 @@ import { translations } from "../i18n/translations";
 import SiteHeader from "../components/SiteHeader.astro";
 import SitePreferencesBootstrap from "../components/SitePreferencesBootstrap.astro";
 import { ClientRouter } from "astro:transitions";
-import { BookOpen, Check, ChevronDown, Copy, Download, FilePlus, Play, Trash2, Upload } from "lucide-astro";
+import { BookOpen, Check, ChevronDown, CircleHelp, Copy, Download, FilePlus, Play, RotateCcw, Trash2, Upload, X } from "lucide-astro";
 import arrowsInSimpleIcon from "@phosphor-icons/core/regular/arrows-in-simple.svg?raw";
 import arrowsOutSimpleIcon from "@phosphor-icons/core/regular/arrows-out-simple.svg?raw";
 
@@ -92,7 +92,11 @@ if (ungroupedPlaygroundExamples.length > 0) {
     <div class="pg-stage">
       <section class="pg-studio-frame" data-pg-studio aria-label={t.playground.title}>
         <div class="pg-toolbar">
-          <h1 class="pg-toolbar-title" data-i18n="playground.title">{t.playground.title}</h1>
+          <div class="pg-toolbar-context">
+            <h1 class="pg-toolbar-title" data-project-title>{initialExample.file}</h1>
+            <span class="pg-target-chip">CKB</span>
+            <span class="pg-save-state" data-save-status data-state="saved" data-i18n="playground.savedLocally">{t.playground.savedLocally}</span>
+          </div>
           <div class="pg-toolbar-actions">
             <details class="pg-example-menu" data-example-menu>
               <summary class="pg-action-btn pg-example-menu-trigger" data-i18n-aria-label="playground.examplesDrawer" aria-label={t.playground.examplesDrawer}>
@@ -126,6 +130,10 @@ if (ungroupedPlaygroundExamples.length > 0) {
                 </div>
               </div>
             </details>
+            <button class="pg-action-btn pg-guide-trigger" type="button" data-guide-open data-i18n-aria-label="playground.openGuide" aria-label={t.playground.openGuide}>
+              <CircleHelp aria-hidden="true" />
+              <span data-i18n="playground.guideTrigger">{t.playground.guideTrigger}</span>
+            </button>
             <button class="pg-action-btn pg-compile-btn" type="button" data-compile data-i18n-aria-label="playground.compileAria" aria-label={t.playground.compileAria}>
               <Play class="pg-compile-icon" aria-hidden="true" />
               <span class="pg-compile-label" data-compile-label data-i18n="playground.compile">{t.playground.compile}</span>
@@ -210,7 +218,10 @@ if (ungroupedPlaygroundExamples.length > 0) {
       <!-- Middle: compile output -->
       <section class="pg-col pg-output" aria-label={t.playground.output} data-i18n-aria-label="playground.output">
         <div class="pg-col-head pg-tabs" role="tablist">
-          <button class="pg-tab active" role="tab" id="pg-tab-actions" aria-selected="true" aria-controls="pg-panel-actions" data-output-tab="actions" tabindex="0">
+          <button class="pg-tab active" role="tab" id="pg-tab-flow" aria-selected="true" aria-controls="pg-panel-flow" data-output-tab="flow" tabindex="0">
+            <span data-i18n="playground.tabFlow">{t.playground.tabFlow}</span>
+          </button>
+          <button class="pg-tab" role="tab" id="pg-tab-actions" aria-selected="false" aria-controls="pg-panel-actions" data-output-tab="actions" tabindex="-1">
             <span data-i18n="playground.tabActions">{t.playground.tabActions}</span>
           </button>
           <button class="pg-tab" role="tab" id="pg-tab-types" aria-selected="false" aria-controls="pg-panel-types" data-output-tab="types" tabindex="-1">
@@ -221,7 +232,9 @@ if (ungroupedPlaygroundExamples.length > 0) {
           </button>
         </div>
         <div class="pg-output-body">
-          <div class="pg-output-panel active" id="pg-panel-actions" role="tabpanel" aria-labelledby="pg-tab-actions" data-output-panel="actions"></div>
+          <div class="pg-output-stale" data-output-stale role="status" hidden></div>
+          <div class="pg-output-panel active" id="pg-panel-flow" role="tabpanel" aria-labelledby="pg-tab-flow" data-output-panel="flow"></div>
+          <div class="pg-output-panel" id="pg-panel-actions" role="tabpanel" aria-labelledby="pg-tab-actions" data-output-panel="actions" hidden></div>
           <div class="pg-output-panel" id="pg-panel-types" role="tabpanel" aria-labelledby="pg-tab-types" data-output-panel="types" hidden></div>
           <div class="pg-output-panel" id="pg-panel-metadata" role="tabpanel" aria-labelledby="pg-tab-metadata" data-output-panel="metadata" hidden></div>
           <div class="pg-loading" data-loading>
@@ -258,7 +271,11 @@ if (ungroupedPlaygroundExamples.length > 0) {
           </section>
           <div class="pg-rail-section" data-rail-view="loading">
             <span class="pg-loading-dot"></span>
-            <span data-i18n="playground.loading">{t.playground.loading}</span>
+            <span data-rail-loading-label data-i18n="playground.loading">{t.playground.loading}</span>
+            <button class="pg-worker-retry" type="button" data-worker-retry hidden>
+              <RotateCcw aria-hidden="true" />
+              <span data-i18n="playground.retryCompiler">{t.playground.retryCompiler}</span>
+            </button>
           </div>
           <div class="pg-rail-section" data-rail-view="ready" hidden>
             <dl class="pg-rail-facts">
@@ -279,18 +296,26 @@ if (ungroupedPlaygroundExamples.length > 0) {
                 <dd class="substrate-value" data-rail-mode></dd>
               </div>
             </dl>
-            <div class="pg-rail-group">
-              <h2 class="pg-rail-group-label" data-i18n="playground.actions">{t.playground.actions}</h2>
-              <ul class="pg-rail-actions" data-rail-actions></ul>
-            </div>
-            <div class="pg-rail-group">
-              <h2 class="pg-rail-group-label" data-i18n="playground.types">{t.playground.types}</h2>
-              <ul class="pg-rail-types" data-rail-types></ul>
-            </div>
+            <section class="pg-inspector" data-inspector aria-live="polite"></section>
           </div>
         </div>
       </aside>
         </main>
+
+        <aside class="pg-guide" data-guide hidden aria-labelledby="pg-guide-title">
+          <div class="pg-guide-head">
+            <span class="pg-guide-progress" data-guide-progress></span>
+            <button class="pg-guide-close" type="button" data-guide-close data-i18n-aria-label="playground.closeGuide" aria-label={t.playground.closeGuide}>
+              <X aria-hidden="true" />
+            </button>
+          </div>
+          <strong id="pg-guide-title" data-guide-title></strong>
+          <p data-guide-body></p>
+          <div class="pg-guide-actions">
+            <button type="button" data-guide-prev data-i18n="playground.guideBack">{t.playground.guideBack}</button>
+            <button class="pg-guide-next" type="button" data-guide-next data-i18n="playground.guideNext">{t.playground.guideNext}</button>
+          </div>
+        </aside>
 
         <footer class="pg-statusbar">
           <span class="pg-status" data-status role="status" aria-live="polite">{t.playground.loading}</span>
@@ -314,6 +339,17 @@ if (ungroupedPlaygroundExamples.length > 0) {
       import { strFromU8, strToU8, unzipSync, zipSync } from "fflate";
       import { renderSource } from "../lib/highlight";
       import { createPlaygroundFocusController } from "../lib/playground-focus.mjs";
+      import {
+        createPlaygroundSessionWriter,
+        readPlaygroundGuideComplete,
+        readPlaygroundSession,
+        writePlaygroundGuideComplete,
+      } from "../lib/playground-session.mjs";
+      import {
+        deriveCellFlow,
+        derivePlaygroundInspector,
+        findPlaygroundSymbolLine,
+      } from "../lib/playground-presentation.mjs";
 
       (window as any).__cellscriptInitPlayground = () => {
       type CompileDiagnosticPosition = {
@@ -380,7 +416,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
       const playgroundAbort = new AbortController();
       (window as any).__cellscriptPlaygroundAbort = playgroundAbort;
       const { signal } = playgroundAbort;
-      const compileWorker = new Worker(workerUrl, { type: "module" });
+      let compileWorker: Worker | null = null;
       let compileRequestId = 0;
       let latestAppliedRequestId = 0;
       let languageRequestId = 0;
@@ -390,7 +426,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
         completion: 0,
         definition: 0,
       };
-      let workerReady = true;
+      let workerReady = false;
 
       // ---- Example sources (inline so no extra fetch needed) ----
       const exampleSources: Record<string, string> = JSON.parse(
@@ -447,10 +483,14 @@ if (ungroupedPlaygroundExamples.length > 0) {
       const mobileViewBtns = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-mobile-view-btn]"));
       const compileBtn = document.querySelector<HTMLButtonElement>("[data-compile]");
       const compileLabel = document.querySelector<HTMLElement>("[data-compile-label]");
+      const projectTitle = document.querySelector<HTMLElement>("[data-project-title]");
+      const saveStatus = document.querySelector<HTMLElement>("[data-save-status]");
+      const outputStale = document.querySelector<HTMLElement>("[data-output-stale]");
       const focusToggle = document.querySelector<HTMLButtonElement>("[data-focus-toggle]");
       const focusLabel = document.querySelector<HTMLElement>("[data-focus-label]");
       const railBody = document.querySelector<HTMLElement>("[data-rail-body]");
       const railLoading = railBody?.querySelector<HTMLElement>('[data-rail-view="loading"]');
+      const railLoadingLabel = railBody?.querySelector<HTMLElement>("[data-rail-loading-label]");
       const railReady = railBody?.querySelector<HTMLElement>('[data-rail-view="ready"]');
       const railModule = railBody?.querySelector<HTMLElement>("[data-rail-module]");
       const railTarget = railBody?.querySelector<HTMLElement>("[data-rail-target]");
@@ -458,16 +498,28 @@ if (ungroupedPlaygroundExamples.length > 0) {
       const railSizeLabel = railBody?.querySelector<HTMLElement>("[data-rail-size-label]");
       const railModeFact = railBody?.querySelector<HTMLElement>("[data-rail-mode-fact]");
       const railMode = railBody?.querySelector<HTMLElement>("[data-rail-mode]");
-      const railActions = railBody?.querySelector<HTMLElement>("[data-rail-actions]");
-      const railTypes = railBody?.querySelector<HTMLElement>("[data-rail-types]");
+      const inspector = railBody?.querySelector<HTMLElement>("[data-inspector]");
+      const workerRetry = railBody?.querySelector<HTMLButtonElement>("[data-worker-retry]");
       const railDiagnosticsBody = railBody?.querySelector<HTMLElement>("[data-rail-diagnostics-body]");
       const errorBadge = document.querySelector<HTMLElement>("[data-error-badge]");
+      const guide = document.querySelector<HTMLElement>("[data-guide]");
+      const guideOpen = document.querySelector<HTMLButtonElement>("[data-guide-open]");
+      const guideClose = document.querySelector<HTMLButtonElement>("[data-guide-close]");
+      const guideTitle = document.querySelector<HTMLElement>("[data-guide-title]");
+      const guideBody = document.querySelector<HTMLElement>("[data-guide-body]");
+      const guideProgress = document.querySelector<HTMLElement>("[data-guide-progress]");
+      const guidePrev = document.querySelector<HTMLButtonElement>("[data-guide-prev]");
+      const guideNext = document.querySelector<HTMLButtonElement>("[data-guide-next]");
       let currentExampleId: string | null = exampleMeta[0]?.id ?? null;
       const MAX_WORKSPACE_FILES = 16;
       const MAX_WORKSPACE_BYTES = 300_000;
       let workspaceFiles: WorkspaceFile[] = [];
       let activePath = "";
       let entryPath = "";
+      let sessionHydrated = false;
+      let lastSuccessfulData: any = null;
+      let inspectorSelection: { kind: "action" | "type"; name: string } | null = null;
+      let guideStep = 0;
 
       const outputPanels = new Map(
         Array.from(document.querySelectorAll<HTMLElement>("[data-output-panel]")).map((p) => [
@@ -480,6 +532,30 @@ if (ungroupedPlaygroundExamples.length > 0) {
       let currentDiagnostics: CompileDiagnostic[] = [];
       let highlightFrame: number | undefined;
       let repositionFloatingTools = () => {};
+      const sessionLimits = { maxFiles: MAX_WORKSPACE_FILES, maxBytes: MAX_WORKSPACE_BYTES };
+      const updateSaveStatus = (state: "dirty" | "saved" | "unavailable") => {
+        if (!saveStatus) return;
+        saveStatus.dataset.state = state;
+        saveStatus.textContent = pg(state === "dirty" ? "savingLocally" : state === "saved" ? "savedLocally" : "localSaveUnavailable");
+      };
+      const sessionSnapshot = () => ({
+        format: "cellscript-playground-session-v1",
+        version: 1,
+        files: workspaceFiles.map((file) => ({ ...file, role: file.path === entryPath ? "entry" : "memory" })),
+        activePath,
+        entryPath,
+        exampleId: currentExampleId,
+        outputTab: outputTabs.find((tab) => tab.classList.contains("active"))?.dataset.outputTab ?? "flow",
+        mobileView: pgMain?.dataset.mobileView ?? "source",
+      });
+      const sessionWriter = createPlaygroundSessionWriter({
+        storage: window.localStorage,
+        limits: sessionLimits,
+        onState: updateSaveStatus,
+      });
+      const persistSession = () => {
+        if (sessionHydrated && workspaceFiles.length) sessionWriter.schedule(sessionSnapshot());
+      };
       const focusController = focusToggle
         ? createPlaygroundFocusController({
             root: document.documentElement,
@@ -681,6 +757,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
           btn.setAttribute("aria-pressed", String(active));
           btn.setAttribute("aria-label", fmt(pg("loadExample"), { name: title }));
         });
+        persistSession();
       };
 
       // ---- Highlight overlay + line-number gutter sync ----
@@ -903,6 +980,10 @@ if (ungroupedPlaygroundExamples.length > 0) {
           activeFileChip.textContent = activePath || "";
           activeFileChip.title = activePath ? fmt(pg("activeFile"), { file: activePath }) : "";
         }
+        if (projectTitle) {
+          projectTitle.textContent = entryPath || activePath || pg("title");
+          projectTitle.title = entryPath ? fmt(pg("entryFile"), { file: entryPath }) : pg("title");
+        }
         if (setEntryBtn && setEntryLabel) {
           const isEntry = !!activePath && activePath === entryPath;
           setEntryBtn.disabled = isEntry;
@@ -958,6 +1039,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
         hideHover();
         scheduleHighlight();
         scheduleCompile();
+        persistSession();
       };
 
       const markWorkspaceEntry = (path = activePath) => {
@@ -970,6 +1052,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
         renderFileTree();
         updateExampleLesson(null);
         scheduleCompile();
+        persistSession();
       };
 
       const deleteWorkspaceFile = (path: string) => {
@@ -994,6 +1077,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
         scheduleHighlight();
         scheduleCompile();
         if (status) status.textContent = fmt(pg("fileDeleted"), { file: path });
+        persistSession();
       };
 
       const switchWorkspaceFile = (path: string, setEntry = false) => {
@@ -1009,6 +1093,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
         updateExampleLesson(null);
         scheduleHighlight();
         scheduleCompile();
+        persistSession();
       };
 
       const makeScratchSource = (index: number) => `module playground::scratch_${index}
@@ -1186,6 +1271,9 @@ source_roots = ["src"]
       const importWorkspaceFiles = async (fileList: FileList | null) => {
         if (!fileList?.length) return;
         try {
+          syncActiveFileFromEditor();
+          persistSession();
+          sessionWriter.flush();
           const files = Array.from(fileList);
           const zipFiles = files.filter((file) => file.name.toLowerCase().endsWith(".zip"));
           if (zipFiles.length > 1 || (zipFiles.length === 1 && files.length > 1)) throw new Error(pg("workspaceOneZipOnly"));
@@ -1239,6 +1327,7 @@ source_roots = ["src"]
           btn.classList.toggle("active", active);
           btn.setAttribute("aria-pressed", String(active));
         });
+        persistSession();
       };
 
       mobileViewBtns.forEach((btn) => {
@@ -1568,11 +1657,14 @@ source_roots = ["src"]
       const cleanupPlayground = () => {
         window.clearTimeout(compileTimer);
         window.clearTimeout(hoverTimer);
+        sessionWriter.flush();
+        sessionWriter.cancel();
         if (highlightFrame !== undefined) {
           window.cancelAnimationFrame(highlightFrame);
           highlightFrame = undefined;
         }
-        compileWorker.terminate();
+        compileWorker?.terminate();
+        compileWorker = null;
         if ((window as any).__cellscriptPlaygroundAbort === playgroundAbort) {
           delete (window as any).__cellscriptPlaygroundAbort;
         }
@@ -1588,7 +1680,7 @@ source_roots = ["src"]
         languageIntents.set(id, intent);
         latestLanguageRequestByIntent[intent] = id;
         if (intent === "definition" && status) status.textContent = pg("definitionLooking");
-        compileWorker.postMessage({
+        compileWorker?.postMessage({
           id,
           type: "language",
           source: textarea.value,
@@ -1610,7 +1702,13 @@ source_roots = ["src"]
         compileBtn.dataset.state = state;
         if (state === "idle") compileLabel.textContent = pg("compile");
         else if (state === "compiling") compileLabel.textContent = pg("compiling");
-        else if (state === "ready") compileLabel.textContent = fmt(pg("compiledIn"), { ms: String(lastElapsed) });
+        else if (state === "ready") {
+          compileLabel.textContent = fmt(pg("compiledSummary"), {
+            actions: String(lastSuccessfulData?.actions?.length ?? 0),
+            types: String(lastSuccessfulData?.types?.length ?? 0),
+            ms: String(lastElapsed),
+          });
+        }
         else if (state === "error") compileLabel.textContent = pg("failed");
       };
 
@@ -1639,6 +1737,83 @@ source_roots = ["src"]
           copyButton.setAttribute("aria-label", copyAria);
           block.prepend(copyButton);
         }
+      };
+
+      const renderFlowCells = (cells: Array<{ binding: string; type: string }>, emptyLabel: string) => {
+        if (!cells.length) return `<span class="pg-flow-empty">${escapeHtml(emptyLabel)}</span>`;
+        return cells.map((cell) => `
+          <button class="pg-flow-cell" type="button" data-inspect-kind="type" data-inspect-name="${escapeAttr(cell.type)}">
+            <span>${escapeHtml(cell.binding)}</span>
+            <code>${escapeHtml(cell.type)}</code>
+          </button>`).join("");
+      };
+
+      const renderCellFlow = (data: any, reveal = false) => {
+        const panel = outputPanels.get("flow");
+        if (!panel) return;
+        const flow = deriveCellFlow(data);
+        if (!flow.length) {
+          panel.innerHTML = `<div class="pg-flow-empty-state"><strong>${escapeHtml(pg("noFlowTitle"))}</strong><p>${escapeHtml(pg("noFlowBody"))}</p></div>`;
+          return;
+        }
+        panel.innerHTML = `<div class="pg-cell-flow" data-cell-flow>${flow.map((action: any, index: number) => `
+          <article class="pg-flow-row${inspectorSelection?.kind === "action" && inspectorSelection.name === action.name ? " is-selected" : ""}" style="--flow-index:${index}">
+            <div class="pg-flow-side pg-flow-inputs">
+              <span class="pg-flow-side-label">${escapeHtml(pg("inputs"))}</span>
+              ${renderFlowCells(action.inputs, pg("noInputs"))}
+            </div>
+            <span class="pg-flow-connector" aria-hidden="true"></span>
+            <button class="pg-flow-action" type="button" data-inspect-kind="action" data-inspect-name="${escapeAttr(action.name)}">
+              <span class="pg-flow-action-kicker">${String(index + 1).padStart(2, "0")} · ${escapeHtml(effectLabel(action.effect))}</span>
+              <code>${escapeHtml(action.name)}</code>
+              ${action.cycles != null ? `<span>${escapeHtml(action.cycles.toLocaleString())} ${escapeHtml(pg("cycles"))}</span>` : ""}
+            </button>
+            <span class="pg-flow-connector" aria-hidden="true"></span>
+            <div class="pg-flow-side pg-flow-outputs">
+              <span class="pg-flow-side-label">${escapeHtml(pg("outputs"))}</span>
+              ${renderFlowCells(action.outputs, pg("noOutputs"))}
+            </div>
+          </article>`).join("")}</div>`;
+        if (reveal) {
+          panel.dataset.reveal = "true";
+          window.setTimeout(() => panel.removeAttribute("data-reveal"), 420);
+        }
+      };
+
+      const renderInspector = (data = lastSuccessfulData) => {
+        if (!inspector || !data) return;
+        const view = derivePlaygroundInspector(data, inspectorSelection) as any;
+        if (view.kind === "action") {
+          inspector.innerHTML = `
+            <div class="pg-inspector-head"><span>${escapeHtml(pg("selectedAction"))}</span><button type="button" data-inspector-clear>${escapeHtml(pg("showSummary"))}</button></div>
+            <code class="pg-inspector-title">${escapeHtml(view.name)}</code>
+            <dl class="pg-inspector-grid">
+              <div><dt>${escapeHtml(pg("effect"))}</dt><dd>${escapeHtml(effectLabel(view.effect))}</dd></div>
+              <div><dt>${escapeHtml(pg("cycles"))}</dt><dd>${view.cycles == null ? "—" : escapeHtml(view.cycles.toLocaleString())}</dd></div>
+              <div><dt>${escapeHtml(pg("consume"))}</dt><dd>${escapeHtml(String(view.inputs.length))}</dd></div>
+              <div><dt>${escapeHtml(pg("create"))}</dt><dd>${escapeHtml(String(view.outputs.length))}</dd></div>
+            </dl>
+            ${view.runtime.length ? `<div class="pg-inspector-runtime"><span>${escapeHtml(pg("runtimeFeatures"))}</span>${view.runtime.map((feature: string) => `<code>${escapeHtml(feature)}</code>`).join("")}</div>` : ""}
+            <button class="pg-inspector-source" type="button" data-jump-kind="action" data-jump-name="${escapeAttr(view.name)}">${escapeHtml(pg("showInSource"))}</button>`;
+          return;
+        }
+        if (view.kind === "type") {
+          inspector.innerHTML = `
+            <div class="pg-inspector-head"><span>${escapeHtml(pg("selectedType"))}</span><button type="button" data-inspector-clear>${escapeHtml(pg("showSummary"))}</button></div>
+            <code class="pg-inspector-title">${escapeHtml(view.name)}</code>
+            <dl class="pg-inspector-grid">
+              <div><dt>${escapeHtml(pg("kind"))}</dt><dd>${escapeHtml(view.typeKind)}</dd></div>
+              <div><dt>${escapeHtml(pg("encodedSize"))}</dt><dd>${view.encodedSize == null ? "—" : `${escapeHtml(String(view.encodedSize))} B`}</dd></div>
+            </dl>
+            <div class="pg-inspector-runtime"><span>${escapeHtml(pg("capabilities"))}</span>${view.capabilities.map((capability: string) => `<code>${escapeHtml(capability)}</code>`).join("") || "—"}</div>
+            <div class="pg-inspector-used"><span>${escapeHtml(pg("usedBy"))}</span><p>${view.usedBy.map((name: string) => `<code>${escapeHtml(name)}</code>`).join(" ") || "—"}</p></div>
+            <button class="pg-inspector-source" type="button" data-jump-kind="type" data-jump-name="${escapeAttr(view.name)}">${escapeHtml(pg("showInSource"))}</button>`;
+          return;
+        }
+        inspector.innerHTML = `
+          <div class="pg-inspector-head"><span>${escapeHtml(pg("projectSummary"))}</span></div>
+          <strong class="pg-inspector-summary">${escapeHtml(fmt(pg("flowSummary"), { actions: String(view.actions), types: String(view.types) }))}</strong>
+          <p>${escapeHtml(pg("flowSummaryBody"))}</p>`;
       };
 
       const renderActions = (data: any) => {
@@ -1670,11 +1845,11 @@ source_roots = ["src"]
           const runtimeLabel = runtimeFeatures.length
             ? `<div class="pg-action-features"><span>${escapeHtml(pg("runtimeFeatures"))}</span><div>${runtimeFeatures.map((feature) => `<code>${escapeHtml(feature)}</code>`).join("")}</div></div>`
             : "";
-          return `<li class="pg-action-item">
-            <div class="pg-action-head">
+          return `<li class="pg-action-item${inspectorSelection?.kind === "action" && inspectorSelection.name === a.name ? " is-selected" : ""}">
+            <button class="pg-action-head" type="button" data-inspect-kind="action" data-inspect-name="${escapeAttr(a.name)}">
               <code class="pg-action-name">${escapeHtml(a.name)}</code>
               <span class="pg-action-effect pg-effect-${String(a.effect_class).toLowerCase()}">${escapeHtml(effectLabel(a.effect_class))}</span>
-            </div>
+            </button>
             <div class="pg-action-sets">
               <div class="pg-set"><span class="pg-set-label">${escapeHtml(pg("consume"))}</span><div class="pg-set-items">${consume || "<span class=\"pg-set-empty\">—</span>"}</div></div>
               <div class="pg-set"><span class="pg-set-label">${escapeHtml(pg("create"))}</span><div class="pg-set-items">${create || "<span class=\"pg-set-empty\">—</span>"}</div></div>
@@ -1696,11 +1871,11 @@ source_roots = ["src"]
         }
         panel.innerHTML = `<ul class="pg-type-list">${types.map((ty: any) => {
           const caps = (ty.capabilities || []).map((c: string) => `<span class="pg-cap">${escapeHtml(c)}</span>`).join("");
-          return `<li class="pg-type-item">
-            <div class="pg-type-head">
+          return `<li class="pg-type-item${inspectorSelection?.kind === "type" && inspectorSelection.name === ty.name ? " is-selected" : ""}">
+            <button class="pg-type-head" type="button" data-inspect-kind="type" data-inspect-name="${escapeAttr(ty.name)}">
               <code class="pg-type-name">${escapeHtml(ty.name)}</code>
               <span class="pg-type-kind">${escapeHtml(ty.kind)}</span>
-            </div>
+            </button>
             <div class="pg-type-caps">${caps}</div>
             ${ty.encoded_size != null ? `<div class="pg-type-size">${ty.encoded_size} bytes</div>` : ""}
           </li>`;
@@ -1757,7 +1932,8 @@ source_roots = ["src"]
       const renderRail = (data: any) => {
         if (!railReady || !railLoading) return;
         railLoading.hidden = true;
-        railLoading.innerHTML = `<span class="pg-loading-dot"></span><span>${escapeHtml(pg("loading"))}</span>`;
+        if (railLoadingLabel) railLoadingLabel.textContent = pg("loading");
+        if (workerRetry) workerRetry.hidden = true;
         railReady.hidden = false;
         if (railModule) railModule.textContent = data.module || "—";
         if (railTarget) railTarget.textContent = data.target_profile?.name || "ckb";
@@ -1777,42 +1953,7 @@ source_roots = ["src"]
         }
         if (railModeFact) railModeFact.hidden = hasSize;
         if (railMode) railMode.textContent = hasSize ? "" : pg("metadataOnly");
-        if (railActions) {
-          const hashToName = buildHashToName(data.types || []);
-          railActions.innerHTML = (data.actions || []).map((a: any) => {
-            const paramsByBinding = actionParamsByBinding(a);
-            const consume = formatSetEntries(a.consume_set || [], paramsByBinding, hashToName);
-            const create = formatSetEntries(a.create_set || [], paramsByBinding, hashToName);
-            const mutate = formatSetEntries(a.mutate_set || [], paramsByBinding, hashToName);
-            const runtimeFeatures = actionRuntimeFeatures(a);
-            const cyclesLabel = a.estimated_cycles != null
-              ? `<div class="pg-rail-detail-row"><span>${escapeHtml(pg("cycles"))}</span><code>${escapeHtml(a.estimated_cycles.toLocaleString())}</code></div>`
-              : "";
-            const runtimeLabel = runtimeFeatures.length
-              ? `<div class="pg-rail-feature-row"><span>${escapeHtml(pg("runtimeFeatures"))}</span><div>${runtimeFeatures.map((feature) => `<code>${escapeHtml(feature)}</code>`).join("")}</div></div>`
-              : "";
-            return `<li class="pg-rail-action">
-              <details>
-                <summary>
-                  <code>${escapeHtml(a.name)}</code>
-                  <span class="pg-action-effect pg-effect-${String(a.effect_class).toLowerCase()}">${escapeHtml(effectLabel(a.effect_class))}</span>
-                </summary>
-                <div class="pg-rail-action-detail">
-                  <div class="pg-rail-detail-row"><span>${escapeHtml(pg("consume"))}</span><div>${consume || "<span class=\"pg-set-empty\">—</span>"}</div></div>
-                  <div class="pg-rail-detail-row"><span>${escapeHtml(pg("create"))}</span><div>${create || "<span class=\"pg-set-empty\">—</span>"}</div></div>
-                  ${mutate ? `<div class="pg-rail-detail-row"><span>${escapeHtml(pg("effect"))}</span><div>${mutate}</div></div>` : ""}
-                  ${cyclesLabel}
-                  ${runtimeLabel}
-                </div>
-              </details>
-            </li>`;
-          }).join("") || `<li class="pg-rail-empty">${escapeHtml(pg("noActions"))}</li>`;
-        }
-        if (railTypes) {
-          railTypes.innerHTML = (data.types || []).map((ty: any) =>
-            `<li class="pg-rail-type"><code>${escapeHtml(ty.name)}</code> <span class="pg-rail-type-kind">${escapeHtml(ty.kind)}</span></li>`
-          ).join("") || `<li class="pg-rail-empty">${escapeHtml(pg("noTypes"))}</li>`;
-        }
+        renderInspector(data);
       };
 
       const clearRailReady = () => {
@@ -1821,8 +1962,7 @@ source_roots = ["src"]
         if (railSize) railSize.textContent = "";
         if (railMode) railMode.textContent = "";
         if (railModeFact) railModeFact.hidden = true;
-        if (railActions) railActions.replaceChildren();
-        if (railTypes) railTypes.replaceChildren();
+        if (inspector) inspector.replaceChildren();
       };
 
       const renderRailError = () => {
@@ -1830,6 +1970,26 @@ source_roots = ["src"]
         clearRailReady();
         railReady.hidden = true;
         railLoading.hidden = true;
+      };
+
+      const setOutputsStale = (message = "", retry = false) => {
+        document.querySelectorAll<HTMLElement>("[data-output-panel]").forEach((panel) => {
+          panel.dataset.stale = "true";
+        });
+        if (outputStale) {
+          outputStale.hidden = false;
+          outputStale.innerHTML = `<span>${escapeHtml(message || pg("staleOutput"))}</span>${retry ? `<button type="button" data-worker-retry-inline>${escapeHtml(pg("retryCompiler"))}</button>` : ""}`;
+        }
+      };
+
+      const clearOutputsStale = () => {
+        document.querySelectorAll<HTMLElement>("[data-output-panel]").forEach((panel) => {
+          delete panel.dataset.stale;
+        });
+        if (outputStale) {
+          outputStale.hidden = true;
+          outputStale.textContent = "";
+        }
       };
 
       const applyCompileResult = (requestId: number, result: WorkerCompileResult, elapsed: number, versionText = "") => {
@@ -1846,21 +2006,30 @@ source_roots = ["src"]
         if (blockingDiagnostics.length || !data) {
           const message = blockingDiagnostics[0]?.message || diagnostics[0]?.message || pg("invalidOutput");
           renderErrors(diagnostics.length ? diagnostics : [{ message, severity: "error" }]);
-          renderMetadata({ __empty: true });
-          renderActions({ actions: [] });
-          renderTypes({ types: [] });
-          selectTab("actions");
+          if (lastSuccessfulData) {
+            setOutputsStale(pg("staleOutput"));
+            renderInspector(lastSuccessfulData);
+          } else {
+            renderMetadata({ __empty: true });
+            renderCellFlow({ actions: [] });
+            renderActions({ actions: [] });
+            renderTypes({ types: [] });
+            selectTab("flow");
+            renderRailError();
+          }
           selectMobileView("rail");
           if (status) {
             status.textContent = summariseError(message);
             status.title = diagnostics.map((diagnostic) => diagnostic.message).join("\n");
           }
           setCompileState("error");
-          renderRailError();
           return;
         }
 
+        lastSuccessfulData = data;
+        clearOutputsStale();
         renderMetadata(data);
+        renderCellFlow(data, true);
         renderActions(data);
         renderTypes(data);
         renderErrors(diagnostics);
@@ -1885,7 +2054,7 @@ source_roots = ["src"]
           source: file.source,
           role: file.path === entryPath ? "entry" : "memory",
         }));
-        compileWorker.postMessage({
+        compileWorker?.postMessage({
           id,
           type: "compile",
           source: currentFile()?.source ?? textarea.value,
@@ -1895,7 +2064,7 @@ source_roots = ["src"]
         });
       };
 
-      compileWorker.addEventListener("message", (event) => {
+      const handleWorkerMessage = (event: MessageEvent) => {
         const { id, type, payload, elapsed, version } = event.data || {};
         if (type === "language-result" && typeof id === "number") {
           const intent = languageIntents.get(id);
@@ -1919,19 +2088,51 @@ source_roots = ["src"]
         }
         if (type !== "result" || typeof id !== "number") return;
         applyCompileResult(id, payload || { metadata: null, diagnostics: [{ message: pg("invalidOutput"), severity: "error" }] }, elapsed || 0, version || "");
-      }, { signal });
+      };
 
-      compileWorker.addEventListener("error", (event) => {
+      const handleWorkerError = (event: ErrorEvent) => {
         workerReady = false;
         const message = fmt(pg("loadFailed"), { error: event.message || "worker error" });
         if (status) status.textContent = message;
-        if (loading) {
+        if (loading && !lastSuccessfulData) {
           loading.hidden = false;
-          loading.innerHTML = `<span class="pg-error-inline">${escapeHtml(message)}</span>`;
+          loading.innerHTML = `<div class="pg-worker-failure"><span class="pg-error-inline">${escapeHtml(message)}</span><button type="button" data-worker-retry-inline>${escapeHtml(pg("retryCompiler"))}</button></div>`;
+        } else if (loading) {
+          loading.hidden = true;
         }
-        renderRailError();
+        if (railLoading) railLoading.hidden = false;
+        if (railLoadingLabel) railLoadingLabel.textContent = message;
+        if (workerRetry) workerRetry.hidden = false;
+        if (lastSuccessfulData) setOutputsStale(pg("workerStaleOutput"), true);
+        else if (railReady) railReady.hidden = true;
         renderErrors([{ message, severity: "error" }]);
         setCompileState("error");
+      };
+
+      const createCompileWorker = () => {
+        compileWorker?.terminate();
+        compileWorker = new Worker(workerUrl, { type: "module" });
+        compileWorker.addEventListener("message", handleWorkerMessage, { signal });
+        compileWorker.addEventListener("error", handleWorkerError, { signal });
+        workerReady = true;
+        if (workerRetry) workerRetry.hidden = true;
+        if (railLoading) railLoading.hidden = false;
+        if (railLoadingLabel) railLoadingLabel.textContent = pg("loading");
+        if (loading) {
+          loading.hidden = false;
+          loading.innerHTML = `<span class="pg-loading-dot"></span><span>${escapeHtml(pg("loading"))}</span>`;
+        }
+      };
+
+      const retryCompiler = () => {
+        createCompileWorker();
+        if (status) status.textContent = pg("retryingCompiler");
+        doCompile();
+      };
+
+      workerRetry?.addEventListener("click", retryCompiler, { signal });
+      document.addEventListener("click", (event) => {
+        if ((event.target as HTMLElement)?.closest("[data-worker-retry-inline]")) retryCompiler();
       }, { signal });
 
       const scheduleCompile = () => {
@@ -1946,6 +2147,7 @@ source_roots = ["src"]
         scheduleHighlight();
         updateExampleLesson(sourceMatchesExample(currentExampleId) ? currentExampleId : null);
         scheduleCompile();
+        persistSession();
       };
 
       const autoPairs = new Map<string, string>([
@@ -2155,6 +2357,7 @@ source_roots = ["src"]
           panel.hidden = key !== target;
           panel.classList.toggle("active", key === target);
         });
+        persistSession();
       };
 
       outputTabs.forEach((tab) => {
@@ -2333,6 +2536,111 @@ source_roots = ["src"]
         if (diagnostic) focusDiagnostic(diagnostic);
       }, { signal });
 
+      const jumpToSemanticSource = (kind: "action" | "type", name: string) => {
+        syncActiveFileFromEditor();
+        const current = currentFile();
+        const candidate = [current, ...workspaceFiles]
+          .filter((file, index, files) => file && files.indexOf(file) === index)
+          .find((file) => new RegExp(`\\b${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`).test(file?.source ?? ""));
+        if (!candidate) return;
+        if (candidate.path !== activePath) switchWorkspaceFile(candidate.path);
+        const line = findPlaygroundSymbolLine(candidate.source, name, kind);
+        window.requestAnimationFrame(() => {
+          focusLine(line);
+          if (window.innerWidth < 820) selectMobileView("source");
+        });
+      };
+
+      const selectInspectorItem = (kind: "action" | "type", name: string, jump = true) => {
+        inspectorSelection = { kind, name };
+        if (lastSuccessfulData) {
+          renderCellFlow(lastSuccessfulData);
+          renderActions(lastSuccessfulData);
+          renderTypes(lastSuccessfulData);
+          renderInspector(lastSuccessfulData);
+        }
+        if (jump) jumpToSemanticSource(kind, name);
+      };
+
+      document.addEventListener("click", (event: MouseEvent) => {
+        const target = event.target as HTMLElement | null;
+        const inspectTarget = target?.closest<HTMLElement>("[data-inspect-kind][data-inspect-name]");
+        if (inspectTarget) {
+          event.preventDefault();
+          const kind = inspectTarget.dataset.inspectKind === "type" ? "type" : "action";
+          selectInspectorItem(kind, inspectTarget.dataset.inspectName ?? "");
+          return;
+        }
+        const jumpTarget = target?.closest<HTMLElement>("[data-jump-kind][data-jump-name]");
+        if (jumpTarget) {
+          event.preventDefault();
+          const kind = jumpTarget.dataset.jumpKind === "type" ? "type" : "action";
+          jumpToSemanticSource(kind, jumpTarget.dataset.jumpName ?? "");
+          return;
+        }
+        if (target?.closest("[data-inspector-clear]")) {
+          inspectorSelection = null;
+          if (lastSuccessfulData) {
+            renderCellFlow(lastSuccessfulData);
+            renderActions(lastSuccessfulData);
+            renderTypes(lastSuccessfulData);
+            renderInspector(lastSuccessfulData);
+          }
+        }
+      }, { signal });
+
+      const guideSteps = [
+        { id: "source", title: "guideSourceTitle", body: "guideSourceBody" },
+        { id: "flow", title: "guideFlowTitle", body: "guideFlowBody" },
+        { id: "inspector", title: "guideInspectorTitle", body: "guideInspectorBody" },
+      ] as const;
+
+      const renderGuide = () => {
+        if (!guide || guide.hidden) return;
+        const step = guideSteps[guideStep];
+        document.documentElement.dataset.playgroundGuideStep = step.id;
+        if (guideProgress) guideProgress.textContent = fmt(pg("guideProgress"), { current: String(guideStep + 1), total: String(guideSteps.length) });
+        if (guideTitle) guideTitle.textContent = pg(step.title);
+        if (guideBody) guideBody.textContent = pg(step.body);
+        if (guidePrev) guidePrev.hidden = guideStep === 0;
+        if (guideNext) guideNext.textContent = pg(guideStep === guideSteps.length - 1 ? "guideDone" : "guideNext");
+        if (window.innerWidth < 820) {
+          selectMobileView(step.id === "source" ? "source" : step.id === "flow" ? "output" : "rail");
+        }
+        if (step.id === "flow") selectTab("flow");
+      };
+
+      const openGuide = () => {
+        if (!guide) return;
+        guideStep = 0;
+        guide.hidden = false;
+        guide.dataset.seen = readPlaygroundGuideComplete(window.localStorage) ? "returning" : "first";
+        renderGuide();
+        guideClose?.focus({ preventScroll: true });
+      };
+
+      const closeGuide = () => {
+        if (!guide) return;
+        guide.hidden = true;
+        delete document.documentElement.dataset.playgroundGuideStep;
+        writePlaygroundGuideComplete(window.localStorage, true);
+        guideOpen?.focus({ preventScroll: true });
+      };
+
+      guideOpen?.addEventListener("click", openGuide, { signal });
+      guideClose?.addEventListener("click", closeGuide, { signal });
+      guidePrev?.addEventListener("click", () => {
+        guideStep = Math.max(0, guideStep - 1);
+        renderGuide();
+      }, { signal });
+      guideNext?.addEventListener("click", () => {
+        if (guideStep >= guideSteps.length - 1) closeGuide();
+        else {
+          guideStep += 1;
+          renderGuide();
+        }
+      }, { signal });
+
       // ---- Example drawer ----
       exampleButtons.forEach((btn) => {
         btn.addEventListener("click", () => {
@@ -2355,8 +2663,21 @@ source_roots = ["src"]
           ? paramExample
           : (exampleMeta[0]?.id ?? Object.keys(exampleSources)[0] ?? "token");
       const initialWorkspacePath = normalizeWorkspacePath(exampleFileById.get(initialWorkspaceExample) ?? `${initialWorkspaceExample}.cell`);
-      setWorkspace(makeExampleWorkspace(initialWorkspaceExample), initialWorkspacePath, initialWorkspacePath);
-      updateExampleLesson(initialWorkspaceExample);
+      const restoredSession = paramExample ? null : readPlaygroundSession(window.localStorage, sessionLimits);
+      sessionHydrated = true;
+      if (restoredSession) {
+        setWorkspace(restoredSession.files, restoredSession.activePath, restoredSession.entryPath);
+        const restoredExample = restoredSession.exampleId && sourceMatchesExample(restoredSession.exampleId)
+          ? restoredSession.exampleId
+          : null;
+        updateExampleLesson(restoredExample);
+        selectTab(restoredSession.outputTab);
+        selectMobileView(restoredSession.mobileView);
+        updateSaveStatus("saved");
+      } else {
+        setWorkspace(makeExampleWorkspace(initialWorkspaceExample), initialWorkspacePath, initialWorkspacePath);
+        updateExampleLesson(initialWorkspaceExample);
+      }
 
       // ---- Runtime i18n: re-apply localized strings when the locale
       //      changes (the topbar toggle updates <html data-locale>
@@ -2386,17 +2707,25 @@ source_roots = ["src"]
         renderFileTree();
         updateWorkspaceChrome();
         updateExampleLesson(currentExampleId);
-        // Refresh compile-button label for the current state, and the
-        // status bar text (re-render the last result if any).
+        if (saveStatus) updateSaveStatus((saveStatus.dataset.state as "dirty" | "saved" | "unavailable") || "saved");
+        if (lastSuccessfulData) {
+          renderMetadata(lastSuccessfulData);
+          renderCellFlow(lastSuccessfulData);
+          renderActions(lastSuccessfulData);
+          renderTypes(lastSuccessfulData);
+          renderInspector(lastSuccessfulData);
+        }
+        if (guide && !guide.hidden) renderGuide();
+        // Refresh compile-button label for the current state.
         const state = (compileBtn?.dataset.state ?? "idle") as CompileState;
-        if (state === "ready") compileLabel && (compileLabel.textContent = fmt(pg("compiledIn"), { ms: String(lastElapsed) }));
-        else setCompileState(state);
-        if (workerReady) doCompile();
+        setCompileState(state);
       };
       window.addEventListener("cellscript:locale-change", applyLocaleStrings, { signal });
       applyLocaleStrings();
 
       updateHighlight();
+      createCompileWorker();
+      window.clearTimeout(compileTimer);
       doCompile();
       };
     </script>
