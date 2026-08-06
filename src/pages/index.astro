@@ -9,7 +9,10 @@ import SiteHeader from "../components/SiteHeader.astro";
 import SitePreferencesBootstrap from "../components/SitePreferencesBootstrap.astro";
 import BrandMark from "../components/BrandMark.astro";
 import { ClientRouter } from "astro:transitions";
-import { ArrowRight, Box, Check, ClipboardList, Copy, Cpu, FileArchive, FileCode2 } from "lucide-astro";
+import { ArrowRight, Box, Check, ClipboardList, Cpu, FileArchive, FileCode2 } from "lucide-astro";
+import arrowRightIcon from "@phosphor-icons/core/regular/arrow-right.svg?raw";
+import checkIcon from "@phosphor-icons/core/regular/check.svg?raw";
+import copyIcon from "@phosphor-icons/core/regular/copy.svg?raw";
 
 const locale = defaultLocale;
 const t = translations[locale];
@@ -146,8 +149,8 @@ const workflowIconComponents = {
               })()}
             </span>
             <button class="copy-btn code-copy" type="button" data-copy-source data-i18n-aria-label="a11y.copyAria" aria-label={t.a11y.copyAria} aria-live="polite">
-              <Copy class="copy-icon" aria-hidden="true" />
-              <Check class="check-icon" aria-hidden="true" />
+              <span class="copy-icon" aria-hidden="true" set:html={copyIcon}></span>
+              <span class="check-icon" aria-hidden="true" set:html={checkIcon}></span>
             </button>
           </div>
           <div class="tabbar" role="tablist" aria-label={t.hero.examplesLabel} data-i18n-aria-label="hero.examplesLabel">
@@ -179,7 +182,7 @@ const workflowIconComponents = {
             </span>
             <a class="playground-link" href={`/playground?example=${heroExamples[0].id}`} data-playground-link>
               <span data-i18n="hero.playground.editLive">{t.hero.playground.editLive}</span>
-              <ArrowRight aria-hidden="true" />
+              <span class="playground-link-icon" aria-hidden="true" set:html={arrowRightIcon}></span>
             </a>
           </div>
         </div>
@@ -317,8 +320,8 @@ const workflowIconComponents = {
               <p>
                 <code data-i18n={`start.steps.${index}.1`}>{command}</code>
                 <button class="copy-btn" type="button" data-copy-text={command} data-i18n-aria-label="a11y.copyAria" aria-label={t.a11y.copyAria} aria-live="polite">
-                  <Copy class="copy-icon" aria-hidden="true" />
-                  <Check class="check-icon" aria-hidden="true" />
+                  <span class="copy-icon" aria-hidden="true" set:html={copyIcon}></span>
+                  <span class="check-icon" aria-hidden="true" set:html={checkIcon}></span>
                 </button>
               </p>
             </article>

@@ -1,5 +1,6 @@
 ---
-import { Check, ChevronDown } from "lucide-astro";
+import caretDownIcon from "@phosphor-icons/core/regular/caret-down.svg?raw";
+import checkIcon from "@phosphor-icons/core/regular/check.svg?raw";
 
 interface FilterOption {
   value: string;
@@ -50,7 +51,7 @@ const initialOption = options[0];
     data-registry-filter-trigger
   >
     <span id={valueId} data-registry-filter-value>{initialOption?.label}</span>
-    <ChevronDown aria-hidden="true" />
+    <span class="registry-filter-caret" aria-hidden="true" set:html={caretDownIcon}></span>
   </button>
   <div
     class="registry-filter-menu"
@@ -69,7 +70,7 @@ const initialOption = options[0];
         data-registry-filter-option
         data-value={option.value}
       >
-        <Check aria-hidden="true" />
+        <span class="registry-filter-check" aria-hidden="true" set:html={checkIcon}></span>
         <span data-registry-filter-option-label data-i18n={option.i18nKey}>{option.label}</span>
       </button>
     ))}

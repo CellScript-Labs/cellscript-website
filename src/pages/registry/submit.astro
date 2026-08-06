@@ -2,6 +2,8 @@
 import RegistryLayout from "../../layouts/RegistryLayout.astro";
 import { defaultLocale, translations } from "../../i18n/translations";
 import { registryRuntime } from "../../lib/registry-runtime";
+import arrowLeftIcon from "@phosphor-icons/core/regular/arrow-left.svg?raw";
+import xIcon from "@phosphor-icons/core/regular/x.svg?raw";
 
 const t = translations[defaultLocale];
 const description = t.registry.submit.description;
@@ -380,12 +382,12 @@ cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-pa
     <dialog class="registry-wallet-dialog" data-wallet-dialog aria-labelledby="wallet-dialog-title">
       <div class="registry-wallet-dialog-shell">
         <header class="registry-wallet-dialog-head">
-          <button class="registry-wallet-back" type="button" data-wallet-back hidden aria-label={t.registry.submit.walletBack} data-i18n-aria-label="registry.submit.walletBack">←</button>
+          <button class="registry-wallet-back" type="button" data-wallet-back hidden aria-label={t.registry.submit.walletBack} data-i18n-aria-label="registry.submit.walletBack"><span aria-hidden="true" set:html={arrowLeftIcon}></span></button>
           <div>
             <p class="registry-label" data-i18n="registry.submit.walletDialogLabel">{t.registry.submit.walletDialogLabel}</p>
             <h2 id="wallet-dialog-title" data-wallet-dialog-title data-i18n="registry.submit.walletChooseTitle">{t.registry.submit.walletChooseTitle}</h2>
           </div>
-          <button class="registry-wallet-close" type="button" data-wallet-close aria-label={t.registry.submit.walletClose} data-i18n-aria-label="registry.submit.walletClose">×</button>
+          <button class="registry-wallet-close" type="button" data-wallet-close aria-label={t.registry.submit.walletClose} data-i18n-aria-label="registry.submit.walletClose"><span aria-hidden="true" set:html={xIcon}></span></button>
         </header>
         <p class="registry-wallet-dialog-body" data-wallet-dialog-body data-i18n="registry.submit.walletChooseBody">{t.registry.submit.walletChooseBody}</p>
         <div class="registry-wallet-toolbar">

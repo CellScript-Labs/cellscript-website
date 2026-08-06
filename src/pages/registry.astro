@@ -3,7 +3,7 @@ import RegistryLayout from "../layouts/RegistryLayout.astro";
 import RegistryFilterMenu from "../components/RegistryFilterMenu.astro";
 import { packageHref, registryDateLabel, registryPackageDetailView, registryPackages, toRegistryPackageView } from "../lib/registry";
 import { defaultLocale, translations } from "../i18n/translations";
-import { ArrowRight, Search } from "lucide-astro";
+import searchIcon from "@phosphor-icons/core/regular/magnifying-glass.svg?raw";
 import { isTestnetSandbox, registryRuntime } from "../lib/registry-runtime";
 
 const t = translations[defaultLocale];
@@ -62,7 +62,7 @@ const intentFilters = [
     </div>
     <div class="registry-browse-search">
       <label class="registry-browse-input">
-        <Search aria-hidden="true" />
+        <span class="registry-search-icon" aria-hidden="true" set:html={searchIcon}></span>
         <span class="sr-only" data-i18n="registry.browse.searchAria">{t.registry.browse.searchAria}</span>
         <input
           type="search"
@@ -118,7 +118,7 @@ const intentFilters = [
               <time datetime={pkg.latest_release_at}>{t.registry.browse.released} {registryDateLabel(pkg.latest_release_at, t.registry.package.notRecorded, defaultLocale)}</time>
             </div>
           </div>
-          <ArrowRight class="registry-row-arrow" aria-hidden="true" />
+          <span class="registry-row-arrow" aria-hidden="true">→</span>
         </a>
       ))}
     </div>

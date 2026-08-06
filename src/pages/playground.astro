@@ -22,9 +22,21 @@ import { translations } from "../i18n/translations";
 import SiteHeader from "../components/SiteHeader.astro";
 import SitePreferencesBootstrap from "../components/SitePreferencesBootstrap.astro";
 import { ClientRouter } from "astro:transitions";
-import { BookOpen, Check, ChevronDown, CircleHelp, Copy, Download, FilePlus, Play, RotateCcw, Trash2, Upload, X } from "lucide-astro";
+import arrowCounterClockwiseIcon from "@phosphor-icons/core/regular/arrow-counter-clockwise.svg?raw";
 import arrowsInSimpleIcon from "@phosphor-icons/core/regular/arrows-in-simple.svg?raw";
 import arrowsOutSimpleIcon from "@phosphor-icons/core/regular/arrows-out-simple.svg?raw";
+import bookOpenIcon from "@phosphor-icons/core/regular/book-open.svg?raw";
+import caretDownIcon from "@phosphor-icons/core/regular/caret-down.svg?raw";
+import checkIcon from "@phosphor-icons/core/regular/check.svg?raw";
+import copyIcon from "@phosphor-icons/core/regular/copy.svg?raw";
+import downloadIcon from "@phosphor-icons/core/regular/download-simple.svg?raw";
+import filePlusIcon from "@phosphor-icons/core/regular/file-plus.svg?raw";
+import playIcon from "@phosphor-icons/core/regular/play.svg?raw";
+import questionIcon from "@phosphor-icons/core/regular/question.svg?raw";
+import spinnerIcon from "@phosphor-icons/core/regular/spinner-gap.svg?raw";
+import trashIcon from "@phosphor-icons/core/regular/trash.svg?raw";
+import uploadIcon from "@phosphor-icons/core/regular/upload-simple.svg?raw";
+import xIcon from "@phosphor-icons/core/regular/x.svg?raw";
 
 // The locale is resolved client-side from localStorage (see the inline
 // init script below), so the server renders the English fallback and
@@ -82,12 +94,12 @@ if (ungroupedPlaygroundExamples.length > 0) {
     <SiteHeader page="playground" />
     <template data-metadata-copy-template>
       <button class="copy-btn metadata-copy" type="button" aria-live="polite">
-        <Copy class="copy-icon" aria-hidden="true" />
-        <Check class="check-icon" aria-hidden="true" />
+        <span class="copy-icon" aria-hidden="true" set:html={copyIcon}></span>
+        <span class="check-icon" aria-hidden="true" set:html={checkIcon}></span>
       </button>
     </template>
     <template data-file-delete-icon>
-      <Trash2 class="pg-file-delete-icon" aria-hidden="true" />
+      <span class="pg-file-delete-icon" aria-hidden="true" set:html={trashIcon}></span>
     </template>
     <div class="pg-stage">
       <section class="pg-studio-frame" data-pg-studio aria-label={t.playground.title}>
@@ -100,9 +112,9 @@ if (ungroupedPlaygroundExamples.length > 0) {
           <div class="pg-toolbar-actions">
             <details class="pg-example-menu" data-example-menu>
               <summary class="pg-action-btn pg-example-menu-trigger" data-i18n-aria-label="playground.examplesDrawer" aria-label={t.playground.examplesDrawer}>
-                <BookOpen aria-hidden="true" />
+                <span aria-hidden="true" set:html={bookOpenIcon}></span>
                 <span data-i18n="playground.examplesDrawer">{t.playground.examplesDrawer}</span>
-                <ChevronDown class="pg-example-menu-chevron" aria-hidden="true" />
+                <span class="pg-example-menu-chevron" aria-hidden="true" set:html={caretDownIcon}></span>
               </summary>
               <div class="pg-example-menu-panel">
                 <aside class="pg-example-lesson" data-example-lesson aria-live="polite">
@@ -131,11 +143,12 @@ if (ungroupedPlaygroundExamples.length > 0) {
               </div>
             </details>
             <button class="pg-action-btn pg-guide-trigger" type="button" data-guide-open data-i18n-aria-label="playground.openGuide" aria-label={t.playground.openGuide}>
-              <CircleHelp aria-hidden="true" />
+              <span aria-hidden="true" set:html={questionIcon}></span>
               <span data-i18n="playground.guideTrigger">{t.playground.guideTrigger}</span>
             </button>
-            <button class="pg-action-btn pg-compile-btn" type="button" data-compile data-i18n-aria-label="playground.compileAria" aria-label={t.playground.compileAria}>
-              <Play class="pg-compile-icon" aria-hidden="true" />
+            <button class="pg-action-btn pg-compile-btn" type="button" data-compile data-state="idle" aria-busy="false" data-i18n-aria-label="playground.compileAria" aria-label={t.playground.compileAria}>
+              <span class="pg-compile-icon pg-compile-play" aria-hidden="true" set:html={playIcon}></span>
+              <span class="pg-compile-icon pg-compile-spinner" aria-hidden="true" set:html={spinnerIcon}></span>
               <span class="pg-compile-label" data-compile-label data-i18n="playground.compile">{t.playground.compile}</span>
             </button>
             <button class="pg-action-btn pg-focus-toggle" type="button" data-focus-toggle aria-pressed="false" aria-label={t.playground.focusMode} title={t.playground.focusMode}>
@@ -160,7 +173,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
           <div class="pg-source-head-actions">
             <code class="pg-active-file-chip" data-active-file-chip></code>
             <button class="pg-entry-action" type="button" data-set-entry data-i18n-aria-label="playground.setEntry" data-i18n-title="playground.setEntry" aria-label={t.playground.setEntry} title={t.playground.setEntry}>
-              <Check aria-hidden="true" />
+              <span aria-hidden="true" set:html={checkIcon}></span>
               <span data-set-entry-label data-i18n="playground.setEntry">{t.playground.setEntry}</span>
             </button>
           </div>
@@ -173,13 +186,13 @@ if (ungroupedPlaygroundExamples.length > 0) {
             </div>
             <div class="pg-workspace-actions">
               <button class="pg-icon-btn" type="button" data-new-file data-i18n-aria-label="playground.newFile" data-i18n-title="playground.newFile" aria-label={t.playground.newFile} title={t.playground.newFile}>
-                <FilePlus aria-hidden="true" />
+                <span aria-hidden="true" set:html={filePlusIcon}></span>
               </button>
               <button class="pg-icon-btn" type="button" data-import-workspace data-i18n-aria-label="playground.importWorkspace" data-i18n-title="playground.importWorkspace" aria-label={t.playground.importWorkspace} title={t.playground.importWorkspace}>
-                <Upload aria-hidden="true" />
+                <span aria-hidden="true" set:html={uploadIcon}></span>
               </button>
               <button class="pg-icon-btn" type="button" data-export-workspace data-i18n-aria-label="playground.exportWorkspace" data-i18n-title="playground.exportWorkspace" aria-label={t.playground.exportWorkspace} title={t.playground.exportWorkspace}>
-                <Download aria-hidden="true" />
+                <span aria-hidden="true" set:html={downloadIcon}></span>
               </button>
               <input data-import-input type="file" accept=".cell,.zip,.json,.toml,text/plain,application/json,application/zip,application/x-zip-compressed" multiple hidden />
             </div>
@@ -273,7 +286,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
             <span class="pg-loading-dot"></span>
             <span data-rail-loading-label data-i18n="playground.loading">{t.playground.loading}</span>
             <button class="pg-worker-retry" type="button" data-worker-retry hidden>
-              <RotateCcw aria-hidden="true" />
+              <span aria-hidden="true" set:html={arrowCounterClockwiseIcon}></span>
               <span data-i18n="playground.retryCompiler">{t.playground.retryCompiler}</span>
             </button>
           </div>
@@ -306,7 +319,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
           <div class="pg-guide-head">
             <span class="pg-guide-progress" data-guide-progress></span>
             <button class="pg-guide-close" type="button" data-guide-close data-i18n-aria-label="playground.closeGuide" aria-label={t.playground.closeGuide}>
-              <X aria-hidden="true" />
+              <span aria-hidden="true" set:html={xIcon}></span>
             </button>
           </div>
           <strong id="pg-guide-title" data-guide-title></strong>
@@ -1700,16 +1713,10 @@ source_roots = ["src"]
       const setCompileState = (state: CompileState) => {
         if (!compileBtn || !compileLabel) return;
         compileBtn.dataset.state = state;
-        if (state === "idle") compileLabel.textContent = pg("compile");
-        else if (state === "compiling") compileLabel.textContent = pg("compiling");
-        else if (state === "ready") {
-          compileLabel.textContent = fmt(pg("compiledSummary"), {
-            actions: String(lastSuccessfulData?.actions?.length ?? 0),
-            types: String(lastSuccessfulData?.types?.length ?? 0),
-            ms: String(lastElapsed),
-          });
-        }
-        else if (state === "error") compileLabel.textContent = pg("failed");
+        const compiling = state === "compiling";
+        compileBtn.disabled = compiling;
+        compileBtn.setAttribute("aria-busy", compiling ? "true" : "false");
+        compileLabel.textContent = compiling ? pg("compiling") : pg("compile");
       };
 
       const renderMetadata = (data: any) => {

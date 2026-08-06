@@ -75,6 +75,23 @@ if (registryCss.includes('.registry-publish-step[data-state="locked"] .registry-
 if (/color:\s*var\(--accent-warm\)/.test(`${globalCss}\n${registryCss}`)) {
   throw new Error("decorative --accent-warm must not carry status text meaning");
 }
+for (const controlToken of [
+  "--control-surface:",
+  "--control-primary:",
+  "--control-selected-surface:",
+  "--control-height-dense: 32px;",
+  "--control-height: 40px;",
+  "--control-height-workflow: 48px;",
+]) {
+  if (!darkTokens.includes(controlToken)) throw new Error(`shared control system is missing ${controlToken}`);
+}
+if (registryCss.includes("--line-strong")) {
+  throw new Error("Registry controls must use defined shared border tokens");
+}
+const registryPrimary = registryCss.match(/\.registry-button\.primary\s*\{(?<body>[\s\S]*?)\n\}/)?.groups?.body || "";
+if (!registryPrimary.includes("background: var(--control-primary);")) {
+  throw new Error("Registry primary actions must use the shared solid primary treatment");
+}
 
 if (!globalCss.includes("--frame-max: 1440px;\n  --max: var(--frame-max);")) {
   throw new Error("global navigation and page shells must share the 1440px alignment frame");
@@ -120,6 +137,9 @@ for (const contract of [
   "data-guide",
   "createPlaygroundSessionWriter",
   "deriveCellFlow",
+  'data-state="idle" aria-busy="false"',
+  'compileBtn.setAttribute("aria-busy", compiling ? "true" : "false")',
+  'compileLabel.textContent = compiling ? pg("compiling") : pg("compile")',
 ]) {
   if (!playgroundPage.includes(contract)) throw new Error(`Playground page is missing ${contract}`);
 }
@@ -128,6 +148,9 @@ if (playgroundPage.toLowerCase().includes("command palette")) {
 }
 if (!globalCss.includes(".pg-cell-flow") || !globalCss.includes(".pg-inspector")) {
   throw new Error("Playground Cell Flow and Inspector must have explicit visual contracts");
+}
+if (/\.pg-guide-trigger span,\s*\n\s*\.pg-save-state/.test(globalCss)) {
+  throw new Error("mobile Playground must not hide the guide icon and label together");
 }
 
 console.log("visual token and readability contract ok");

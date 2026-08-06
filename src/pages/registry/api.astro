@@ -2,7 +2,7 @@
 import RegistryLayout from "../../layouts/RegistryLayout.astro";
 import { defaultLocale, translations } from "../../i18n/translations";
 import { registryRuntime } from "../../lib/registry-runtime";
-import { ArrowUpRight } from "lucide-astro";
+import arrowSquareOutIcon from "@phosphor-icons/core/regular/arrow-square-out.svg?raw";
 
 const t = translations[defaultLocale];
 const apiOrigin = registryRuntime.apiOrigin;
@@ -35,7 +35,7 @@ const writeEndpoints = [
         <p class="registry-label" data-i18n="registry.api.label">{t.registry.api.label}</p>
         <a class="registry-api-health" href={`${apiOrigin}/health`} target="_blank" rel="noopener noreferrer">
           <span data-i18n="registry.api.health">{t.registry.api.health}</span>
-          <ArrowUpRight aria-hidden="true" />
+          <span aria-hidden="true" set:html={arrowSquareOutIcon}></span>
         </a>
       </div>
       <h2 id="registry-api-title" data-i18n="registry.api.title">{t.registry.api.title}</h2>
@@ -52,7 +52,7 @@ const writeEndpoints = [
             <p data-i18n={`registry.api.${endpoint.key}`}>{endpoint.description}</p>
             {endpoint.href && (
               <a href={endpoint.href} target="_blank" rel="noopener noreferrer" aria-label={t.registry.api.openEndpoint} data-i18n-aria-label="registry.api.openEndpoint">
-                <ArrowUpRight aria-hidden="true" />
+                <span aria-hidden="true" set:html={arrowSquareOutIcon}></span>
               </a>
             )}
           </div>

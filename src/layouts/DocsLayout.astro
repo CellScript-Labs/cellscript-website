@@ -5,7 +5,10 @@ import SitePreferencesBootstrap from "../components/SitePreferencesBootstrap.ast
 import { ClientRouter } from "astro:transitions";
 import { defaultLocale, translations } from "../i18n/translations";
 import type { DocsNeighbor, DocsPage } from "../lib/docs";
-import { ArrowLeft, ArrowRight, ListTree, Search } from "lucide-astro";
+import arrowLeftIcon from "@phosphor-icons/core/regular/arrow-left.svg?raw";
+import arrowRightIcon from "@phosphor-icons/core/regular/arrow-right.svg?raw";
+import listIcon from "@phosphor-icons/core/regular/list-bullets.svg?raw";
+import searchIcon from "@phosphor-icons/core/regular/magnifying-glass.svg?raw";
 
 interface Props {
   page: DocsPage;
@@ -43,11 +46,11 @@ const title = `${page.title} — CellScript Docs`;
     <main class="docs-shell" id="docs-content">
       <aside class="docs-sidebar" aria-label="Docs pages">
         <div class="docs-sidebar-head">
-          <ListTree aria-hidden="true" />
+          <span class="docs-sidebar-icon" aria-hidden="true" set:html={listIcon}></span>
           <span>Docs</span>
         </div>
         <div class="docs-search-box">
-          <Search class="docs-search-icon" aria-hidden="true" />
+          <span class="docs-search-icon" aria-hidden="true" set:html={searchIcon}></span>
           <input
             type="search"
             class="docs-search-input"
@@ -77,7 +80,7 @@ const title = `${page.title} — CellScript Docs`;
         <nav class="docs-pagination" aria-label="Docs pagination">
           {previous ? (
             <a class="docs-page-card" href={previous.href}>
-              <ArrowLeft aria-hidden="true" />
+              <span class="docs-page-icon" aria-hidden="true" set:html={arrowLeftIcon}></span>
               <span>
                 <small>Previous</small>
                 <strong>{previous.title}</strong>
@@ -90,7 +93,7 @@ const title = `${page.title} — CellScript Docs`;
                 <small>Next</small>
                 <strong>{next.title}</strong>
               </span>
-              <ArrowRight aria-hidden="true" />
+              <span class="docs-page-icon" aria-hidden="true" set:html={arrowRightIcon}></span>
             </a>
           )}
         </nav>
