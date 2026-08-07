@@ -35,10 +35,16 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           repository: CellScript-Labs/CellScript
+          ref: nightly-0.23
           path: cellscript-source
           sparse-checkout: |
             docs/wiki
             examples
+            proposals/evolving-dob/evolving-dob-profile-v1
+
+      - name: Check out Registry package source
+        working-directory: cellscript-source
+        run: git submodule update --init --depth 1 proposals/evolving-dob/evolving-dob-profile-v1
 
       - name: Generate registry website data
         env:
