@@ -27,6 +27,10 @@ const expectNotContains = (name, value, needle) => {
   if (value.includes(needle)) fail(`${name}: unexpected ${needle}`);
 };
 
+const expectMatches = (name, value, pattern) => {
+  if (!pattern.test(value)) fail(`${name}: missing ${pattern}`);
+};
+
 const countContains = (value, needle) => value.split(needle).length - 1;
 
 const root = resolve(".");
@@ -258,7 +262,7 @@ expectContains("site header", siteHeaderSourceText, 'class="nav-tooltip"');
 expectContains("site header", siteHeaderSourceText, 'class="language-short"');
 expectContains("site header styles", cssText, ".nav-source:hover .nav-tooltip");
 expectContains("site header styles", cssText, ".nav-source:focus-visible .nav-tooltip");
-expectContains("site header styles", cssText, "@media(min-width:841px)and (max-width:960px)");
+expectMatches("site header styles", cssText, /@media\s*(?:\(min-width:841px\)\s*and\s*\(max-width:960px\)|\(width>=841px\)\s*and\s*\(width<=960px\))/);
 expectNotContains("site header", siteHeaderSourceText, "theme-toggle-track");
 
 for (const wallet of [
@@ -296,7 +300,7 @@ for (const icon of [
   "quantumpurse.svg",
 ]) {
   expectFile(resolve(dist, "wallets", icon));
-  expectContains("registry wallet bundle", jsText, `\"${icon.replace(".svg", "")}\"`);
+  expectContains("registry wallet bundle", jsText, icon.replace(".svg", ""));
 }
 
 for (const stage of ["wallet", "scope", "authorise"]) {
@@ -368,7 +372,6 @@ for (const token of [
   ".hero-release-tag:hover",
   ".value-card-copy",
   ".landing-example-copy",
-  "@media(max-width:840px)",
   ".nav-drawer-backdrop",
   ".nav-menu-toggle",
   ".registry-skeleton-row",
@@ -380,6 +383,7 @@ for (const token of [
 ]) {
   expectContains("generated CSS", cssText, token);
 }
+expectMatches("generated CSS", cssText, /@media\s*(?:\(max-width:840px\)|\(width<=840px\))/);
 
 const newDocSlugs = [
   "tutorial-09-action-model-and-canonical-syntax",

@@ -8,8 +8,9 @@
     "data:github": "node scripts/fetch-github-data.mjs",
     "data:regen": "node scripts/regen-website-data.mjs",
     "dev": "npm run prepare:registry && astro dev --host 127.0.0.1",
-    "build": "npm run prepare:registry && npm run test:registry-guidance && npm run test:registry-browse && npm run test:session-storage && npm run test:submit-draft && npm run test:playground-focus && npm run test:playground-session && npm run test:playground-presentation && npm run check:visual && astro check && astro build && npm run test:site-preferences && npm run check:docs && npm run check:dist && npm run check:deploy",
-    "build:testnet": "npm run prepare:registry && npm run test:registry-guidance && npm run test:registry-browse && npm run test:session-storage && npm run test:submit-draft && npm run test:playground-focus && npm run test:playground-session && npm run test:playground-presentation && npm run check:visual && PUBLIC_REGISTRY_ENVIRONMENT=testnet-sandbox astro check && PUBLIC_REGISTRY_ENVIRONMENT=testnet-sandbox astro build --outDir dist-testnet && node scripts/test-site-preferences.mjs dist-testnet && node scripts/check-testnet-build.mjs",
+    "build": "npm run prepare:registry && npm run test:registry-url && npm run test:registry-guidance && npm run test:registry-browse && npm run test:session-storage && npm run test:submit-draft && npm run test:playground-focus && npm run test:playground-session && npm run test:playground-presentation && npm run check:visual && astro check && astro build && npm run test:site-preferences && npm run check:docs && npm run check:dist && npm run check:deploy",
+    "build:testnet": "npm run prepare:registry && npm run test:registry-url && npm run test:registry-guidance && npm run test:registry-browse && npm run test:session-storage && npm run test:submit-draft && npm run test:playground-focus && npm run test:playground-session && npm run test:playground-presentation && npm run check:visual && PUBLIC_REGISTRY_ENVIRONMENT=testnet-sandbox astro check && PUBLIC_REGISTRY_ENVIRONMENT=testnet-sandbox astro build --outDir dist-testnet && node scripts/test-site-preferences.mjs dist-testnet && node scripts/check-testnet-build.mjs",
+    "test:registry-url": "node scripts/test-registry-url.mjs",
     "test:registry-guidance": "node scripts/test-registry-guidance.mjs",
     "test:registry-browse": "node scripts/test-registry-browse-state.mjs",
     "test:session-storage": "node scripts/test-authorisation-session-storage.mjs",
@@ -25,15 +26,15 @@
     "preview": "astro preview --host 127.0.0.1"
   },
   "dependencies": {
-    "@astrojs/check": "^0.9.4",
-    "@ckb-ccc/connector": "^1.1.0",
+    "@astrojs/check": "^0.9.10",
+    "@ckb-ccc/connector": "^1.1.7",
     "@phosphor-icons/core": "^2.1.1",
-    "astro": "^5.9.2",
+    "astro": "^7.2.0",
     "buffer": "^6.0.3",
     "fflate": "^0.8.3",
-    "marked": "^18.0.5",
-    "mermaid": "^11.15.0",
-    "smol-toml": "^1.6.0",
+    "marked": "^18.0.9",
+    "mermaid": "^11.16.1",
+    "smol-toml": "^1.7.1",
     "typescript": "^5.8.3"
   }
 }

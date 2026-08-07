@@ -3,6 +3,7 @@ import {
   deriveArtifactGuidance,
   type RegistryArtifactGuidance,
 } from "./registry-guidance";
+import { registryHttpsUrl } from "./registry-url";
 
 export {
   deriveArtifactGuidance,
@@ -431,7 +432,7 @@ export function registryPackageDetailView(pkg: RegistryPackageView, apiOrigin: s
     ? evidenceDeployments
     : pkg.deployments.map((deployment) => ({ ...deployment, kind: "deployed" }));
   const profileContract = firstRelease?.profile_contract;
-  const cleanApiOrigin = apiOrigin.replace(/\/$/, "");
+  const cleanApiOrigin = (registryHttpsUrl(apiOrigin) ?? "https://api.registry.cellscript.dev/").replace(/\/$/, "");
   const apiArg = ` --api-url ${cleanApiOrigin}`;
   const release = firstRelease?.release ?? pkg.latest_release ?? "<release>";
   const coordinate = `${pkg.coordinate}@${release}`;
@@ -444,7 +445,10 @@ export function registryPackageDetailView(pkg: RegistryPackageView, apiOrigin: s
         : pkg.artifact.consumption_mode === "deployment"
           ? `cellc artifact pin ${coordinate} --output Artifacts.lock --accept-hash-bound${apiArg}`
           : `cellc artifact pin ${coordinate} --output Artifacts.lock --accept-hash-bound${apiArg}`;
-  const recordUrl = firstRelease?.direct_url || firstRelease?.immutable_bundle?.url || pkg.registry_json_url || "#";
+  const recordUrl = registryHttpsUrl(firstRelease?.direct_url)
+    ?? registryHttpsUrl(firstRelease?.immutable_bundle?.url)
+    ?? registryHttpsUrl(pkg.registry_json_url)
+    ?? "#";
   const maintainUrl = `/registry/manage?package=${encodeURIComponent(pkg.coordinate)}`;
   const installCommand = pkg.install_command || `cellc install ${coordinate}`;
   const evidenceUrl = `${cleanApiOrigin}/v1/artifacts/${encodeURIComponent(pkg.namespace)}/${encodeURIComponent(pkg.name)}/releases/${encodeURIComponent(release)}/evidence`;
@@ -581,8 +585,8 @@ export function registryPackageViewFromApi(value: unknown): RegistryPackageView 
     namespace,
     name,
     description: optionalString(value.description),
-    repository: optionalString(value.repository),
-    homepage: optionalString(value.homepage),
+    repository: registryHttpsUrl(value.repository),
+    homepage: registryHttpsUrl(value.homepage),
     documentation: optionalString(value.documentation),
     registry_json_url: optionalString(value.registry_json_url),
     production: value.registry_environment !== "testnet-sandbox",
@@ -618,8 +622,8 @@ export function toRegistryPackageView(pkg: RegistryPackage): RegistryPackageView
     namespace: pkg.namespace,
     name: pkg.name,
     description: pkg.description,
-    repository: pkg.repository,
-    homepage: pkg.homepage,
+    repository: registryHttpsUrl(pkg.repository),
+    homepage: registryHttpsUrl(pkg.homepage),
     documentation: pkg.documentation,
     package_path: pkg.path,
     package_dir_url: pkg.source_package_path ? `${repositoryRoot}/${encodeRepositoryPath(pkg.source_package_path)}` : repositoryRoot,
@@ -653,7 +657,9 @@ export function toRegistryPackageView(pkg: RegistryPackage): RegistryPackageView
 }
 
 function repositoryTreeUrl(repository: string, revision: string): string {
-  const clean = repository.replace(/[.]git$/, "").replace(/\/$/, "");
+  const safeRepository = registryHttpsUrl(repository);
+  if (!safeRepository) return "#";
+  const clean = safeRepository.replace(/[.]git\/?$/, "").replace(/\/$/, "");
   const treeSegment = clean.includes("gitlab.com/") ? "-/tree" : "tree";
   return `${clean}/${treeSegment}/${encodeURIComponent(revision)}`;
 }

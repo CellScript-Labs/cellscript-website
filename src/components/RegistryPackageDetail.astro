@@ -235,6 +235,7 @@ const evidenceKey = (kind?: string) => `evidence${pascalKey(kind)}`;
       shortHash,
       type RegistryPackageView,
     } from "../lib/registry";
+    import { registryHttpsUrl } from "../lib/registry-url";
 
     const setupRegistryPackageDetail = () => {
     const app = document.querySelector<HTMLElement>("[data-package-detail]");
@@ -504,7 +505,8 @@ const evidenceKey = (kind?: string) => `evidence${pascalKey(kind)}`;
       const record = app?.querySelector<HTMLAnchorElement>("[data-package-record]");
       if (record) record.href = detail.recordUrl;
       const repository = app?.querySelector<HTMLAnchorElement>("[data-package-repository]");
-      if (repository) { repository.hidden = !artifact.repository; repository.href = artifact.repository || "#"; }
+      const repositoryUrl = registryHttpsUrl(artifact.repository);
+      if (repository) { repository.hidden = !repositoryUrl; repository.href = repositoryUrl || "#"; }
       const maintain = app?.querySelector<HTMLAnchorElement>("[data-package-maintain]");
       if (maintain) maintain.href = detail.maintainUrl;
       renderGuidance(detail);

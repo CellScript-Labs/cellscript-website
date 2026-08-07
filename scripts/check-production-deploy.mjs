@@ -30,6 +30,7 @@ requireText(nginx, "gzip_types application/wasm", "WASM response compression");
 requireText(nginx, "location ~* \\.wasm$", "dedicated WASM asset policy");
 requireText(nginx, "public, max-age=31536000, immutable", "versioned WASM immutable caching");
 for (const header of [
+  "Content-Security-Policy",
   "Permissions-Policy",
   "Referrer-Policy",
   "Strict-Transport-Security",
