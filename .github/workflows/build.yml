@@ -41,6 +41,8 @@ jobs:
             examples
 
       - name: Generate registry website data
+        env:
+          CELLSCRIPT_REGISTRY_ROOT: ${{ github.workspace }}/cellscript-source
         run: npm run prepare:registry
 
       - name: Check generated registry data is committed
