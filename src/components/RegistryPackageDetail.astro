@@ -22,7 +22,8 @@ const statusLabel = (status?: string) =>
   ?? t.registry.package.notRecorded;
 const kindLabel = (value?: string) => value?.replaceAll("_", " ") || t.registry.package.notRecorded;
 const detail = pkg ? registryPackageDetailView(pkg, apiOrigin) : undefined;
-const firstRelease = detail?.firstRelease;
+const initialPackageJson = JSON.stringify(pkg ?? null).replaceAll("<", "\\u003c");
+const selectedRelease = detail?.selectedRelease;
 const allEvidence = detail?.evidence ?? [];
 const deploymentEvidence = detail?.deployments ?? [];
 const profileContract = detail?.profileContract;
@@ -70,12 +71,12 @@ const evidenceKey = (kind?: string) => `evidence${pascalKey(kind)}`;
           <span data-package-release>{pkg?.latest_release || t.registry.package.notRecorded}</span>
         </p>
         <p class="registry-pkg-desc" data-package-description>{pkg?.description || t.registry.browse.noDescription}</p>
-        <p class="registry-sandbox-expiry" data-package-expiry hidden={!firstRelease?.expires_at} data-expires-at={firstRelease?.expires_at}></p>
+        <p class="registry-sandbox-expiry" data-package-expiry hidden={!selectedRelease?.expires_at} data-expires-at={selectedRelease?.expires_at}></p>
       </div>
       <div class="registry-state-cluster" aria-label={t.registry.package.stateSummary} data-i18n-aria-label="registry.package.stateSummary">
-        <span class="registry-status" data-package-verification data-state={registryStatusTone(pkg?.verification_status)}>{statusLabel(pkg?.verification_status)}</span>
-        <span class="registry-status" data-package-deployment data-state={registryStatusTone(pkg?.deployment_status)}>{statusLabel(pkg?.deployment_status)}</span>
-        <span class="registry-status" data-package-availability data-state={registryStatusTone(pkg?.availability_status)}>{statusLabel(pkg?.availability_status)}</span>
+        <span class="registry-status" data-package-verification data-state={registryStatusTone(selectedRelease?.verification_status ?? pkg?.verification_status)}>{statusLabel(selectedRelease?.verification_status ?? pkg?.verification_status)}</span>
+        <span class="registry-status" data-package-deployment data-state={registryStatusTone(selectedRelease?.deployment_status ?? pkg?.deployment_status)}>{statusLabel(selectedRelease?.deployment_status ?? pkg?.deployment_status)}</span>
+        <span class="registry-status" data-package-availability data-state={registryStatusTone(selectedRelease?.availability_status ?? pkg?.availability_status)}>{statusLabel(selectedRelease?.availability_status ?? pkg?.availability_status)}</span>
       </div>
     </header>
 
@@ -92,6 +93,15 @@ const evidenceKey = (kind?: string) => `evidence${pascalKey(kind)}`;
         <section class="registry-panel registry-section-block" aria-labelledby="releases-title">
           <p class="registry-label" data-i18n="registry.package.releasesLabel">{t.registry.package.releasesLabel}</p>
           <h2 id="releases-title" data-i18n="registry.package.releasesTitle">{t.registry.package.releasesTitle}</h2>
+          <label class="registry-builder-field registry-release-picker" hidden={(detail?.releases.length ?? 0) < 2} data-package-release-picker>
+            <span data-i18n="registry.package.selectedReleaseLabel">{t.registry.package.selectedReleaseLabel}</span>
+            <select class="registry-select" data-package-release-select>
+              {detail?.releases.map((release) => (
+                <option value={release.release} selected={release.release === selectedRelease?.release}>{release.release}</option>
+              ))}
+            </select>
+            <small class="registry-field-hint" data-i18n="registry.package.selectedReleaseHint">{t.registry.package.selectedReleaseHint}</small>
+          </label>
           <div class="registry-table-wrap registry-table-block">
             <table class="registry-table registry-responsive-table">
               <caption class="sr-only" data-i18n="registry.package.releasesCaption">{t.registry.package.releasesCaption}</caption>
@@ -106,7 +116,7 @@ const evidenceKey = (kind?: string) => `evidence${pascalKey(kind)}`;
               </tr></thead>
               <tbody data-package-releases>
                 {detail?.releases.map((release) => (
-                  <tr>
+                  <tr data-selected={String(release.release === selectedRelease?.release)}>
                     <td data-label={t.registry.package.thRelease}>{release.release}</td>
                     <td data-label={t.registry.package.thSourceHash}><code>{shortHash(release.source_hash, 12, t.registry.package.notRecorded)}</code></td>
                     <td data-label={t.registry.package.thArtifactHash}><code>{shortHash(release.artifact_hash, 12, t.registry.package.notRecorded)}</code></td>
@@ -225,6 +235,8 @@ const evidenceKey = (kind?: string) => `evidence${pascalKey(kind)}`;
     </div>
   </article>
 
+  <script is:inline type="application/json" data-package-initial set:html={initialPackageJson} />
+
   <script>
     import {
       registryDateLabel,
@@ -235,10 +247,12 @@ const evidenceKey = (kind?: string) => `evidence${pascalKey(kind)}`;
       shortHash,
       type RegistryPackageView,
     } from "../lib/registry";
+    import { registryHttpsUrl } from "../lib/registry-url";
 
     const setupRegistryPackageDetail = () => {
     const app = document.querySelector<HTMLElement>("[data-package-detail]");
     if (!app) return;
+    const initialArtifactNode = app.querySelector<HTMLScriptElement>("[data-package-initial]");
     const previousLifecycle = (window as any).__cellscriptRegistryPackageDetailAbort as AbortController | undefined;
     previousLifecycle?.abort();
     const lifecycle = new AbortController();
@@ -304,6 +318,8 @@ const evidenceKey = (kind?: string) => `evidence${pascalKey(kind)}`;
     const maintainerTitle = app?.querySelector<HTMLElement>("[data-package-maintainer-title]");
     const maintainerBody = app?.querySelector<HTMLElement>("[data-package-maintainer-body]");
     const maintainerLink = app?.querySelector<HTMLAnchorElement>("[data-package-maintainer-link]");
+    const releasePicker = app?.querySelector<HTMLElement>("[data-package-release-picker]");
+    const releaseSelect = app?.querySelector<HTMLSelectElement>("[data-package-release-select]");
     const pascalKey = (value: string) => value.split("_").map((part) => `${part[0]?.toUpperCase()}${part.slice(1)}`).join("");
     const renderGuidanceText = () => {
       const summaryKey = guidancePanel?.dataset.guidanceKey;
@@ -363,10 +379,22 @@ const evidenceKey = (kind?: string) => `evidence${pascalKey(kind)}`;
       row.append(td);
       return td;
     };
-    let currentArtifact: RegistryPackageView | undefined;
-    const render = (artifact: RegistryPackageView) => {
+    let currentArtifact: RegistryPackageView | undefined = (() => {
+      try {
+        const parsed = JSON.parse(initialArtifactNode?.textContent || "null");
+        return parsed && typeof parsed === "object" ? parsed as RegistryPackageView : undefined;
+      } catch {
+        return undefined;
+      }
+    })();
+    const render = (artifact: RegistryPackageView, requestedRelease?: string) => {
       currentArtifact = artifact;
-      const detail = registryPackageDetailView(artifact, app?.dataset.apiOrigin || "https://api.registry.cellscript.dev");
+      const detail = registryPackageDetailView(
+        artifact,
+        app?.dataset.apiOrigin || "https://api.registry.cellscript.dev",
+        requestedRelease,
+      );
+      const selectedRelease = detail.selectedRelease;
       app?.querySelector<HTMLElement>("[data-package-loading]")?.setAttribute("hidden", "");
       app?.querySelector<HTMLElement>("[data-package-error]")?.setAttribute("hidden", "");
       const content = app?.querySelector<HTMLElement>("[data-package-content]");
@@ -376,11 +404,11 @@ const evidenceKey = (kind?: string) => `evidence${pascalKey(kind)}`;
       document.title = `${message("registry.eyebrow")}: ${artifact.coordinate}`;
       text("[data-package-kind]", String(artifact.artifact.kind).replaceAll("_", " "));
       text("[data-package-consumption]", String(artifact.artifact.consumption_mode).replaceAll("_", " "));
-      text("[data-package-release]", artifact.latest_release || message("registry.package.notRecorded"));
+      text("[data-package-release]", selectedRelease?.release || artifact.latest_release || message("registry.package.notRecorded"));
       text("[data-package-description]", artifact.description || message("registry.browse.noDescription"));
-      setState("[data-package-verification]", artifact.verification_status);
-      setState("[data-package-deployment]", artifact.deployment_status);
-      setState("[data-package-availability]", artifact.availability_status);
+      setState("[data-package-verification]", selectedRelease?.verification_status ?? artifact.verification_status);
+      setState("[data-package-deployment]", selectedRelease?.deployment_status ?? artifact.deployment_status);
+      setState("[data-package-availability]", selectedRelease?.availability_status ?? artifact.availability_status);
       text("[data-package-fact-kind]", String(artifact.artifact.kind).replaceAll("_", " "));
       text("[data-package-fact-profile]", String(artifact.artifact.profile).replaceAll("_", " "));
       text("[data-package-fact-consumption]", String(artifact.artifact.consumption_mode).replaceAll("_", " "));
@@ -396,10 +424,21 @@ const evidenceKey = (kind?: string) => `evidence${pascalKey(kind)}`;
       fact("verifier", profileContract?.verifier?.verifier_id);
 
       const releases = detail.releases;
+      if (releasePicker) releasePicker.hidden = releases.length < 2;
+      if (releaseSelect) {
+        releaseSelect.replaceChildren(...releases.map((release) => {
+          const option = document.createElement("option");
+          option.value = release.release;
+          option.textContent = release.release;
+          option.selected = release.release === selectedRelease?.release;
+          return option;
+        }));
+      }
       const releaseBody = app?.querySelector<HTMLTableSectionElement>("[data-package-releases]");
       releaseBody?.replaceChildren();
       for (const release of releases) {
         const row = document.createElement("tr");
+        row.dataset.selected = String(release.release === selectedRelease?.release);
         cell(row, message("registry.package.thRelease"), release.release);
         cell(row, message("registry.package.thSourceHash"), release.source_hash, true);
         cell(row, message("registry.package.thArtifactHash"), release.artifact_hash || "", true);
@@ -499,16 +538,23 @@ const evidenceKey = (kind?: string) => `evidence${pascalKey(kind)}`;
       const noDeployment = app?.querySelector<HTMLElement>("[data-package-no-deployment]");
       if (deploymentWrap) deploymentWrap.hidden = deployments.length === 0;
       if (noDeployment) noDeployment.hidden = deployments.length > 0;
-      const selected = detail.firstRelease;
-      renderExpiry(selected?.expires_at);
+      renderExpiry(selectedRelease?.expires_at);
       const record = app?.querySelector<HTMLAnchorElement>("[data-package-record]");
       if (record) record.href = detail.recordUrl;
       const repository = app?.querySelector<HTMLAnchorElement>("[data-package-repository]");
-      if (repository) { repository.hidden = !artifact.repository; repository.href = artifact.repository || "#"; }
+      const repositoryUrl = registryHttpsUrl(artifact.repository);
+      if (repository) { repository.hidden = !repositoryUrl; repository.href = repositoryUrl || "#"; }
       const maintain = app?.querySelector<HTMLAnchorElement>("[data-package-maintain]");
       if (maintain) maintain.href = detail.maintainUrl;
       renderGuidance(detail);
       formatPackageDates();
+      const nextUrl = new URL(window.location.href);
+      if (selectedRelease?.release && selectedRelease.release !== artifact.latest_release) {
+        nextUrl.searchParams.set("release", selectedRelease.release);
+      } else {
+        nextUrl.searchParams.delete("release");
+      }
+      window.history.replaceState({}, "", nextUrl);
     };
     let requestInFlight = false;
     const load = async (force = false) => {
@@ -548,7 +594,7 @@ const evidenceKey = (kind?: string) => `evidence${pascalKey(kind)}`;
         const payload = await response.json();
         const artifact = registryPackageViewFromApi(payload);
         if (!artifact) throw new Error(message("registry.package.invalidResponse"));
-        render(artifact);
+        render(artifact, new URLSearchParams(window.location.search).get("release") || undefined);
       } catch (error) {
         if (signal.aborted) return;
         if (errorPanel) errorPanel.hidden = false;
@@ -564,6 +610,9 @@ const evidenceKey = (kind?: string) => `evidence${pascalKey(kind)}`;
       }
     };
     app?.querySelector<HTMLButtonElement>("[data-package-retry]")?.addEventListener("click", () => void load(), { signal });
+    releaseSelect?.addEventListener("change", () => {
+      if (currentArtifact) render(currentArtifact, releaseSelect.value);
+    }, { signal });
     consumerButton?.addEventListener("click", () => {
       if (consumerButton.dataset.consumerAction === "refresh") {
         void load(true);
@@ -578,7 +627,7 @@ const evidenceKey = (kind?: string) => `evidence${pascalKey(kind)}`;
       });
     }, { signal });
     window.addEventListener("cellscript:locale-change", () => {
-      if (currentArtifact) render(currentArtifact);
+      if (currentArtifact) render(currentArtifact, releaseSelect?.value);
       else {
         formatPackageDates();
         renderGuidanceText();
@@ -586,6 +635,9 @@ const evidenceKey = (kind?: string) => `evidence${pascalKey(kind)}`;
     }, { signal });
     document.addEventListener("astro:before-swap", () => lifecycle.abort(), { once: true, signal });
     formatPackageDates();
+    if (currentArtifact) {
+      render(currentArtifact, new URLSearchParams(window.location.search).get("release") || undefined);
+    }
     renderGuidanceText();
     load();
     };

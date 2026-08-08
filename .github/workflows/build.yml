@@ -19,10 +19,10 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Check out repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: "22"
           cache: "npm"
@@ -32,15 +32,23 @@ jobs:
         run: npm ci
 
       - name: Check out CellScript examples
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           repository: CellScript-Labs/CellScript
+          ref: nightly-0.23
           path: cellscript-source
           sparse-checkout: |
             docs/wiki
             examples
+            proposals/evolving-dob/evolving-dob-profile-v1
+
+      - name: Check out Registry package source
+        working-directory: cellscript-source
+        run: git submodule update --init --depth 1 proposals/evolving-dob/evolving-dob-profile-v1
 
       - name: Generate registry website data
+        env:
+          CELLSCRIPT_REGISTRY_ROOT: ${{ github.workspace }}/cellscript-source
         run: npm run prepare:registry
 
       - name: Check generated registry data is committed
@@ -58,7 +66,7 @@ jobs:
         run: npm run build
 
       - name: Upload website dist
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: cellscript-website-dist
           path: dist/

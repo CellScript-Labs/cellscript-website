@@ -157,12 +157,33 @@ const apiOrigin = registryRuntime.apiOrigin;
             </div>
             <div class="registry-task-cluster" data-task-tone="danger">
               <span class="registry-task-cluster-label" data-i18n="registry.manage.dangerAction">{t.registry.manage.dangerAction}</span>
+              <div class="registry-task-cluster-grid">
+                <div class="registry-task-option">
+                  <input id="manage-task-availability" type="radio" name="action" value="availability" />
+                  <label for="manage-task-availability">
+                    <strong data-i18n="registry.manage.taskAvailability">{t.registry.manage.taskAvailability}</strong>
+                    <span data-i18n="registry.manage.taskAvailabilityBody">{t.registry.manage.taskAvailabilityBody}</span>
+                    <i aria-hidden="true">07</i>
+                  </label>
+                </div>
+                <div class="registry-task-option">
+                  <input id="manage-task-revoke" type="radio" name="action" value="revoke" />
+                  <label for="manage-task-revoke">
+                    <strong data-i18n="registry.manage.taskRevoke">{t.registry.manage.taskRevoke}</strong>
+                    <span data-i18n="registry.manage.taskRevokeBody">{t.registry.manage.taskRevokeBody}</span>
+                    <i aria-hidden="true">09</i>
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div class="registry-task-cluster" data-task-tone="primary">
+              <span class="registry-task-cluster-label" data-i18n="registry.manage.accessActions">{t.registry.manage.accessActions}</span>
               <div class="registry-task-option">
-                <input id="manage-task-yank" type="radio" name="action" value="yank" />
-                <label for="manage-task-yank">
-                  <strong data-i18n="registry.manage.taskYank">{t.registry.manage.taskYank}</strong>
-                  <span data-i18n="registry.manage.taskYankBody">{t.registry.manage.taskYankBody}</span>
-                  <i aria-hidden="true">07</i>
+                <input id="manage-task-capability" type="radio" name="action" value="capability" />
+                <label for="manage-task-capability">
+                  <strong data-i18n="registry.manage.taskCapability">{t.registry.manage.taskCapability}</strong>
+                  <span data-i18n="registry.manage.taskCapabilityBody">{t.registry.manage.taskCapabilityBody}</span>
+                  <i aria-hidden="true">08</i>
                 </label>
               </div>
             </div>
@@ -170,11 +191,19 @@ const apiOrigin = registryRuntime.apiOrigin;
           </fieldset>
         </details>
 
-        <div class="registry-yank-fields" data-manage-yank-fields hidden>
+        <div class="registry-yank-fields" data-manage-availability-fields hidden>
           <div class="registry-yank-grid">
             <label class="registry-builder-field">
               <span data-i18n="registry.manage.versionLabel">{t.registry.manage.versionLabel}</span>
               <input class="registry-input" name="version" list="manage-version-options" autocomplete="off" />
+            </label>
+            <label class="registry-builder-field">
+              <span data-i18n="registry.manage.availabilityLabel">{t.registry.manage.availabilityLabel}</span>
+              <select class="registry-select" name="availability_status">
+                <option value="active" data-i18n="registry.manage.availabilityActive">{t.registry.manage.availabilityActive}</option>
+                <option value="deprecated" data-i18n="registry.manage.availabilityDeprecated">{t.registry.manage.availabilityDeprecated}</option>
+                <option value="yanked" selected data-i18n="registry.manage.availabilityYanked">{t.registry.manage.availabilityYanked}</option>
+              </select>
             </label>
             <label class="registry-builder-field">
               <span data-i18n="registry.manage.capabilityKeyLabel">{t.registry.manage.capabilityKeyLabel}</span>
@@ -187,8 +216,72 @@ const apiOrigin = registryRuntime.apiOrigin;
             <input class="registry-input" name="note" autocomplete="off" placeholder={t.registry.manage.reasonPlaceholder} data-i18n-placeholder="registry.manage.reasonPlaceholder" />
           </label>
           <div class="registry-yank-warning" role="note">
-            <strong data-i18n="registry.manage.yankWarningTitle">{t.registry.manage.yankWarningTitle}</strong>
-            <span data-i18n="registry.manage.yankWarningBody">{t.registry.manage.yankWarningBody}</span>
+            <strong data-i18n="registry.manage.availabilityWarningTitle">{t.registry.manage.availabilityWarningTitle}</strong>
+            <span data-i18n="registry.manage.availabilityWarningBody">{t.registry.manage.availabilityWarningBody}</span>
+          </div>
+        </div>
+
+        <div class="registry-yank-fields" data-manage-capability-fields hidden>
+          <div class="registry-yank-grid">
+            <label class="registry-builder-field">
+              <span data-i18n="registry.manage.principalTypeLabel">{t.registry.manage.principalTypeLabel}</span>
+              <select class="registry-select" name="principal_type">
+                <option value="joyid_ckb">joyid_ckb</option>
+                <option value="ckb_secp256k1">ckb_secp256k1</option>
+              </select>
+            </label>
+            <label class="registry-builder-field">
+              <span data-i18n="registry.manage.principalIdLabel">{t.registry.manage.principalIdLabel}</span>
+              <input class="registry-input" name="principal_id" autocomplete="off" placeholder={t.registry.manage.principalIdPlaceholder} data-i18n-placeholder="registry.manage.principalIdPlaceholder" />
+            </label>
+          </div>
+          <div class="registry-yank-grid">
+            <label class="registry-builder-field">
+              <span data-i18n="registry.manage.scopeLabel">{t.registry.manage.scopeLabel}</span>
+              <select class="registry-select" name="capability_scope">
+                <option value="deployment" data-i18n="registry.manage.scopeDeployment">{t.registry.manage.scopeDeployment}</option>
+                <option value="availability" data-i18n="registry.manage.scopeAvailability">{t.registry.manage.scopeAvailability}</option>
+                <option value="maintenance" selected data-i18n="registry.manage.scopeMaintenance">{t.registry.manage.scopeMaintenance}</option>
+              </select>
+            </label>
+            <label class="registry-builder-field">
+              <span data-i18n="registry.manage.expiryLabel">{t.registry.manage.expiryLabel}</span>
+              <input class="registry-input" name="capability_expires" autocomplete="off" value="90d" placeholder="90d" />
+            </label>
+          </div>
+          <div class="registry-yank-warning" role="note">
+            <strong data-i18n="registry.manage.capabilityBoundaryTitle">{t.registry.manage.capabilityBoundaryTitle}</strong>
+            <span data-i18n="registry.manage.capabilityBoundaryBody">{t.registry.manage.capabilityBoundaryBody}</span>
+          </div>
+        </div>
+
+        <div class="registry-yank-fields" data-manage-revoke-fields hidden>
+          <div class="registry-yank-grid">
+            <label class="registry-builder-field">
+              <span data-i18n="registry.manage.principalTypeLabel">{t.registry.manage.principalTypeLabel}</span>
+              <select class="registry-select" name="revoke_principal_type">
+                <option value="joyid_ckb">joyid_ckb</option>
+                <option value="ckb_secp256k1">ckb_secp256k1</option>
+              </select>
+            </label>
+            <label class="registry-builder-field">
+              <span data-i18n="registry.manage.principalIdLabel">{t.registry.manage.principalIdLabel}</span>
+              <input class="registry-input" name="revoke_principal_id" autocomplete="off" placeholder={t.registry.manage.principalIdPlaceholder} data-i18n-placeholder="registry.manage.principalIdPlaceholder" />
+            </label>
+          </div>
+          <div class="registry-yank-grid">
+            <label class="registry-builder-field">
+              <span data-i18n="registry.manage.capabilityKeyLabel">{t.registry.manage.capabilityKeyLabel}</span>
+              <input class="registry-input" name="revoke_capability" autocomplete="off" placeholder="cap_…" pattern="cap_[0-9a-f]{32}" />
+            </label>
+            <label class="registry-builder-field">
+              <span data-i18n="registry.manage.reasonLabel">{t.registry.manage.reasonLabel}</span>
+              <input class="registry-input" name="revoke_reason" autocomplete="off" placeholder={t.registry.manage.revokeReasonPlaceholder} data-i18n-placeholder="registry.manage.revokeReasonPlaceholder" />
+            </label>
+          </div>
+          <div class="registry-yank-warning" role="note">
+            <strong data-i18n="registry.manage.revokeWarningTitle">{t.registry.manage.revokeWarningTitle}</strong>
+            <span data-i18n="registry.manage.revokeWarningBody">{t.registry.manage.revokeWarningBody}</span>
           </div>
         </div>
 
@@ -228,6 +321,10 @@ const apiOrigin = registryRuntime.apiOrigin;
         </div>
         <p class="registry-manage-help" data-manage-help>{t.registry.manage.helpPublish}</p>
         <div class="registry-manage-validation" data-manage-validation role="alert" hidden></div>
+        <div class="registry-manage-access-check" data-manage-access-check hidden>
+          <strong data-i18n="registry.manage.accessCheckLabel">{t.registry.manage.accessCheckLabel}</strong>
+          <output data-manage-access-check-output role="status" aria-live="polite"></output>
+        </div>
         <div class="registry-command-line">
           <code data-manage-command>cellc package verify --json &amp;&amp; cellc publish --dry-run &amp;&amp; cellc publish</code>
           <button
@@ -266,7 +363,9 @@ const apiOrigin = registryRuntime.apiOrigin;
       const kind = app?.querySelector("[data-manage-kind]");
       const output = app?.querySelector("[data-manage-output]");
       const copy = app?.querySelector("[data-manage-copy]");
-      const yankFields = app?.querySelector("[data-manage-yank-fields]");
+      const availabilityFields = app?.querySelector("[data-manage-availability-fields]");
+      const capabilityFields = app?.querySelector("[data-manage-capability-fields]");
+      const revokeFields = app?.querySelector("[data-manage-revoke-fields]");
       const artifactFields = app?.querySelector("[data-manage-artifact-fields]");
       const reproduceFields = app?.querySelector("[data-manage-reproduce-fields]");
       const deploymentFields = app?.querySelector("[data-manage-deployment-fields]");
@@ -277,20 +376,26 @@ const apiOrigin = registryRuntime.apiOrigin;
       const versionOptions = app?.querySelector("[data-manage-version-options]");
       const remoteStatus = app?.querySelector("[data-manage-remote-status]");
       const validation = app?.querySelector("[data-manage-validation]");
+      const accessCheck = app?.querySelector("[data-manage-access-check]");
+      const accessCheckOutput = app?.querySelector("[data-manage-access-check-output]");
       const taskMenu = app?.querySelector("[data-manage-task-menu]");
       const currentTaskTitle = app?.querySelector("[data-manage-current-title]");
       const currentTaskBody = app?.querySelector("[data-manage-current-body]");
       const coordinatePattern = /^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?\/[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$/;
       const params = new URLSearchParams(window.location.search);
-      const allowedTasks = new Set(["publish", "yank", "package", "live", "reproduce", "deployment", "commitment"]);
+      const allowedTasks = new Set(["publish", "availability", "package", "live", "reproduce", "deployment", "commitment", "capability", "revoke"]);
       const remoteLoadDebounceMs = 260;
       const mobileLayoutMedia = "(max-width: 900px)";
       const mobileScrollDelayMs = 80;
       const requestedCoordinate = params.get("package")?.trim() || "";
-      const requestedTask = params.get("task")?.trim() || "";
+      const requestedTaskValue = params.get("task")?.trim() || "";
+      const requestedTask = requestedTaskValue === "yank" ? "availability" : requestedTaskValue;
+      const requestedRelease = params.get("release")?.trim() || "";
       let remotePackage = null;
       let remoteRequest = null;
       let remoteTimer = 0;
+      let accessRequest = null;
+      let accessTimer = 0;
 
       const i18n = window.__CELLSCRIPT_I18N__;
       const locale = () => document.documentElement.dataset.locale === "zh" ? "zh" : "en";
@@ -314,12 +419,14 @@ const apiOrigin = registryRuntime.apiOrigin;
       const selectedTask = () => form?.querySelector("input[name='action']:checked")?.value || "publish";
       const taskKeys = {
         publish: "Publish",
-        yank: "Yank",
+        availability: "Availability",
         package: "VerifyPackage",
         live: "VerifyLive",
         reproduce: "Reproduce",
         deployment: "Deployment",
         commitment: "Commitment",
+        capability: "Capability",
+        revoke: "Revoke",
       };
       const shellArg = (value) => `'${String(value).replace(/'/g, "'\\''")}'`;
       const prefix = () => field("path") ? `cd ${shellArg(field("path"))} && ` : "";
@@ -330,6 +437,59 @@ const apiOrigin = registryRuntime.apiOrigin;
         if (!coordinatePattern.test(coordinate())) return "/registry";
         if (localPackage()) return `/registry/package/${encodeURIComponent(namespace)}/${encodeURIComponent(name)}`;
         return `/registry/package/?${new URLSearchParams({ namespace, name })}`;
+      };
+
+      const accessRequirement = () => {
+        const task = selectedTask();
+        if (task === "deployment") return { keyId: field("deployment_capability"), scope: "deployment" };
+        if (task === "availability") return { keyId: field("capability"), scope: "availability" };
+        if (task === "revoke") return { keyId: field("revoke_capability"), scope: "" };
+        return null;
+      };
+
+      const checkAccess = async (keyId, scope, checkedCoordinate) => {
+        accessRequest?.abort();
+        const request = new AbortController();
+        accessRequest = request;
+        if (accessCheck) accessCheck.hidden = false;
+        if (accessCheckOutput) accessCheckOutput.textContent = g("registry.manage.checkingAccess");
+        const [namespace, name] = checkedCoordinate.split("/");
+        const query = new URLSearchParams({ namespace, name });
+        try {
+          const response = await fetch(`${app?.dataset.apiOrigin}/v1/capabilities/${encodeURIComponent(keyId)}/check?${query}`, {
+            headers: { accept: "application/json" },
+            signal: request.signal,
+          });
+          const payload = await response.json();
+          if (!response.ok || !payload || !Array.isArray(payload.scopes) || !payload.allows) throw new Error();
+          if (coordinate() !== checkedCoordinate || accessRequirement()?.keyId !== keyId) return;
+          const allowed = scope
+            ? payload.status === "active" && payload.allows[scope] === true
+            : payload.status !== "revoked";
+          const decision = allowed ? g("registry.manage.accessAllowed") : g("registry.manage.accessDenied");
+          if (accessCheck) accessCheck.dataset.tone = allowed ? "success" : "error";
+          if (accessCheckOutput) {
+            accessCheckOutput.textContent = `${statusLabel(payload.status)} · ${scope || g("registry.manage.anyScope")}: ${decision} · ${payload.scopes.join(" · ")}`;
+          }
+        } catch (error) {
+          if (request.signal.aborted) return;
+          if (accessCheck) accessCheck.dataset.tone = "error";
+          if (accessCheckOutput) accessCheckOutput.textContent = g("registry.manage.accessCheckFailed");
+        }
+      };
+
+      const scheduleAccessCheck = () => {
+        window.clearTimeout(accessTimer);
+        accessRequest?.abort();
+        const requirement = accessRequirement();
+        if (!requirement || !coordinatePattern.test(coordinate()) || !/^cap_[0-9a-f]{32}$/.test(requirement.keyId)) {
+          if (accessCheck) accessCheck.hidden = true;
+          return;
+        }
+        if (accessCheck) accessCheck.hidden = false;
+        if (accessCheckOutput) accessCheckOutput.textContent = g("registry.manage.checkingAccess");
+        const checkedCoordinate = coordinate();
+        accessTimer = window.setTimeout(() => void checkAccess(requirement.keyId, requirement.scope, checkedCoordinate), 320);
       };
 
       const syncUrl = () => {
@@ -384,15 +544,19 @@ const apiOrigin = registryRuntime.apiOrigin;
         const taskKey = taskKeys[task] || "Publish";
         if (currentTaskTitle) currentTaskTitle.textContent = g(`registry.manage.task${taskKey}`);
         if (currentTaskBody) currentTaskBody.textContent = g(`registry.manage.task${taskKey}Body`);
-        const isYank = task === "yank";
+        const isAvailability = task === "availability";
+        const isCapability = task === "capability";
+        const isRevoke = task === "revoke";
         const isArtifactTask = ["reproduce", "deployment", "commitment"].includes(task);
-        if (yankFields) yankFields.hidden = !isYank;
+        if (availabilityFields) availabilityFields.hidden = !isAvailability;
+        if (capabilityFields) capabilityFields.hidden = !isCapability;
+        if (revokeFields) revokeFields.hidden = !isRevoke;
         if (artifactFields) artifactFields.hidden = !isArtifactTask;
         if (reproduceFields) reproduceFields.hidden = task !== "reproduce";
         if (deploymentFields) deploymentFields.hidden = task !== "deployment";
-        if (versionInput instanceof HTMLInputElement) versionInput.required = isYank;
-        if (reasonInput instanceof HTMLInputElement) reasonInput.required = isYank;
-        if (capabilityInput instanceof HTMLInputElement) capabilityInput.required = isYank;
+        if (versionInput instanceof HTMLInputElement) versionInput.required = isAvailability;
+        if (reasonInput instanceof HTMLInputElement) reasonInput.required = isAvailability && field("availability_status") !== "active";
+        if (capabilityInput instanceof HTMLInputElement) capabilityInput.required = isAvailability;
 
         const pkg = localPackage() || remotePackage;
         const generic = pkg?.artifact?.profile && pkg.artifact.profile !== "cellscript_source";
@@ -403,15 +567,17 @@ const apiOrigin = registryRuntime.apiOrigin;
         let noteKey = "registry.manage.noteWrite";
         let kindKey = "registry.manage.kindRegistryWrite";
         let tone = "write";
-        if (task === "yank") {
+        if (task === "availability") {
           const version = field("version") || "<version>";
           const reason = field("note");
           const capability = field("capability") || "<key_id>";
-          next = `cellc artifact set-availability ${shellArg(`${coordinate()}@${version}`)} --status yanked --reason ${shellArg(reason || "<reason>")} --capability-key-id ${shellArg(capability)}`;
-          helpKey = "registry.manage.helpYank";
-          noteKey = "registry.manage.noteYank";
+          const availability = field("availability_status") || "active";
+          const reasonArgument = reason ? ` --reason ${shellArg(reason)}` : "";
+          next = `cellc artifact set-availability ${shellArg(`${coordinate()}@${version}`)} --status ${shellArg(availability)}${reasonArgument} --capability-key-id ${shellArg(capability)} --api-url ${shellArg(app?.dataset.apiOrigin || "https://api.registry.cellscript.dev")}`;
+          helpKey = "registry.manage.helpAvailability";
+          noteKey = "registry.manage.noteAvailability";
           kindKey = "registry.manage.kindRegistryWrite";
-          tone = "danger";
+          tone = availability === "active" ? "write" : "danger";
         } else if (task === "package") {
           next = generic ? `${prefix()}cellc publish --artifact-manifest Artifact.toml --dry-run` : `${prefix()}cellc package verify --json`;
           helpKey = "registry.manage.helpVerifyPackage";
@@ -452,9 +618,32 @@ const apiOrigin = registryRuntime.apiOrigin;
           noteKey = "registry.manage.noteCommitment";
           kindKey = "registry.manage.kindWalletIntent";
           tone = "write";
+        } else if (task === "capability") {
+          const registryOrigin = app?.dataset.apiOrigin || "https://api.registry.cellscript.dev";
+          const principalType = field("principal_type") || "joyid_ckb";
+          const principalId = field("principal_id") || "<principal_id>";
+          const scopeSelection = field("capability_scope") || "maintenance";
+          const scopeActions = scopeSelection === "maintenance" ? ["deployment", "availability"] : [scopeSelection];
+          const scopeArguments = scopeActions.map((scope) => `--scope ${shellArg(`${scope}:${coordinate()}`)}`).join(" ");
+          next = `cellc auth capability create --registry-origin ${shellArg(registryOrigin)} --principal-type ${shellArg(principalType)} --principal-id ${shellArg(principalId)} ${scopeArguments} --expires ${shellArg(field("capability_expires") || "90d")} --json > capability-payload.json\n# Sign capability-payload.json with the matching CKB wallet, then:\ncellc auth capability submit --api-url ${shellArg(registryOrigin)} --payload capability-payload.json --wallet-signature wallet-signature.json --json`;
+          helpKey = "registry.manage.helpCapability";
+          noteKey = "registry.manage.noteCapability";
+          kindKey = "registry.manage.kindWalletAuthorisation";
+          tone = "write";
+        } else if (task === "revoke") {
+          const registryOrigin = app?.dataset.apiOrigin || "https://api.registry.cellscript.dev";
+          const principalType = field("revoke_principal_type") || "joyid_ckb";
+          const principalId = field("revoke_principal_id") || "<principal_id>";
+          const capability = field("revoke_capability") || "<key_id>";
+          const reason = field("revoke_reason") || "<reason>";
+          next = `cellc auth capability revoke --registry-origin ${shellArg(registryOrigin)} --principal-type ${shellArg(principalType)} --principal-id ${shellArg(principalId)} --capability-key-id ${shellArg(capability)} --json > capability-revoke-payload.json\n# Sign capability-revoke-payload.json with the matching CKB wallet, then:\ncellc auth capability revoke --api-url ${shellArg(registryOrigin)} --payload capability-revoke-payload.json --wallet-signature wallet-signature.json --reason ${shellArg(reason)} --json`;
+          helpKey = "registry.manage.helpRevoke";
+          noteKey = "registry.manage.noteRevoke";
+          kindKey = "registry.manage.kindWalletAuthorisation";
+          tone = "danger";
         }
         const issues = [];
-        for (const name of ["version", "note", "capability", "artifact_version", "reports", "code_hash", "tx_hash", "output_index", "deployment_capability"]) {
+        for (const name of ["version", "note", "capability", "artifact_version", "reports", "code_hash", "tx_hash", "output_index", "deployment_capability", "principal_id", "capability_expires", "revoke_principal_id", "revoke_capability", "revoke_reason"]) {
           setFieldInvalid(name, false);
         }
         const requireField = (name, accepted, messageKey) => {
@@ -463,9 +652,11 @@ const apiOrigin = registryRuntime.apiOrigin;
           setFieldInvalid(name, true);
         };
         if (!valid) issues.push(g("registry.manage.validationCoordinate"));
-        if (isYank) {
+        if (isAvailability) {
           requireField("version", Boolean(field("version")), "registry.manage.validationVersion");
-          requireField("note", Boolean(field("note")), "registry.manage.validationReason");
+          if (field("availability_status") !== "active") {
+            requireField("note", Boolean(field("note")), "registry.manage.validationAvailabilityReason");
+          }
           requireField("capability", /^cap_[0-9a-f]{32}$/.test(field("capability")), "registry.manage.validationCapability");
         }
         if (isArtifactTask) {
@@ -480,6 +671,15 @@ const apiOrigin = registryRuntime.apiOrigin;
           requireField("tx_hash", /^0x[0-9a-fA-F]{64}$/.test(field("tx_hash")), "registry.manage.validationTxHash");
           requireField("output_index", /^[0-9]+$/.test(field("output_index")), "registry.manage.validationOutputIndex");
           requireField("deployment_capability", /^cap_[0-9a-f]{32}$/.test(field("deployment_capability")), "registry.manage.validationCapability");
+        }
+        if (isCapability) {
+          requireField("principal_id", Boolean(field("principal_id")), "registry.manage.validationPrincipal");
+          requireField("capability_expires", /^[1-9][0-9]*(?:d|h)$/.test(field("capability_expires")), "registry.manage.validationExpiry");
+        }
+        if (isRevoke) {
+          requireField("revoke_principal_id", Boolean(field("revoke_principal_id")), "registry.manage.validationPrincipal");
+          requireField("revoke_capability", /^cap_[0-9a-f]{32}$/.test(field("revoke_capability")), "registry.manage.validationCapability");
+          requireField("revoke_reason", Boolean(field("revoke_reason")), "registry.manage.validationRevokeReason");
         }
         if (validation) {
           validation.replaceChildren(...issues.map((issue) => {
@@ -499,6 +699,7 @@ const apiOrigin = registryRuntime.apiOrigin;
           copy.disabled = issues.length > 0;
           copy.dataset.copyText = issues.length === 0 ? next : "";
         }
+        scheduleAccessCheck();
         syncUrl();
       };
 
@@ -580,6 +781,16 @@ const apiOrigin = registryRuntime.apiOrigin;
       };
 
       if (requestedCoordinate) coordinateInput.value = requestedCoordinate;
+      if (requestedRelease) {
+        if (versionInput instanceof HTMLInputElement) {
+          versionInput.value = requestedRelease;
+          versionInput.dataset.package = requestedCoordinate;
+        }
+        if (artifactVersionInput instanceof HTMLInputElement) {
+          artifactVersionInput.value = requestedRelease;
+          artifactVersionInput.dataset.package = requestedCoordinate;
+        }
+      }
       if (allowedTasks.has(requestedTask)) {
         const input = form?.querySelector(`input[name='action'][value='${requestedTask}']`);
         if (input instanceof HTMLInputElement) input.checked = true;
@@ -600,7 +811,11 @@ const apiOrigin = registryRuntime.apiOrigin;
         }, { signal });
       }
       window.addEventListener("cellscript:locale-change", render, { signal });
-      signal.addEventListener("abort", () => remoteRequest?.abort(), { once: true });
+      signal.addEventListener("abort", () => {
+        remoteRequest?.abort();
+        accessRequest?.abort();
+        window.clearTimeout(accessTimer);
+      }, { once: true });
       render();
       loadRemote();
     })();

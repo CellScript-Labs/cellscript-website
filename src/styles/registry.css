@@ -674,6 +674,40 @@
   margin-top: 16px;
 }
 
+.registry-release-picker {
+  max-width: 24rem;
+  margin-top: 16px;
+}
+
+.registry-release-picker[hidden],
+.registry-manage-access-check[hidden] {
+  display: none;
+}
+
+.registry-table tbody tr[data-selected="true"] {
+  background: color-mix(in oklch, var(--accent) 9%, transparent);
+  box-shadow: inset 3px 0 0 var(--accent);
+}
+
+.registry-manage-access-check {
+  display: grid;
+  gap: 4px;
+  padding: 10px 12px;
+  border: 1px solid var(--line-soft);
+  border-radius: var(--control-radius);
+  font-size: 0.82rem;
+}
+
+.registry-manage-access-check[data-tone="success"] {
+  border-color: var(--accent-line);
+  color: var(--accent);
+}
+
+.registry-manage-access-check[data-tone="error"] {
+  border-color: var(--status-danger-line);
+  color: var(--status-danger-text);
+}
+
 .registry-panel h2 {
   font-size: 1.18rem;
 }

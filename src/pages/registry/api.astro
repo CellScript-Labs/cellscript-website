@@ -14,6 +14,9 @@ const readEndpoints = [
   { method: "GET", path: "/v1/capabilities/:key_id/check?namespace=:namespace&name=:name", description: t.registry.api.capabilityCheck, key: "capabilityCheck" },
 ];
 const writeEndpoints = [
+  { method: "POST", path: "/v1/capabilities", description: t.registry.api.createCapability, key: "createCapability" },
+  { method: "POST", path: "/v1/capabilities/:key_id/revoke", description: t.registry.api.revokeCapability, key: "revokeCapability" },
+  { method: "POST", path: "/v1/namespaces/claim", description: t.registry.api.claimNamespace, key: "claimNamespace" },
   { method: "POST", path: "/v1/artifacts/:namespace/:name/releases", description: t.registry.api.publishRelease, key: "publishRelease" },
   { method: "POST", path: "/v1/artifacts/:namespace/:name/releases/:release/deployments", description: t.registry.api.publishDeployment, key: "publishDeployment" },
   { method: "POST", path: "/v1/artifacts/:namespace/:name/releases/:release/availability", description: t.registry.api.publishAvailability, key: "publishAvailability" },
