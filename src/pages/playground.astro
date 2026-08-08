@@ -344,6 +344,10 @@ if (ungroupedPlaygroundExamples.length > 0) {
       import { renderSource } from "../lib/highlight";
       import { createPlaygroundFocusController } from "../lib/playground-focus.mjs";
       import {
+        buildPlaygroundCellToml,
+        parsePlaygroundCellTomlEntry,
+      } from "../lib/playground-workspace.mjs";
+      import {
         createPlaygroundSessionWriter,
         readPlaygroundGuideComplete,
         readPlaygroundSession,
@@ -1150,19 +1154,6 @@ action inspect() -> u64 {
         return uniqueWorkspacePath(sourcePath, usedPaths);
       };
 
-      const buildCellToml = (entry: string) => `[package]
-name = "playground"
-version = "0.1.0"
-cellscript_version = "0.22.0"
-entry = "${entry.replace(/"/g, "")}"
-source_roots = ["src"]
-`;
-
-      const parseCellTomlEntry = (text: string) => {
-        const match = text.match(/^\s*entry\s*=\s*["']([^"']+)["']/m);
-        return match?.[1] ? normalizeWorkspacePath(match[1]) : "";
-      };
-
       const resolveImportedEntry = (files: WorkspaceFile[], requestedEntry?: string) => {
         if (!files.length) return "";
         const normalized = requestedEntry ? normalizeWorkspacePath(requestedEntry) : "";
@@ -1211,7 +1202,7 @@ source_roots = ["src"]
           exportedFiles.find((file) => file.originalPath === payload.entryPath)?.zipPath ??
           exportedFiles[0]?.zipPath ??
           "src/main.cell";
-        zipEntries["Cell.toml"] = strToU8(buildCellToml(entryZipPath));
+        zipEntries["Cell.toml"] = strToU8(buildPlaygroundCellToml(entryZipPath));
         const zipBytes = zipSync(zipEntries, { level: 6 });
         downloadBlob(new Blob([zipBytes], { type: "application/zip" }), "cellscript-playground-project.zip");
         if (status) status.textContent = pg("workspaceExported");
@@ -1253,7 +1244,7 @@ source_roots = ["src"]
           if (!path || path.endsWith("/")) return;
           if (path.split("/").some((part) => part.startsWith(".") || part === "__MACOSX")) return;
           if (path.toLowerCase() === "cell.toml" || path.toLowerCase().endsWith("/cell.toml")) {
-            manifestEntry = parseCellTomlEntry(strFromU8(bytes));
+            manifestEntry = parsePlaygroundCellTomlEntry(strFromU8(bytes), normalizeWorkspacePath);
             return;
           }
           if (!path.toLowerCase().endsWith(".cell")) return;
@@ -1272,7 +1263,9 @@ source_roots = ["src"]
           const path = normalizePortablePath((file as any).webkitRelativePath || file.name, "");
           return path.toLowerCase() === "cell.toml" || path.toLowerCase().endsWith("/cell.toml");
         });
-        const manifestEntry = manifest ? parseCellTomlEntry(await manifest.text()) : "";
+        const manifestEntry = manifest
+          ? parsePlaygroundCellTomlEntry(await manifest.text(), normalizeWorkspacePath)
+          : "";
         const cellFiles = files.filter((file) => {
           const path = normalizePortablePath((file as any).webkitRelativePath || file.name, "");
           return path.toLowerCase().endsWith(".cell");

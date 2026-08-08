@@ -4,6 +4,11 @@ import {
   type RegistryArtifactGuidance,
 } from "./registry-guidance";
 import { registryHttpsUrl } from "./registry-url";
+import {
+  mayUseAggregateDeployments,
+  registryEvidenceForRelease,
+  selectRegistryRelease,
+} from "./registry-release.mjs";
 
 export {
   deriveArtifactGuidance,
@@ -133,6 +138,7 @@ export interface RegistryReleaseView extends Omit<RegistryRelease, "evidence"> {
 export interface RegistryPackageDetailView {
   pkg: RegistryPackageView;
   firstRelease?: RegistryReleaseView;
+  selectedRelease?: RegistryReleaseView;
   releases: RegistryReleaseView[];
   evidence: RegistryEvidenceView[];
   deployments: RegistryEvidenceView[];
@@ -418,44 +424,55 @@ export function registryDateLabel(value?: string, missingLabel = "not recorded",
   }).format(date);
 }
 
-export function registryPackageDetailView(pkg: RegistryPackageView, apiOrigin: string): RegistryPackageDetailView {
+export function registryPackageDetailView(
+  pkg: RegistryPackageView,
+  apiOrigin: string,
+  requestedRelease?: string,
+): RegistryPackageDetailView {
   const releases: RegistryReleaseView[] = pkg.releases.map((release) => ({
     ...release,
     evidence: (release.evidence ?? []).map(evidenceView),
   }));
   const firstRelease = releases.find((release) => release.release === pkg.latest_release) ?? releases[0];
+  const selectedRelease = selectRegistryRelease(releases, pkg.latest_release, requestedRelease) as RegistryReleaseView | undefined;
   const topLevelEvidence = pkg.evidence.map(evidenceView);
-  const releaseEvidence = releases.flatMap((release) => release.evidence);
-  const evidence = releaseEvidence.length > 0 ? releaseEvidence : topLevelEvidence;
+  const scopedEvidence = registryEvidenceForRelease(
+    selectedRelease,
+    topLevelEvidence,
+    releases.length,
+  ) as RegistryEvidence[];
+  const evidence: RegistryEvidenceView[] = scopedEvidence.map(evidenceView);
   const evidenceDeployments = evidence.filter((item) => item.kind === "deployed");
   const deployments: RegistryEvidenceView[] = evidenceDeployments.length > 0
     ? evidenceDeployments
-    : pkg.deployments.map((deployment) => ({ ...deployment, kind: "deployed" }));
-  const profileContract = firstRelease?.profile_contract;
+    : mayUseAggregateDeployments(selectedRelease, pkg.latest_release, releases.length)
+      ? pkg.deployments.map((deployment) => ({ ...deployment, kind: "deployed" }))
+      : [];
+  const profileContract = selectedRelease?.profile_contract;
   const cleanApiOrigin = (registryHttpsUrl(apiOrigin) ?? "https://api.registry.cellscript.dev/").replace(/\/$/, "");
   const apiArg = ` --api-url ${cleanApiOrigin}`;
-  const release = firstRelease?.release ?? pkg.latest_release ?? "<release>";
+  const release = selectedRelease?.release ?? pkg.latest_release ?? "<release>";
   const coordinate = `${pkg.coordinate}@${release}`;
   const consumerCommand = pkg.artifact.consumption_mode === "dependency"
     ? ""
     : pkg.artifact.consumption_mode === "copy"
       ? `cellc artifact copy ${coordinate} --destination . --accept-hash-bound${apiArg}`
-      : pkg.artifact.consumption_mode === "deployment" && firstRelease?.deployment_status === "chain_verified"
+      : pkg.artifact.consumption_mode === "deployment" && selectedRelease?.deployment_status === "chain_verified"
         ? `cellc artifact cell-dep ${coordinate} --output CellDep.json --accept-hash-bound${apiArg}`
         : pkg.artifact.consumption_mode === "deployment"
           ? `cellc artifact pin ${coordinate} --output Artifacts.lock --accept-hash-bound${apiArg}`
           : `cellc artifact pin ${coordinate} --output Artifacts.lock --accept-hash-bound${apiArg}`;
-  const recordUrl = registryHttpsUrl(firstRelease?.direct_url)
-    ?? registryHttpsUrl(firstRelease?.immutable_bundle?.url)
+  const recordUrl = registryHttpsUrl(selectedRelease?.direct_url)
+    ?? registryHttpsUrl(selectedRelease?.immutable_bundle?.url)
     ?? registryHttpsUrl(pkg.registry_json_url)
     ?? "#";
-  const maintainUrl = `/registry/manage?package=${encodeURIComponent(pkg.coordinate)}`;
-  const installCommand = pkg.install_command || `cellc install ${coordinate}`;
+  const maintainUrl = `/registry/manage?package=${encodeURIComponent(pkg.coordinate)}&release=${encodeURIComponent(release)}`;
+  const installCommand = `cellc install ${coordinate}`;
   const evidenceUrl = `${cleanApiOrigin}/v1/artifacts/${encodeURIComponent(pkg.namespace)}/${encodeURIComponent(pkg.name)}/releases/${encodeURIComponent(release)}/evidence`;
   const guidance = deriveArtifactGuidance({
-    availabilityStatus: pkg.availability_status,
-    verificationStatus: pkg.verification_status,
-    deploymentStatus: pkg.deployment_status,
+    availabilityStatus: selectedRelease?.availability_status ?? pkg.availability_status,
+    verificationStatus: selectedRelease?.verification_status ?? pkg.verification_status,
+    deploymentStatus: selectedRelease?.deployment_status ?? pkg.deployment_status,
     consumptionMode: pkg.artifact.consumption_mode,
     installCommand,
     consumerCommand,
@@ -466,6 +483,7 @@ export function registryPackageDetailView(pkg: RegistryPackageView, apiOrigin: s
   return {
     pkg,
     firstRelease,
+    selectedRelease,
     releases,
     evidence,
     deployments,

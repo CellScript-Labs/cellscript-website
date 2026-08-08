@@ -50,6 +50,7 @@ const registrySubmitSource = resolve(root, "src", "pages", "registry", "submit.a
 const registryBrowseSource = resolve(root, "src", "pages", "registry.astro");
 const registryLayoutSource = resolve(root, "src", "layouts", "RegistryLayout.astro");
 const registryPackageDetailSource = resolve(root, "src", "components", "RegistryPackageDetail.astro");
+const registryManageSource = resolve(root, "src", "pages", "registry", "manage.astro");
 const siteHeaderSource = resolve(root, "src", "components", "SiteHeader.astro");
 const playgroundSource = resolve(root, "src", "pages", "playground.astro");
 const brandMarkSource = resolve(root, "src", "components", "BrandMark.astro");
@@ -73,6 +74,7 @@ expectFile(registrySubmitSource);
 expectFile(registryBrowseSource);
 expectFile(registryLayoutSource);
 expectFile(registryPackageDetailSource);
+expectFile(registryManageSource);
 expectFile(siteHeaderSource);
 expectFile(playgroundSource);
 expectFile(brandMarkSource);
@@ -91,6 +93,7 @@ const registrySubmitSourceText = existsSync(registrySubmitSource) ? read(registr
 const registryBrowseSourceText = existsSync(registryBrowseSource) ? read(registryBrowseSource) : "";
 const registryLayoutSourceText = existsSync(registryLayoutSource) ? read(registryLayoutSource) : "";
 const registryPackageDetailSourceText = existsSync(registryPackageDetailSource) ? read(registryPackageDetailSource) : "";
+const registryManageSourceText = existsSync(registryManageSource) ? read(registryManageSource) : "";
 const siteHeaderSourceText = existsSync(siteHeaderSource) ? read(siteHeaderSource) : "";
 const playgroundSourceText = existsSync(playgroundSource) ? read(playgroundSource) : "";
 const brandMarkSourceText = existsSync(brandMarkSource) ? read(brandMarkSource) : "";
@@ -243,8 +246,17 @@ expectContains("registry package detail", registryPackageDetailSourceText, "rend
 expectContains("registry package detail", registryPackageDetailSourceText, "data-package-guidance");
 expectContains("registry package detail", registryPackageDetailSourceText, "data-package-maintainer-action");
 expectContains("registry package detail", registryPackageDetailSourceText, "openEvidenceJson");
+expectContains("registry package detail", registryPackageDetailSourceText, "data-package-release-select");
+expectContains("registry package detail", registryPackageDetailSourceText, "detail.selectedRelease");
+expectContains("registry package detail", registryPackageDetailSourceText, "render(currentArtifact, releaseSelect.value)");
 expectContains("registry manage", registryManageHtml, "data-manage-current-title");
 expectContains("registry manage", registryManageHtml, "data-manage-task-menu");
+expectContains("registry manage", registryManageHtml, "Change release availability");
+expectContains("registry manage", registryManageHtml, "Grant maintenance access");
+expectContains("registry manage", registryManageHtml, "Revoke a capability");
+expectContains("registry manage source", registryManageSourceText, '["deployment", "availability"]');
+expectContains("registry manage source", registryManageSourceText, "--scope ${shellArg(`${scope}:${coordinate()}`)}");
+expectContains("registry manage source", registryManageSourceText, "cellc auth capability revoke");
 expectContains("registry CSS", cssText, "::view-transition-old(registry-route)");
 expectContains("registry CSS", cssText, "::view-transition-new(registry-route)");
 expectContains("registry source", registryBrowseSourceText, '"no-results"');
@@ -314,6 +326,7 @@ expectContains("registry submit", registrySubmitHtml, 'data-publish-step data-st
 
 expectContains("playground bundle", jsText, expectedCompilerAssetVersion);
 expectContains("playground bundle", jsText, 'cellscript_version = "0.22.0"');
+expectContains("playground bundle", jsText, 'edition = "2026"');
 expectNotContains("playground bundle", jsText, 'cellscript_version = "0.20.0-rc.1"');
 expectContains("playground worker", playgroundWorker, `const COMPILER_ASSET_VERSION = "${expectedCompilerAssetVersion}"`);
 expectContains("playground", playgroundHtml, "data-pg-studio");
