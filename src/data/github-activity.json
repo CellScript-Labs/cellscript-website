@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "tag": "v0.23.0",
+      "name": "CellScript 0.23.0",
+      "date": "2026-08-11",
+      "body": "## Installation\n\n### One-line install\n\n```bash\ncurl -fsSL https://github.com/CellScript-Labs/CellScript/releases/latest/download/install.sh\u2026",
+      "url": "https://github.com/CellScript-Labs/CellScript/releases/tag/v0.23.0"
+    },
+    {
       "tag": "v0.22.0",
       "name": "CellScript 0.22.0",
       "date": "2026-07-25",
@@ -13,16 +20,16 @@
       "date": "2026-07-11",
       "body": "## Installation\n\n### One-line install (Global)\n\n```bash\ncurl -fsSL https://raw.githubusercontent.com/CellScript-Labs/CellScript/main/script\u2026",
       "url": "https://github.com/CellScript-Labs/CellScript/releases/tag/v0.21.1"
-    },
-    {
-      "tag": "v0.21.0",
-      "name": "CellScript 0.21.0",
-      "date": "2026-07-11",
-      "body": "## Installation\n\n### One-line install (Global)\n\n```bash\ncurl -fsSL https://raw.githubusercontent.com/CellScript-Labs/CellScript/main/script\u2026",
-      "url": "https://github.com/CellScript-Labs/CellScript/releases/tag/v0.21.0"
     }
   ],
   "commits": [
+    {
+      "sha": "04b4de8",
+      "message": "fix: use canonical installer release origin",
+      "author": "Arthur",
+      "date": "2026-08-11",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/04b4de85e3e89aee49b5b4ec1b715a24e36288fc"
+    },
     {
       "sha": "dc66c6e",
       "message": "Add 0.23 roadmap: registry production, Rust tooling port, RGB++/Fiber, off-chai\u2026",
@@ -50,13 +57,6 @@
       "author": "Arthur",
       "date": "2026-07-25",
       "url": "https://github.com/CellScript-Labs/CellScript/commit/830b5971237401a74dd7848b200f48b4d2ed79f4"
-    },
-    {
-      "sha": "56fd971",
-      "message": "Make WASM release builds reproducible",
-      "author": "Arthur",
-      "date": "2026-07-25",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/56fd9710c3acff9364d7ea86f8e1a096dbcd403e"
     }
   ]
 }
