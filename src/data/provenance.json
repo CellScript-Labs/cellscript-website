@@ -5,7 +5,7 @@
     "artifactSizeBytes": 78906,
     "artifactHash": "bd044d0c63140ccb",
     "sourceHash": "e4fd396578223af8",
-    "compilerVersion": "0.22.0",
+    "compilerVersion": "0.23.0",
     "types": [
       {
         "name": "Token",
@@ -126,7 +126,7 @@
     "artifactSizeBytes": 507917,
     "artifactHash": "a29c57fea42cb6cf",
     "sourceHash": "7d5c6d86de39fbda",
-    "compilerVersion": "0.22.0",
+    "compilerVersion": "0.23.0",
     "types": [
       {
         "name": "Token",
@@ -452,7 +452,7 @@
     "artifactSizeBytes": 501422,
     "artifactHash": "2b675b5163cb715d",
     "sourceHash": "3e7612535b8289a4",
-    "compilerVersion": "0.22.0",
+    "compilerVersion": "0.23.0",
     "types": [
       {
         "name": "Token",
@@ -630,7 +630,7 @@
     "artifactSizeBytes": 236779,
     "artifactHash": "0ee81ae9172dd15c",
     "sourceHash": "b1f0aa10f432ed21",
-    "compilerVersion": "0.22.0",
+    "compilerVersion": "0.23.0",
     "types": [
       {
         "name": "Token",
