@@ -9,6 +9,8 @@ const metadata = {
   module: "cellscript::token",
   target_profile: { name: "ckb" },
   artifact_size_bytes: 128,
+  interface_hash: "interface-123",
+  typed_semantics_hash: "semantics-456",
   types: [
     { name: "Token", kind: "Resource", capabilities: ["consume", "create"], encoded_size: 16 },
     { name: "Authority", kind: "Resource", capabilities: ["replace"] },
@@ -39,5 +41,7 @@ assert.equal(findPlaygroundSymbolLine("", "missing", "action"), 1);
 assert.deepEqual(derivePlaygroundInspector(metadata, { kind: "action", name: "transfer" }).inputs[0], { binding: "token", type: "Token" });
 assert.deepEqual(derivePlaygroundInspector(metadata, { kind: "type", name: "Token" }).usedBy, ["transfer"]);
 assert.equal(derivePlaygroundInspector(metadata, null).actions, 1);
+assert.equal(derivePlaygroundInspector(metadata, null).interfaceHash, "interface-123");
+assert.equal(derivePlaygroundInspector(metadata, null).typedSemanticsHash, "semantics-456");
 
 console.log("playground Cell Flow and inspector derivation ok");

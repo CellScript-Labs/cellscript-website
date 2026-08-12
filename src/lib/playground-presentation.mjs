@@ -83,5 +83,7 @@ export const derivePlaygroundInspector = (data, selection) => {
     types: types.length,
     artifactSize: Number.isFinite(data?.artifact_size_bytes) ? data.artifact_size_bytes : null,
     artifactFormat: String(data?.artifact_format || "—"),
+    interfaceHash: typeof data?.interface_hash === "string" ? data.interface_hash : null,
+    typedSemanticsHash: typeof data?.typed_semantics_hash === "string" ? data.typed_semantics_hash : null,
   };
 };
