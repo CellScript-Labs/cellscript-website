@@ -141,16 +141,16 @@ for (const [name, html] of [
   expectContains(name, html, 'data-i18n-aria-label="nav.registryBrowse"');
 }
 
-expectContains("registry interface", registryInterfaceHtml, ">Resolve a Lock Script interface</h1>");
+expectContains("registry interface", registryInterfaceHtml, ">Resolve a Lock Script LS-IDL</h1>");
 expectContains("registry interface", registryInterfaceHtml, 'data-astro-transition-persist="registry-header"');
 expectContains("registry interface", registryInterfaceHtml, 'data-astro-transition-persist="registry-environment"');
 expectContains("registry interface", registryInterfaceHtml, 'data-astro-transition-persist="registry-tabs"');
 expectContains("registry interface", registryInterfaceHtml, 'data-registry-title-key="registry.nav.interface"');
-expectContains("registry interface", registryInterfaceHtml, 'data-i18n="registry.nav.interface">Interface');
+expectContains("registry interface", registryInterfaceHtml, 'data-i18n="registry.nav.interface">LS-IDL');
 expectNotContains("registry interface", registryInterfaceHtml, "registry-tool-back");
 const interfaceTab = registryInterfaceHtml.match(/<a[^>]*href="\/registry\/interface"[^>]*>/)?.[0] ?? "";
 if (!interfaceTab.includes('class="active"') || !interfaceTab.includes('aria-current="page"')) {
-  fail("registry interface: Interface tab must be the only active route affordance");
+  fail("registry interface: LS-IDL tab must be the only active route affordance");
 }
 
 expectContains("registry", registryHtml, 'data-registry-title-key="registry.nav.browse"');
@@ -229,7 +229,7 @@ expectContains("registry", registryHtml, 'data-registry-empty role="status" aria
 expectContains("registry", registryHtml, "data-registry-empty-submit");
 expectContains("registry", registryHtml, 'href="/registry/interface"');
 expectContains("registry", registryHtml, ">Browse</span>");
-expectContains("registry", registryHtml, ">Interface</span>");
+expectContains("registry", registryHtml, ">LS-IDL</span>");
 expectNotContains("registry", registryHtml, "registry-index-strip");
 expectNotContains("registry", registryHtml, "registry-cell-blueprint");
 expectNotContains("registry", registryHtml, "registry-browse-tools");

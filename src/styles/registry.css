@@ -420,7 +420,8 @@
 
 .registry-tool-route {
   display: grid;
-  max-width: 980px;
+  width: 100%;
+  min-width: 0;
   padding-top: var(--registry-route-start);
 }
 
@@ -442,7 +443,7 @@
 .registry-ls-idl-panel {
   padding: clamp(20px, 3vw, 30px);
   border: 1px solid var(--line-soft);
-  border-radius: var(--panel-radius);
+  border-radius: var(--radius-panel);
   background: var(--panel-soft);
 }
 
