@@ -4,6 +4,7 @@ import { resolve } from "node:path";
 const files = {
   browse: resolve("dist", "registry", "index.html"),
   api: resolve("dist", "registry", "api", "index.html"),
+  lookup: resolve("src", "components", "RegistryLsIdlLookup.astro"),
   detail: resolve("src", "components", "RegistryPackageDetail.astro"),
   library: resolve("src", "lib", "registry.ts"),
 };
@@ -14,6 +15,7 @@ for (const [name, file] of Object.entries(files)) {
 
 const browse = readFileSync(files.browse, "utf8");
 const api = readFileSync(files.api, "utf8");
+const lookup = readFileSync(files.lookup, "utf8");
 const detail = readFileSync(files.detail, "utf8");
 const library = readFileSync(files.library, "utf8");
 
@@ -37,7 +39,7 @@ if (!/<details class="registry-ls-idl-disclosure">/.test(browse)) {
 if (/data-ls-idl-submit[^>]*class="[^"]*primary/.test(browse) || /class="[^"]*primary[^"]*"[^>]*data-ls-idl-submit/.test(browse)) {
   throw new Error("LS-IDL lookup must not compete with the Registry primary action");
 }
-if (!browse.includes('hashTypeSelect.value === "type"') || !browse.includes("dataHashField.hidden = !needsDataHash")) {
+if (!lookup.includes('hashTypeSelect.value === "type"') || !lookup.includes("dataHashField.hidden = !needsDataHash")) {
   throw new Error("LS-IDL data hash must be disclosed only for type-hash lookup");
 }
 
