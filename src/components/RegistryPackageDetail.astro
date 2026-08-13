@@ -31,6 +31,7 @@ const pascalKey = (value?: string) => value
   ? value.split("_").map((part) => `${part[0]?.toUpperCase()}${part.slice(1)}`).join("")
   : "";
 const guidance = detail?.guidance;
+const lsIdl = detail?.lsIdl;
 const initialGuidanceKey = `guidance${pascalKey(guidance?.summaryKey)}`;
 const initialConsumerKey = `consumer${pascalKey(guidance?.consumerAction.kind)}`;
 const initialMaintainerKey = `maintainer${pascalKey(guidance?.maintainerAction?.kind)}`;
@@ -147,6 +148,31 @@ const evidenceKey = (kind?: string) => `evidence${pascalKey(kind)}`;
             </table>
           </div>
           <p class="registry-body-copy" data-package-no-deployment hidden={deploymentEvidence.length > 0} data-i18n="registry.package.noDeployment">{t.registry.package.noDeployment}</p>
+        </section>
+
+        <section class="registry-panel registry-section-block registry-ls-idl" data-package-ls-idl hidden={!lsIdl} aria-labelledby="ls-idl-title">
+          <div class="registry-ls-idl-heading">
+            <div>
+              <p class="registry-label" data-i18n="registry.package.lsIdlLabel">{t.registry.package.lsIdlLabel}</p>
+              <h2 id="ls-idl-title" data-i18n="registry.package.lsIdlTitle">{t.registry.package.lsIdlTitle}</h2>
+            </div>
+            <span class="registry-status" data-state="active" data-i18n="registry.package.lsIdlBound">{t.registry.package.lsIdlBound}</span>
+          </div>
+          <p class="registry-body-copy" data-i18n="registry.package.lsIdlBody">{t.registry.package.lsIdlBody}</p>
+          <dl class="registry-facts registry-ls-idl-facts">
+            <div><dt data-i18n="registry.package.lsIdlVersion">{t.registry.package.lsIdlVersion}</dt><dd data-package-ls-idl-version>{lsIdl?.contract.format_version}</dd></div>
+            <div><dt data-i18n="registry.package.lsIdlEncoding">{t.registry.package.lsIdlEncoding}</dt><dd data-package-ls-idl-encoding>{lsIdl?.contract.encoding}</dd></div>
+            <div><dt>SHA-256</dt><dd><code data-package-ls-idl-digest>{lsIdl?.contract.commitment.digest}</code></dd></div>
+          </dl>
+          <div class="registry-ls-idl-actions">
+            <a class="registry-button primary" data-package-ls-idl-download href={lsIdl?.lookupUrl || "#"} hidden={!lsIdl?.lookupUrl} target="_blank" rel="noreferrer" data-i18n="registry.package.lsIdlDownload">{t.registry.package.lsIdlDownload}</a>
+            <a data-package-ls-idl-compatible href={lsIdl?.compatibilityUrl || "#"} hidden={!lsIdl?.compatibilityUrl} target="_blank" rel="noreferrer" data-i18n="registry.package.lsIdlCompatibility">{t.registry.package.lsIdlCompatibility}</a>
+          </div>
+          <div class="registry-step-code" data-package-ls-idl-command-wrap hidden={!lsIdl?.fetchCommand}>
+            <code data-package-ls-idl-command>{lsIdl?.fetchCommand}</code>
+            <button class="registry-copy" type="button" data-package-ls-idl-copy data-copy-text={lsIdl?.fetchCommand || ""} data-revert-label={t.registry.copy} data-i18n="registry.copy">{t.registry.copy}</button>
+          </div>
+          <p class="registry-field-hint" data-i18n="registry.package.lsIdlBoundary">{t.registry.package.lsIdlBoundary}</p>
         </section>
 
         <section class="registry-panel registry-section-block" aria-labelledby="evidence-title">
@@ -394,6 +420,29 @@ const evidenceKey = (kind?: string) => `evidence${pascalKey(kind)}`;
       fact("target", profileContract?.build?.target);
       fact("security", profileContract?.security?.status);
       fact("verifier", profileContract?.verifier?.verifier_id);
+
+      const lsIdlPanel = app?.querySelector<HTMLElement>("[data-package-ls-idl]");
+      if (lsIdlPanel) lsIdlPanel.hidden = !detail.lsIdl;
+      if (detail.lsIdl) {
+        text("[data-package-ls-idl-version]", detail.lsIdl.contract.format_version);
+        text("[data-package-ls-idl-encoding]", detail.lsIdl.contract.encoding);
+        text("[data-package-ls-idl-digest]", detail.lsIdl.contract.commitment.digest);
+        const download = app?.querySelector<HTMLAnchorElement>("[data-package-ls-idl-download]");
+        if (download) {
+          download.hidden = !detail.lsIdl.lookupUrl;
+          download.href = detail.lsIdl.lookupUrl || "#";
+        }
+        const compatibility = app?.querySelector<HTMLAnchorElement>("[data-package-ls-idl-compatible]");
+        if (compatibility) {
+          compatibility.hidden = !detail.lsIdl.compatibilityUrl;
+          compatibility.href = detail.lsIdl.compatibilityUrl || "#";
+        }
+        const commandWrap = app?.querySelector<HTMLElement>("[data-package-ls-idl-command-wrap]");
+        if (commandWrap) commandWrap.hidden = !detail.lsIdl.fetchCommand;
+        text("[data-package-ls-idl-command]", detail.lsIdl.fetchCommand || "");
+        const copyCommand = app?.querySelector<HTMLButtonElement>("[data-package-ls-idl-copy]");
+        if (copyCommand) copyCommand.dataset.copyText = detail.lsIdl.fetchCommand || "";
+      }
 
       const releases = detail.releases;
       const releaseBody = app?.querySelector<HTMLTableSectionElement>("[data-package-releases]");

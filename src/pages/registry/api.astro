@@ -11,6 +11,8 @@ const readEndpoints = [
   { method: "GET", path: "/v1/artifacts/:namespace/:name", description: t.registry.api.artifactDetail, key: "artifactDetail" },
   { method: "GET", path: "/v1/artifacts/:namespace/:name/releases/:release/evidence", description: t.registry.api.releaseEvidence, key: "releaseEvidence" },
   { method: "GET", path: "/v1/artifacts/:namespace/:name/releases/:release/commitment", description: t.registry.api.releaseCommitment, key: "releaseCommitment" },
+  { method: "GET", path: "/v1/ckb/scripts/:code_hash/interfaces/ls-idl", description: t.registry.api.lsIdlLookup, key: "lsIdlLookup" },
+  { method: "GET", path: "/idl/:code_hash", description: t.registry.api.lsIdlCompatibility, key: "lsIdlCompatibility" },
   { method: "GET", path: "/v1/capabilities/:key_id/check?namespace=:namespace&name=:name", description: t.registry.api.capabilityCheck, key: "capabilityCheck" },
 ];
 const writeEndpoints = [
@@ -84,6 +86,23 @@ const writeEndpoints = [
           class="registry-copy"
           type="button"
           data-copy-text={`curl --fail '${apiOrigin}/v1/artifacts?kind=deployable_contract&deployment=chain_verified'`}
+          data-revert-label={t.registry.copy}
+          data-i18n="registry.copy"
+        >{t.registry.copy}</button>
+      </div>
+    </section>
+
+    <section class="registry-api-example" aria-labelledby="registry-api-ls-idl-title">
+      <div>
+        <h3 id="registry-api-ls-idl-title">LS-IDL</h3>
+        <p data-i18n="registry.api.lsIdlExactBytes">{t.registry.api.lsIdlExactBytes}</p>
+      </div>
+      <div class="registry-step-code">
+        <code>{`curl --fail '${apiOrigin}/v1/ckb/scripts/0x<code_hash>/interfaces/ls-idl?network=mainnet&hash_type=data1' --output idl.json`}</code>
+        <button
+          class="registry-copy"
+          type="button"
+          data-copy-text={`curl --fail '${apiOrigin}/v1/ckb/scripts/0x<code_hash>/interfaces/ls-idl?network=mainnet&hash_type=data1' --output idl.json`}
           data-revert-label={t.registry.copy}
           data-i18n="registry.copy"
         >{t.registry.copy}</button>

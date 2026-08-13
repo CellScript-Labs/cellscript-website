@@ -1,6 +1,7 @@
 ---
 import RegistryLayout from "../layouts/RegistryLayout.astro";
 import RegistryFilterMenu from "../components/RegistryFilterMenu.astro";
+import RegistryLsIdlLookup from "../components/RegistryLsIdlLookup.astro";
 import { packageHref, registryDateLabel, registryPackageDetailView, registryPackages, toRegistryPackageView } from "../lib/registry";
 import { defaultLocale, translations } from "../i18n/translations";
 import searchIcon from "@phosphor-icons/core/regular/magnifying-glass.svg?raw";
@@ -56,6 +57,8 @@ const intentFilters = [
   active="search"
   showSubmitCta={false}
 >
+  <RegistryLsIdlLookup apiOrigin={apiOrigin} />
+
   <section class="registry-browse" data-registry-browser data-api-origin={apiOrigin} data-state="loading" data-source="loading" aria-label={t.registry.browse.searchAria} data-i18n-aria-label="registry.browse.searchAria" aria-busy="true">
     <div class="registry-index-strip">
       <span class="registry-index-network"><i aria-hidden="true"></i><span data-i18n="registry.browse.indexNetwork">{t.registry.browse.indexNetwork}</span></span>
