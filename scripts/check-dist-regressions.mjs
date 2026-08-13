@@ -38,6 +38,7 @@ const distPlaygroundIndex = resolve(dist, "playground", "index.html");
 const distRegistryIndex = resolve(dist, "registry", "index.html");
 const distRegistrySubmitIndex = resolve(dist, "registry", "submit", "index.html");
 const distRegistryApiIndex = resolve(dist, "registry", "api", "index.html");
+const distRegistryInterfaceIndex = resolve(dist, "registry", "interface", "index.html");
 const distRegistryManageIndex = resolve(dist, "registry", "manage", "index.html");
 const distPlaygroundWorker = resolve(dist, "playground-worker.js");
 const distWasm = resolve(dist, "wasm", "cellscript_wasm_bg.wasm");
@@ -59,6 +60,7 @@ expectFile(distPlaygroundIndex);
 expectFile(distRegistryIndex);
 expectFile(distRegistrySubmitIndex);
 expectFile(distRegistryApiIndex);
+expectFile(distRegistryInterfaceIndex);
 expectFile(distRegistryManageIndex);
 expectFile(distPlaygroundWorker);
 expectFile(distWasm);
@@ -76,6 +78,7 @@ const playgroundHtml = existsSync(distPlaygroundIndex) ? read(distPlaygroundInde
 const registryHtml = existsSync(distRegistryIndex) ? read(distRegistryIndex) : "";
 const registrySubmitHtml = existsSync(distRegistrySubmitIndex) ? read(distRegistrySubmitIndex) : "";
 const registryApiHtml = existsSync(distRegistryApiIndex) ? read(distRegistryApiIndex) : "";
+const registryInterfaceHtml = existsSync(distRegistryInterfaceIndex) ? read(distRegistryInterfaceIndex) : "";
 const registryManageHtml = existsSync(distRegistryManageIndex) ? read(distRegistryManageIndex) : "";
 const playgroundWorker = existsSync(distPlaygroundWorker) ? read(distPlaygroundWorker) : "";
 const docsSourceText = existsSync(docsSource) ? read(docsSource) : "";
@@ -118,6 +121,7 @@ for (const [name, html] of [
   ["playground", playgroundHtml],
   ["registry", registryHtml],
   ["registry submit", registrySubmitHtml],
+  ["registry interface", registryInterfaceHtml],
 ]) {
   expectContains(name, html, 'data-theme="light"');
   expectContains(name, html, "data-astro-rerun");
@@ -130,12 +134,17 @@ for (const [name, html] of [
   ["registry api", registryApiHtml],
 ]) {
   expectContains(name, html, ">Artifact Registry</h1>");
-  expectContains(name, html, "Discover verified CKB artifacts and deployment records, or publish with scoped wallet authorisation.");
+  expectContains(name, html, "Browse verified CKB artifacts and deployment records.");
   expectContains(name, html, 'data-astro-transition-persist="registry-header"');
   expectContains(name, html, 'data-astro-transition-persist="registry-environment"');
   expectContains(name, html, 'data-astro-transition-persist="registry-tabs"');
   expectContains(name, html, 'data-i18n-aria-label="nav.registryBrowse"');
 }
+
+expectContains("registry interface", registryInterfaceHtml, ">Resolve a Lock Script interface</h1>");
+expectContains("registry interface", registryInterfaceHtml, 'data-astro-transition-persist="registry-header"');
+expectContains("registry interface", registryInterfaceHtml, 'data-astro-transition-persist="registry-environment"');
+expectContains("registry interface", registryInterfaceHtml, 'data-astro-transition-persist="registry-tabs"');
 
 expectContains("registry", registryHtml, 'data-registry-title-key="registry.nav.browse"');
 expectContains("registry submit", registrySubmitHtml, 'data-registry-title-key="registry.nav.submit"');
@@ -208,6 +217,10 @@ expectContains("registry", registryHtml, 'data-state="loading" data-source="load
 expectContains("registry", registryHtml, 'data-registry-skeleton aria-hidden="true" hidden');
 expectContains("registry", registryHtml, 'data-registry-empty role="status" aria-live="polite" aria-atomic="true"');
 expectContains("registry", registryHtml, "data-registry-empty-submit");
+expectContains("registry", registryHtml, 'href="/registry/interface"');
+expectContains("registry", registryHtml, ">Browse</span>");
+expectNotContains("registry", registryHtml, "registry-index-strip");
+expectNotContains("registry", registryHtml, "registry-cell-blueprint");
 expectContains("registry", registryHtml, "data-registry-clear");
 expectContains("registry", registryHtml, "data-registry-intent");
 expectContains("registry", registryHtml, "data-registry-filter-trigger");
@@ -355,8 +368,8 @@ for (const token of [
   ".nav-menu-toggle",
   ".registry-skeleton-row",
   ".registry-wallet-dialog-head:has(.registry-wallet-back[hidden])",
-  "@keyframes registry-empty-surface",
-  "@keyframes registry-empty-blueprint",
+  ".registry-shell-bar",
+  ".registry-browse-tools",
   "text-shadow:none",
   "text-wrap:normal",
 ]) {

@@ -1,6 +1,5 @@
 ---
 import { defaultLocale, translations } from "../i18n/translations";
-import caretDownIcon from "@phosphor-icons/core/regular/caret-down.svg?raw";
 
 interface Props {
   apiOrigin: string;
@@ -11,18 +10,9 @@ const t = translations[defaultLocale];
 ---
 
 <section class="registry-ls-idl-tools" data-ls-idl-lookup data-api-origin={apiOrigin.replace(/\/$/, "")} aria-label={t.registry.browse.lsIdlLabel} data-i18n-aria-label="registry.browse.lsIdlLabel">
-  <details class="registry-ls-idl-disclosure">
-    <summary>
-      <span class="registry-ls-idl-summary-copy">
-        <span class="registry-label" data-i18n="registry.browse.lsIdlToolsLabel">{t.registry.browse.lsIdlToolsLabel}</span>
-        <strong id="ls-idl-lookup-title" data-i18n="registry.browse.lsIdlTitle">{t.registry.browse.lsIdlTitle}</strong>
-        <span data-i18n="registry.browse.lsIdlSummary">{t.registry.browse.lsIdlSummary}</span>
-      </span>
-      <span class="registry-ls-idl-disclosure-caret" aria-hidden="true" set:html={caretDownIcon}></span>
-    </summary>
-    <div class="registry-ls-idl-panel">
-      <p class="registry-ls-idl-boundary" data-i18n="registry.browse.lsIdlBody">{t.registry.browse.lsIdlBody}</p>
-      <form class="registry-ls-idl-lookup-form" data-ls-idl-form aria-labelledby="ls-idl-lookup-title">
+  <div class="registry-ls-idl-panel">
+    <p class="registry-ls-idl-boundary" data-i18n="registry.browse.lsIdlBody">{t.registry.browse.lsIdlBody}</p>
+    <form class="registry-ls-idl-lookup-form" data-ls-idl-form aria-label={t.registry.browse.lsIdlLabel} data-i18n-aria-label="registry.browse.lsIdlLabel">
         <label class="registry-ls-idl-code-hash">
           <span data-i18n="registry.browse.lsIdlCodeHash">{t.registry.browse.lsIdlCodeHash}</span>
           <input class="registry-input" name="code_hash" required pattern="0x[0-9a-fA-F]{64}" placeholder="0x…" autocomplete="off" />
@@ -47,15 +37,14 @@ const t = translations[defaultLocale];
           <span data-i18n="registry.browse.lsIdlDataHash">{t.registry.browse.lsIdlDataHash}</span>
           <input class="registry-input" name="data_hash" pattern="0x[0-9a-fA-F]{64}" placeholder="0x…" autocomplete="off" data-ls-idl-data-hash />
         </label>
-        <button class="registry-button" type="submit" data-ls-idl-submit data-i18n="registry.browse.lsIdlLookup">{t.registry.browse.lsIdlLookup}</button>
-      </form>
-      <output class="registry-ls-idl-result" data-ls-idl-result role="status" aria-live="polite" hidden>
-        <span data-ls-idl-status></span>
-        <a data-ls-idl-download hidden download="idl.json" data-i18n="registry.browse.lsIdlDownload">{t.registry.browse.lsIdlDownload}</a>
-        <pre data-ls-idl-document hidden></pre>
-      </output>
-    </div>
-  </details>
+      <button class="registry-button primary" type="submit" data-ls-idl-submit data-i18n="registry.browse.lsIdlLookup">{t.registry.browse.lsIdlLookup}</button>
+    </form>
+    <output class="registry-ls-idl-result" data-ls-idl-result role="status" aria-live="polite" hidden>
+      <span data-ls-idl-status></span>
+      <a data-ls-idl-download hidden download="idl.json" data-i18n="registry.browse.lsIdlDownload">{t.registry.browse.lsIdlDownload}</a>
+      <pre data-ls-idl-document hidden></pre>
+    </output>
+  </div>
 </section>
 
 <script>

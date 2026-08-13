@@ -86,21 +86,22 @@ const activeHref =
     <a class="skip-link" href="#registry-main" data-i18n="a11y.skipToContent">{t.a11y.skipToContent}</a>
     <SiteHeader page="registry" />
     <main id="registry-main" class="registry-app">
-      <aside class:list={["registry-environment-bar", isTestnetSandbox && "is-testnet"]} transition:persist="registry-environment" aria-label={isTestnetSandbox ? t.registry.sandboxTitle : t.registry.productionTitle}>
-        <span class="registry-environment-identity">
-          <i aria-hidden="true"></i>
-          <strong data-i18n={isTestnetSandbox ? "registry.sandboxTitle" : "registry.productionTitle"}>{isTestnetSandbox ? t.registry.sandboxTitle : t.registry.productionTitle}</strong>
-          <span data-i18n={isTestnetSandbox ? "registry.sandboxBody" : "registry.productionBody"}>{isTestnetSandbox ? t.registry.sandboxBody : t.registry.productionBody}</span>
-        </span>
-        <a href={registryRuntime.alternateOrigin} data-i18n={isTestnetSandbox ? "registry.openProduction" : "registry.openSandbox"}>{isTestnetSandbox ? t.registry.openProduction : t.registry.openSandbox}</a>
-      </aside>
-      {showHeader && <header class:list={["registry-topbar", compactHeader && "registry-topbar-compact"]} transition:persist="registry-header" aria-label={t.registry.appLabel} data-i18n-aria-label="registry.appLabel">
-        <div>
-          <h1 data-registry-heading data-registry-heading-key={headingKey}>{headingText}</h1>
-          <p data-registry-description data-registry-description-key={descriptionKey}>{descriptionText}</p>
-        </div>
-        {showSubmitCta && <a class="registry-button primary registry-topbar-cta" href="/registry/submit" data-registry-topbar-cta data-i18n="registry.submitPackage">{t.registry.submitPackage}</a>}
-      </header>}
+      <div class:list={["registry-shell-bar", !showHeader && "registry-shell-bar-context-only"]}>
+        {showHeader && <header class:list={["registry-topbar", compactHeader && "registry-topbar-compact"]} transition:persist="registry-header" aria-label={t.registry.appLabel} data-i18n-aria-label="registry.appLabel">
+          <div>
+            <h1 data-registry-heading data-registry-heading-key={headingKey}>{headingText}</h1>
+            <p data-registry-description data-registry-description-key={descriptionKey}>{descriptionText}</p>
+          </div>
+          {showSubmitCta && <a class="registry-button primary registry-topbar-cta" href="/registry/submit" data-registry-topbar-cta data-i18n="registry.submitPackage">{t.registry.submitPackage}</a>}
+        </header>}
+        <aside class:list={["registry-environment-bar", isTestnetSandbox && "is-testnet"]} transition:persist="registry-environment" aria-label={isTestnetSandbox ? t.registry.sandboxTitle : t.registry.productionTitle}>
+          <span class="registry-environment-identity">
+            <i aria-hidden="true"></i>
+            <strong data-i18n={isTestnetSandbox ? "registry.sandboxTitle" : "registry.productionTitle"}>{isTestnetSandbox ? t.registry.sandboxTitle : t.registry.productionTitle}</strong>
+          </span>
+          <a href={registryRuntime.alternateOrigin} data-i18n={isTestnetSandbox ? "registry.openProduction" : "registry.openSandbox"}>{isTestnetSandbox ? t.registry.openProduction : t.registry.openSandbox}</a>
+        </aside>
+      </div>
 
       {showTabs && <nav class="registry-tabs" transition:persist="registry-tabs" aria-label={t.registry.sectionsLabel} data-i18n-aria-label="registry.sectionsLabel">
         {registrySections.map((section) => (
@@ -195,7 +196,8 @@ const activeHref =
         const currentPath = normaliseRegistryPath(window.location.pathname);
         tabs.querySelectorAll<HTMLAnchorElement>("a[href]").forEach((link) => {
           const targetPath = normaliseRegistryPath(new URL(link.href, window.location.href).pathname);
-          const isActive = targetPath === currentPath;
+          const isBrowseUtility = currentPath === "/registry/interface" && targetPath === "/registry";
+          const isActive = targetPath === currentPath || isBrowseUtility;
           link.classList.toggle("active", isActive);
           if (isActive) link.setAttribute("aria-current", "page");
           else link.removeAttribute("aria-current");
