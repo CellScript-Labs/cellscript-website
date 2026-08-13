@@ -22,7 +22,7 @@ const detail = readFileSync(files.detail, "utf8");
 const library = readFileSync(files.library, "utf8");
 
 for (const [name, text, tokens] of [
-  ["browse", browse, ["data-registry-browser", 'href="/registry/interface"', "Resolve a Lock Script interface"]],
+  ["browse", browse, ["data-registry-browser", 'href="/registry/interface"', 'data-i18n="registry.nav.interface">Interface']],
   ["interface", interfacePage, ["data-ls-idl-lookup", "data-ls-idl-data-hash-field hidden", "interfaces/ls-idl", "application/vnd.ckb.ls-idl+json", "x-ls-idl-verification", "schema-and-suffix-bound"]],
   ["API", api, ["/v1/ckb/scripts/:code_hash/interfaces/ls-idl", "/idl/:code_hash", "byte-preserving"]],
   ["detail", detail, ["data-package-ls-idl", "data-package-ls-idl-download", "lsIdlBoundary"]],
@@ -35,6 +35,9 @@ for (const [name, text, tokens] of [
 
 if (browse.includes("data-ls-idl-lookup")) {
   throw new Error("LS-IDL lookup must not compete with Registry browsing");
+}
+if (browse.includes("registry-browse-tools")) {
+  throw new Error("The Interface tab must not be repeated as a Browse-page utility row");
 }
 if (interfacePage.includes("registry-ls-idl-disclosure") || interfacePage.includes("<details")) {
   throw new Error("The dedicated LS-IDL page must present one direct lookup surface");

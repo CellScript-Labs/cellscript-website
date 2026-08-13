@@ -18,7 +18,7 @@ interface Props {
   headingKey?: string;
   descriptionKey?: string;
   titleKey?: string;
-  active: "search" | "submit" | "api" | "manage" | "package";
+  active: "search" | "submit" | "interface" | "api" | "manage" | "package";
   compactHeader?: boolean;
   showSubmitCta?: boolean;
   showHeader?: boolean;
@@ -54,7 +54,13 @@ const headingText = resolveKey(headingKey) ?? title.replace("CellScript Registry
 const descriptionText = resolveKey(descriptionKey) ?? description;
 const titleSuffix = headingKey ? undefined : title.split(": ").slice(1).join(": ") || undefined;
 const activeHref =
-  active === "submit" ? "/registry/submit" : active === "api" ? "/registry/api" : "/registry";
+  active === "submit"
+    ? "/registry/submit"
+    : active === "interface"
+      ? "/registry/interface"
+      : active === "api"
+        ? "/registry/api"
+        : "/registry";
 ---
 
 <!doctype html>
@@ -196,8 +202,7 @@ const activeHref =
         const currentPath = normaliseRegistryPath(window.location.pathname);
         tabs.querySelectorAll<HTMLAnchorElement>("a[href]").forEach((link) => {
           const targetPath = normaliseRegistryPath(new URL(link.href, window.location.href).pathname);
-          const isBrowseUtility = currentPath === "/registry/interface" && targetPath === "/registry";
-          const isActive = targetPath === currentPath || isBrowseUtility;
+          const isActive = targetPath === currentPath;
           link.classList.toggle("active", isActive);
           if (isActive) link.setAttribute("aria-current", "page");
           else link.removeAttribute("aria-current");

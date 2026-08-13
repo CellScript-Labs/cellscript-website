@@ -145,6 +145,13 @@ expectContains("registry interface", registryInterfaceHtml, ">Resolve a Lock Scr
 expectContains("registry interface", registryInterfaceHtml, 'data-astro-transition-persist="registry-header"');
 expectContains("registry interface", registryInterfaceHtml, 'data-astro-transition-persist="registry-environment"');
 expectContains("registry interface", registryInterfaceHtml, 'data-astro-transition-persist="registry-tabs"');
+expectContains("registry interface", registryInterfaceHtml, 'data-registry-title-key="registry.nav.interface"');
+expectContains("registry interface", registryInterfaceHtml, 'data-i18n="registry.nav.interface">Interface');
+expectNotContains("registry interface", registryInterfaceHtml, "registry-tool-back");
+const interfaceTab = registryInterfaceHtml.match(/<a[^>]*href="\/registry\/interface"[^>]*>/)?.[0] ?? "";
+if (!interfaceTab.includes('class="active"') || !interfaceTab.includes('aria-current="page"')) {
+  fail("registry interface: Interface tab must be the only active route affordance");
+}
 
 expectContains("registry", registryHtml, 'data-registry-title-key="registry.nav.browse"');
 expectContains("registry submit", registrySubmitHtml, 'data-registry-title-key="registry.nav.submit"');
@@ -158,6 +165,9 @@ if (registryStyleSignature !== JSON.stringify(registryStylesheets(registrySubmit
 }
 if (registryStyleSignature !== JSON.stringify(registryStylesheets(registryApiHtml))) {
   fail("registry API: stylesheet set differs from Registry");
+}
+if (registryStyleSignature !== JSON.stringify(registryStylesheets(registryInterfaceHtml))) {
+  fail("registry interface: stylesheet set differs from Registry");
 }
 
 for (const action of ["connect", "sign", "submit", "claim"]) {
@@ -219,8 +229,10 @@ expectContains("registry", registryHtml, 'data-registry-empty role="status" aria
 expectContains("registry", registryHtml, "data-registry-empty-submit");
 expectContains("registry", registryHtml, 'href="/registry/interface"');
 expectContains("registry", registryHtml, ">Browse</span>");
+expectContains("registry", registryHtml, ">Interface</span>");
 expectNotContains("registry", registryHtml, "registry-index-strip");
 expectNotContains("registry", registryHtml, "registry-cell-blueprint");
+expectNotContains("registry", registryHtml, "registry-browse-tools");
 expectContains("registry", registryHtml, "data-registry-clear");
 expectContains("registry", registryHtml, "data-registry-intent");
 expectContains("registry", registryHtml, "data-registry-filter-trigger");
@@ -369,7 +381,7 @@ for (const token of [
   ".registry-skeleton-row",
   ".registry-wallet-dialog-head:has(.registry-wallet-back[hidden])",
   ".registry-shell-bar",
-  ".registry-browse-tools",
+  ".registry-tool-route",
   "text-shadow:none",
   "text-wrap:normal",
 ]) {

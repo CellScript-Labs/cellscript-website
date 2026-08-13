@@ -3,7 +3,6 @@ import RegistryLsIdlLookup from "../../components/RegistryLsIdlLookup.astro";
 import RegistryLayout from "../../layouts/RegistryLayout.astro";
 import { defaultLocale, translations } from "../../i18n/translations";
 import { registryRuntime } from "../../lib/registry-runtime";
-import arrowLeftIcon from "@phosphor-icons/core/regular/arrow-left.svg?raw";
 
 const t = translations[defaultLocale];
 ---
@@ -13,15 +12,11 @@ const t = translations[defaultLocale];
   description={t.registry.browse.lsIdlSummary}
   headingKey="registry.browse.lsIdlTitle"
   descriptionKey="registry.browse.lsIdlSummary"
-  titleKey="registry.browse.lsIdlTitle"
-  active="search"
+  titleKey="registry.nav.interface"
+  active="interface"
   showSubmitCta={false}
 >
   <div class="registry-tool-route">
-    <a class="registry-tool-back" href="/registry">
-      <span class="registry-inline-icon" aria-hidden="true" set:html={arrowLeftIcon}></span>
-      <span data-i18n="registry.browse.backToBrowse">{t.registry.browse.backToBrowse}</span>
-    </a>
     <RegistryLsIdlLookup apiOrigin={registryRuntime.apiOrigin} />
   </div>
 </RegistryLayout>

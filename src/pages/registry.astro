@@ -135,12 +135,6 @@ const intentFilters = [
     </div>
 
     <button class="registry-button registry-load-more" type="button" data-registry-more hidden data-i18n="registry.browse.loadMore">{t.registry.browse.loadMore}</button>
-    <nav class="registry-browse-tools" aria-label={t.registry.browse.toolsLabel} data-i18n-aria-label="registry.browse.toolsLabel">
-      <a href="/registry/interface">
-        <span data-i18n="registry.browse.lsIdlTitle">{t.registry.browse.lsIdlTitle}</span>
-        <span class="registry-inline-icon" aria-hidden="true" set:html={arrowRightIcon}></span>
-      </a>
-    </nav>
   </section>
 
   <script is:inline type="application/json" data-registry-fallback set:html={fallbackPayload}></script>

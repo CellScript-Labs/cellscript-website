@@ -420,24 +420,8 @@
 
 .registry-tool-route {
   display: grid;
-  gap: 18px;
   max-width: 980px;
   padding-top: var(--registry-route-start);
-}
-
-.registry-tool-back {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  width: fit-content;
-  color: var(--muted);
-  font-size: 0.82rem;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.registry-tool-back:hover {
-  color: var(--text);
 }
 
 .registry-inline-icon {
@@ -870,25 +854,6 @@
   font-size: 0.78rem;
   color: var(--dim);
   text-align: center;
-}
-
-.registry-browse-tools {
-  padding: 14px 2px 0;
-  border-top: 1px solid var(--line-soft);
-}
-
-.registry-browse-tools a {
-  display: inline-flex;
-  align-items: center;
-  gap: 7px;
-  color: var(--muted);
-  font-size: 0.82rem;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.registry-browse-tools a:hover {
-  color: var(--text);
 }
 
 .registry-panel {

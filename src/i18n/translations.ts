@@ -497,6 +497,7 @@ export const translations = {
       nav: {
         browse: "Browse",
         submit: "Publish",
+        interface: "Interface",
         api: "API",
       },
       submitPackage: "Publish artifact",
@@ -576,8 +577,6 @@ export const translations = {
         kindDeployableContract: "Deployable contract",
         kindReproducibleBinary: "Reproducible binary",
         kindTemplate: "Copy-only template",
-        toolsLabel: "Registry tools",
-        backToBrowse: "Back to Browse",
         lsIdlLabel: "Lock Script interface",
         lsIdlToolsLabel: "Interface tools",
         lsIdlTitle: "Resolve a Lock Script interface",
@@ -1646,6 +1645,7 @@ export const translations = {
       nav: {
         browse: "浏览",
         submit: "发布",
+        interface: "接口",
         api: "API",
       },
       submitPackage: "发布产物",
@@ -1725,8 +1725,6 @@ export const translations = {
         kindDeployableContract: "可部署合约",
         kindReproducibleBinary: "可复现二进制",
         kindTemplate: "仅复制模板",
-        toolsLabel: "注册表工具",
-        backToBrowse: "返回浏览",
         lsIdlLabel: "Lock Script 接口",
         lsIdlToolsLabel: "接口工具",
         lsIdlTitle: "解析 Lock Script 接口",
