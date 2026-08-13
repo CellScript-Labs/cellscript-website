@@ -445,7 +445,11 @@ export function registryDateLabel(value?: string, missingLabel = "not recorded",
   }).format(date);
 }
 
-export function registryPackageDetailView(pkg: RegistryPackageView, apiOrigin: string): RegistryPackageDetailView {
+export function registryPackageDetailView(
+  pkg: RegistryPackageView,
+  apiOrigin: string,
+  defaultNetwork: "mainnet" | "testnet" = "mainnet",
+): RegistryPackageDetailView {
   const releases: RegistryReleaseView[] = pkg.releases.map((release) => ({
     ...release,
     evidence: (release.evidence ?? []).map(evidenceView),
@@ -489,7 +493,7 @@ export function registryPackageDetailView(pkg: RegistryPackageView, apiOrigin: s
   const interfaceContract = firstRelease?.interface
     ?? (isRegistryLsIdlInterface(profileContract?.interface) ? profileContract.interface : undefined);
   const interfaceDeployment = deployments.find((item) => item.code_hash) ?? pkg.deployments.find((item) => item.code_hash);
-  const network = interfaceDeployment?.network ?? firstRelease?.network ?? "mainnet";
+  const network = interfaceDeployment?.network ?? firstRelease?.network ?? defaultNetwork;
   let lsIdl: RegistryLsIdlView | undefined;
   if (interfaceContract) {
     const codeHash = interfaceDeployment?.code_hash;

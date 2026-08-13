@@ -2,12 +2,13 @@
 import RegistryLayout from "../../layouts/RegistryLayout.astro";
 import { registryPackages, registryStatusTone, registryStatusTones } from "../../lib/registry";
 import { defaultLocale, translations } from "../../i18n/translations";
-import { registryRuntime } from "../../lib/registry-runtime";
+import { isTestnetSandbox, registryRuntime } from "../../lib/registry-runtime";
 import arrowLeftIcon from "@phosphor-icons/core/regular/arrow-left.svg?raw";
 
 const t = translations[defaultLocale];
 const description = t.registry.manage.description;
-const first = registryPackages[0];
+const availablePackages = isTestnetSandbox ? [] : registryPackages;
+const first = availablePackages[0];
 const initialCoordinate = first?.coordinate ?? "";
 const initialStatus = first
   ? (t.registry.statuses as Record<string, string>)[first.status] ?? first.status.replaceAll("_", " ")
@@ -72,7 +73,7 @@ const apiOrigin = registryRuntime.apiOrigin;
               <small class="registry-field-error" id="manage-coordinate-error" data-manage-coordinate-error hidden data-i18n="registry.manage.invalidPackage">{t.registry.manage.invalidPackage}</small>
             </label>
             <datalist id="manage-package-options">
-              {registryPackages.map((pkg) => <option value={pkg.coordinate}></option>)}
+              {availablePackages.map((pkg) => <option value={pkg.coordinate}></option>)}
             </datalist>
             <label class="registry-builder-field">
               <span data-i18n="registry.manage.localPath">{t.registry.manage.localPath}</span>
@@ -244,7 +245,7 @@ const apiOrigin = registryRuntime.apiOrigin;
     </div>
   </section>
 
-  <script is:inline define:vars={{ packages: registryPackages, statusTones: registryStatusTones }}>
+  <script is:inline define:vars={{ packages: availablePackages, statusTones: registryStatusTones, registryApiFallback: apiOrigin, registryNetworkFallback: registryRuntime.network }}>
     (() => {
       const previous = window.__cellscriptRegistryManageAbort;
       previous?.abort();
@@ -369,7 +370,7 @@ const apiOrigin = registryRuntime.apiOrigin;
             status.textContent = statusLabel(pkg.status);
             sub.append(status);
           }
-          const registryNetwork = app?.dataset.registryNetwork || "mainnet";
+          const registryNetwork = app?.dataset.registryNetwork || registryNetworkFallback;
           const networks = (pkg?.deployment?.networks || []).filter((network) => network === registryNetwork);
           if (networks.length) sub.append(document.createTextNode(` · ${networks.join(", ")}`));
         }
@@ -439,8 +440,8 @@ const apiOrigin = registryRuntime.apiOrigin;
           tone = "write";
         } else if (task === "deployment") {
           const selectedVersion = field("artifact_version") || pkg?.latest_version || "<version>";
-          const network = app?.dataset.registryNetwork || "mainnet";
-          next = `cellc artifact record-deployment ${shellArg(`${coordinate()}@${selectedVersion}`)} --network ${shellArg(network)} --api-url ${shellArg(app?.dataset.apiOrigin || "https://api.registry.cellscript.dev")} --code-hash ${shellArg(field("code_hash") || "<code_hash>")} --hash-type ${shellArg(field("deployment_hash_type"))} --dep-type ${shellArg(field("deployment_dep_type"))} --tx-hash ${shellArg(field("tx_hash") || "<tx_hash>")} --index ${shellArg(field("output_index") || "0")} --capability-key-id ${shellArg(field("deployment_capability") || "<key_id>")}`;
+          const network = app?.dataset.registryNetwork || registryNetworkFallback;
+          next = `cellc artifact record-deployment ${shellArg(`${coordinate()}@${selectedVersion}`)} --network ${shellArg(network)} --api-url ${shellArg(app?.dataset.apiOrigin || registryApiFallback)} --code-hash ${shellArg(field("code_hash") || "<code_hash>")} --hash-type ${shellArg(field("deployment_hash_type"))} --dep-type ${shellArg(field("deployment_dep_type"))} --tx-hash ${shellArg(field("tx_hash") || "<tx_hash>")} --index ${shellArg(field("output_index") || "0")} --capability-key-id ${shellArg(field("deployment_capability") || "<key_id>")}`;
           helpKey = "registry.manage.helpDeployment";
           noteKey = "registry.manage.noteWrite";
           kindKey = "registry.manage.kindRegistryWrite";

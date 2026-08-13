@@ -8,20 +8,22 @@ import {
   shortHash,
   type RegistryPackageView,
 } from "../lib/registry";
+import type { RegistryNetwork } from "../lib/registry-runtime";
 
 interface Props {
   pkg?: RegistryPackageView;
-  apiOrigin?: string;
+  apiOrigin: string;
+  network: RegistryNetwork;
 }
 
-const { pkg, apiOrigin = "https://api.registry.cellscript.dev" } = Astro.props;
+const { pkg, apiOrigin, network } = Astro.props;
 const t = translations[defaultLocale];
 const statusLabel = (status?: string) =>
   (t.registry.statuses as Record<string, string>)[status ?? ""]
   ?? status?.replaceAll("_", " ")
   ?? t.registry.package.notRecorded;
 const kindLabel = (value?: string) => value?.replaceAll("_", " ") || t.registry.package.notRecorded;
-const detail = pkg ? registryPackageDetailView(pkg, apiOrigin) : undefined;
+const detail = pkg ? registryPackageDetailView(pkg, apiOrigin, network) : undefined;
 const firstRelease = detail?.firstRelease;
 const allEvidence = detail?.evidence ?? [];
 const deploymentEvidence = detail?.deployments ?? [];
@@ -42,6 +44,7 @@ const evidenceKey = (kind?: string) => `evidence${pascalKey(kind)}`;
   class="registry-package-detail"
   data-package-detail
   data-api-origin={apiOrigin.replace(/\/$/, "")}
+  data-registry-network={network}
   aria-label={pkg ? `${pkg.coordinate} artifact detail` : t.registry.package.liveDescription}
 >
   <div class="registry-package-loading" data-package-loading hidden={Boolean(pkg)} role="status" aria-live="polite">
@@ -138,7 +141,7 @@ const evidenceKey = (kind?: string) => `evidence${pascalKey(kind)}`;
               <tbody data-package-deployments>
                 {deploymentEvidence.map((item) => (
                   <tr>
-                    <td data-label={t.registry.package.thNetwork}>{item.network || "mainnet"}</td>
+                    <td data-label={t.registry.package.thNetwork}>{item.network || network}</td>
                     <td data-label={t.registry.package.thOutPoint}><code>{shortHash(registryOutPointLabel(item.out_point), 12, t.registry.package.notRecorded)}</code></td>
                     <td data-label={t.registry.package.thCodeHash}><code>{shortHash(item.code_hash, 12, t.registry.package.notRecorded)}</code></td>
                     <td data-label={t.registry.package.thDeployment}><span class="registry-status" data-state={registryStatusTone(item.chain_verification ? "chain_verified" : "deployed")}>{statusLabel(item.chain_verification ? "chain_verified" : "deployed")}</span></td>
@@ -392,7 +395,8 @@ const evidenceKey = (kind?: string) => `evidence${pascalKey(kind)}`;
     let currentArtifact: RegistryPackageView | undefined;
     const render = (artifact: RegistryPackageView) => {
       currentArtifact = artifact;
-      const detail = registryPackageDetailView(artifact, app?.dataset.apiOrigin || "https://api.registry.cellscript.dev");
+      const defaultNetwork = app?.dataset.registryNetwork === "testnet" ? "testnet" : "mainnet";
+      const detail = registryPackageDetailView(artifact, app?.dataset.apiOrigin || "", defaultNetwork);
       app?.querySelector<HTMLElement>("[data-package-loading]")?.setAttribute("hidden", "");
       app?.querySelector<HTMLElement>("[data-package-error]")?.setAttribute("hidden", "");
       const content = app?.querySelector<HTMLElement>("[data-package-content]");
@@ -533,7 +537,8 @@ const evidenceKey = (kind?: string) => `evidence${pascalKey(kind)}`;
       deploymentBody?.replaceChildren();
       for (const item of deployments) {
         const row = document.createElement("tr");
-        cell(row, message("registry.package.thNetwork"), item.network || "mainnet");
+        const defaultNetwork = app?.dataset.registryNetwork === "testnet" ? "testnet" : "mainnet";
+        cell(row, message("registry.package.thNetwork"), item.network || defaultNetwork);
         cell(row, message("registry.package.thOutPoint"), registryOutPointLabel(item.out_point), true);
         cell(row, message("registry.package.thCodeHash"), item.code_hash || "", true);
         const deploymentState = item.chain_verification ? "chain_verified" : "deployed";

@@ -1,10 +1,11 @@
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
+const dist = resolve(process.argv[2] || "dist");
 const files = {
-  browse: resolve("dist", "registry", "index.html"),
-  interface: resolve("dist", "registry", "interface", "index.html"),
-  api: resolve("dist", "registry", "api", "index.html"),
+  browse: resolve(dist, "registry", "index.html"),
+  interface: resolve(dist, "registry", "interface", "index.html"),
+  api: resolve(dist, "registry", "api", "index.html"),
   lookup: resolve("src", "components", "RegistryLsIdlLookup.astro"),
   detail: resolve("src", "components", "RegistryPackageDetail.astro"),
   library: resolve("src", "lib", "registry.ts"),

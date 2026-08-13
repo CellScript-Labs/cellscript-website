@@ -11,7 +11,7 @@ const t = translations[defaultLocale];
 const apiOrigin = registryRuntime.apiOrigin;
 const fallbackPackages = (isTestnetSandbox ? [] : registryPackages).map((pkg) => {
   const view = toRegistryPackageView(pkg);
-  const detail = registryPackageDetailView(view, apiOrigin);
+  const detail = registryPackageDetailView(view, apiOrigin, registryRuntime.network);
   return {
     ...view,
     keywords: pkg.keywords || [],

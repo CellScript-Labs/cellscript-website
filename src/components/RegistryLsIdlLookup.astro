@@ -1,15 +1,17 @@
 ---
 import { defaultLocale, translations } from "../i18n/translations";
+import type { RegistryNetwork } from "../lib/registry-runtime";
 
 interface Props {
   apiOrigin: string;
+  network: RegistryNetwork;
 }
 
-const { apiOrigin } = Astro.props;
+const { apiOrigin, network } = Astro.props;
 const t = translations[defaultLocale];
 ---
 
-<section class="registry-ls-idl-tools" data-ls-idl-lookup data-api-origin={apiOrigin.replace(/\/$/, "")} aria-label={t.registry.browse.lsIdlLabel} data-i18n-aria-label="registry.browse.lsIdlLabel">
+<section class="registry-ls-idl-tools" data-ls-idl-lookup data-api-origin={apiOrigin.replace(/\/$/, "")} data-registry-network={network} aria-label={t.registry.browse.lsIdlLabel} data-i18n-aria-label="registry.browse.lsIdlLabel">
   <div class="registry-ls-idl-panel">
     <p class="registry-ls-idl-boundary" data-i18n="registry.browse.lsIdlBody">{t.registry.browse.lsIdlBody}</p>
     <form class="registry-ls-idl-lookup-form" data-ls-idl-form aria-label={t.registry.browse.lsIdlLabel} data-i18n-aria-label="registry.browse.lsIdlLabel">
@@ -29,8 +31,8 @@ const t = translations[defaultLocale];
         <label class="registry-ls-idl-network">
           <span data-i18n="registry.browse.lsIdlNetwork">{t.registry.browse.lsIdlNetwork}</span>
           <select class="registry-select" name="network">
-            <option value="mainnet">mainnet</option>
-            <option value="testnet">testnet</option>
+            <option value="mainnet" selected={network === "mainnet"}>mainnet</option>
+            <option value="testnet" selected={network === "testnet"}>testnet</option>
           </select>
         </label>
         <label class="registry-ls-idl-data-hash" data-ls-idl-data-hash-field hidden>
@@ -101,7 +103,7 @@ const t = translations[defaultLocale];
         submit.disabled = false;
         return;
       }
-      const params = new URLSearchParams({ network: String(data.get("network") || "mainnet"), hash_type: hashType });
+      const params = new URLSearchParams({ network: String(data.get("network") || root.dataset.registryNetwork), hash_type: hashType });
       if (dataHash) params.set("data_hash", dataHash);
       try {
         const response = await fetch(`${root.dataset.apiOrigin}/v1/ckb/scripts/${encodeURIComponent(codeHash)}/interfaces/ls-idl?${params}`, {
