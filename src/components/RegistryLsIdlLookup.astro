@@ -1,5 +1,6 @@
 ---
 import { defaultLocale, translations } from "../i18n/translations";
+import caretDownIcon from "@phosphor-icons/core/regular/caret-down.svg?raw";
 
 interface Props {
   apiOrigin: string;
@@ -9,44 +10,52 @@ const { apiOrigin } = Astro.props;
 const t = translations[defaultLocale];
 ---
 
-<section class="registry-ls-idl-lookup" data-ls-idl-lookup data-api-origin={apiOrigin.replace(/\/$/, "")} aria-labelledby="ls-idl-lookup-title">
-  <div class="registry-ls-idl-lookup-copy">
-    <p class="registry-label" data-i18n="registry.browse.lsIdlLabel">{t.registry.browse.lsIdlLabel}</p>
-    <h2 id="ls-idl-lookup-title" data-i18n="registry.browse.lsIdlTitle">{t.registry.browse.lsIdlTitle}</h2>
-    <p data-i18n="registry.browse.lsIdlBody">{t.registry.browse.lsIdlBody}</p>
-  </div>
-  <form class="registry-ls-idl-lookup-form" data-ls-idl-form>
-    <label>
-      <span data-i18n="registry.browse.lsIdlCodeHash">{t.registry.browse.lsIdlCodeHash}</span>
-      <input class="registry-input" name="code_hash" required pattern="0x[0-9a-fA-F]{64}" placeholder="0x…" autocomplete="off" />
-    </label>
-    <label>
-      <span data-i18n="registry.browse.lsIdlHashType">{t.registry.browse.lsIdlHashType}</span>
-      <select class="registry-select" name="hash_type">
-        <option value="data1">data1</option>
-        <option value="data2">data2</option>
-        <option value="data">data</option>
-        <option value="type">type</option>
-      </select>
-    </label>
-    <label>
-      <span data-i18n="registry.browse.lsIdlDataHash">{t.registry.browse.lsIdlDataHash}</span>
-      <input class="registry-input" name="data_hash" pattern="0x[0-9a-fA-F]{64}" placeholder={t.registry.browse.lsIdlOptional} data-i18n-placeholder="registry.browse.lsIdlOptional" autocomplete="off" />
-    </label>
-    <label>
-      <span data-i18n="registry.browse.lsIdlNetwork">{t.registry.browse.lsIdlNetwork}</span>
-      <select class="registry-select" name="network">
-        <option value="mainnet">mainnet</option>
-        <option value="testnet">testnet</option>
-      </select>
-    </label>
-    <button class="registry-button primary" type="submit" data-ls-idl-submit data-i18n="registry.browse.lsIdlLookup">{t.registry.browse.lsIdlLookup}</button>
-  </form>
-  <output class="registry-ls-idl-result" data-ls-idl-result role="status" aria-live="polite" hidden>
-    <span data-ls-idl-status></span>
-    <a data-ls-idl-download hidden download="idl.json" data-i18n="registry.browse.lsIdlDownload">{t.registry.browse.lsIdlDownload}</a>
-    <pre data-ls-idl-document hidden></pre>
-  </output>
+<section class="registry-ls-idl-tools" data-ls-idl-lookup data-api-origin={apiOrigin.replace(/\/$/, "")} aria-label={t.registry.browse.lsIdlLabel} data-i18n-aria-label="registry.browse.lsIdlLabel">
+  <details class="registry-ls-idl-disclosure">
+    <summary>
+      <span class="registry-ls-idl-summary-copy">
+        <span class="registry-label" data-i18n="registry.browse.lsIdlToolsLabel">{t.registry.browse.lsIdlToolsLabel}</span>
+        <strong id="ls-idl-lookup-title" data-i18n="registry.browse.lsIdlTitle">{t.registry.browse.lsIdlTitle}</strong>
+        <span data-i18n="registry.browse.lsIdlSummary">{t.registry.browse.lsIdlSummary}</span>
+      </span>
+      <span class="registry-ls-idl-disclosure-caret" aria-hidden="true" set:html={caretDownIcon}></span>
+    </summary>
+    <div class="registry-ls-idl-panel">
+      <p class="registry-ls-idl-boundary" data-i18n="registry.browse.lsIdlBody">{t.registry.browse.lsIdlBody}</p>
+      <form class="registry-ls-idl-lookup-form" data-ls-idl-form aria-labelledby="ls-idl-lookup-title">
+        <label class="registry-ls-idl-code-hash">
+          <span data-i18n="registry.browse.lsIdlCodeHash">{t.registry.browse.lsIdlCodeHash}</span>
+          <input class="registry-input" name="code_hash" required pattern="0x[0-9a-fA-F]{64}" placeholder="0x…" autocomplete="off" />
+        </label>
+        <label class="registry-ls-idl-hash-type">
+          <span data-i18n="registry.browse.lsIdlHashType">{t.registry.browse.lsIdlHashType}</span>
+          <select class="registry-select" name="hash_type" data-ls-idl-hash-type>
+            <option value="data1">data1</option>
+            <option value="data2">data2</option>
+            <option value="data">data</option>
+            <option value="type">type</option>
+          </select>
+        </label>
+        <label class="registry-ls-idl-network">
+          <span data-i18n="registry.browse.lsIdlNetwork">{t.registry.browse.lsIdlNetwork}</span>
+          <select class="registry-select" name="network">
+            <option value="mainnet">mainnet</option>
+            <option value="testnet">testnet</option>
+          </select>
+        </label>
+        <label class="registry-ls-idl-data-hash" data-ls-idl-data-hash-field hidden>
+          <span data-i18n="registry.browse.lsIdlDataHash">{t.registry.browse.lsIdlDataHash}</span>
+          <input class="registry-input" name="data_hash" pattern="0x[0-9a-fA-F]{64}" placeholder="0x…" autocomplete="off" data-ls-idl-data-hash />
+        </label>
+        <button class="registry-button" type="submit" data-ls-idl-submit data-i18n="registry.browse.lsIdlLookup">{t.registry.browse.lsIdlLookup}</button>
+      </form>
+      <output class="registry-ls-idl-result" data-ls-idl-result role="status" aria-live="polite" hidden>
+        <span data-ls-idl-status></span>
+        <a data-ls-idl-download hidden download="idl.json" data-i18n="registry.browse.lsIdlDownload">{t.registry.browse.lsIdlDownload}</a>
+        <pre data-ls-idl-document hidden></pre>
+      </output>
+    </div>
+  </details>
 </section>
 
 <script>
@@ -58,7 +67,10 @@ const t = translations[defaultLocale];
     const documentNode = root?.querySelector<HTMLElement>("[data-ls-idl-document]");
     const download = root?.querySelector<HTMLAnchorElement>("[data-ls-idl-download]");
     const submit = root?.querySelector<HTMLButtonElement>("[data-ls-idl-submit]");
-    if (!root || !form || !result || !status || !documentNode || !download || !submit) return;
+    const hashTypeSelect = root?.querySelector<HTMLSelectElement>("[data-ls-idl-hash-type]");
+    const dataHashField = root?.querySelector<HTMLElement>("[data-ls-idl-data-hash-field]");
+    const dataHashInput = root?.querySelector<HTMLInputElement>("[data-ls-idl-data-hash]");
+    if (!root || !form || !result || !status || !documentNode || !download || !submit || !hashTypeSelect || !dataHashField || !dataHashInput) return;
     const previous = (window as any).__cellscriptLsIdlLookupAbort as AbortController | undefined;
     previous?.abort();
     const lifecycle = new AbortController();
@@ -74,6 +86,14 @@ const t = translations[defaultLocale];
     };
     lifecycle.signal.addEventListener("abort", revokeDownload, { once: true });
     document.addEventListener("astro:before-swap", () => lifecycle.abort(), { once: true, signal: lifecycle.signal });
+    const syncDataHashField = () => {
+      const needsDataHash = hashTypeSelect.value === "type";
+      dataHashField.hidden = !needsDataHash;
+      dataHashInput.required = needsDataHash;
+      if (!needsDataHash) dataHashInput.value = "";
+    };
+    hashTypeSelect.addEventListener("change", syncDataHashField, { signal: lifecycle.signal });
+    syncDataHashField();
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
       if (!form.reportValidity()) return;
