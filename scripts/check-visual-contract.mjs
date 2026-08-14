@@ -113,6 +113,12 @@ if (!globalCss.includes(".hero-aurora span:nth-child(2) {\n  display: none;")) {
 if (!registryCss.includes(".registry-artifact-mark i {\n  display: none;")) {
   throw new Error("artifact identity marks must not reuse the network status-dot language");
 }
+for (const token of [".registry-hero", ".registry-network-card", ".registry-api-group-heading"]) {
+  if (!registryCss.includes(token)) throw new Error(`Registry unified layout is missing ${token}`);
+}
+if (!registryCss.includes("line-height: 1.72;")) {
+  throw new Error("Registry hero and supporting copy must preserve the expanded reading rhythm");
+}
 if (registryCss.includes("--line-strong")) {
   throw new Error("Registry controls must use defined shared border tokens");
 }

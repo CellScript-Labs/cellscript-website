@@ -33,21 +33,15 @@ const writeEndpoints = [
   active="api"
   showSubmitCta={false}
 >
-  <section class="registry-api" aria-labelledby="registry-api-title">
-    <header class="registry-api-intro">
-      <div class="registry-api-meta">
-        <p class="registry-label" data-i18n="registry.api.label">{t.registry.api.label}</p>
+  <section class="registry-api" aria-label={t.registry.nav.api} data-i18n-aria-label="registry.nav.api">
+    <section class="registry-api-group" aria-labelledby="registry-api-read-title">
+      <div class="registry-api-group-heading">
+        <h2 id="registry-api-read-title" data-i18n="registry.api.readTitle">{t.registry.api.readTitle}</h2>
         <a class="registry-api-health" href={`${apiOrigin}/health`} target="_blank" rel="noopener noreferrer">
           <span data-i18n="registry.api.health">{t.registry.api.health}</span>
           <span aria-hidden="true" set:html={arrowSquareOutIcon}></span>
         </a>
       </div>
-      <h2 id="registry-api-title" data-i18n="registry.api.title">{t.registry.api.title}</h2>
-      <p data-i18n="registry.api.description">{t.registry.api.description}</p>
-    </header>
-
-    <section class="registry-api-group" aria-labelledby="registry-api-read-title">
-      <h3 id="registry-api-read-title" data-i18n="registry.api.readTitle">{t.registry.api.readTitle}</h3>
       <div class="registry-api-endpoints">
         {readEndpoints.map((endpoint) => (
           <div class="registry-api-endpoint">
@@ -65,7 +59,7 @@ const writeEndpoints = [
     </section>
 
     <section class="registry-api-group" aria-labelledby="registry-api-write-title">
-      <h3 id="registry-api-write-title" data-i18n="registry.api.writeTitle">{t.registry.api.writeTitle}</h3>
+      <h2 id="registry-api-write-title" data-i18n="registry.api.writeTitle">{t.registry.api.writeTitle}</h2>
       <div class="registry-api-endpoints">
         {writeEndpoints.map((endpoint) => (
           <div class="registry-api-endpoint">
@@ -79,7 +73,7 @@ const writeEndpoints = [
 
     <section class="registry-api-example" aria-labelledby="registry-api-example-title">
       <div>
-        <h3 id="registry-api-example-title" data-i18n="registry.api.exampleTitle">{t.registry.api.exampleTitle}</h3>
+        <h2 id="registry-api-example-title" data-i18n="registry.api.exampleTitle">{t.registry.api.exampleTitle}</h2>
         <p data-i18n="registry.api.exampleBody">{t.registry.api.exampleBody}</p>
       </div>
       <div class="registry-step-code">
@@ -96,7 +90,7 @@ const writeEndpoints = [
 
     <section class="registry-api-example" aria-labelledby="registry-api-ls-idl-title">
       <div>
-        <h3 id="registry-api-ls-idl-title">LS-IDL</h3>
+        <h2 id="registry-api-ls-idl-title">LS-IDL</h2>
         <p data-i18n="registry.api.lsIdlExactBytes">{t.registry.api.lsIdlExactBytes}</p>
       </div>
       <div class="registry-step-code">

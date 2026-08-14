@@ -22,10 +22,9 @@ const apiOrigin = registryRuntime.apiOrigin;
   showSubmitCta={false}
 >
   <section class="registry-flow" aria-label={t.registry.nav.submit} data-i18n-aria-label="registry.nav.submit">
-    <section class="registry-publish-entry" data-publish-entry aria-labelledby="registry-publish-entry-title">
+    <section class="registry-publish-entry" data-publish-entry aria-label={t.registry.submit.entryLabel} data-i18n-aria-label="registry.submit.entryLabel">
       <div class="registry-publish-entry-main">
         <p class="registry-context-label" data-i18n="registry.submit.entryLabel">{t.registry.submit.entryLabel}</p>
-        <h2 id="registry-publish-entry-title" data-i18n="registry.submit.entryTitle">{t.registry.submit.entryTitle}</h2>
         <p class="registry-publish-entry-lead" data-i18n="registry.submit.entryBody">{t.registry.submit.entryBody}</p>
         <div class="registry-publish-command" aria-label={t.registry.submit.entryCommandLabel} data-i18n-aria-label="registry.submit.entryCommandLabel">
           <span>

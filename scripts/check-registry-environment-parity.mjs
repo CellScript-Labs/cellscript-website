@@ -17,7 +17,9 @@ const routes = new Map([
 
 const sharedShell = [
   'id="registry-main"',
+  "data-registry-hero",
   "registry-environment-bar",
+  "registry-network-card",
   'href="/registry"',
 ];
 const tabShell = [
@@ -45,8 +47,10 @@ for (const [relativePath, [routeTokens, showsTabs]] of routes) {
   ]);
   requireToken(production, 'data-registry-environment="production"', `${relativePath} production`);
   requireToken(production, 'data-registry-network="mainnet"', `${relativePath} production`);
+  requireToken(production, "Persistent, production-facing records", `${relativePath} production`);
   requireToken(testnet, 'data-registry-environment="testnet-sandbox"', `${relativePath} testnet`);
   requireToken(testnet, 'data-registry-network="testnet"', `${relativePath} testnet`);
+  requireToken(testnet, "Ephemeral records · hidden after 72 hours · test CKB only", `${relativePath} testnet`);
   for (const token of [...sharedShell, ...(showsTabs ? tabShell : []), ...routeTokens]) {
     requireToken(production, token, `${relativePath} production`);
     requireToken(testnet, token, `${relativePath} testnet`);

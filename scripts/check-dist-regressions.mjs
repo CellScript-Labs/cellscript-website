@@ -137,6 +137,9 @@ for (const [name, html, eyebrow, heading, description] of [
   expectContains(name, html, `>${eyebrow}</span>`);
   expectContains(name, html, `>${heading}</h1>`);
   expectContains(name, html, description);
+  expectContains(name, html, "data-registry-hero");
+  expectContains(name, html, "registry-network-card");
+  expectContains(name, html, "Persistent, production-facing records");
   expectNotContains(name, html, 'data-astro-transition-persist="registry-header"');
   expectContains(name, html, 'data-astro-transition-persist="registry-environment"');
   expectContains(name, html, 'data-astro-transition-persist="registry-tabs"');
@@ -154,6 +157,9 @@ if (!interfaceTab.includes('class="active"') || !interfaceTab.includes('aria-cur
 expectContains("registry", registryHtml, 'data-registry-title-key="registry.nav.browse"');
 expectContains("registry submit", registrySubmitHtml, 'data-registry-title-key="registry.nav.submit"');
 expectContains("registry api", registryApiHtml, 'data-registry-title-key="registry.nav.api"');
+expectNotContains("registry submit", registrySubmitHtml, 'id="registry-publish-entry-title"');
+expectNotContains("registry api", registryApiHtml, 'id="registry-api-title"');
+expectContains("registry api", registryApiHtml, 'class="registry-api-group-heading"');
 const registryStylesheets = (html) => [...html.matchAll(/<link rel="stylesheet" href="([^"]+)"/g)]
   .map((match) => match[1])
   .sort();
@@ -384,6 +390,8 @@ for (const token of [
   ".registry-skeleton-row",
   ".registry-wallet-dialog-head:has(.registry-wallet-back[hidden])",
   ".registry-shell-bar",
+  ".registry-hero",
+  ".registry-network-card",
   ".registry-tool-route",
   "text-shadow:none",
   "text-wrap:normal",

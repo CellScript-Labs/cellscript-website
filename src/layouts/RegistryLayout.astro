@@ -11,6 +11,7 @@ import bracketsCurlyIcon from "@phosphor-icons/core/regular/brackets-curly.svg?r
 import magnifyingGlassIcon from "@phosphor-icons/core/regular/magnifying-glass.svg?raw";
 import terminalWindowIcon from "@phosphor-icons/core/regular/terminal-window.svg?raw";
 import uploadSimpleIcon from "@phosphor-icons/core/regular/upload-simple.svg?raw";
+import arrowUpRightIcon from "@phosphor-icons/core/regular/arrow-up-right.svg?raw";
 
 interface Props {
   title: string;
@@ -106,38 +107,48 @@ const activeHref =
     <a class="skip-link" href="#registry-main" data-i18n="a11y.skipToContent">{t.a11y.skipToContent}</a>
     <SiteHeader page="registry" />
     <main id="registry-main" class="registry-app">
-      <div class:list={["registry-shell-bar", !showHeader && "registry-shell-bar-context-only"]}>
-        {showHeader && <header class:list={["registry-topbar", compactHeader && "registry-topbar-compact"]} transition:name="registry-header" data-registry-section={active} aria-label={t.registry.appLabel} data-i18n-aria-label="registry.appLabel">
-          <div class="registry-topbar-copy">
-            {eyebrowText && <p class="registry-topbar-kicker">
-              {headerIcon && <span class="registry-topbar-kicker-icon" aria-hidden="true" set:html={headerIcon}></span>}
-              <span data-i18n={eyebrowKey}>{eyebrowText}</span>
-            </p>}
-            <h1 data-registry-heading data-registry-heading-key={headingKey}>{headingText}</h1>
-            <p data-registry-description data-registry-description-key={descriptionKey}>{descriptionText}</p>
-          </div>
-          {showSubmitCta && <a class="registry-button primary registry-topbar-cta" href="/registry/submit" data-registry-topbar-cta data-i18n="registry.submitPackage">{t.registry.submitPackage}</a>}
-        </header>}
-        <aside class:list={["registry-environment-bar", isTestnetSandbox && "is-testnet"]} transition:persist="registry-environment" aria-label={isTestnetSandbox ? t.registry.sandboxTitle : t.registry.productionTitle}>
-          <span class="registry-environment-identity">
-            <i aria-hidden="true"></i>
-            <strong data-i18n={isTestnetSandbox ? "registry.sandboxTitle" : "registry.productionTitle"}>{isTestnetSandbox ? t.registry.sandboxTitle : t.registry.productionTitle}</strong>
-          </span>
-          <a href={registryRuntime.alternateOrigin} data-i18n={isTestnetSandbox ? "registry.openProduction" : "registry.openSandbox"}>{isTestnetSandbox ? t.registry.openProduction : t.registry.openSandbox}</a>
-        </aside>
-      </div>
+      <section class:list={["registry-hero", !showHeader && "registry-hero-no-header", !showTabs && "registry-hero-no-tabs"]} data-registry-hero>
+        <div class:list={["registry-shell-bar", !showHeader && "registry-shell-bar-context-only"]}>
+          {showHeader && <header class:list={["registry-topbar", compactHeader && "registry-topbar-compact"]} transition:name="registry-header" data-registry-section={active} aria-label={t.registry.appLabel} data-i18n-aria-label="registry.appLabel">
+            <div class="registry-topbar-copy">
+              {eyebrowText && <p class="registry-topbar-kicker">
+                {headerIcon && <span class="registry-topbar-kicker-icon" aria-hidden="true" set:html={headerIcon}></span>}
+                <span data-i18n={eyebrowKey}>{eyebrowText}</span>
+              </p>}
+              <h1 data-registry-heading data-registry-heading-key={headingKey}>{headingText}</h1>
+              <p data-registry-description data-registry-description-key={descriptionKey}>{descriptionText}</p>
+            </div>
+            {showSubmitCta && <a class="registry-button primary registry-topbar-cta" href="/registry/submit" data-registry-topbar-cta data-i18n="registry.submitPackage">{t.registry.submitPackage}</a>}
+          </header>}
+          <aside class:list={["registry-environment-bar", "registry-network-card", isTestnetSandbox && "is-testnet"]} transition:persist="registry-environment" aria-label={isTestnetSandbox ? t.registry.sandboxTitle : t.registry.productionTitle}>
+            <p class="registry-network-label" data-i18n="registry.currentNetwork">{t.registry.currentNetwork}</p>
+            <div class="registry-network-heading">
+              <span class="registry-environment-identity">
+                <i aria-hidden="true"></i>
+                <strong data-i18n={isTestnetSandbox ? "registry.sandboxTitle" : "registry.productionTitle"}>{isTestnetSandbox ? t.registry.sandboxTitle : t.registry.productionTitle}</strong>
+              </span>
+              <span class="registry-network-code">CKB</span>
+            </div>
+            <p class="registry-network-body" data-i18n={isTestnetSandbox ? "registry.sandboxBody" : "registry.productionBody"}>{isTestnetSandbox ? t.registry.sandboxBody : t.registry.productionBody}</p>
+            <a class="registry-network-switch" href={registryRuntime.alternateOrigin}>
+              <span data-i18n={isTestnetSandbox ? "registry.openProduction" : "registry.openSandbox"}>{isTestnetSandbox ? t.registry.openProduction : t.registry.openSandbox}</span>
+              <span aria-hidden="true" set:html={arrowUpRightIcon}></span>
+            </a>
+          </aside>
+        </div>
 
-      {showTabs && <nav class="registry-tabs" transition:persist="registry-tabs" aria-label={t.registry.sectionsLabel} data-i18n-aria-label="registry.sectionsLabel">
-        {registrySections.map((section) => (
-          <a
-            href={section.href}
-            class:list={[section.href === activeHref && "active"]}
-            aria-current={section.href === activeHref ? "page" : undefined}
-          >
-            <span data-i18n={section.i18nKey}>{section.label}</span>
-          </a>
-        ))}
-      </nav>}
+        {showTabs && <nav class="registry-tabs" transition:persist="registry-tabs" aria-label={t.registry.sectionsLabel} data-i18n-aria-label="registry.sectionsLabel">
+          {registrySections.map((section) => (
+            <a
+              href={section.href}
+              class:list={[section.href === activeHref && "active"]}
+              aria-current={section.href === activeHref ? "page" : undefined}
+            >
+              <span data-i18n={section.i18nKey}>{section.label}</span>
+            </a>
+          ))}
+        </nav>}
+      </section>
 
       <div class="registry-route" transition:name="registry-route">
         <slot />
