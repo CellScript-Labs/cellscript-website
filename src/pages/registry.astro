@@ -25,7 +25,6 @@ const fallbackPackages = (isTestnetSandbox ? [] : registryPackages).map((pkg) =>
 const packageTranslations = t.registry.package as unknown as Record<string, string>;
 const pascalKey = (value: string) => value.split("_").map((part) => `${part[0]?.toUpperCase()}${part.slice(1)}`).join("");
 const guidanceTitle = (key: string) => packageTranslations[`guidance${pascalKey(key)}Title`] ?? key;
-const usageLabel = (state: string) => (t.registry.browse.usageStates as Record<string, string>)[state] ?? state.replaceAll("_", " ");
 const fallbackPayload = JSON.stringify(fallbackPackages).replaceAll("<", "\\u003c");
 const kindFilters = [
   { value: "", label: t.registry.browse.allKinds, i18nKey: "registry.browse.allKinds" },
@@ -104,14 +103,15 @@ const intentFilters = [
         >
           <span class="registry-artifact-mark" data-kind={pkg.artifact.kind} aria-hidden="true"><i></i></span>
           <div class="registry-row-copy">
-            <strong class="registry-row-coordinate"><span>{pkg.namespace}/</span>{pkg.name}</strong>
+            <div class="registry-row-headline">
+              <strong class="registry-row-coordinate"><span>{pkg.namespace}/</span>{pkg.name}</strong>
+              <span class="registry-row-version">{pkg.latest_release || t.registry.browse.unversioned}</span>
+            </div>
             <p class="registry-row-conclusion">{guidanceTitle(pkg.guidance.summaryKey)}</p>
             <p class="registry-row-description">{pkg.description || t.registry.browse.noDescription}</p>
             <div class="registry-row-meta">
               <div class="registry-badges">
                 <span class="registry-badge" data-kind="artifact">{pkg.artifact.kind.replaceAll("_", " ")}</span>
-                <span class="registry-badge" data-kind="usage" data-usage-state={pkg.guidance.usageState}>{usageLabel(pkg.guidance.usageState)}</span>
-                <span class="registry-badge" data-kind="version">{pkg.latest_release || t.registry.browse.unversioned}</span>
               </div>
               <time datetime={pkg.latest_release_at}>{t.registry.browse.released} {registryDateLabel(pkg.latest_release_at, t.registry.package.notRecorded, defaultLocale)}</time>
             </div>
@@ -405,11 +405,17 @@ const intentFilters = [
           mark.append(document.createElement("i"));
           const body = document.createElement("div");
           body.className = "registry-row-copy";
+          const headline = document.createElement("div");
+          headline.className = "registry-row-headline";
           const title = document.createElement("strong");
           title.className = "registry-row-coordinate";
           const namespace = document.createElement("span");
           namespace.textContent = `${pkg.namespace}/`;
           title.append(namespace, document.createTextNode(pkg.name));
+          const version = document.createElement("span");
+          version.className = "registry-row-version";
+          version.textContent = pkg.latest_release || message("registry.browse.unversioned");
+          headline.append(title, version);
           const conclusion = document.createElement("p");
           conclusion.className = "registry-row-conclusion";
           conclusion.textContent = message(`registry.package.guidance${pascalKey(guidance.summaryKey)}Title`);
@@ -420,26 +426,17 @@ const intentFilters = [
           meta.className = "registry-row-meta";
           const badges = document.createElement("div");
           badges.className = "registry-badges";
-          const version = document.createElement("span");
-          version.className = "registry-badge";
-          version.dataset.kind = "version";
-          version.textContent = pkg.latest_release || message("registry.browse.unversioned");
           const artifact = document.createElement("span");
           artifact.className = "registry-badge";
           artifact.dataset.kind = "artifact";
           artifact.textContent = kindLabel(pkg.artifact?.kind);
-          const usage = document.createElement("span");
-          usage.className = "registry-badge";
-          usage.dataset.kind = "usage";
-          usage.dataset.usageState = guidance.usageState;
-          usage.textContent = message(`registry.browse.usageStates.${guidance.usageState}`);
-          badges.append(artifact, usage, version);
+          badges.append(artifact);
           const released = document.createElement("time");
           const releasedAt = latestReleaseAt(pkg);
           if (releasedAt) released.dateTime = releasedAt;
           released.textContent = `${message("registry.browse.released")} ${registryDateLabel(releasedAt, message("registry.package.notRecorded"), locale())}`;
           meta.append(badges, released);
-          body.append(title, conclusion, description, meta);
+          body.append(headline, conclusion, description, meta);
           const arrow = document.createElement("span");
           arrow.className = "registry-row-arrow";
           arrow.setAttribute("aria-hidden", "true");
