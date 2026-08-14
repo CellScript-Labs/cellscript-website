@@ -2611,7 +2611,7 @@ body.home-body {
   position: absolute;
   top: 22px;
   right: 24px;
-  z-index: var(--z-base);
+  z-index: var(--z-elevated);
   color: var(--accent);
   font-family: var(--font-mono);
   font-size: 0.78rem;
@@ -2645,6 +2645,8 @@ body.home-body {
 
 .value-card h3,
 .value-card p {
+  position: relative;
+  z-index: var(--z-elevated);
   text-shadow: none;
 }
 
@@ -3352,6 +3354,8 @@ tr:last-child td {
 
 .landing-example-card h3,
 .landing-example-card p {
+  position: relative;
+  z-index: var(--z-elevated);
   text-shadow: none;
 }
 

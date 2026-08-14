@@ -11,7 +11,7 @@ const t = translations[defaultLocale];
 const apiOrigin = registryRuntime.apiOrigin;
 const fallbackPackages = (isTestnetSandbox ? [] : registryPackages).map((pkg) => {
   const view = toRegistryPackageView(pkg);
-  const detail = registryPackageDetailView(view, apiOrigin);
+  const detail = registryPackageDetailView(view, apiOrigin, registryRuntime.network);
   return {
     ...view,
     keywords: pkg.keywords || [],
@@ -57,10 +57,6 @@ const intentFilters = [
   showSubmitCta={false}
 >
   <section class="registry-browse" data-registry-browser data-api-origin={apiOrigin} data-state="loading" data-source="loading" aria-label={t.registry.browse.searchAria} data-i18n-aria-label="registry.browse.searchAria" aria-busy="true">
-    <div class="registry-index-strip">
-      <span class="registry-index-network"><i aria-hidden="true"></i><span data-i18n="registry.browse.indexNetwork">{t.registry.browse.indexNetwork}</span></span>
-      <span class="registry-index-scope" data-i18n="registry.browse.indexScope">{t.registry.browse.indexScope}</span>
-    </div>
     <div class="registry-browse-search">
       <label class="registry-browse-input">
         <span class="registry-search-icon" aria-hidden="true" set:html={searchIcon}></span>
@@ -126,19 +122,15 @@ const intentFilters = [
 
     <div class="registry-empty" data-registry-empty role="status" aria-live="polite" aria-atomic="true" hidden>
       <div class="registry-empty-copy">
-        <span class="registry-label" data-i18n="registry.browse.indexNetwork">{t.registry.browse.indexNetwork}</span>
         <h2 data-registry-empty-title>{t.registry.browse.emptyTitle}</h2>
         <p data-registry-empty-body>{t.registry.browse.emptyBody}</p>
         <div class="registry-empty-actions">
-          <a class="registry-button primary" href="/registry/submit" data-registry-empty-submit data-i18n="registry.submitPackage">{t.registry.submitPackage}</a>
+          <a class="registry-empty-publish" href="/registry/submit" data-registry-empty-submit>
+            <span data-i18n="registry.submitPackage">{t.registry.submitPackage}</span>
+            <span class="registry-inline-icon" aria-hidden="true" set:html={arrowRightIcon}></span>
+          </a>
           <button class="registry-button secondary" type="button" data-registry-clear hidden data-i18n="registry.browse.clearFilters">{t.registry.browse.clearFilters}</button>
         </div>
-      </div>
-      <div class="registry-cell-blueprint" aria-hidden="true">
-        <div class="registry-cell-blueprint-head"><span>live cell</span><i></i></div>
-        <div class="registry-cell-blueprint-row"><span>lock</span><i></i></div>
-        <div class="registry-cell-blueprint-row"><span>type</span><i></i></div>
-        <div class="registry-cell-blueprint-row"><span>data</span><i></i></div>
       </div>
     </div>
 

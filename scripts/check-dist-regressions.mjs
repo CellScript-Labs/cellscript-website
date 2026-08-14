@@ -38,6 +38,7 @@ const distPlaygroundIndex = resolve(dist, "playground", "index.html");
 const distRegistryIndex = resolve(dist, "registry", "index.html");
 const distRegistrySubmitIndex = resolve(dist, "registry", "submit", "index.html");
 const distRegistryApiIndex = resolve(dist, "registry", "api", "index.html");
+const distRegistryInterfaceIndex = resolve(dist, "registry", "interface", "index.html");
 const distRegistryManageIndex = resolve(dist, "registry", "manage", "index.html");
 const distPlaygroundWorker = resolve(dist, "playground-worker.js");
 const distWasm = resolve(dist, "wasm", "cellscript_wasm_bg.wasm");
@@ -48,9 +49,9 @@ const registryLayoutSource = resolve(root, "src", "layouts", "RegistryLayout.ast
 const registryPackageDetailSource = resolve(root, "src", "components", "RegistryPackageDetail.astro");
 const siteHeaderSource = resolve(root, "src", "components", "SiteHeader.astro");
 const wikiRoot = resolve(root, "..", "docs", "wiki");
-const expectedReleaseTag = "v0.22.0";
-const expectedCompilerAssetVersion = "20260731-v0.22.0-9bb2d765";
-const expectedWasmSha256 = "1141d7227079d0585e61b09450331ee4a4791b0875ea2cae81b63219acd70530";
+const expectedReleaseTag = "v0.23.0";
+const expectedCompilerAssetVersion = "20260811-v0.23.0-fa369818";
+const expectedWasmSha256 = "fa369818631532c657e73e970b6138e3a231d532a073d428dfe7f61686135dd5";
 
 expectFile(distIndex);
 expectFile(dist404);
@@ -59,6 +60,7 @@ expectFile(distPlaygroundIndex);
 expectFile(distRegistryIndex);
 expectFile(distRegistrySubmitIndex);
 expectFile(distRegistryApiIndex);
+expectFile(distRegistryInterfaceIndex);
 expectFile(distRegistryManageIndex);
 expectFile(distPlaygroundWorker);
 expectFile(distWasm);
@@ -76,6 +78,7 @@ const playgroundHtml = existsSync(distPlaygroundIndex) ? read(distPlaygroundInde
 const registryHtml = existsSync(distRegistryIndex) ? read(distRegistryIndex) : "";
 const registrySubmitHtml = existsSync(distRegistrySubmitIndex) ? read(distRegistrySubmitIndex) : "";
 const registryApiHtml = existsSync(distRegistryApiIndex) ? read(distRegistryApiIndex) : "";
+const registryInterfaceHtml = existsSync(distRegistryInterfaceIndex) ? read(distRegistryInterfaceIndex) : "";
 const registryManageHtml = existsSync(distRegistryManageIndex) ? read(distRegistryManageIndex) : "";
 const playgroundWorker = existsSync(distPlaygroundWorker) ? read(distPlaygroundWorker) : "";
 const docsSourceText = existsSync(docsSource) ? read(docsSource) : "";
@@ -118,6 +121,7 @@ for (const [name, html] of [
   ["playground", playgroundHtml],
   ["registry", registryHtml],
   ["registry submit", registrySubmitHtml],
+  ["registry interface", registryInterfaceHtml],
 ]) {
   expectContains(name, html, 'data-theme="light"');
   expectContains(name, html, "data-astro-rerun");
@@ -130,11 +134,23 @@ for (const [name, html] of [
   ["registry api", registryApiHtml],
 ]) {
   expectContains(name, html, ">Artifact Registry</h1>");
-  expectContains(name, html, "Discover verified CKB artifacts and deployment records, or publish with scoped wallet authorisation.");
+  expectContains(name, html, "Browse verified CKB artifacts and deployment records.");
   expectContains(name, html, 'data-astro-transition-persist="registry-header"');
   expectContains(name, html, 'data-astro-transition-persist="registry-environment"');
   expectContains(name, html, 'data-astro-transition-persist="registry-tabs"');
   expectContains(name, html, 'data-i18n-aria-label="nav.registryBrowse"');
+}
+
+expectContains("registry interface", registryInterfaceHtml, ">Resolve a Lock Script LS-IDL</h1>");
+expectContains("registry interface", registryInterfaceHtml, 'data-astro-transition-persist="registry-header"');
+expectContains("registry interface", registryInterfaceHtml, 'data-astro-transition-persist="registry-environment"');
+expectContains("registry interface", registryInterfaceHtml, 'data-astro-transition-persist="registry-tabs"');
+expectContains("registry interface", registryInterfaceHtml, 'data-registry-title-key="registry.nav.interface"');
+expectContains("registry interface", registryInterfaceHtml, 'data-i18n="registry.nav.interface">LS-IDL');
+expectNotContains("registry interface", registryInterfaceHtml, "registry-tool-back");
+const interfaceTab = registryInterfaceHtml.match(/<a[^>]*href="\/registry\/interface"[^>]*>/)?.[0] ?? "";
+if (!interfaceTab.includes('class="active"') || !interfaceTab.includes('aria-current="page"')) {
+  fail("registry interface: LS-IDL tab must be the only active route affordance");
 }
 
 expectContains("registry", registryHtml, 'data-registry-title-key="registry.nav.browse"');
@@ -149,6 +165,9 @@ if (registryStyleSignature !== JSON.stringify(registryStylesheets(registrySubmit
 }
 if (registryStyleSignature !== JSON.stringify(registryStylesheets(registryApiHtml))) {
   fail("registry API: stylesheet set differs from Registry");
+}
+if (registryStyleSignature !== JSON.stringify(registryStylesheets(registryInterfaceHtml))) {
+  fail("registry interface: stylesheet set differs from Registry");
 }
 
 for (const action of ["connect", "sign", "submit", "claim"]) {
@@ -208,6 +227,12 @@ expectContains("registry", registryHtml, 'data-state="loading" data-source="load
 expectContains("registry", registryHtml, 'data-registry-skeleton aria-hidden="true" hidden');
 expectContains("registry", registryHtml, 'data-registry-empty role="status" aria-live="polite" aria-atomic="true"');
 expectContains("registry", registryHtml, "data-registry-empty-submit");
+expectContains("registry", registryHtml, 'href="/registry/interface"');
+expectContains("registry", registryHtml, ">Browse</span>");
+expectContains("registry", registryHtml, ">LS-IDL</span>");
+expectNotContains("registry", registryHtml, "registry-index-strip");
+expectNotContains("registry", registryHtml, "registry-cell-blueprint");
+expectNotContains("registry", registryHtml, "registry-browse-tools");
 expectContains("registry", registryHtml, "data-registry-clear");
 expectContains("registry", registryHtml, "data-registry-intent");
 expectContains("registry", registryHtml, "data-registry-filter-trigger");
@@ -303,7 +328,7 @@ expectContains("registry submit", registrySubmitHtml, 'form="registry-submit-for
 expectContains("registry submit", registrySubmitHtml, 'data-publish-step data-state="locked" aria-labelledby="registry-publish-heading" hidden');
 
 expectContains("playground bundle", jsText, expectedCompilerAssetVersion);
-expectContains("playground bundle", jsText, 'cellscript_version = "0.22.0"');
+expectContains("playground bundle", jsText, 'cellscript_version = "0.23.0"');
 expectNotContains("playground bundle", jsText, 'cellscript_version = "0.20.0-rc.1"');
 expectContains("playground worker", playgroundWorker, `const COMPILER_ASSET_VERSION = "${expectedCompilerAssetVersion}"`);
 expectContains("playground", playgroundHtml, "data-pg-studio");
@@ -355,8 +380,8 @@ for (const token of [
   ".nav-menu-toggle",
   ".registry-skeleton-row",
   ".registry-wallet-dialog-head:has(.registry-wallet-back[hidden])",
-  "@keyframes registry-empty-surface",
-  "@keyframes registry-empty-blueprint",
+  ".registry-shell-bar",
+  ".registry-tool-route",
   "text-shadow:none",
   "text-wrap:normal",
 ]) {
