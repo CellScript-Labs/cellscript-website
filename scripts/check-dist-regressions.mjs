@@ -38,7 +38,7 @@ const distPlaygroundIndex = resolve(dist, "playground", "index.html");
 const distRegistryIndex = resolve(dist, "registry", "index.html");
 const distRegistrySubmitIndex = resolve(dist, "registry", "submit", "index.html");
 const distRegistryApiIndex = resolve(dist, "registry", "api", "index.html");
-const distRegistryInterfaceIndex = resolve(dist, "registry", "interface", "index.html");
+const distRegistryInterfaceIndex = resolve(dist, "registry", "LS-IDL", "index.html");
 const distRegistryManageIndex = resolve(dist, "registry", "manage", "index.html");
 const distPlaygroundWorker = resolve(dist, "playground-worker.js");
 const distWasm = resolve(dist, "wasm", "cellscript_wasm_bg.wasm");
@@ -148,7 +148,7 @@ expectContains("registry interface", registryInterfaceHtml, 'data-astro-transiti
 expectContains("registry interface", registryInterfaceHtml, 'data-registry-title-key="registry.nav.interface"');
 expectContains("registry interface", registryInterfaceHtml, 'data-i18n="registry.nav.interface">LS-IDL');
 expectNotContains("registry interface", registryInterfaceHtml, "registry-tool-back");
-const interfaceTab = registryInterfaceHtml.match(/<a[^>]*href="\/registry\/interface"[^>]*>/)?.[0] ?? "";
+const interfaceTab = registryInterfaceHtml.match(/<a[^>]*href="\/registry\/LS-IDL"[^>]*>/)?.[0] ?? "";
 if (!interfaceTab.includes('class="active"') || !interfaceTab.includes('aria-current="page"')) {
   fail("registry interface: LS-IDL tab must be the only active route affordance");
 }
@@ -227,7 +227,7 @@ expectContains("registry", registryHtml, 'data-state="loading" data-source="load
 expectContains("registry", registryHtml, 'data-registry-skeleton aria-hidden="true" hidden');
 expectContains("registry", registryHtml, 'data-registry-empty role="status" aria-live="polite" aria-atomic="true"');
 expectContains("registry", registryHtml, "data-registry-empty-submit");
-expectContains("registry", registryHtml, 'href="/registry/interface"');
+expectContains("registry", registryHtml, 'href="/registry/LS-IDL"');
 expectContains("registry", registryHtml, ">Browse</span>");
 expectContains("registry", registryHtml, ">LS-IDL</span>");
 expectNotContains("registry", registryHtml, "registry-index-strip");

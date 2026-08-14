@@ -257,7 +257,7 @@ export interface RegistrySection {
 export const registrySections: RegistrySection[] = [
   { href: "/registry", label: "Browse", i18nKey: "registry.nav.browse" },
   { href: "/registry/submit", label: "Submit", i18nKey: "registry.nav.submit" },
-  { href: "/registry/interface", label: "LS-IDL", i18nKey: "registry.nav.interface" },
+  { href: "/registry/LS-IDL", label: "LS-IDL", i18nKey: "registry.nav.interface" },
   { href: "/registry/api", label: "API", i18nKey: "registry.nav.api" },
 ];
 

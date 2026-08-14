@@ -4,7 +4,8 @@ import { resolve } from "node:path";
 const dist = resolve(process.argv[2] || "dist");
 const files = {
   browse: resolve(dist, "registry", "index.html"),
-  interface: resolve(dist, "registry", "interface", "index.html"),
+  interface: resolve(dist, "registry", "LS-IDL", "index.html"),
+  legacyRedirect: resolve(dist, "registry", "interface", "index.html"),
   api: resolve(dist, "registry", "api", "index.html"),
   lookup: resolve("src", "components", "RegistryLsIdlLookup.astro"),
   detail: resolve("src", "components", "RegistryPackageDetail.astro"),
@@ -18,6 +19,7 @@ for (const [name, file] of Object.entries(files)) {
 
 const browse = readFileSync(files.browse, "utf8");
 const interfacePage = readFileSync(files.interface, "utf8");
+const legacyRedirect = readFileSync(files.legacyRedirect, "utf8");
 const api = readFileSync(files.api, "utf8");
 const lookup = readFileSync(files.lookup, "utf8");
 const detail = readFileSync(files.detail, "utf8");
@@ -25,7 +27,7 @@ const library = readFileSync(files.library, "utf8");
 const styles = readFileSync(files.styles, "utf8");
 
 for (const [name, text, tokens] of [
-  ["browse", browse, ["data-registry-browser", 'href="/registry/interface"', 'data-i18n="registry.nav.interface">LS-IDL']],
+  ["browse", browse, ["data-registry-browser", 'href="/registry/LS-IDL"', 'data-i18n="registry.nav.interface">LS-IDL']],
   ["interface", interfacePage, ["data-ls-idl-lookup", "data-ls-idl-data-hash-field hidden", "interfaces/ls-idl", "application/vnd.ckb.ls-idl+json", "x-ls-idl-verification", "schema-and-suffix-bound"]],
   ["API", api, ["/v1/ckb/scripts/:code_hash/interfaces/ls-idl", "/idl/:code_hash", "byte-preserving"]],
   ["detail", detail, ["data-package-ls-idl", "data-package-ls-idl-download", "lsIdlBoundary"]],
@@ -34,6 +36,10 @@ for (const [name, text, tokens] of [
   for (const token of tokens) {
     if (!text.includes(token)) throw new Error(`LS-IDL ${name} contract is missing: ${token}`);
   }
+}
+
+if (!legacyRedirect.includes('url=/registry/LS-IDL') || !legacyRedirect.includes('href="https://cellscript.dev/registry/LS-IDL"')) {
+  throw new Error("The legacy Registry interface route must redirect to /registry/LS-IDL");
 }
 
 if (browse.includes("data-ls-idl-lookup")) {

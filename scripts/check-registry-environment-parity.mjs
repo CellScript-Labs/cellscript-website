@@ -9,7 +9,7 @@ const testnetRoot = path.resolve(root, process.argv[3] || "dist-testnet");
 const routes = new Map([
   ["registry/index.html", [["data-registry-browser", "data-registry-query", "data-registry-filter-menu", "data-registry-empty"], true]],
   ["registry/submit/index.html", [["registry-flow", "data-publish-entry", "data-authorisation-session", "data-submit-form"], true]],
-  ["registry/interface/index.html", [["registry-tool-route", "data-ls-idl-lookup", "data-ls-idl-form", "data-ls-idl-result"], true]],
+  ["registry/LS-IDL/index.html", [["registry-tool-route", "data-ls-idl-lookup", "data-ls-idl-form", "data-ls-idl-result"], true]],
   ["registry/api/index.html", [["registry-api", "registry-api-endpoints", "registry-api-example"], true]],
   ["registry/manage/index.html", [["registry-maintainer", "data-manage-app", "data-manage-form", "data-manage-command"], false]],
   ["registry/package/index.html", [["registry-package-detail", "data-package-detail", "data-package-loading", "data-package-error"], true]],
@@ -22,7 +22,7 @@ const sharedShell = [
 ];
 const tabShell = [
   'href="/registry/submit"',
-  'href="/registry/interface"',
+  'href="/registry/LS-IDL"',
   'href="/registry/api"',
   'data-i18n="registry.nav.browse"',
   'data-i18n="registry.nav.submit"',
@@ -87,8 +87,8 @@ for (const relativePath of productionAssets) {
 }
 
 const [productionLookup, testnetLookup, productionApi, testnetApi] = await Promise.all([
-  readFile(path.join(productionRoot, "registry/interface/index.html"), "utf8"),
-  readFile(path.join(testnetRoot, "registry/interface/index.html"), "utf8"),
+  readFile(path.join(productionRoot, "registry/LS-IDL/index.html"), "utf8"),
+  readFile(path.join(testnetRoot, "registry/LS-IDL/index.html"), "utf8"),
   readFile(path.join(productionRoot, "registry/api/index.html"), "utf8"),
   readFile(path.join(testnetRoot, "registry/api/index.html"), "utf8"),
 ]);

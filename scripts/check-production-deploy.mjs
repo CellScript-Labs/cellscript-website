@@ -29,6 +29,10 @@ requireText(nginx, "absolute_redirect off", "proxy-safe relative directory redir
 requireText(nginx, "gzip_types application/wasm", "WASM response compression");
 requireText(nginx, "location ~* \\.wasm$", "dedicated WASM asset policy");
 requireText(nginx, "public, max-age=31536000, immutable", "versioned WASM immutable caching");
+requireText(nginx, "location = /registry/interface", "legacy LS-IDL redirect");
+requireText(nginx, "return 301 https://cellscript.dev/registry/LS-IDL;", "canonical LS-IDL redirect target");
+requireText(nginx, "location = /registry/LS-IDL", "canonical LS-IDL route");
+requireText(nginx, "try_files /registry/LS-IDL/index.html =404;", "canonical LS-IDL document");
 for (const header of [
   "Permissions-Policy",
   "Referrer-Policy",

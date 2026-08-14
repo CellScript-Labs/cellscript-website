@@ -7,7 +7,7 @@ const apiOrigin = process.env.PUBLIC_REGISTRY_API_ORIGIN || "https://api.testnet
 const routes = new Map([
   ["Browse", ["registry/index.html", "data-registry-browser", true]],
   ["Publish", ["registry/submit/index.html", "data-publish-entry", true]],
-  ["LS-IDL", ["registry/interface/index.html", "data-ls-idl-lookup", true]],
+  ["LS-IDL", ["registry/LS-IDL/index.html", "data-ls-idl-lookup", true]],
   ["API", ["registry/api/index.html", "registry-api-endpoints", true]],
   ["Manage", ["registry/manage/index.html", "data-manage-app", false]],
   ["Artifact detail", ["registry/package/index.html", "data-package-detail", true]],
@@ -24,13 +24,13 @@ for (const [label, [relativePath, routeMarker, showsTabs]] of routes) {
     'href="/registry"',
     routeMarker,
   ];
-  if (showsTabs) requiredTokens.push('href="/registry/submit"', 'href="/registry/interface"', 'href="/registry/api"');
+  if (showsTabs) requiredTokens.push('href="/registry/submit"', 'href="/registry/LS-IDL"', 'href="/registry/api"');
   for (const required of requiredTokens) {
     if (!html.includes(required)) throw new Error(`${label} testnet build is missing ${required}`);
   }
 }
 
-const lookup = await readFile(path.join(dist, "registry/interface/index.html"), "utf8");
+const lookup = await readFile(path.join(dist, "registry/LS-IDL/index.html"), "utf8");
 if (!/<option value="testnet" selected>testnet<\/option>/.test(lookup)) {
   throw new Error("testnet LS-IDL lookup must default to the testnet network");
 }
