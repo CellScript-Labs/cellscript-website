@@ -112,6 +112,22 @@ if (/\.textContent\s*=\s*["'][→←↗✓✕×]["']|>[→←↗✓✕×]</.test
 if (!globalCss.includes(".hero-aurora span:nth-child(2) {\n  display: none;")) {
   throw new Error("the landing hero must keep one ambient visual layer instead of stacked auroras");
 }
+if (!visualSources.includes('<div class="hero-brand-lockup">') || !visualSources.includes("<BrandMark />")) {
+  throw new Error("the landing hero must retain its animated CellScript brand lockup");
+}
+const heroLogoGlow = cssRuleBody("\\.hero-brand-lockup::before");
+const heroOrbit = cssRuleBody("\\.hero-orbit i");
+const heroOrbitTwo = cssRuleBody("\\.hero-orbit i:nth-child\\(2\\)");
+const heroOrbitThree = cssRuleBody("\\.hero-orbit i:nth-child\\(3\\)");
+if (!heroLogoGlow.includes("animation: hero-logo-breathe")) {
+  throw new Error("the landing hero logo must retain its breathing light animation");
+}
+if (!heroOrbit.includes("animation: hero-orbit-spin") || heroOrbit.includes("animation: none")) {
+  throw new Error("the landing hero logo must retain its orbit animation");
+}
+if (heroOrbitTwo.includes("display: none") || heroOrbitThree.includes("display: none")) {
+  throw new Error("all three landing hero logo orbit layers must remain visible");
+}
 if (!registryCss.includes(".registry-artifact-mark i {\n  display: none;")) {
   throw new Error("artifact identity marks must not reuse the network status-dot language");
 }
