@@ -1,210 +1,692 @@
 ---
 import RegistryLayout from "../../layouts/RegistryLayout.astro";
 import { defaultLocale, translations } from "../../i18n/translations";
+import { registryRuntime } from "../../lib/registry-runtime";
+import arrowLeftIcon from "@phosphor-icons/core/regular/arrow-left.svg?raw";
+import checkIcon from "@phosphor-icons/core/regular/check.svg?raw";
+import xIcon from "@phosphor-icons/core/regular/x.svg?raw";
 
 const t = translations[defaultLocale];
-const description = t.registry.submit.description;
+const description = t.registry.headers.submit.description;
+const apiOrigin = registryRuntime.apiOrigin;
 ---
 
-<RegistryLayout title="CellScript Registry: Submit" description={description} headingKey="registry.submit.title" descriptionKey="registry.submit.description" active="submit">
+<RegistryLayout
+  title="CellScript Artifact Registry: Publish"
+  description={description}
+  eyebrowKey="registry.headers.submit.eyebrow"
+  headingKey="registry.headers.submit.title"
+  descriptionKey="registry.headers.submit.description"
+  titleKey="registry.nav.submit"
+  active="submit"
+  showSubmitCta={false}
+>
   <section class="registry-flow" aria-label={t.registry.nav.submit} data-i18n-aria-label="registry.nav.submit">
-    <div class="registry-flow-head">
-      <p class="registry-label" data-i18n="registry.submit.builderLabel">{t.registry.submit.builderLabel}</p>
-      <h2 data-i18n="registry.submit.builderHeading">{t.registry.submit.builderHeading}</h2>
-      <p data-i18n="registry.submit.builderBody">{t.registry.submit.builderBody}</p>
-    </div>
+    <section class="registry-publish-entry" data-publish-entry aria-label={t.registry.submit.entryLabel} data-i18n-aria-label="registry.submit.entryLabel">
+      <div class="registry-publish-entry-main">
+        <p class="registry-context-label" data-i18n="registry.submit.entryLabel">{t.registry.submit.entryLabel}</p>
+        <p class="registry-publish-entry-lead" data-i18n="registry.submit.entryBody">{t.registry.submit.entryBody}</p>
+        <div class="registry-publish-command" aria-label={t.registry.submit.entryCommandLabel} data-i18n-aria-label="registry.submit.entryCommandLabel">
+          <span>
+            <small data-i18n="registry.submit.entryCommandLabel">{t.registry.submit.entryCommandLabel}</small>
+            <code><i aria-hidden="true">$</i><span>cellc publish --authorise</span></code>
+          </span>
+          <button class="registry-button primary" type="button" data-copy-text="cellc publish --authorise" data-revert-label={t.registry.submit.entryCopyCommand} data-i18n="registry.submit.entryCopyCommand">{t.registry.submit.entryCopyCommand}</button>
+        </div>
+        <p class="registry-publish-entry-note">
+          <span class="registry-assurance-mark" aria-hidden="true" set:html={checkIcon}></span>
+          <span data-i18n="registry.submit.entryNote">{t.registry.submit.entryNote}</span>
+        </p>
+        <button class="registry-text-button registry-publish-advanced" type="button" data-open-manual-publish data-i18n="registry.submit.entryAdvanced">{t.registry.submit.entryAdvanced}</button>
+      </div>
+      <aside class="registry-publish-journey" aria-label={t.registry.submit.entryJourneyLabel} data-i18n-aria-label="registry.submit.entryJourneyLabel">
+        <p class="registry-label" data-i18n="registry.submit.entryJourneyLabel">{t.registry.submit.entryJourneyLabel}</p>
+        <ol>
+          <li><span aria-hidden="true"></span><div><strong data-i18n="registry.submit.entryStepCheck">{t.registry.submit.entryStepCheck}</strong><small data-i18n="registry.submit.entryStepCheckBody">{t.registry.submit.entryStepCheckBody}</small></div></li>
+          <li><span aria-hidden="true"></span><div><strong data-i18n="registry.submit.entryStepApprove">{t.registry.submit.entryStepApprove}</strong><small data-i18n="registry.submit.entryStepApproveBody">{t.registry.submit.entryStepApproveBody}</small></div></li>
+          <li><span aria-hidden="true"></span><div><strong data-i18n="registry.submit.entryStepPublish">{t.registry.submit.entryStepPublish}</strong><small data-i18n="registry.submit.entryStepPublishBody">{t.registry.submit.entryStepPublishBody}</small></div></li>
+        </ol>
+      </aside>
+    </section>
 
-    <form class="registry-builder" data-submit-form>
-      <div class="registry-builder-grid">
+    <section class="registry-session-approval" data-authorisation-session data-state="loading" hidden aria-labelledby="registry-authorisation-session-title">
+      <div class="registry-session-main">
+        <p class="registry-label" data-i18n="registry.submit.sessionLabel">{t.registry.submit.sessionLabel}</p>
+        <h2 id="registry-authorisation-session-title">
+          <span data-session-title data-i18n="registry.submit.sessionApprovalTitle">{t.registry.submit.sessionApprovalTitle}</span>
+          <strong data-session-coordinate aria-live="polite">—</strong>
+        </h2>
+        <p class="registry-session-lead" data-session-lead data-i18n="registry.submit.sessionApprovalBody">{t.registry.submit.sessionApprovalBody}</p>
+        <dl class="registry-session-facts">
+          <div><dt data-i18n="registry.submit.sessionArtifactType">{t.registry.submit.sessionArtifactType}</dt><dd data-session-kind>—</dd></div>
+          <div><dt data-i18n="registry.submit.sessionPermission">{t.registry.submit.sessionPermission}</dt><dd data-i18n="registry.submit.sessionPermissionBody">{t.registry.submit.sessionPermissionBody}</dd></div>
+        </dl>
+        <div class="registry-session-action" data-session-action>
+          <output class="registry-signer-status" data-capability-status role="status" aria-live="polite" data-i18n="registry.submit.sessionLoading">{t.registry.submit.sessionLoading}</output>
+          <div class="registry-session-buttons">
+            <button class="registry-button primary" type="button" data-capability-action="connect" data-i18n="registry.submit.continueConnect" hidden>{t.registry.submit.continueConnect}</button>
+            <button class="registry-button primary" type="button" data-capability-action="sign" data-i18n="registry.submit.continueSubmit" hidden>{t.registry.submit.continueSubmit}</button>
+            <button class="registry-text-button registry-change-wallet" type="button" data-capability-change-wallet hidden data-i18n="registry.submit.changeWallet">{t.registry.submit.changeWallet}</button>
+          </div>
+        </div>
+        <div class="registry-session-recovery">
+          <p data-i18n="registry.submit.sessionRecoveryBody">{t.registry.submit.sessionRecoveryBody}</p>
+          <div>
+            <button class="registry-button" type="button" data-session-retry data-i18n="registry.submit.sessionRetry">{t.registry.submit.sessionRetry}</button>
+            <button class="registry-copy" type="button" data-copy-text="cellc publish --authorise" data-revert-label={t.registry.submit.entryCopyCommand} data-i18n="registry.submit.entryCopyCommand">{t.registry.submit.entryCopyCommand}</button>
+          </div>
+        </div>
+        <details class="registry-session-details">
+          <summary data-i18n="registry.submit.technicalDetails">{t.registry.submit.technicalDetails}</summary>
+          <dl>
+            <div><dt data-i18n="registry.submit.sessionAccess">{t.registry.submit.sessionAccess}</dt><dd data-session-scope>—</dd></div>
+            <div><dt data-i18n="registry.submit.sessionExpires">{t.registry.submit.sessionExpires}</dt><dd data-session-expiry>—</dd></div>
+            <div><dt data-i18n="registry.submit.sessionId">{t.registry.submit.sessionId}</dt><dd data-session-id>—</dd></div>
+          </dl>
+        </details>
+      </div>
+      <aside class="registry-session-journey" aria-label={t.registry.submit.sessionJourneyLabel} data-i18n-aria-label="registry.submit.sessionJourneyLabel">
+        <span class="registry-network-badge"><i aria-hidden="true"></i>CKB {registryRuntime.network}</span>
+        <ol>
+          <li data-session-stage="local" data-state="complete"><span>01</span><div><strong data-i18n="registry.submit.sessionStepLocal">{t.registry.submit.sessionStepLocal}</strong><small data-session-stage-state data-i18n="registry.submit.sessionStepComplete">{t.registry.submit.sessionStepComplete}</small></div></li>
+          <li data-session-stage="approval" data-state="active"><span>02</span><div><strong data-i18n="registry.submit.sessionStepApproval">{t.registry.submit.sessionStepApproval}</strong><small data-session-stage-state data-i18n="registry.submit.sessionStepCurrent">{t.registry.submit.sessionStepCurrent}</small></div></li>
+          <li data-session-stage="publish" data-state="pending"><span>03</span><div><strong data-i18n="registry.submit.sessionStepPublish">{t.registry.submit.sessionStepPublish}</strong><small data-session-stage-state data-i18n="registry.submit.sessionStepNext">{t.registry.submit.sessionStepNext}</small></div></li>
+        </ol>
+      </aside>
+    </section>
+
+    <section class="registry-manual-publish" data-manual-publish hidden aria-labelledby="registry-manual-publish-title">
+      <header class="registry-manual-publish-head">
+        <button class="registry-text-button" type="button" data-close-manual-publish data-i18n="registry.submit.manualBack">{t.registry.submit.manualBack}</button>
+        <div class="registry-manual-publish-intro">
+          <p class="registry-context-label" data-i18n="registry.submit.manualLabel">{t.registry.submit.manualLabel}</p>
+          <h2 id="registry-manual-publish-title" data-i18n="registry.submit.manualTitle">{t.registry.submit.manualTitle}</h2>
+          <p data-i18n="registry.submit.manualBody">{t.registry.submit.manualBody}</p>
+        </div>
+        <aside class="registry-submit-boundary" aria-label={t.registry.submit.toolBoundaryTitle} data-i18n-aria-label="registry.submit.toolBoundaryTitle">
+          <strong data-i18n="registry.submit.toolBoundaryTitle">{t.registry.submit.toolBoundaryTitle}</strong>
+          <span data-i18n="registry.submit.toolBoundaryBody">{t.registry.submit.toolBoundaryBody}</span>
+        </aside>
+      </header>
+
+      <nav class="registry-manual-index" aria-label={t.registry.submit.manualLabel} data-i18n-aria-label="registry.submit.manualLabel">
+        <ol>
+          <li><a href="#registry-submit-form"><span aria-hidden="true">1</span><strong data-i18n="registry.submit.detailsLabel">{t.registry.submit.detailsLabel}</strong></a></li>
+          <li><a href="#registry-preflight-stage"><span aria-hidden="true">2</span><strong data-i18n="registry.submit.preflightTitle">{t.registry.submit.preflightTitle}</strong></a></li>
+          <li><a href="#registry-authorisation-stage"><span aria-hidden="true">3</span><strong data-i18n="registry.submit.walletLabel">{t.registry.submit.walletLabel}</strong></a></li>
+        </ol>
+      </nav>
+
+    <form class="registry-builder" id="registry-submit-form" data-submit-form novalidate>
+      <div class="registry-builder-heading">
+        <p class="registry-label" data-i18n="registry.submit.detailsLabel">{t.registry.submit.detailsLabel}</p>
+        <h2 data-i18n="registry.submit.detailsTitle">{t.registry.submit.detailsTitle}</h2>
+        <p data-i18n="registry.submit.detailsBody">{t.registry.submit.detailsBody}</p>
+      </div>
+      <div class="registry-builder-grid registry-builder-grid-compact">
+        <label class="registry-builder-field registry-artifact-kind-field">
+          <span data-i18n="registry.submit.artifactKind">{t.registry.submit.artifactKind}</span>
+          <select class="registry-select" name="artifact_kind" data-artifact-kind>
+            <option value="source_library" data-i18n="registry.submit.kindCellScript">{t.registry.submit.kindCellScript}</option>
+            <option value="profile_library" data-i18n="registry.submit.kindProfileLibrary">{t.registry.submit.kindProfileLibrary}</option>
+            <option value="deployable_contract" data-i18n="registry.submit.kindCkbScript">{t.registry.submit.kindCkbScript}</option>
+            <option value="runtime_verifier" data-i18n="registry.submit.kindRuntimeVerifier">{t.registry.submit.kindRuntimeVerifier}</option>
+            <option value="reproducible_binary" data-i18n="registry.submit.kindReproducibleBinary">{t.registry.submit.kindReproducibleBinary}</option>
+            <option value="template" data-i18n="registry.submit.kindTemplate">{t.registry.submit.kindTemplate}</option>
+          </select>
+          <small class="registry-field-hint" data-artifact-kind-hint data-i18n="registry.submit.kindCellScriptHint">{t.registry.submit.kindCellScriptHint}</small>
+        </label>
+        <label class="registry-builder-field" data-artifact-language-field>
+          <span data-i18n="registry.submit.artifactLanguage">{t.registry.submit.artifactLanguage}</span>
+          <select class="registry-select" name="artifact_language" data-artifact-language>
+            <option value="cellscript">CellScript</option>
+            <option value="rust">Rust</option>
+            <option value="c">C</option>
+            <option value="javascript">JavaScript</option>
+            <option value="other">Other</option>
+            <option value="unspecified">Unspecified</option>
+          </select>
+          <small class="registry-field-hint" data-i18n="registry.submit.artifactLanguageHint">{t.registry.submit.artifactLanguageHint}</small>
+        </label>
+      </div>
+      <div class="registry-builder-grid registry-builder-grid-compact">
         <label class="registry-builder-field">
           <span data-i18n="registry.submit.namespace">{t.registry.submit.namespace}</span>
-          <input class="registry-input" name="namespace" value="" placeholder="dob" autocomplete="off" />
+          <input
+            class="registry-input"
+            name="namespace"
+            placeholder="dob"
+            autocomplete="off"
+            required
+            minlength="1"
+            maxlength="64"
+            pattern="[a-z0-9](?:(?:[a-z0-9_]|-){0,62}[a-z0-9])?"
+            aria-describedby="submit-coordinate-help submit-coordinate-error"
+          />
         </label>
         <label class="registry-builder-field">
           <span data-i18n="registry.submit.packageName">{t.registry.submit.packageName}</span>
-          <input class="registry-input" name="name" value="" placeholder="evolving-dob-profile-v1" autocomplete="off" />
-        </label>
-        <label class="registry-builder-field">
-          <span data-i18n="registry.submit.sourceRepo">{t.registry.submit.sourceRepo}</span>
-          <input class="registry-input" name="source" value="" placeholder="https://github.com/CellScript-Labs/CellScript" autocomplete="off" />
-        </label>
-        <label class="registry-builder-field">
-          <span data-i18n="registry.submit.packageDir">{t.registry.submit.packageDir}</span>
-          <input class="registry-input" name="path" value="" placeholder="proposals/evolving-dob/evolving-dob-profile-v1" autocomplete="off" />
+          <input
+            class="registry-input"
+            name="name"
+            placeholder="evolving-dob-profile-v1"
+            autocomplete="off"
+            required
+            minlength="1"
+            maxlength="64"
+            pattern="[a-z0-9](?:(?:[a-z0-9_]|-){0,62}[a-z0-9])?"
+            aria-describedby="submit-coordinate-help submit-coordinate-error"
+          />
         </label>
       </div>
+      <p class="registry-field-hint" id="submit-coordinate-help" data-i18n="registry.submit.coordinateHelp">{t.registry.submit.coordinateHelp}</p>
+      <p class="registry-field-error" id="submit-coordinate-error" data-coordinate-error hidden data-i18n="registry.submit.invalidCoordinate">{t.registry.submit.invalidCoordinate}</p>
+      <details class="registry-command-options registry-profile-builder" data-profile-builder hidden>
+        <summary data-i18n="registry.submit.profileContractTitle">{t.registry.submit.profileContractTitle}</summary>
+        <p class="registry-field-hint" data-i18n="registry.submit.profileContractBody">{t.registry.submit.profileContractBody}</p>
+        <div class="registry-builder-grid registry-builder-grid-compact" data-profile-group="identity">
+          <label class="registry-builder-field"><span data-i18n="registry.submit.release">{t.registry.submit.release}</span><input class="registry-input" name="artifact_release" placeholder="1.0.0" pattern="[0-9]+[.][0-9]+[.][0-9]+(?:(?:-|[+])(?:[0-9A-Za-z.]|-)+)?" /></label>
+        </div>
+        <div class="registry-builder-grid registry-builder-grid-compact" data-profile-group="build">
+          <label class="registry-builder-field"><span data-i18n="registry.submit.buildTarget">{t.registry.submit.buildTarget}</span><input class="registry-input" name="build_target" value="riscv64imac-unknown-none-elf" /></label>
+          <label class="registry-builder-field"><span data-i18n="registry.submit.toolchain">{t.registry.submit.toolchain}</span><input class="registry-input" name="toolchain" placeholder="rustc 1.97.1" /></label>
+          <label class="registry-builder-field"><span data-i18n="registry.submit.sourceRevision">{t.registry.submit.sourceRevision}</span><input class="registry-input" name="source_revision" placeholder="git commit / source digest" /></label>
+          <label class="registry-builder-field"><span data-i18n="registry.submit.reproducibleBuild">{t.registry.submit.reproducibleBuild}</span><select class="registry-select" name="build_reproducible"><option value="false" data-i18n="registry.submit.notReproducible">{t.registry.submit.notReproducible}</option><option value="true" data-i18n="registry.submit.reproducible">{t.registry.submit.reproducible}</option></select></label>
+          <label class="registry-builder-field"><span data-i18n="registry.submit.securityStatus">{t.registry.submit.securityStatus}</span><select class="registry-select" name="security_status"><option value="unaudited">unaudited</option><option value="review_required" selected>review required</option><option value="audited">audited</option><option value="rejected">rejected</option></select></label>
+        </div>
+        <div class="registry-builder-grid registry-builder-grid-compact" data-profile-group="ckb">
+          <label class="registry-builder-field"><span data-i18n="registry.submit.scriptRole">{t.registry.submit.scriptRole}</span><select class="registry-select" name="script_role"><option value="type">type</option><option value="lock">lock</option><option value="dual_role">dual role</option><option value="helper">helper</option></select></label>
+          <label class="registry-builder-field"><span data-i18n="registry.submit.vmVersion">{t.registry.submit.vmVersion}</span><select class="registry-select" name="vm_version"><option value="2">2</option><option value="1">1</option><option value="0">0</option></select></label>
+          <label class="registry-builder-field"><span>hash_type</span><select class="registry-select" name="hash_type"><option value="data1">data1</option><option value="data2">data2</option><option value="data">data</option><option value="type">type</option></select></label>
+          <label class="registry-builder-field"><span>dep_type</span><select class="registry-select" name="dep_type"><option value="code">code</option><option value="dep_group">dep_group</option></select></label>
+        </div>
+        <div class="registry-builder-grid registry-builder-grid-compact" data-profile-group="verifier">
+          <label class="registry-builder-field"><span data-i18n="registry.submit.verifierId">{t.registry.submit.verifierId}</span><input class="registry-input" name="verifier_id" placeholder="btc.bip340.v0" /></label>
+          <label class="registry-builder-field"><span data-i18n="registry.submit.ipcAbi">{t.registry.submit.ipcAbi}</span><input class="registry-input" name="ipc_abi" placeholder="cellscript-btc-bip340-ipc-v0" /></label>
+        </div>
+        <div class="registry-builder-grid registry-builder-grid-compact" data-profile-group="reproduction">
+          <label class="registry-builder-field"><span data-i18n="registry.submit.buildEnvironment">{t.registry.submit.buildEnvironment}</span><input class="registry-input" name="build_environment" placeholder="container image@sha256:digest" /></label>
+          <label class="registry-builder-field"><span data-i18n="registry.submit.buildCommand">{t.registry.submit.buildCommand}</span><input class="registry-input" name="build_command" placeholder="cargo build --locked --release" /></label>
+        </div>
+        <div class="registry-builder-grid registry-builder-grid-compact" data-profile-group="copy">
+          <label class="registry-builder-field"><span data-i18n="registry.submit.templateEntrypoint">{t.registry.submit.templateEntrypoint}</span><input class="registry-input" name="template_entrypoint" placeholder="src/main.cell" /></label>
+        </div>
+        <div class="registry-step-code registry-profile-preview">
+          <span class="registry-label">Artifact.toml</span>
+          <code data-artifact-manifest-preview></code>
+          <button class="registry-copy" type="button" data-artifact-manifest-copy data-copy-text="" data-revert-label={t.registry.copy} data-i18n="registry.copy">{t.registry.copy}</button>
+        </div>
+        <div class="registry-step-code registry-profile-preview">
+          <span class="registry-label">artifact.bundle.json</span>
+          <code data-profile-contract-preview></code>
+          <button class="registry-copy" type="button" data-artifact-bundle-copy data-copy-text="" data-revert-label={t.registry.copy} data-i18n="registry.copy">{t.registry.copy}</button>
+        </div>
+      </details>
     </form>
 
-    <ol class="registry-steps">
-      <li class="registry-step-card">
-        <div class="registry-step-copy">
-          <span class="registry-step-num">01</span>
-          <h3 data-i18n="registry.submit.preflightTitle">{t.registry.submit.preflightTitle}</h3>
-          <p data-i18n="registry.submit.preflightBody">{t.registry.submit.preflightBody}</p>
-        </div>
-        <div class="registry-step-code">
-          <code data-submit-preflight>cellc package verify --json && cellc publish --dry-run</code>
-          <button class="registry-copy" type="button" data-submit-preflight-copy data-copy-text="cellc package verify --json && cellc publish --dry-run" data-revert-label={t.registry.copy} data-i18n="registry.copy">{t.registry.copy}</button>
-        </div>
-      </li>
-      <li class="registry-step-card">
-        <div class="registry-step-copy">
-          <span class="registry-step-num">02</span>
-          <h3 data-i18n="registry.submit.discoveryTitle">{t.registry.submit.discoveryTitle}</h3>
-          <p data-i18n="registry.submit.discoveryBody">{t.registry.submit.discoveryBody}</p>
-        </div>
-        <div class="registry-step-code">
-          <code data-submit-add>cellc auth capability create --principal-id &lt;principal_id&gt; --scope publish:&lt;namespace&gt;/&lt;name&gt; --expires 90d --json &gt; capability-payload.json
-cellc auth capability submit --payload capability-payload.json --joyid-signature joyid-signature.json</code>
-          <button class="registry-copy" type="button" data-submit-copy data-copy-text="" data-revert-label={t.registry.submit.copyAddCommand} data-i18n="registry.submit.copyAddCommand">{t.registry.submit.copyAddCommand}</button>
-        </div>
-      </li>
-      <li class="registry-step-card">
-        <div class="registry-step-copy">
-          <span class="registry-step-num">03</span>
-          <h3 data-i18n="registry.submit.prTitle">{t.registry.submit.prTitle}</h3>
-          <p data-i18n="registry.submit.prBody">{t.registry.submit.prBody}</p>
-        </div>
-        <div class="registry-step-code">
-          <code data-submit-publish>cellc publish</code>
-          <button class="registry-copy" type="button" data-submit-publish-copy data-copy-text="cellc publish" data-revert-label={t.registry.copy} data-i18n="registry.copy">{t.registry.copy}</button>
-        </div>
-      </li>
-    </ol>
-
-    <section class="registry-signer" data-capability-signer>
-      <div class="registry-flow-head">
-        <p class="registry-label">JoyID signer</p>
-        <h2>Sign and submit a publisher capability.</h2>
-        <p>The challenge below must be the JSON emitted by <code>cellc auth capability create --principal-id &lt;principal_id&gt; --json</code>.</p>
+    <section class="registry-submit-preflight" id="registry-preflight-stage" aria-labelledby="registry-preflight-heading">
+      <div class="registry-step-copy">
+        <h2 id="registry-preflight-heading" data-i18n="registry.submit.preflightTitle">{t.registry.submit.preflightTitle}</h2>
+        <p data-i18n="registry.submit.preflightBody">{t.registry.submit.preflightBody}</p>
       </div>
-
-      <div class="registry-signer-grid">
-        <label class="registry-builder-field registry-signer-api">
-          <span>Registry API</span>
-          <input class="registry-input" name="registryApi" data-capability-api value="https://api.registry.cellscript.dev" autocomplete="off" />
-        </label>
-        <label class="registry-builder-field registry-signer-api">
-          <span>Connected principal_id</span>
-          <input class="registry-input" data-capability-principal readonly placeholder="Connect JoyID to derive principal_id" />
-        </label>
-        <label class="registry-builder-field">
-          <span>Capability payload</span>
-          <textarea class="registry-textarea" data-capability-payload spellcheck="false" placeholder='{"protocol":"cellscript-registry-auth-v1",...}'></textarea>
-        </label>
-        <label class="registry-builder-field">
-          <span>JoyID signature</span>
-          <textarea class="registry-textarea" data-capability-signature spellcheck="false" readonly></textarea>
-        </label>
+      <div class="registry-step-code">
+        <code data-submit-preflight>cellc package verify --json &amp;&amp; cellc publish --dry-run</code>
+        <button class="registry-copy" type="button" data-submit-preflight-copy data-copy-text="cellc package verify --json && cellc publish --dry-run" data-revert-label={t.registry.copy} data-i18n="registry.copy">{t.registry.copy}</button>
+        <details class="registry-command-options">
+          <summary data-i18n="registry.submit.localCommandOptions">{t.registry.submit.localCommandOptions}</summary>
+          <label class="registry-builder-field">
+            <span data-i18n="registry.submit.packageDir">{t.registry.submit.packageDir}</span>
+            <input class="registry-input" name="path" form="registry-submit-form" placeholder="./path/to/package" autocomplete="off" />
+          </label>
+        </details>
       </div>
-
-      <div class="registry-signer-actions">
-        <button class="registry-button" type="button" data-capability-connect>Connect JoyID</button>
-        <button class="registry-button primary" type="button" data-capability-sign>Sign payload</button>
-        <button class="registry-button" type="button" data-capability-submit>Submit capability</button>
-        <button class="registry-copy" type="button" data-capability-copy-principal data-copy-text="" data-revert-label="Copy principal_id">Copy principal_id</button>
-        <button class="registry-copy" type="button" data-capability-copy-signature data-copy-text="" data-revert-label="Copy signature">Copy signature</button>
-      </div>
-      <output class="registry-signer-status" data-capability-status>JoyID not connected</output>
-      <pre class="registry-signer-response" data-capability-response hidden></pre>
     </section>
+
+    <section class="registry-authorisation-card" id="registry-authorisation-stage" data-authorisation-card aria-labelledby="registry-wallet-heading">
+      <header class="registry-authorisation-head">
+        <div>
+          <h2 id="registry-wallet-heading" data-i18n="registry.submit.walletTitle">{t.registry.submit.walletTitle}</h2>
+          <p data-i18n="registry.submit.walletBody">{t.registry.submit.walletBody}</p>
+        </div>
+        <div class="registry-authorisation-controls">
+          <span class="registry-network-badge"><i aria-hidden="true"></i>CKB {registryRuntime.network}</span>
+          <output class="registry-signer-status" data-capability-status role="status" aria-live="polite" data-i18n="registry.submit.authorisationIdle">{t.registry.submit.authorisationIdle}</output>
+          <div class="registry-signer-actions">
+            <button class="registry-text-button registry-change-wallet" type="button" data-capability-change-wallet hidden data-i18n="registry.submit.changeWallet">{t.registry.submit.changeWallet}</button>
+          </div>
+        </div>
+      </header>
+
+      <div class="registry-authorisation-paths" role="group" aria-label={t.registry.submit.authorisationPathLabel} data-i18n-aria-label="registry.submit.authorisationPathLabel">
+        <button type="button" data-authorisation-mode="new" aria-pressed="false">
+          <span data-i18n="registry.submit.newCapabilityTitle">{t.registry.submit.newCapabilityTitle}</span>
+          <small data-i18n="registry.submit.newCapabilityBody">{t.registry.submit.newCapabilityBody}</small>
+        </button>
+        <button type="button" data-authorisation-mode="existing" aria-pressed="false">
+          <span data-i18n="registry.submit.existingCapabilityTitle">{t.registry.submit.existingCapabilityTitle}</span>
+          <small data-i18n="registry.submit.existingCapabilityBody">{t.registry.submit.existingCapabilityBody}</small>
+        </button>
+      </div>
+
+      <div class="registry-signer" data-capability-signer data-new-capability-flow data-api-origin={apiOrigin} hidden>
+        <ol class="registry-authorisation-progress" aria-label={t.registry.submit.progressLabel} data-i18n-aria-label="registry.submit.progressLabel">
+          <li data-workflow-stage="wallet"><span>01</span><strong data-i18n="registry.submit.stageConnect">{t.registry.submit.stageConnect}</strong></li>
+          <li data-workflow-stage="scope"><span>02</span><strong data-i18n="registry.submit.stageScope">{t.registry.submit.stageScope}</strong></li>
+          <li data-workflow-stage="authorise"><span>03</span><strong data-i18n="registry.submit.stageAuthorise">{t.registry.submit.stageAuthorise}</strong></li>
+        </ol>
+        <div class="registry-workflow-guide" data-workflow-guide data-state="active" role="status" aria-live="polite" aria-atomic="true">
+          <span data-workflow-guide-index>01</span>
+          <div>
+            <strong data-workflow-guide-title data-i18n="registry.submit.guideChooseRouteTitle">{t.registry.submit.guideChooseRouteTitle}</strong>
+            <p data-workflow-guide-body data-i18n="registry.submit.guideChooseRouteBody">{t.registry.submit.guideChooseRouteBody}</p>
+          </div>
+        </div>
+
+        <label class="registry-builder-field registry-signer-principal" data-principal-panel hidden>
+          <span data-i18n="registry.submit.principal">{t.registry.submit.principal}</span>
+          <span class="registry-inline-control">
+            <input
+              class="registry-input"
+              data-capability-principal
+              readonly
+              placeholder={t.registry.submit.principalPlaceholder}
+              data-i18n-placeholder="registry.submit.principalPlaceholder"
+            />
+            <button class="registry-copy" type="button" data-capability-copy-principal data-copy-text="" data-revert-label={t.registry.submit.copyPrincipal} data-i18n="registry.submit.copyPrincipal">{t.registry.submit.copyPrincipal}</button>
+          </span>
+        </label>
+
+        <div class="registry-progressive-panel" data-payload-panel hidden>
+          <div class="registry-capability-create-intro">
+            <strong data-i18n="registry.submit.createLocalKeyTitle">{t.registry.submit.createLocalKeyTitle}</strong>
+            <span data-i18n="registry.submit.createLocalKeyBody">{t.registry.submit.createLocalKeyBody}</span>
+          </div>
+          <div class="registry-step-code registry-capability-command">
+            <code data-submit-create-capability>cellc auth capability create --principal-type &lt;principal_type&gt; --principal-id &lt;principal_id&gt; --scope publish:&lt;namespace&gt;/&lt;name&gt; --expires 90d --json &gt; capability-payload.json</code>
+            <button class="registry-copy" type="button" data-submit-create-capability-copy data-copy-text="" data-revert-label={t.registry.submit.copyCreateCommand} data-i18n="registry.submit.copyCreateCommand">{t.registry.submit.copyCreateCommand}</button>
+          </div>
+          <label class="registry-builder-field">
+            <span data-i18n="registry.submit.payload">{t.registry.submit.payload}</span>
+            <textarea
+              class="registry-textarea"
+              data-capability-payload
+              spellcheck="false"
+              placeholder={t.registry.submit.payloadPlaceholder}
+              data-i18n-placeholder="registry.submit.payloadPlaceholder"
+              aria-describedby="capability-payload-hint"
+            ></textarea>
+            <small class="registry-field-hint" id="capability-payload-hint" data-i18n="registry.submit.payloadHint">{t.registry.submit.payloadHint}</small>
+          </label>
+        </div>
+
+        <div class="registry-progressive-panel" data-signature-panel hidden>
+          <label class="registry-builder-field">
+            <span data-i18n="registry.submit.signature">{t.registry.submit.signature}</span>
+            <textarea class="registry-textarea" data-capability-signature spellcheck="false" readonly></textarea>
+            <small class="registry-field-hint" data-signature-hint data-i18n="registry.submit.signatureReady">{t.registry.submit.signatureReady}</small>
+          </label>
+          <button class="registry-copy" type="button" data-capability-copy-signature data-copy-text="" data-revert-label={t.registry.submit.copySignature} data-i18n="registry.submit.copySignature">{t.registry.submit.copySignature}</button>
+        </div>
+
+        <div class="registry-workflow-actions" data-capability-actions>
+          <button class="registry-button primary registry-workflow-primary" type="button" data-capability-action="connect" data-i18n="registry.submit.continueConnect" hidden>{t.registry.submit.continueConnect}</button>
+          <button class="registry-button primary registry-workflow-primary" type="button" data-capability-action="sign" data-i18n="registry.submit.continueSign" hidden>{t.registry.submit.continueSign}</button>
+          <button class="registry-button primary registry-workflow-primary" type="button" data-capability-action="submit" data-i18n="registry.submit.continueSubmit" hidden>{t.registry.submit.continueSubmit}</button>
+          <button class="registry-button primary registry-workflow-primary" type="button" data-capability-action="claim" data-i18n="registry.submit.continueClaim" hidden>{t.registry.submit.continueClaim}</button>
+        </div>
+
+        <details class="registry-technical-details" data-capability-details hidden>
+          <summary data-i18n="registry.submit.technicalDetails">{t.registry.submit.technicalDetails}</summary>
+          <pre class="registry-signer-response" data-capability-response></pre>
+        </details>
+
+        <details class="registry-manual-auth">
+          <summary data-i18n="registry.submit.manualAuthSummary">{t.registry.submit.manualAuthSummary}</summary>
+          <div class="registry-step-code registry-capability-command">
+          <code data-submit-add>cellc auth capability create --principal-type &lt;principal_type&gt; --principal-id &lt;principal_id&gt; --scope publish:&lt;namespace&gt;/&lt;name&gt; --expires 90d --json &gt; capability-payload.json
+cellc auth capability submit --payload capability-payload.json --wallet-signature wallet-signature.json
+cellc auth namespace claim --namespace &lt;namespace&gt; --payload capability-payload.json --wallet-signature wallet-signature.json</code>
+            <button class="registry-copy" type="button" data-submit-copy data-copy-text="" data-revert-label={t.registry.submit.copyAddCommand} data-i18n="registry.submit.copyAddCommand">{t.registry.submit.copyAddCommand}</button>
+          </div>
+        </details>
+      </div>
+
+      <section class="registry-existing-capability-panel" data-existing-capability-panel hidden aria-labelledby="registry-existing-capability-heading">
+        <div>
+          <h3 id="registry-existing-capability-heading" data-i18n="registry.submit.existingCheckTitle">{t.registry.submit.existingCheckTitle}</h3>
+          <p data-i18n="registry.submit.existingCheckBody">{t.registry.submit.existingCheckBody}</p>
+        </div>
+        <div class="registry-existing-capability-control">
+          <label class="registry-builder-field">
+            <span data-i18n="registry.submit.capabilityKeyId">{t.registry.submit.capabilityKeyId}</span>
+            <input class="registry-input" data-existing-capability-key autocomplete="off" spellcheck="false" placeholder="cap_0123456789abcdef0123456789abcdef" />
+          </label>
+          <button class="registry-button primary" type="button" data-existing-capability-check data-i18n="registry.submit.checkCapability">{t.registry.submit.checkCapability}</button>
+        </div>
+        <dl class="registry-capability-check-summary" data-capability-check-summary hidden>
+          <div><dt data-i18n="registry.submit.checkStatus">{t.registry.submit.checkStatus}</dt><dd data-capability-check-status></dd></div>
+          <div><dt data-i18n="registry.submit.checkExpiry">{t.registry.submit.checkExpiry}</dt><dd data-capability-check-expiry></dd></div>
+          <div><dt data-i18n="registry.submit.checkNamespace">{t.registry.submit.checkNamespace}</dt><dd data-capability-check-namespace></dd></div>
+          <div><dt data-i18n="registry.submit.checkScopes">{t.registry.submit.checkScopes}</dt><dd data-capability-check-scopes></dd></div>
+        </dl>
+      </section>
+    </section>
+
+    <section class="registry-publish-step" data-publish-step data-state="locked" aria-labelledby="registry-publish-heading" hidden>
+      <div class="registry-step-copy">
+        <h2 id="registry-publish-heading" data-i18n="registry.submit.prTitle">{t.registry.submit.prTitle}</h2>
+        <p data-i18n="registry.submit.prBody">{t.registry.submit.prBody}</p>
+      </div>
+      <div class="registry-step-code">
+        <code data-submit-publish>cellc publish --capability-key-id &lt;server-confirmed-key-id&gt;</code>
+        <button class="registry-copy" type="button" data-submit-publish-copy data-copy-text="" data-revert-label={t.registry.copy} data-i18n="registry.copy" disabled>{t.registry.copy}</button>
+      </div>
+    </section>
+    </section>
+
+    <dialog class="registry-wallet-dialog" data-wallet-dialog aria-labelledby="wallet-dialog-title">
+      <div class="registry-wallet-dialog-shell">
+        <header class="registry-wallet-dialog-head">
+          <button class="registry-wallet-back" type="button" data-wallet-back hidden aria-label={t.registry.submit.walletBack} data-i18n-aria-label="registry.submit.walletBack"><span aria-hidden="true" set:html={arrowLeftIcon}></span></button>
+          <div>
+            <p class="registry-label" data-i18n="registry.submit.walletDialogLabel">{t.registry.submit.walletDialogLabel}</p>
+            <h2 id="wallet-dialog-title" data-wallet-dialog-title data-i18n="registry.submit.walletChooseTitle">{t.registry.submit.walletChooseTitle}</h2>
+          </div>
+          <button class="registry-wallet-close" type="button" data-wallet-close aria-label={t.registry.submit.walletClose} data-i18n-aria-label="registry.submit.walletClose"><span aria-hidden="true" set:html={xIcon}></span></button>
+        </header>
+        <p class="registry-wallet-dialog-body" data-wallet-dialog-body data-i18n="registry.submit.walletChooseBody">{t.registry.submit.walletChooseBody}</p>
+        <div class="registry-wallet-toolbar">
+          <label>
+            <span class="sr-only" data-i18n="registry.submit.walletSearchPlaceholder">{t.registry.submit.walletSearchPlaceholder}</span>
+            <input type="search" autocomplete="off" placeholder={t.registry.submit.walletSearchPlaceholder} data-i18n-placeholder="registry.submit.walletSearchPlaceholder" data-wallet-search />
+          </label>
+          <span data-wallet-count aria-live="polite"></span>
+        </div>
+        <div class="registry-wallet-options" data-wallet-options role="list"></div>
+        <p class="registry-wallet-dialog-note" data-i18n="registry.submit.walletPrivacy">{t.registry.submit.walletPrivacy}</p>
+      </div>
+    </dialog>
   </section>
 
   <script>
-    const form = document.querySelector<HTMLFormElement>("[data-submit-form]");
-    const preflight = document.querySelector<HTMLElement>("[data-submit-preflight]");
-    const preflightCopy = document.querySelector<HTMLElement>("[data-submit-preflight-copy]");
-    const add = document.querySelector<HTMLElement>("[data-submit-add]");
-    const copy = document.querySelector<HTMLElement>("[data-submit-copy]");
-    const publish = document.querySelector<HTMLElement>("[data-submit-publish]");
-    const publishCopy = document.querySelector<HTMLElement>("[data-submit-publish-copy]");
-    const principalField = document.querySelector<HTMLInputElement>("[data-capability-principal]");
+    import walletArrowIcon from "@phosphor-icons/core/regular/arrow-right.svg?raw";
+    import { clearAuthorisationSession, readAuthorisationSession } from "../../lib/authorisation-session-storage.mjs";
+    import {
+      readRegistrySubmitDraft,
+      registrySubmitDraftFieldNames,
+      registrySubmitDraftKey,
+      writeRegistrySubmitDraft,
+    } from "../../lib/registry-submit-draft.mjs";
 
-    const value = (name: string) => {
-      const input = form?.elements.namedItem(name);
-      return input instanceof HTMLInputElement ? input.value.trim() : "";
+    type PrincipalType = "joyid_ckb" | "ckb_secp256k1";
+    type WalletIdentity = {
+      principalType: PrincipalType;
+      publicKey: string;
+      keyType?: "main_key" | "sub_key";
     };
-
-    const shellQuote = (text: string) => {
-      if (!text) return "";
-      return /[\s"'$]/.test(text) ? `'${text.replace(/'/g, "'\\''")}'` : text;
-    };
-
-    const update = () => {
-      const namespace = value("namespace") || "<namespace>";
-      const name = value("name") || "<name>";
-      const principalId = principalField?.value.trim() || "<principal_id>";
-      const path = value("path");
-      const cd = path ? `cd ${shellQuote(path)} && ` : "";
-      const preflightCommand = `${cd}cellc package verify --json && cellc publish --dry-run`;
-      const authCommand = `cellc auth capability create --principal-id ${shellQuote(principalId)} --scope ${shellQuote(`publish:${namespace}/${name}`)} --expires 90d --json > capability-payload.json\ncellc auth capability submit --payload capability-payload.json --joyid-signature joyid-signature.json`;
-      const publishCommand = `${cd}cellc publish`;
-
-      if (preflight) preflight.textContent = preflightCommand;
-      preflightCopy?.setAttribute("data-copy-text", preflightCommand);
-      if (add) add.textContent = authCommand;
-      if (publish) publish.textContent = publishCommand;
-      copy?.setAttribute("data-copy-text", authCommand);
-      publishCopy?.setAttribute("data-copy-text", publishCommand);
-    };
-
-    form?.addEventListener("input", update);
-    window.addEventListener("cellscript:joyid-connected", update);
-    update();
-  </script>
-
-  <script>
-    import { applyCCCConnectorTheme } from "../../lib/cccConnectorTheme";
-
-    type CapabilitySignature = {
+    type WalletSignature = Record<string, unknown> & {
       challenge: string;
       signature: string;
-      message?: string;
-      pubkey?: string;
-      keyType?: string;
-      alg?: number | string;
+    };
+    type WalletCatalogEntry = {
+      name: string;
+      aliases: string[];
+      url: string;
+      icon: string;
+      mark: string;
+    };
+    type WalletSelection =
+      | { kind: "signer"; signer: any }
+      | { kind: "external"; wallet: WalletCatalogEntry };
+    type AuthorisationMode = "new" | "existing";
+    type CapabilityCheck = {
+      key_id: string;
+      status: "active" | "expired" | "revoked";
+      scopes: string[];
+      expires_at: string;
+      namespace: { name: string; status: string; owned_by_capability_principal: boolean };
+      allows: { publish: boolean; deployment: boolean; availability: boolean };
+      usable_for_publish: boolean;
+      reasons: string[];
+    };
+    type AuthorisationSession = {
+      schema: "cellscript-registry-authorisation-session-v1";
+      session_id: string;
+      status: "pending" | "authorised" | "review_pending";
+      artifact: { namespace: string; name: string; kind: string };
+      requested_scopes: string[];
+      capability_expires_at: string;
+      expires_at: string;
     };
 
-    const apiInput = document.querySelector<HTMLInputElement>("[data-capability-api]");
+    class WorkflowError extends Error {
+      constructor(readonly key: string, technical?: string) {
+        super(technical || key);
+      }
+    }
+
+    const setupSubmitPage = () => {
+    const form = document.querySelector<HTMLFormElement>("[data-submit-form]");
+    if (!form) return;
+    const previousLifecycle = (window as any).__cellscriptRegistrySubmitAbort as AbortController | undefined;
+    previousLifecycle?.abort();
+    const lifecycle = new AbortController();
+    (window as any).__cellscriptRegistrySubmitAbort = lifecycle;
+    const { signal } = lifecycle;
+    const publishEntry = document.querySelector<HTMLElement>("[data-publish-entry]");
+    const manualPublish = document.querySelector<HTMLElement>("[data-manual-publish]");
+    const openManualPublish = document.querySelector<HTMLButtonElement>("[data-open-manual-publish]");
+    const closeManualPublish = document.querySelector<HTMLButtonElement>("[data-close-manual-publish]");
+    const sessionPanel = document.querySelector<HTMLElement>("[data-authorisation-session]");
+    const sessionTitle = document.querySelector<HTMLElement>("[data-session-title]");
+    const sessionLead = document.querySelector<HTMLElement>("[data-session-lead]");
+    const sessionCoordinate = document.querySelector<HTMLElement>("[data-session-coordinate]");
+    const sessionKind = document.querySelector<HTMLElement>("[data-session-kind]");
+    const sessionScope = document.querySelector<HTMLElement>("[data-session-scope]");
+    const sessionExpiry = document.querySelector<HTMLElement>("[data-session-expiry]");
+    const sessionIdOutput = document.querySelector<HTMLElement>("[data-session-id]");
+    const sessionRetry = document.querySelector<HTMLButtonElement>("[data-session-retry]");
+    const sessionStages = Array.from(document.querySelectorAll<HTMLElement>("[data-session-stage]"));
+    const namespaceInput = form?.elements.namedItem("namespace") as HTMLInputElement | null;
+    const nameInput = form?.elements.namedItem("name") as HTMLInputElement | null;
+    const pathInput = form?.elements.namedItem("path") as HTMLInputElement | null;
+    const artifactKindInput = form?.elements.namedItem("artifact_kind") as HTMLSelectElement | null;
+    const artifactLanguageInput = form?.elements.namedItem("artifact_language") as HTMLSelectElement | null;
+    const artifactKindHint = document.querySelector<HTMLElement>("[data-artifact-kind-hint]");
+    const profileBuilder = document.querySelector<HTMLDetailsElement>("[data-profile-builder]");
+    const profileGroups = Array.from(document.querySelectorAll<HTMLElement>("[data-profile-group]"));
+    const profilePreview = document.querySelector<HTMLElement>("[data-profile-contract-preview]");
+    const artifactManifestPreview = document.querySelector<HTMLElement>("[data-artifact-manifest-preview]");
+    const artifactManifestCopy = document.querySelector<HTMLButtonElement>("[data-artifact-manifest-copy]");
+    const artifactBundleCopy = document.querySelector<HTMLButtonElement>("[data-artifact-bundle-copy]");
+    const coordinateError = document.querySelector<HTMLElement>("[data-coordinate-error]");
+    const preflight = document.querySelector<HTMLElement>("[data-submit-preflight]");
+    const preflightCopy = document.querySelector<HTMLButtonElement>("[data-submit-preflight-copy]");
+    const capabilityCreateCommand = document.querySelector<HTMLElement>("[data-submit-create-capability]");
+    const capabilityCreateCopy = document.querySelector<HTMLButtonElement>("[data-submit-create-capability-copy]");
+    const capabilityCommand = document.querySelector<HTMLElement>("[data-submit-add]");
+    const capabilityCopy = document.querySelector<HTMLButtonElement>("[data-submit-copy]");
+    const publish = document.querySelector<HTMLElement>("[data-submit-publish]");
+    const publishCopy = document.querySelector<HTMLButtonElement>("[data-submit-publish-copy]");
+    const publishStep = document.querySelector<HTMLElement>("[data-publish-step]");
+    const authorisationModes = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-authorisation-mode]"));
+    const newCapabilityFlow = document.querySelector<HTMLElement>("[data-new-capability-flow]");
+    const existingCapabilityPanel = document.querySelector<HTMLElement>("[data-existing-capability-panel]");
+    const existingCapabilityKey = document.querySelector<HTMLInputElement>("[data-existing-capability-key]");
+    const existingCapabilityCheck = document.querySelector<HTMLButtonElement>("[data-existing-capability-check]");
+    const capabilityCheckSummary = document.querySelector<HTMLElement>("[data-capability-check-summary]");
+    const capabilityCheckStatus = document.querySelector<HTMLElement>("[data-capability-check-status]");
+    const capabilityCheckExpiry = document.querySelector<HTMLElement>("[data-capability-check-expiry]");
+    const capabilityCheckNamespace = document.querySelector<HTMLElement>("[data-capability-check-namespace]");
+    const capabilityCheckScopes = document.querySelector<HTMLElement>("[data-capability-check-scopes]");
+    const signerRoot = document.querySelector<HTMLElement>("[data-capability-signer]");
+    const principalPanel = document.querySelector<HTMLElement>("[data-principal-panel]");
     const principalInput = document.querySelector<HTMLInputElement>("[data-capability-principal]");
+    const payloadPanel = document.querySelector<HTMLElement>("[data-payload-panel]");
     const payloadInput = document.querySelector<HTMLTextAreaElement>("[data-capability-payload]");
+    const signaturePanel = document.querySelector<HTMLElement>("[data-signature-panel]");
     const signatureOutput = document.querySelector<HTMLTextAreaElement>("[data-capability-signature]");
-    const connectButton = document.querySelector<HTMLButtonElement>("[data-capability-connect]");
-    const signButton = document.querySelector<HTMLButtonElement>("[data-capability-sign]");
-    const submitButton = document.querySelector<HTMLButtonElement>("[data-capability-submit]");
+    const signatureHint = document.querySelector<HTMLElement>("[data-signature-hint]");
+    const capabilityActionButtons = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-capability-action]"));
+    const changeWalletButtons = Array.from(document.querySelectorAll<HTMLButtonElement>("[data-capability-change-wallet]"));
     const copyPrincipalButton = document.querySelector<HTMLButtonElement>("[data-capability-copy-principal]");
     const copySignatureButton = document.querySelector<HTMLButtonElement>("[data-capability-copy-signature]");
-    const statusOutput = document.querySelector<HTMLOutputElement>("[data-capability-status]");
-    const responseOutput = document.querySelector<HTMLElement>("[data-capability-response]");
-    const joyidLogo = `${window.location.origin}${import.meta.env.BASE_URL}cellscript-logo.png`;
-    const joyidStorageKey = "cellscript-joyid-connection";
-
-    let cccPromise: Promise<typeof import("@ckb-ccc/connector")> | null = null;
-    let activeJoyIdSigner: any | null = null;
-
-    const setCapabilityStatus = (message: string, tone: "idle" | "ok" | "error" = "idle") => {
-      if (!statusOutput) return;
-      statusOutput.textContent = message;
-      statusOutput.dataset.tone = tone;
-    };
-
-    const loadCCC = async () => {
-      cccPromise ??= import("@ckb-ccc/connector");
-      return cccPromise;
-    };
-
-    const createJoyIdOnlyController = (ccc: typeof import("@ckb-ccc/connector").ccc) => {
-      return new class extends ccc.SignersController {
-        async refresh(client: any, onUpdate: (wallets: any[]) => void, configs?: any) {
-          await super.refresh(client, (wallets: any[]) => {
-            onUpdate(wallets.filter((wallet) => /joyid/i.test(String(wallet.name))));
-          }, configs);
-        }
-      }();
-    };
-
-    const canonicalJson = (value: unknown): string => JSON.stringify(sortJson(value));
+    const statusOutputs = Array.from(document.querySelectorAll<HTMLOutputElement>("[data-capability-status]"));
+    const technicalDetails = document.querySelector<HTMLDetailsElement>("[data-capability-details]");
+    const technicalOutput = document.querySelector<HTMLElement>("[data-capability-response]");
+    const walletDialog = document.querySelector<HTMLDialogElement>("[data-wallet-dialog]");
+    const walletDialogBody = document.querySelector<HTMLElement>("[data-wallet-dialog-body]");
+    const walletOptions = document.querySelector<HTMLElement>("[data-wallet-options]");
+    const walletToolbar = document.querySelector<HTMLElement>(".registry-wallet-toolbar");
+    const walletSearch = document.querySelector<HTMLInputElement>("[data-wallet-search]");
+    const walletCount = document.querySelector<HTMLElement>("[data-wallet-count]");
+    const walletDialogTitle = document.querySelector<HTMLElement>("[data-wallet-dialog-title]");
+    const walletBack = document.querySelector<HTMLButtonElement>("[data-wallet-back]");
+    const walletClose = document.querySelector<HTMLButtonElement>("[data-wallet-close]");
+    const stages = Array.from(document.querySelectorAll<HTMLElement>("[data-workflow-stage]"));
+    const workflowGuide = document.querySelector<HTMLElement>("[data-workflow-guide]");
+    const workflowGuideIndex = document.querySelector<HTMLElement>("[data-workflow-guide-index]");
+    const workflowGuideTitle = document.querySelector<HTMLElement>("[data-workflow-guide-title]");
+    const workflowGuideBody = document.querySelector<HTMLElement>("[data-workflow-guide-body]");
+    const appLogo = `${window.location.origin}${import.meta.env.BASE_URL}cellscript-logo.png`;
+    const registryNetwork = document.documentElement.dataset.registryNetwork === "testnet" ? "testnet" : "mainnet";
     const joyidPrincipalContext = "cellscript-registry-joyid-ckb-principal-v1";
+    const ckbPrincipalContext = "cellscript-registry-ckb-secp256k1-principal-v1";
+    const coordinatePattern = /^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$/;
+    const walletIcon = (name: string) => `${import.meta.env.BASE_URL}wallets/${name}.svg`;
+    const officialWalletCatalog: WalletCatalogEntry[] = [
+      { name: "Neuron", aliases: ["Neuron"], url: "https://neuron.magickbase.com/", icon: walletIcon("neuron"), mark: "N" },
+      { name: "JoyID", aliases: ["JoyID", "JoyID Passkey"], url: "https://joy.id/", icon: walletIcon("joyid"), mark: "J" },
+      { name: "imToken", aliases: ["imToken"], url: "https://token.im/", icon: walletIcon("imtoken"), mark: "iM" },
+      { name: "CKBull", aliases: ["CKBull"], url: "https://ckbull.app/", icon: walletIcon("ckbull"), mark: "CB" },
+      { name: "SafePal", aliases: ["SafePal"], url: "https://blog.safepal.com/safepal-wallet-now-supports-nervos-ckb/", icon: walletIcon("safepal"), mark: "SP" },
+      { name: "Ledger", aliases: ["Ledger"], url: "https://www.ledger.com/", icon: walletIcon("ledger"), mark: "L" },
+      { name: "imKey", aliases: ["imKey"], url: "https://imkey.im/", icon: walletIcon("imkey"), mark: "iK" },
+      { name: "OneKey", aliases: ["OneKey"], url: "https://onekey.so/", icon: walletIcon("onekey"), mark: "OK" },
+      { name: "UTXO Global", aliases: ["UTXO Global", "UTXO Global Wallet"], url: "https://utxo.global/", icon: walletIcon("utxoglobal"), mark: "UG" },
+      { name: "Rei Wallet", aliases: ["Rei Wallet", "Rei"], url: "https://reiwallet.io/", icon: walletIcon("reiwallet"), mark: "R" },
+      { name: "Gate", aliases: ["Gate", "Gate Wallet"], url: "https://www.gate.io/", icon: walletIcon("gate"), mark: "G" },
+      { name: "QuantumPurse", aliases: ["QuantumPurse"], url: "https://quantumpurse.org/", icon: walletIcon("quantumpurse"), mark: "QP" },
+    ];
+    const recoveredAuthorisationSession = readAuthorisationSession(window.location.href, sessionStorage);
+    const authorisationSessionId = recoveredAuthorisationSession.sessionId;
+    const authorisationBrowserToken = recoveredAuthorisationSession.browserToken;
+    const authorisationSessionMode = recoveredAuthorisationSession.sessionMode;
+    const submitDraftStorageKey = registrySubmitDraftKey(
+      document.documentElement.dataset.registryEnvironment ?? "production",
+      registryNetwork,
+    );
+    if (recoveredAuthorisationSession.cleanedUrl) {
+      history.replaceState(history.state, "", recoveredAuthorisationSession.cleanedUrl);
+    }
+
+    const clearStoredAuthorisationSession = () => {
+      clearAuthorisationSession(sessionStorage, authorisationSessionId);
+    };
+
+    let cccPromise: Promise<typeof import("@ckb-ccc/connector/barrel")> | null = null;
+    let walletController: any | null = null;
+    let availableWallets: any[] = [];
+    let walletRefreshSequence = 0;
+    let walletPicker: { resolve: (selection: WalletSelection) => void; reject: (error: unknown) => void; settled: boolean } | null = null;
+    let activeWalletSigner: any | null = null;
+    let activeWalletIdentity: WalletIdentity | null = null;
+    let activeExternalWallet: WalletCatalogEntry | null = null;
+    let authorisationMode: AuthorisationMode | null = null;
+    let capabilitySubmitted = false;
+    let submittedCapabilityKeyId = "";
+    let namespaceClaimed = false;
+    let namespaceReviewPending = false;
+    let confirmedCapabilityKeyId = "";
+    let lastCapabilityCheck: CapabilityCheck | null = null;
+    let busy = false;
+    let statusKey = "authorisationIdle";
+    let statusTone: "idle" | "ok" | "error" = "idle";
+    let statusSuffix = "";
+    let lastCoordinate = "";
+    let authorisationSession: AuthorisationSession | null = null;
+    let authorisationChallengeToken = "";
+    let authorisationSessionFinished = false;
+
+    const message = (key: string): string => {
+      const locale = document.documentElement.dataset.locale === "zh" ? "zh" : "en";
+      const messages = (window as any).__CELLSCRIPT_I18N__?.[locale]?.registry?.submit;
+      return typeof messages?.[key] === "string" ? messages[key] : key;
+    };
+    const preferredScrollBehavior: ScrollBehavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+    const applyAuthorisationSessionLayout = () => {
+      if (publishEntry) publishEntry.hidden = authorisationSessionMode;
+      if (manualPublish) manualPublish.hidden = true;
+      if (sessionPanel) {
+        sessionPanel.hidden = !authorisationSessionMode;
+        sessionPanel.dataset.state = authorisationSession ? "ready" : "loading";
+      }
+    };
+    applyAuthorisationSessionLayout();
+
+    const setStatus = (key: string, tone: "idle" | "ok" | "error" = "idle", suffix = "") => {
+      statusKey = key;
+      statusTone = tone;
+      statusSuffix = suffix;
+      for (const output of statusOutputs) {
+        output.dataset.tone = tone;
+        output.textContent = `${message(key)}${suffix}`;
+        output.removeAttribute("data-i18n");
+      }
+    };
+    const showTechnical = (value: unknown) => {
+      if (!technicalDetails || !technicalOutput) return;
+      technicalDetails.hidden = false;
+      technicalOutput.textContent = typeof value === "string" ? value : JSON.stringify(value, null, 2);
+    };
+    const clearTechnical = () => {
+      if (technicalDetails) {
+        technicalDetails.hidden = true;
+        technicalDetails.open = false;
+      }
+      if (technicalOutput) technicalOutput.textContent = "";
+    };
+    const setError = (error: unknown, fallbackKey: string) => {
+      const key = error instanceof WorkflowError ? error.key : fallbackKey;
+      setStatus(key, "error");
+      if (error instanceof WorkflowError) {
+        if (error.message !== error.key) showTechnical(error.message);
+      } else if (error instanceof Error) showTechnical(error.message);
+      else if (error != null) showTechnical(error);
+    };
+    const fieldValue = (name: string) => {
+      const input = form?.elements.namedItem(name);
+      return input instanceof HTMLInputElement || input instanceof HTMLSelectElement ? input.value.trim() : "";
+    };
+    const coordinateValid = () => coordinatePattern.test(fieldValue("namespace")) && coordinatePattern.test(fieldValue("name"));
+    const persistSubmitDraft = () => {
+      if (authorisationSessionMode) return;
+      const fields: Record<string, string> = {};
+      for (const name of registrySubmitDraftFieldNames) fields[name] = fieldValue(name);
+      writeRegistrySubmitDraft(sessionStorage, submitDraftStorageKey, {
+        fields,
+        manualOpen: Boolean(manualPublish && !manualPublish.hidden),
+        profileOpen: profileBuilder?.open === true,
+        authorisationMode,
+      });
+    };
+    const restoreSubmitDraft = () => {
+      if (authorisationSessionMode) return;
+      const draft = readRegistrySubmitDraft(sessionStorage, submitDraftStorageKey);
+      if (!draft) return;
+      for (const [name, value] of Object.entries(draft.fields)) {
+        const input = form.elements.namedItem(name);
+        if (input instanceof HTMLSelectElement) {
+          if (Array.from(input.options).some((option) => option.value === value)) input.value = value;
+        } else if (input instanceof HTMLInputElement) input.value = value;
+      }
+      if (profileBuilder) profileBuilder.open = draft.profileOpen;
+      if (manualPublish) manualPublish.hidden = !draft.manualOpen;
+      if (publishEntry) publishEntry.hidden = draft.manualOpen;
+      if (draft.authorisationMode && coordinateValid()) authorisationMode = draft.authorisationMode;
+    };
+    const shellQuote = (text: string) => /[\s"'$]/.test(text) ? `'${text.replace(/'/g, "'\\''")}'` : text;
+    const commandPrefix = () => fieldValue("path") ? `cd ${shellQuote(fieldValue("path"))} && ` : "";
 
     const sortJson = (value: unknown): unknown => {
       if (Array.isArray(value)) return value.map(sortJson);
@@ -218,217 +700,1303 @@ cellc auth capability submit --payload capability-payload.json --joyid-signature
       }
       return value;
     };
-
+    const canonicalJson = (value: unknown): string => JSON.stringify(sortJson(value));
     const sha256Hex = async (value: string): Promise<string> => {
       const hash = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(value));
       return Array.from(new Uint8Array(hash), (byte) => byte.toString(16).padStart(2, "0")).join("");
     };
-
     const normalizePubkey = (value: string): string => {
       const trimmed = value.trim().toLowerCase();
       return trimmed.startsWith("0x") ? trimmed.slice(2) : trimmed;
     };
-
-    const joyidPrincipalCandidates = async (keyType: string, pubkey: string): Promise<string[]> => {
-      const normalized = normalizePubkey(pubkey);
-      const candidates = new Set<string>();
-      const digest = await sha256Hex(`${joyidPrincipalContext}\n${keyType}\n${normalized}`);
-      candidates.add(`0x${digest}`);
-      if (/^[0-9a-f]{40,64}$/.test(normalized)) {
-        candidates.add(`0x${normalized}`);
-      }
-      return [...candidates];
+    const joyidPrincipalId = async (keyType: string, publicKey: string): Promise<string> =>
+      `0x${await sha256Hex(`${joyidPrincipalContext}\n${keyType}\n${normalizePubkey(publicKey)}`)}`;
+    const ckbPrincipalId = async (publicKey: string): Promise<string> => {
+      const normalized = `0x${normalizePubkey(publicKey)}`;
+      return `0x${await sha256Hex(`${ckbPrincipalContext}\n${normalized}`)}`;
     };
 
     const parsePayload = (): Record<string, unknown> => {
-      if (!payloadInput?.value.trim()) {
-        throw new Error("Capability payload JSON is required");
+      if (!payloadInput?.value.trim()) throw new WorkflowError("errorPayloadRequired");
+      let parsed: unknown;
+      try {
+        parsed = JSON.parse(payloadInput.value);
+      } catch (error) {
+        throw new WorkflowError("errorPayloadObject", error instanceof Error ? error.message : undefined);
       }
-      const parsed = JSON.parse(payloadInput.value) as unknown;
       const payload = parsed && typeof parsed === "object" && !Array.isArray(parsed) && "payload" in parsed
         ? (parsed as Record<string, unknown>).payload
         : parsed;
-      if (!payload || typeof payload !== "object" || Array.isArray(payload)) {
-        throw new Error("Capability payload must be a JSON object");
-      }
+      if (!payload || typeof payload !== "object" || Array.isArray(payload)) throw new WorkflowError("errorPayloadObject");
       return payload as Record<string, unknown>;
     };
-
-    const readSignerIdentity = async (signer: any) => {
-      const raw = typeof signer.getIdentity === "function" ? await signer.getIdentity() : undefined;
-      if (typeof raw !== "string") return {};
+    const hasValidPayload = () => {
       try {
-        const parsed = JSON.parse(raw) as Record<string, unknown>;
-        return {
-          keyType: typeof parsed.keyType === "string" ? parsed.keyType : undefined,
-          publicKey: typeof parsed.publicKey === "string" ? parsed.publicKey : undefined,
-        };
+        parsePayload();
+        return true;
       } catch {
-        return {};
+        return false;
       }
     };
 
-    const readSignerAddress = async (signer: any): Promise<string | undefined> => {
-      if (typeof signer.getInternalAddress === "function") return signer.getInternalAddress();
-      if (typeof signer.getBtcAccount === "function") return signer.getBtcAccount();
-      return undefined;
+    const syncExternalPrincipal = () => {
+      if (!activeExternalWallet || !principalInput) return;
+      let principalId = "";
+      let principalType = "";
+      try {
+        const payload = parsePayload();
+        principalId = typeof payload.principal_id === "string" ? payload.principal_id.trim() : "";
+        principalType = typeof payload.principal_type === "string" ? payload.principal_type.trim() : "";
+      } catch {
+        // An external wallet may still be preparing the capability payload.
+      }
+      principalInput.value = principalId;
+      if (principalType) principalInput.dataset.principalType = principalType;
+      else delete principalInput.dataset.principalType;
+      if (copyPrincipalButton) copyPrincipalButton.dataset.copyText = principalId;
     };
 
-    const openJoyIdConnector = async (): Promise<any> => {
-      const { ccc } = await loadCCC();
-      const connector = document.createElement("ccc-connector") as any;
-      connector.name = "CellScript Registry";
-      connector.icon = joyidLogo;
-      connector.client = new ccc.ClientPublicMainnet();
-      connector.preferredNetworks = [{ addressPrefix: "ckb", signerType: ccc.SignerType.CKB, network: "mainnet" }];
-      connector.signersController = createJoyIdOnlyController(ccc);
-      applyCCCConnectorTheme(connector);
+    const updateCommands = () => {
+      const namespace = fieldValue("namespace") || "<namespace>";
+      const name = fieldValue("name") || "<name>";
+      const principalId = principalInput?.value.trim() || "<principal_id>";
+      const principalType = principalInput?.dataset.principalType || "<principal_type>";
+      const artifactKind = artifactKindInput?.value || "source_library";
+      const isCellScript = artifactKind === "source_library" || artifactKind === "profile_library";
+      const cellscriptKindFlag = artifactKind === "profile_library" ? " --artifact-kind profile_library" : "";
+      const registryApi = signerRoot?.dataset.apiOrigin || "https://api.registry.cellscript.dev";
+      const apiFlag = ` --api-url ${shellQuote(registryApi)}`;
+      const preflightCommand = isCellScript
+        ? `${commandPrefix()}cellc package verify --json && cellc publish${cellscriptKindFlag}${apiFlag} --dry-run`
+        : `${commandPrefix()}cellc publish --artifact-manifest Artifact.toml${apiFlag} --dry-run`;
+      const createCapabilityCommand = `cellc auth capability create --registry-origin ${shellQuote(registryApi)} --principal-type ${shellQuote(principalType)} --principal-id ${shellQuote(principalId)} --scope ${shellQuote(`publish:${namespace}/${name}`)} --expires 90d --json > capability-payload.json`;
+      const authCommand = `${createCapabilityCommand}\ncellc auth capability submit${apiFlag} --payload capability-payload.json --wallet-signature wallet-signature.json\ncellc auth namespace claim${apiFlag} --namespace ${shellQuote(namespace)} --payload capability-payload.json --wallet-signature wallet-signature.json`;
+      const capabilityFlag = ` --capability-key-id ${shellQuote(confirmedCapabilityKeyId || "<server-confirmed-key-id>")}`;
+      const publishCommand = isCellScript
+        ? `${commandPrefix()}cellc publish${cellscriptKindFlag}${apiFlag}${capabilityFlag}`
+        : `${commandPrefix()}cellc publish --artifact-manifest Artifact.toml${apiFlag}${capabilityFlag}`;
+      if (preflight) preflight.textContent = preflightCommand;
+      if (preflightCopy) preflightCopy.dataset.copyText = preflightCommand;
+      if (capabilityCreateCommand) capabilityCreateCommand.textContent = createCapabilityCommand;
+      if (capabilityCreateCopy) capabilityCreateCopy.dataset.copyText = createCapabilityCommand;
+      if (capabilityCommand) capabilityCommand.textContent = authCommand;
+      if (capabilityCopy) capabilityCopy.dataset.copyText = authCommand;
+      if (publish) publish.textContent = publishCommand;
+      if (publishCopy) publishCopy.dataset.copyText = confirmedCapabilityKeyId ? publishCommand : "";
+    };
 
-      return new Promise((resolve, reject) => {
-        const timeout = window.setTimeout(() => {
-          connector.remove();
-          reject(new Error("JoyID connection timed out"));
-        }, 180000);
-        connector.addEventListener("close", async () => {
-          window.clearTimeout(timeout);
-          try {
-            const signer = connector.signer?.signer;
-            if (!signer || (typeof signer.isConnected === "function" && !(await signer.isConnected()))) {
-              throw new Error("JoyID was not connected");
+    const stageState = (name: string, complete: boolean, active: boolean) => {
+      const stage = stages.find((item) => item.dataset.workflowStage === name);
+      if (stage) stage.dataset.state = complete ? "complete" : active ? "active" : "pending";
+    };
+    const setWorkflowGuide = (index: "01" | "02" | "03", key: string, state: "active" | "complete" = "active") => {
+      if (workflowGuide) workflowGuide.dataset.state = state;
+      if (workflowGuideIndex) workflowGuideIndex.textContent = index;
+      if (workflowGuideTitle) {
+        workflowGuideTitle.dataset.i18n = `registry.submit.guide${key}Title`;
+        workflowGuideTitle.textContent = message(`guide${key}Title`);
+      }
+      if (workflowGuideBody) {
+        workflowGuideBody.dataset.i18n = `registry.submit.guide${key}Body`;
+        workflowGuideBody.textContent = message(`guide${key}Body`);
+      }
+    };
+    const setSessionStage = (name: string, state: "pending" | "active" | "complete", labelKey: string) => {
+      const stage = sessionStages.find((item) => item.dataset.sessionStage === name);
+      if (!stage) return;
+      stage.dataset.state = state;
+      const label = stage.querySelector<HTMLElement>("[data-session-stage-state]");
+      if (label) {
+        label.dataset.i18n = `registry.submit.${labelKey}`;
+        label.textContent = message(labelKey);
+      }
+    };
+    const syncSessionJourney = () => {
+      if (!authorisationSessionMode || !authorisationSession) return;
+      setSessionStage("local", "complete", "sessionStepComplete");
+      if (!authorisationSessionFinished) {
+        setSessionStage("approval", "active", busy ? "sessionStepWaiting" : "sessionStepCurrent");
+        setSessionStage("publish", "pending", "sessionStepNext");
+      } else {
+        setSessionStage("approval", "complete", "sessionStepApproved");
+        setSessionStage(
+          "publish",
+          namespaceReviewPending ? "pending" : "active",
+          namespaceReviewPending ? "sessionStepAfterReview" : "sessionStepContinuing",
+        );
+      }
+      if (sessionPanel) sessionPanel.toggleAttribute("data-busy", busy);
+    };
+    const syncWorkflow = () => {
+      const coordinateReady = coordinateValid();
+      const newMode = authorisationMode === "new";
+      const existingMode = authorisationMode === "existing";
+      const directSignerConnected = Boolean(activeWalletSigner && activeWalletIdentity);
+      const manualSignatureMode = Boolean(activeExternalWallet);
+      const signingRouteSelected = directSignerConnected || manualSignatureMode;
+      const payloadReady = newMode
+        && signingRouteSelected
+        && hasValidPayload()
+        && (!authorisationSessionMode || Boolean(authorisationChallengeToken));
+      const signatureReady = payloadReady && Boolean(signatureOutput?.value.trim());
+      if (newCapabilityFlow) newCapabilityFlow.hidden = !newMode;
+      if (existingCapabilityPanel) existingCapabilityPanel.hidden = !existingMode;
+      for (const button of authorisationModes) {
+        const selected = button.dataset.authorisationMode === authorisationMode;
+        button.setAttribute("aria-pressed", String(selected));
+        button.disabled = busy || !coordinateReady;
+      }
+      stageState("wallet", newMode && signingRouteSelected, newMode && !signingRouteSelected);
+      stageState("scope", newMode && signatureReady, newMode && signingRouteSelected && !signatureReady);
+      stageState("authorise", authorisationSessionFinished || Boolean(confirmedCapabilityKeyId), newMode && signatureReady && !authorisationSessionFinished && !confirmedCapabilityKeyId);
+      if (authorisationSessionFinished) {
+        setWorkflowGuide("03", namespaceReviewPending ? "WaitForReview" : "ReturnToCli", "complete");
+      } else if (!signingRouteSelected) {
+        setWorkflowGuide("01", authorisationSessionMode ? "ConnectSessionWallet" : "ChooseRoute");
+      } else if (authorisationSessionMode) {
+        setWorkflowGuide("02", busy ? "ApprovalInProgress" : "ApproveSession");
+      } else if (!payloadReady) {
+        setWorkflowGuide("02", manualSignatureMode ? "PrepareExternalPayload" : "PreparePayload");
+      } else if (!signatureReady) {
+        setWorkflowGuide("02", manualSignatureMode ? "ImportSignature" : "ApproveScope");
+      } else if (!capabilitySubmitted) {
+        setWorkflowGuide("03", "SubmitAccess");
+      } else if (!namespaceClaimed && !namespaceReviewPending) {
+        setWorkflowGuide("03", "ClaimNamespace");
+      } else {
+        setWorkflowGuide("03", namespaceReviewPending ? "WaitForReview" : "PublishReady", "complete");
+      }
+      syncSessionJourney();
+      if (principalPanel) principalPanel.hidden = !directSignerConnected && !(manualSignatureMode && principalInput?.value.trim());
+      if (payloadPanel) payloadPanel.hidden = authorisationSessionMode || !newMode || !signingRouteSelected;
+      if (signaturePanel) signaturePanel.hidden = authorisationSessionMode || !newMode || (!signatureReady && !manualSignatureMode);
+      if (signatureHint) {
+        const key = activeExternalWallet ? "signatureExternalHint" : "signatureReady";
+        signatureHint.dataset.i18n = `registry.submit.${key}`;
+        signatureHint.textContent = message(key);
+      }
+      for (const button of changeWalletButtons) button.hidden = !newMode || !signingRouteSelected || authorisationSessionFinished;
+      const canPublish = !authorisationSessionMode && Boolean(confirmedCapabilityKeyId);
+      if (publishStep) {
+        publishStep.dataset.state = canPublish ? "ready" : "locked";
+        publishStep.hidden = !canPublish;
+      }
+      if (publishCopy) publishCopy.disabled = !canPublish;
+
+      for (const button of capabilityActionButtons) {
+        const action = button.dataset.capabilityAction;
+        if (action === "sign") {
+          const labelKey = authorisationSessionMode ? "continueSubmit" : "continueSign";
+          button.dataset.i18n = `registry.submit.${labelKey}`;
+          button.textContent = message(labelKey);
+        }
+        const visible = action === "connect"
+          ? newMode && !signingRouteSelected && !authorisationSessionFinished
+          : action === "sign"
+            ? newMode && directSignerConnected && (authorisationSessionMode || payloadReady) && !signatureReady && !authorisationSessionFinished
+            : action === "submit"
+              ? !authorisationSessionMode && newMode && signatureReady && !capabilitySubmitted && !authorisationSessionFinished
+              : action === "claim"
+                ? !authorisationSessionMode && newMode && capabilitySubmitted && !namespaceClaimed && !namespaceReviewPending
+                : false;
+        button.hidden = !visible;
+        button.disabled = busy || !coordinateReady;
+        button.setAttribute("aria-busy", String(busy && visible));
+      }
+      if (existingCapabilityCheck) {
+        existingCapabilityCheck.disabled = busy
+          || !existingMode
+          || !coordinateReady
+          || !/^cap_[0-9a-f]{32}$/.test(existingCapabilityKey?.value.trim().toLowerCase() ?? "");
+        existingCapabilityCheck.setAttribute("aria-busy", String(busy && existingMode));
+      }
+      const valid = coordinateValid();
+      for (const input of [namespaceInput, nameInput]) {
+        if (input) input.setAttribute("aria-invalid", String(input.value.length > 0 && !coordinatePattern.test(input.value.trim())));
+      }
+      if (coordinateError) coordinateError.hidden = valid || (!namespaceInput?.value && !nameInput?.value);
+      updateCommands();
+    };
+
+    const syncArtifactKind = () => {
+      if (!artifactKindHint || !artifactKindInput) return;
+      const hintKey = artifactKindInput.value === "deployable_contract"
+        ? "kindCkbScriptHint"
+        : artifactKindInput.value === "profile_library"
+          ? "kindProfileLibraryHint"
+        : artifactKindInput.value === "runtime_verifier"
+          ? "kindRuntimeVerifierHint"
+          : artifactKindInput.value === "reproducible_binary"
+            ? "kindReproducibleBinaryHint"
+            : artifactKindInput.value === "template"
+              ? "kindTemplateHint"
+              : "kindCellScriptHint";
+      artifactKindHint.dataset.i18n = `registry.submit.${hintKey}`;
+      artifactKindHint.textContent = message(hintKey);
+      const kind = artifactKindInput.value;
+      const generic = !["source_library", "profile_library"].includes(kind);
+      const allowedLanguages: Record<string, string[]> = {
+        source_library: ["cellscript"],
+        profile_library: ["cellscript"],
+        deployable_contract: ["cellscript", "rust", "c", "javascript", "other"],
+        runtime_verifier: ["cellscript", "rust", "c", "javascript", "other"],
+        reproducible_binary: ["rust", "c", "other"],
+        template: ["cellscript", "rust", "c", "javascript", "other", "unspecified"],
+      };
+      if (artifactLanguageInput) {
+        const allowed = allowedLanguages[kind] || ["other"];
+        for (const option of artifactLanguageInput.options) option.hidden = !allowed.includes(option.value);
+        if (!allowed.includes(artifactLanguageInput.value)) artifactLanguageInput.value = allowed[0];
+        artifactLanguageInput.disabled = allowed.length === 1;
+      }
+      const reproducibleInput = form?.elements.namedItem("build_reproducible") as HTMLSelectElement | null;
+      if (reproducibleInput) {
+        if (kind === "reproducible_binary") reproducibleInput.value = "true";
+        reproducibleInput.disabled = kind === "reproducible_binary";
+      }
+      const reproducible = kind === "reproducible_binary" || fieldValue("build_reproducible") === "true";
+      if (profileBuilder) profileBuilder.hidden = !generic;
+      for (const group of profileGroups) {
+        const name = group.dataset.profileGroup;
+        group.hidden = !generic || (name === "build" && kind === "template")
+          || (name === "ckb" && !["deployable_contract", "runtime_verifier"].includes(kind))
+          || (name === "verifier" && kind !== "runtime_verifier")
+          || (name === "reproduction" && !reproducible)
+          || (name === "copy" && kind !== "template");
+      }
+      if (!generic || !profilePreview || !artifactManifestPreview) return;
+      const profile = ["deployable_contract", "runtime_verifier"].includes(kind)
+        ? "ckb_executable"
+        : kind === "reproducible_binary" ? "reproducible_build" : "copy_material";
+      const contract: Record<string, unknown> = {
+        schema: "cellscript-registry-profile-contract-v1",
+        artifact_kind: kind,
+        profile,
+      };
+      if (kind !== "template") {
+        contract.build = {
+          target: fieldValue("build_target") || "<target>",
+          toolchain: fieldValue("toolchain") || "<pinned toolchain>",
+          profile: "release",
+          source_revision: fieldValue("source_revision") || "<source revision>",
+          reproducible,
+        };
+        const securityStatus = fieldValue("security_status") || "review_required";
+        contract.security = securityStatus === "audited"
+          ? { status: securityStatus, audit_report_hash: "<audit_report object BLAKE2b-256>" }
+          : { status: securityStatus };
+      }
+      if (["deployable_contract", "runtime_verifier"].includes(kind)) {
+        contract.ckb = {
+          vm_version: fieldValue("vm_version"),
+          script_role: fieldValue("script_role"),
+          hash_type: fieldValue("hash_type"),
+          dep_type: fieldValue("dep_type"),
+          abi_hash: "<ABI BLAKE2b-256>",
+        };
+      }
+      if (kind === "runtime_verifier") {
+        contract.verifier = {
+          verifier_id: fieldValue("verifier_id") || "<verifier id>",
+          ipc_abi: fieldValue("ipc_abi") || "<IPC ABI>",
+          ipc_abi_hash: "<ABI BLAKE2b-256>",
+        };
+      }
+      if (reproducible) {
+        contract.reproduction = {
+          environment: fieldValue("build_environment") || "<pinned environment>",
+          command: fieldValue("build_command") || "<deterministic build command>",
+          recipe_hash: "<build recipe BLAKE2b-256>",
+          expected_artifact_hash: "<artifact BLAKE2b-256>",
+        };
+      }
+      if (kind === "template") {
+        contract.copy = { format: "file_map_v1", entrypoint: fieldValue("template_entrypoint") || "<entrypoint>" };
+      }
+      const release = fieldValue("artifact_release") || "1.0.0";
+      const language = fieldValue("artifact_language") || "other";
+      const manifest = [
+        'schema = "cellscript-registry-artifact"',
+        `namespace = ${JSON.stringify(fieldValue("namespace") || "<namespace>")}`,
+        `name = ${JSON.stringify(fieldValue("name") || "<name>")}`,
+        `release = ${JSON.stringify(release)}`,
+        `kind = ${JSON.stringify(kind)}`,
+        `language = ${JSON.stringify(language)}`,
+        'bundle = "artifact.bundle.json"',
+      ].join("\n");
+      const roles = kind === "template"
+        ? ["source"]
+        : kind === "reproducible_binary"
+          ? ["source", "executable", "build_recipe"]
+          : ["source", "executable", "abi", ...(reproducible ? ["build_recipe"] : []), ...(fieldValue("security_status") === "audited" ? ["audit_report"] : [])];
+      const bundle = JSON.stringify({
+        schema: "cellscript-registry-bundle",
+        namespace: fieldValue("namespace") || "<namespace>",
+        name: fieldValue("name") || "<name>",
+        release,
+        profile,
+        manifest_json: JSON.stringify(contract),
+        objects: roles.map((role) => ({ role, content_base64: `<replace with base64 ${role} bytes>` })),
+      }, null, 2);
+      artifactManifestPreview.textContent = manifest;
+      profilePreview.textContent = bundle;
+      if (artifactManifestCopy) artifactManifestCopy.dataset.copyText = manifest;
+      if (artifactBundleCopy) artifactBundleCopy.dataset.copyText = bundle;
+    };
+
+    const loadCCC = async () => {
+      cccPromise ??= import("@ckb-ccc/connector/barrel");
+      return cccPromise;
+    };
+    const createCkbOnlyController = (ccc: typeof import("@ckb-ccc/connector/barrel")) => new class extends ccc.SignersController {
+      async refresh(client: any, onUpdate: (wallets: any[]) => void, configs?: any) {
+        const ckbWallets = new Map<string, any>();
+        await super.refresh(client, (wallets: any[]) => {
+          for (const wallet of wallets) {
+            const signers = wallet.signers.filter((info: any) => info.signer?.type === ccc.SignerType.CKB);
+            if (signers.length > 0) {
+              ckbWallets.set(wallet.name, {
+                ...wallet,
+                signers,
+                installOnly: signers.every((info: any) => info.signer instanceof ccc.SignerOpenLink),
+              });
             }
-            connector.remove();
-            resolve(signer);
-          } catch (error) {
-            connector.remove();
-            reject(error);
           }
-        }, { once: true });
-        document.body.appendChild(connector);
-        applyCCCConnectorTheme(connector);
+          onUpdate([...ckbWallets.values()]);
+        }, configs);
+      }
+    }();
+
+    const setWalletDialogTitle = (key: string, fallback?: string) => {
+      if (!walletDialogTitle) return;
+      walletDialogTitle.textContent = fallback || message(key);
+      if (fallback) walletDialogTitle.removeAttribute("data-i18n");
+      else walletDialogTitle.dataset.i18n = `registry.submit.${key}`;
+    };
+    const transitionWalletOptions = (render: () => void) => {
+      if (!walletOptions) return;
+      walletOptions.classList.remove("is-entering");
+      walletOptions.replaceChildren();
+      render();
+      requestAnimationFrame(() => walletOptions.classList.add("is-entering"));
+    };
+    const walletOptionButton = (
+      label: string,
+      detail: string,
+      icon: string | undefined,
+      onClick: () => void,
+      fallbackMark?: string,
+      mode: "direct" | "manual" = "manual",
+    ) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "registry-wallet-option";
+      button.setAttribute("role", "listitem");
+      button.dataset.connectMode = mode;
+      button.dataset.walletSearch = `${label} ${detail}`.toLowerCase();
+      if (icon) {
+        const image = document.createElement("img");
+        image.src = icon;
+        image.alt = "";
+        image.decoding = "async";
+        button.append(image);
+      } else {
+        const markNode = document.createElement("span");
+        markNode.className = "registry-wallet-option-mark";
+        markNode.textContent = fallbackMark || label.slice(0, 1).toUpperCase();
+        button.append(markNode);
+      }
+      const copy = document.createElement("span");
+      const name = document.createElement("strong");
+      name.textContent = label;
+      const meta = document.createElement("small");
+      meta.textContent = detail;
+      copy.append(name, meta);
+      const arrow = document.createElement("span");
+      arrow.className = "registry-wallet-option-arrow";
+      arrow.setAttribute("aria-hidden", "true");
+      arrow.innerHTML = walletArrowIcon;
+      button.append(copy, arrow);
+      button.addEventListener("click", onClick, { signal });
+      return button;
+    };
+    const walletGroup = (label: string, items: HTMLButtonElement[], mode: "direct" | "manual") => {
+      const section = document.createElement("section");
+      section.className = "registry-wallet-group";
+      section.dataset.walletGroup = "";
+      section.dataset.groupMode = mode;
+      const heading = document.createElement("div");
+      const title = document.createElement("strong");
+      title.textContent = label;
+      const count = document.createElement("span");
+      count.textContent = String(items.length).padStart(2, "0");
+      heading.append(title, count);
+      const list = document.createElement("div");
+      list.append(...items);
+      section.append(heading, list);
+      return section;
+    };
+    const applyWalletSearch = () => {
+      const query = walletSearch?.value.trim().toLowerCase() || "";
+      let direct = 0;
+      let external = 0;
+      for (const button of walletOptions?.querySelectorAll<HTMLButtonElement>(".registry-wallet-option") || []) {
+        button.hidden = Boolean(query) && !(button.dataset.walletSearch || "").includes(query);
+        if (!button.hidden) {
+          if (button.dataset.connectMode === "direct") direct += 1;
+          else external += 1;
+        }
+      }
+      for (const group of walletOptions?.querySelectorAll<HTMLElement>("[data-wallet-group]") || []) {
+        group.hidden = !group.querySelector(".registry-wallet-option:not([hidden])");
+      }
+      if (walletCount) {
+        walletCount.textContent = authorisationSessionMode
+          ? message("walletCountDirect").replace("{direct}", String(direct))
+          : message("walletCount").replace("{direct}", String(direct)).replace("{external}", String(external));
+      }
+    };
+    walletSearch?.addEventListener("input", applyWalletSearch, { signal });
+    const renderWalletEmpty = (key = "walletEmpty") => {
+      if (walletToolbar) walletToolbar.hidden = true;
+      transitionWalletOptions(() => {
+        const empty = document.createElement("p");
+        empty.className = "registry-wallet-empty";
+        empty.textContent = message(key);
+        walletOptions?.append(empty);
+      });
+    };
+    const connectWalletSigner = async (wallet: any, signerInfo: any) => {
+      if (!walletOptions || !walletPicker) return;
+      if (walletToolbar) walletToolbar.hidden = true;
+      transitionWalletOptions(() => {
+        const state = document.createElement("div");
+        state.className = "registry-wallet-connecting";
+        const pulse = document.createElement("span");
+        pulse.setAttribute("aria-hidden", "true");
+        const copy = document.createElement("div");
+        const title = document.createElement("strong");
+        title.textContent = message("walletConnecting");
+        const detail = document.createElement("small");
+        detail.textContent = wallet.name;
+        copy.append(title, detail);
+        state.append(pulse, copy);
+        walletOptions.append(state);
+      });
+      try {
+        await signerInfo.signer.connect();
+        if (typeof signerInfo.signer.isConnected === "function" && !(await signerInfo.signer.isConnected())) {
+          throw new WorkflowError("errorNoWallet");
+        }
+        const picker = walletPicker;
+        if (!picker || picker.settled) return;
+        picker.settled = true;
+        picker.resolve({ kind: "signer", signer: signerInfo.signer });
+        walletDialog?.close();
+      } catch (error) {
+        renderWalletEmpty(error instanceof Error && error.message ? "errorWallet" : "errorNoWallet");
+        setError(error, "errorWallet");
+      }
+    };
+    const renderSignerChoices = (wallet: any) => {
+      setWalletDialogTitle("walletSignerTitle", wallet.name);
+      if (walletBack) walletBack.hidden = false;
+      if (walletToolbar) walletToolbar.hidden = true;
+      transitionWalletOptions(() => {
+        for (const signerInfo of wallet.signers) {
+          walletOptions?.append(walletOptionButton(
+            signerInfo.name || wallet.name,
+            message("walletCkbSigner"),
+            wallet.icon,
+            () => void connectWalletSigner(wallet, signerInfo),
+          ));
+        }
+      });
+    };
+    const walletNameKey = (value: string) => value.trim().toLowerCase().replaceAll(/[^a-z0-9]/g, "");
+    const discoveredCatalogWallet = (entry: WalletCatalogEntry) => {
+      const aliases = new Set(entry.aliases.map(walletNameKey));
+      return availableWallets.find((wallet) => aliases.has(walletNameKey(String(wallet.name || ""))));
+    };
+    const selectExternalWallet = (wallet: WalletCatalogEntry) => {
+      window.open(wallet.url, "_blank", "noopener,noreferrer");
+      const picker = walletPicker;
+      if (!picker || picker.settled) return;
+      picker.settled = true;
+      picker.resolve({ kind: "external", wallet });
+      walletDialog?.close();
+    };
+    const renderWalletChoices = () => {
+      setWalletDialogTitle("walletChooseTitle");
+      if (walletDialogBody) {
+        const bodyKey = authorisationSessionMode ? "walletSessionChooseBody" : "walletChooseBody";
+        walletDialogBody.dataset.i18n = `registry.submit.${bodyKey}`;
+        walletDialogBody.textContent = message(bodyKey);
+      }
+      if (walletBack) walletBack.hidden = true;
+      if (walletToolbar) walletToolbar.hidden = false;
+      if (walletSearch) walletSearch.value = "";
+      transitionWalletOptions(() => {
+        const claimed = new Set<string>();
+        const direct: HTMLButtonElement[] = [];
+        const directory: HTMLButtonElement[] = [];
+        for (const catalogWallet of officialWalletCatalog) {
+          const wallet = discoveredCatalogWallet(catalogWallet);
+          if (wallet) claimed.add(walletNameKey(String(wallet.name || "")));
+          const directlyConnectable = wallet && !wallet.installOnly && wallet.signers.length > 0;
+          let detail = directlyConnectable ? message("walletDirect") : message("walletExternal");
+          if (directlyConnectable && wallet.signers.length > 1) {
+            detail = message("walletMultipleSigners").replace("{count}", String(wallet.signers.length));
+          }
+          const option = walletOptionButton(
+            catalogWallet.name,
+            detail,
+            catalogWallet.icon,
+            () => directlyConnectable
+              ? wallet.signers.length === 1
+                ? void connectWalletSigner(wallet, wallet.signers[0])
+                : renderSignerChoices(wallet)
+              : selectExternalWallet(catalogWallet),
+            catalogWallet.mark,
+            directlyConnectable ? "direct" : "manual",
+          );
+          (directlyConnectable ? direct : directory).push(option);
+        }
+        for (const wallet of availableWallets) {
+          if (claimed.has(walletNameKey(String(wallet.name || ""))) || wallet.installOnly || wallet.signers.length === 0) continue;
+          const detail = wallet.signers.length > 1
+            ? message("walletMultipleSigners").replace("{count}", String(wallet.signers.length))
+            : message("walletDirect");
+          direct.push(walletOptionButton(
+            wallet.name,
+            detail,
+            wallet.icon,
+            () => wallet.signers.length === 1
+              ? void connectWalletSigner(wallet, wallet.signers[0])
+              : renderSignerChoices(wallet),
+            undefined,
+            "direct",
+          ));
+        }
+        if (direct.length) walletOptions?.append(walletGroup(message("walletAvailableNow"), direct, "direct"));
+        if (!authorisationSessionMode && directory.length) {
+          walletOptions?.append(walletGroup(message("walletDirectory"), directory, "manual"));
+        }
+      });
+      applyWalletSearch();
+    };
+    const refreshWalletChoices = async () => {
+      const sequence = ++walletRefreshSequence;
+      setWalletDialogTitle("walletChooseTitle");
+      if (walletBack) walletBack.hidden = true;
+      renderWalletEmpty("walletLoading");
+      try {
+        const ccc = await loadCCC();
+        walletController ??= createCkbOnlyController(ccc);
+        const client = registryNetwork === "testnet" ? new ccc.ClientPublicTestnet() : new ccc.ClientPublicMainnet();
+        let discoveredWallets: any[] = [];
+        await walletController.refresh(client, (wallets: any[]) => {
+          if (sequence !== walletRefreshSequence) return;
+          discoveredWallets = wallets;
+        }, {
+          name: "CellScript Registry",
+          icon: appLogo,
+          preferredNetworks: [{
+            addressPrefix: registryNetwork === "testnet" ? "ckt" : "ckb",
+            signerType: ccc.SignerType.CKB,
+            network: registryNetwork,
+          }],
+        });
+        if (sequence !== walletRefreshSequence) return;
+        availableWallets = discoveredWallets;
+        renderWalletChoices();
+      } catch (error) {
+        if (sequence !== walletRefreshSequence) return;
+        availableWallets = [];
+        renderWalletChoices();
+        setError(error, "errorWallet");
+      }
+    };
+
+    const readSignerIdentity = async (signer: any): Promise<WalletIdentity> => {
+      const raw = typeof signer.getIdentity === "function" ? await signer.getIdentity() : undefined;
+      if (typeof raw !== "string" || !raw.trim()) throw new WorkflowError("errorPublicKey");
+      try {
+        const parsed = JSON.parse(raw) as Record<string, unknown>;
+        const publicKey = typeof parsed.publicKey === "string" ? parsed.publicKey : "";
+        const keyType = parsed.keyType;
+        if (publicKey && (keyType === "main_key" || keyType === "sub_key")) return { principalType: "joyid_ckb", publicKey, keyType };
+        if (/^(?:0x)?(?:02|03)[0-9a-fA-F]{64}$/.test(publicKey)) return { principalType: "ckb_secp256k1", publicKey: `0x${normalizePubkey(publicKey)}` };
+      } catch {
+        // Standard CKB signers expose the compressed public key directly.
+      }
+      if (/^(?:0x)?(?:02|03)[0-9a-fA-F]{64}$/.test(raw.trim())) return { principalType: "ckb_secp256k1", publicKey: `0x${normalizePubkey(raw)}` };
+      throw new WorkflowError("errorUnsupportedIdentity");
+    };
+    const readSignerAddress = async (signer: any): Promise<string | undefined> => {
+      try {
+        return typeof signer.getInternalAddress === "function" ? await signer.getInternalAddress() : undefined;
+      } catch {
+        return undefined;
+      }
+    };
+    const openWalletConnector = (): Promise<WalletSelection> => {
+      if (!walletDialog || !walletOptions) return Promise.reject(new WorkflowError("errorWallet"));
+      if (walletPicker && !walletPicker.settled) {
+        walletPicker.settled = true;
+        walletPicker.reject(new WorkflowError("errorNoWallet"));
+      }
+      if (!walletDialog.open) walletDialog.showModal();
+      void refreshWalletChoices();
+      return new Promise((resolve, reject) => {
+        walletPicker = { resolve, reject, settled: false };
       });
     };
 
-    const ensureJoyIdSigner = async () => {
-      if (activeJoyIdSigner && (typeof activeJoyIdSigner.isConnected !== "function" || await activeJoyIdSigner.isConnected())) {
-        return activeJoyIdSigner;
+    const clearCapabilityConfirmation = () => {
+      confirmedCapabilityKeyId = "";
+      lastCapabilityCheck = null;
+      if (capabilityCheckSummary) capabilityCheckSummary.hidden = true;
+      if (capabilityCheckStatus) capabilityCheckStatus.textContent = "";
+      if (capabilityCheckExpiry) capabilityCheckExpiry.textContent = "";
+      if (capabilityCheckNamespace) capabilityCheckNamespace.textContent = "";
+      if (capabilityCheckScopes) capabilityCheckScopes.textContent = "";
+    };
+    const clearSignature = (notifyRequestChange = false) => {
+      const hadSignature = Boolean(signatureOutput?.value.trim() || authorisationChallengeToken || capabilitySubmitted);
+      if (signatureOutput) signatureOutput.value = "";
+      if (copySignatureButton) copySignatureButton.dataset.copyText = "";
+      authorisationChallengeToken = "";
+      capabilitySubmitted = false;
+      submittedCapabilityKeyId = "";
+      namespaceClaimed = false;
+      namespaceReviewPending = false;
+      clearCapabilityConfirmation();
+      if (notifyRequestChange && hadSignature) setStatus("errorPayloadChanged", "error");
+    };
+    const resetWallet = async (disconnect = false) => {
+      if (disconnect && typeof activeWalletSigner?.disconnect === "function") {
+        try { await activeWalletSigner.disconnect(); } catch { /* Wallet may already be closed. */ }
       }
-      setCapabilityStatus("Waiting for JoyID confirmation");
-      activeJoyIdSigner = await openJoyIdConnector();
-      const address = await readSignerAddress(activeJoyIdSigner);
-      const identity = await readSignerIdentity(activeJoyIdSigner);
-      if (identity.publicKey && identity.keyType) {
-        const [principalId] = await joyidPrincipalCandidates(identity.keyType, identity.publicKey);
-        if (principalInput && principalId) principalInput.value = principalId;
-        if (principalId) copyPrincipalButton?.setAttribute("data-copy-text", principalId);
+      activeWalletSigner = null;
+      activeWalletIdentity = null;
+      activeExternalWallet = null;
+      signatureOutput?.setAttribute("readonly", "");
+      if (principalInput) {
+        principalInput.value = "";
+        delete principalInput.dataset.principalType;
       }
-      if (address) {
-        localStorage.setItem(joyidStorageKey, JSON.stringify({
-          principalType: "joyid_ckb",
-          address,
-          cccIdentity: JSON.stringify({ keyType: identity.keyType, publicKey: identity.publicKey }),
-          connectedAt: new Date().toISOString(),
-        }));
-        window.dispatchEvent(new CustomEvent("cellscript:joyid-connected", { detail: { principalType: "joyid_ckb", address } }));
+      if (copyPrincipalButton) copyPrincipalButton.dataset.copyText = "";
+      clearSignature();
+      clearTechnical();
+      setStatus("walletIdle");
+      window.dispatchEvent(new CustomEvent("cellscript:wallet-disconnected"));
+      syncWorkflow();
+    };
+    const ensureWalletSigner = async () => {
+      if (activeWalletSigner && activeWalletIdentity && (typeof activeWalletSigner.isConnected !== "function" || await activeWalletSigner.isConnected())) return activeWalletSigner;
+      setStatus("walletWaiting");
+      const selection = await openWalletConnector();
+      if (selection.kind === "external") {
+        if (authorisationSessionMode) throw new WorkflowError("errorSessionExternal");
+        activeWalletSigner = null;
+        activeWalletIdentity = null;
+        activeExternalWallet = selection.wallet;
+        if (principalInput) {
+          principalInput.value = "";
+          delete principalInput.dataset.principalType;
+        }
+        if (copyPrincipalButton) copyPrincipalButton.dataset.copyText = "";
+        clearSignature();
+        signatureOutput?.removeAttribute("readonly");
+        setStatus("walletExternalReady", "idle", `: ${selection.wallet.name}`);
+        syncWorkflow();
+        return null;
       }
-      setCapabilityStatus(address ? `JoyID connected: ${address}` : "JoyID connected", "ok");
-      return activeJoyIdSigner;
+      activeExternalWallet = null;
+      signatureOutput?.setAttribute("readonly", "");
+      activeWalletSigner = selection.signer;
+      activeWalletIdentity = await readSignerIdentity(activeWalletSigner);
+      const principalId = activeWalletIdentity.principalType === "joyid_ckb"
+        ? await joyidPrincipalId(activeWalletIdentity.keyType!, activeWalletIdentity.publicKey)
+        : await ckbPrincipalId(activeWalletIdentity.publicKey);
+      const address = await readSignerAddress(activeWalletSigner);
+      if (principalInput) {
+        principalInput.value = principalId;
+        principalInput.dataset.principalType = activeWalletIdentity.principalType;
+      }
+      if (copyPrincipalButton) copyPrincipalButton.dataset.copyText = principalId;
+      setStatus("walletConnected", "ok", address ? `: ${address}` : "");
+      window.dispatchEvent(new CustomEvent("cellscript:wallet-connected", { detail: { principalType: activeWalletIdentity.principalType, address } }));
+      return activeWalletSigner;
     };
 
-    const signCapabilityPayload = async (): Promise<CapabilitySignature> => {
-      const signer = await ensureJoyIdSigner();
+    const signCapabilityPayload = async (): Promise<WalletSignature> => {
+      const signer = await ensureWalletSigner();
+      if (!signer) throw new WorkflowError("errorExternalSignature");
+      const identity = activeWalletIdentity;
+      if (!identity) throw new WorkflowError("errorIdentityUnavailable");
       const payload = parsePayload();
       const challenge = canonicalJson(payload);
+      if (payload.principal_type !== identity.principalType) throw new WorkflowError("errorPrincipalType");
+      const expectedPrincipalId = identity.principalType === "joyid_ckb"
+        ? await joyidPrincipalId(identity.keyType!, identity.publicKey)
+        : await ckbPrincipalId(identity.publicKey);
+      const payloadPrincipalId = typeof payload.principal_id === "string" ? payload.principal_id.trim().toLowerCase() : "";
+      if (payloadPrincipalId !== expectedPrincipalId) throw new WorkflowError("errorPrincipalId", `Expected ${expectedPrincipalId}`);
       const rawSignature = await signer.signMessageRaw(challenge);
-      let signed: Record<string, unknown>;
+      if (identity.principalType === "joyid_ckb") {
+        let signed: Record<string, unknown>;
+        try { signed = JSON.parse(String(rawSignature)) as Record<string, unknown>; }
+        catch { signed = { signature: rawSignature }; }
+        if (typeof signed.signature !== "string" || !signed.signature) throw new WorkflowError("errorJoyidSignature");
+        return {
+          challenge,
+          signature: signed.signature,
+          message: typeof signed.message === "string" ? signed.message : challenge,
+          pubkey: identity.publicKey,
+          keyType: identity.keyType,
+          alg: typeof signed.alg === "number" || typeof signed.alg === "string" ? signed.alg : undefined,
+        };
+      }
+      let signature = String(rawSignature).trim();
       try {
-        signed = JSON.parse(String(rawSignature)) as Record<string, unknown>;
+        const parsed = JSON.parse(signature) as Record<string, unknown>;
+        if (typeof parsed.signature === "string") signature = parsed.signature;
       } catch {
-        signed = { signature: rawSignature };
+        // CCC CKB signers normally return a recoverable signature as hex.
       }
-      const identity = await readSignerIdentity(signer);
-      if (!identity.publicKey || !identity.keyType) {
-        throw new Error("JoyID identity did not include public key and key type");
+      if (!/^0x[0-9a-fA-F]{130}$/.test(signature)) throw new WorkflowError("errorCkbSignature");
+      return { scheme: "ckb_secp256k1", challenge, signature: signature.toLowerCase(), public_key: identity.publicKey };
+    };
+    const writeSignature = (signature: WalletSignature) => {
+      const text = JSON.stringify(signature, null, 2);
+      if (signatureOutput) signatureOutput.value = text;
+      if (copySignatureButton) copySignatureButton.dataset.copyText = text;
+    };
+    const signatureForPayload = async (payload: Record<string, unknown>): Promise<WalletSignature> => {
+      if (!signatureOutput?.value.trim()) throw new WorkflowError("errorSigning");
+      let signature: WalletSignature;
+      try {
+        signature = JSON.parse(signatureOutput.value) as WalletSignature;
+      } catch (error) {
+        throw new WorkflowError("errorSigning", error instanceof Error ? error.message : undefined);
       }
-      const principalId = typeof payload["principal_id"] === "string" ? payload["principal_id"].trim().toLowerCase() : "";
-      const candidates = await joyidPrincipalCandidates(identity.keyType, identity.publicKey);
-      if (!candidates.includes(principalId)) {
-        throw new Error(`Payload principal_id does not match this JoyID signer. Use ${candidates[0]}`);
+      if (signature.challenge !== canonicalJson(payload)) throw new WorkflowError("errorPayloadChanged");
+      const principalType = typeof payload.principal_type === "string" ? payload.principal_type : "";
+      const principalId = typeof payload.principal_id === "string" ? payload.principal_id.trim().toLowerCase() : "";
+      if (principalType === "ckb_secp256k1") {
+        if (signature.scheme !== "ckb_secp256k1"
+          || typeof signature.public_key !== "string"
+          || !/^(?:0x)?(?:02|03)[0-9a-fA-F]{64}$/.test(signature.public_key)
+          || typeof signature.signature !== "string"
+          || !/^0x[0-9a-fA-F]{130}$/.test(signature.signature)) {
+          throw new WorkflowError("errorCkbSignature");
+        }
+        if (principalId !== await ckbPrincipalId(signature.public_key)) throw new WorkflowError("errorPrincipalId");
+      } else if (principalType === "joyid_ckb") {
+        if (typeof signature.pubkey !== "string"
+          || (signature.keyType !== "main_key" && signature.keyType !== "sub_key")
+          || typeof signature.signature !== "string"
+          || !signature.signature) {
+          throw new WorkflowError("errorJoyidSignature");
+        }
+        if (principalId !== await joyidPrincipalId(signature.keyType, signature.pubkey)) throw new WorkflowError("errorPrincipalId");
+      } else {
+        throw new WorkflowError("errorUnsupportedIdentity");
       }
-      const signature = typeof signed.signature === "string" ? signed.signature : undefined;
-      if (!signature) {
-        throw new Error("JoyID did not return a signature");
+      return signature;
+    };
+    const readApiResponse = async (response: Response, reveal = true) => {
+      const text = await response.text();
+      let parsed: unknown;
+      try { parsed = JSON.parse(text); }
+      catch { parsed = { response: text }; }
+      if (reveal) showTechnical({ status: response.status, response: parsed });
+      return parsed;
+    };
+    const isAuthorisationSession = (value: unknown): value is AuthorisationSession => {
+      if (!value || typeof value !== "object" || Array.isArray(value)) return false;
+      const session = value as Partial<AuthorisationSession>;
+      return session.schema === "cellscript-registry-authorisation-session-v1"
+        && session.session_id === authorisationSessionId
+        && (session.status === "pending" || session.status === "authorised" || session.status === "review_pending")
+        && Boolean(session.artifact)
+        && typeof session.artifact?.namespace === "string"
+        && typeof session.artifact?.name === "string"
+        && typeof session.artifact?.kind === "string"
+        && Array.isArray(session.requested_scopes)
+        && session.requested_scopes.every((scope) => typeof scope === "string")
+        && typeof session.capability_expires_at === "string"
+        && typeof session.expires_at === "string";
+    };
+    const artifactKindLabel = (kind: string) => {
+      const key = ({
+        source_library: "kindCellScript",
+        profile_library: "kindProfileLibrary",
+        deployable_contract: "kindCkbScript",
+        runtime_verifier: "kindRuntimeVerifier",
+        reproducible_binary: "kindReproducibleBinary",
+        template: "kindTemplate",
+      } as Record<string, string>)[kind];
+      return key ? message(key) : kind.replaceAll("_", " ");
+    };
+    const setSessionCopy = (status: "pending" | "authorised" | "review_pending" | "error") => {
+      const prefix = status === "authorised"
+        ? "sessionCompleted"
+        : status === "review_pending"
+          ? "sessionReview"
+          : status === "error"
+            ? "sessionError"
+            : "sessionApproval";
+      if (sessionTitle) {
+        sessionTitle.dataset.i18n = `registry.submit.${prefix}Title`;
+        sessionTitle.textContent = message(`${prefix}Title`);
       }
-      const output: CapabilitySignature = {
-        challenge,
-        signature,
-        message: typeof signed.message === "string" ? signed.message : challenge,
-        pubkey: identity.publicKey,
-        keyType: identity.keyType,
-        alg: typeof signed.alg === "number" || typeof signed.alg === "string" ? signed.alg : undefined,
+      if (sessionLead) {
+        sessionLead.dataset.i18n = `registry.submit.${prefix}Body`;
+        sessionLead.textContent = message(`${prefix}Body`);
+      }
+    };
+    const renderAuthorisationSession = (session: AuthorisationSession) => {
+      authorisationSession = session;
+      const locale = document.documentElement.dataset.locale === "zh" ? "zh-CN" : "en-GB";
+      const formatter = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" });
+      if (sessionCoordinate) sessionCoordinate.textContent = `${session.artifact.namespace}/${session.artifact.name}`;
+      if (sessionKind) sessionKind.textContent = artifactKindLabel(session.artifact.kind);
+      if (sessionScope) sessionScope.textContent = session.requested_scopes.join(" · ");
+      if (sessionExpiry) sessionExpiry.textContent = formatter.format(new Date(session.expires_at));
+      if (sessionIdOutput) sessionIdOutput.textContent = session.session_id;
+      if (sessionPanel) sessionPanel.dataset.state = session.status;
+      setSessionCopy(session.status);
+      if (namespaceInput) namespaceInput.value = session.artifact.namespace;
+      if (nameInput) nameInput.value = session.artifact.name;
+      if (artifactKindInput) artifactKindInput.value = session.artifact.kind;
+      authorisationMode = "new";
+      authorisationSessionFinished = session.status !== "pending";
+      namespaceReviewPending = session.status === "review_pending";
+      if (session.status === "authorised") {
+        clearStoredAuthorisationSession();
+        setStatus("sessionCompleted", "ok");
+      } else if (session.status === "review_pending") {
+        clearStoredAuthorisationSession();
+        setStatus("sessionReviewPending", "idle");
+      }
+      else setStatus("sessionReady");
+      lastCoordinate = `${session.artifact.namespace}/${session.artifact.name}`;
+      syncArtifactKind();
+      syncWorkflow();
+    };
+    const loadAuthorisationSession = async () => {
+      if (!authorisationSessionMode) return;
+      if (!/^browser_[0-9a-f]{32}$/.test(authorisationBrowserToken)) throw new WorkflowError("errorSessionLoad");
+      const apiOrigin = signerRoot?.dataset.apiOrigin;
+      if (!apiOrigin) throw new WorkflowError("errorSessionLoad");
+      const response = await fetch(`${apiOrigin}/v1/authorisation-sessions/${encodeURIComponent(authorisationSessionId)}`, {
+        headers: { accept: "application/json", authorization: `Bearer ${authorisationBrowserToken}` },
+        signal,
+      });
+      const parsed = await readApiResponse(response, false);
+      if (response.status === 410) {
+        clearStoredAuthorisationSession();
+        throw new WorkflowError("errorSessionExpired", JSON.stringify(parsed, null, 2));
+      }
+      if (!response.ok) throw new WorkflowError("errorSessionLoad", JSON.stringify({ status: response.status, response: parsed }, null, 2));
+      if (!isAuthorisationSession(parsed)) throw new WorkflowError("errorSessionResponse");
+      if (!coordinatePattern.test(parsed.artifact.namespace) || !coordinatePattern.test(parsed.artifact.name)) {
+        throw new WorkflowError("errorSessionResponse");
+      }
+      renderAuthorisationSession(parsed);
+    };
+    const prepareAuthorisationSessionChallenge = async () => {
+      if (!authorisationSession || authorisationSession.status !== "pending") throw new WorkflowError("errorSessionLoad");
+      if (!activeWalletIdentity || !principalInput?.value.trim()) throw new WorkflowError("errorIdentityUnavailable");
+      setStatus("sessionPreparing");
+      const response = await fetch(`${signerRoot?.dataset.apiOrigin}/v1/authorisation-sessions/${encodeURIComponent(authorisationSessionId)}/challenge`, {
+        method: "POST",
+        headers: { "content-type": "application/json", accept: "application/json", authorization: `Bearer ${authorisationBrowserToken}` },
+        body: JSON.stringify({
+          principal_type: activeWalletIdentity.principalType,
+          principal_id: principalInput.value.trim(),
+        }),
+        signal,
+      });
+      const parsed = await readApiResponse(response, false);
+      if (!response.ok) throw new WorkflowError("errorSessionLoad", JSON.stringify({ status: response.status, response: parsed }, null, 2));
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new WorkflowError("errorSessionResponse");
+      const challenge = parsed as Record<string, unknown>;
+      if (typeof challenge.challenge_token !== "string" || !challenge.challenge_token.startsWith("challenge_")
+        || !challenge.payload || typeof challenge.payload !== "object" || Array.isArray(challenge.payload)) {
+        throw new WorkflowError("errorSessionResponse");
+      }
+      authorisationChallengeToken = challenge.challenge_token;
+      if (payloadInput) payloadInput.value = JSON.stringify({ payload: challenge.payload }, null, 2);
+    };
+    const completeAuthorisationSession = async () => {
+      if (!authorisationChallengeToken) throw new WorkflowError("errorSessionResponse");
+      const payload = parsePayload();
+      const signature = await signatureForPayload(payload);
+      const response = await fetch(`${signerRoot?.dataset.apiOrigin}/v1/authorisation-sessions/${encodeURIComponent(authorisationSessionId)}/complete`, {
+        method: "POST",
+        headers: { "content-type": "application/json", accept: "application/json", authorization: `Bearer ${authorisationBrowserToken}` },
+        body: JSON.stringify({ challenge_token: authorisationChallengeToken, wallet_signature: signature }),
+        signal,
+      });
+      const parsed = await readApiResponse(response, !response.ok);
+      if (!response.ok) throw new WorkflowError("errorSubmit", JSON.stringify({ status: response.status, response: parsed }, null, 2));
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new WorkflowError("errorSessionResponse");
+      const completedStatus = (parsed as Record<string, unknown>).status;
+      if (completedStatus !== "authorised" && completedStatus !== "review_pending") throw new WorkflowError("errorSessionResponse");
+      capabilitySubmitted = true;
+      namespaceReviewPending = completedStatus === "review_pending";
+      authorisationSessionFinished = true;
+      clearStoredAuthorisationSession();
+      if (sessionPanel) sessionPanel.dataset.state = String(completedStatus);
+      setSessionCopy(completedStatus);
+      setStatus(completedStatus === "authorised" ? "sessionCompleted" : "sessionReviewPending", completedStatus === "authorised" ? "ok" : "idle");
+    };
+    const renderCapabilityCheck = (check: CapabilityCheck) => {
+      lastCapabilityCheck = check;
+      const locale = document.documentElement.dataset.locale === "zh" ? "zh-CN" : "en-GB";
+      if (capabilityCheckStatus) capabilityCheckStatus.textContent = message(`capabilityStatus${check.status[0]?.toUpperCase()}${check.status.slice(1)}`);
+      if (capabilityCheckExpiry) capabilityCheckExpiry.textContent = new Intl.DateTimeFormat(locale, { dateStyle: "medium", timeStyle: "short" }).format(new Date(check.expires_at));
+      if (capabilityCheckNamespace) {
+        const ownership = check.namespace.owned_by_capability_principal ? message("capabilityOwnerMatch") : message("capabilityOwnerMismatch");
+        capabilityCheckNamespace.textContent = `${check.namespace.name} · ${check.namespace.status} · ${ownership}`;
+      }
+      if (capabilityCheckScopes) capabilityCheckScopes.textContent = check.scopes.join(" · ");
+      if (capabilityCheckSummary) capabilityCheckSummary.hidden = false;
+    };
+    const checkCapabilityKey = async (rawKeyId: string, successKey: string) => {
+      const keyId = rawKeyId.trim().toLowerCase();
+      if (!/^cap_[0-9a-f]{32}$/.test(keyId)) throw new WorkflowError("errorCapabilityKeyId");
+      if (!coordinateValid()) throw new WorkflowError("invalidCoordinate");
+      setStatus("checkingCapability");
+      clearCapabilityConfirmation();
+      const query = new URLSearchParams({ namespace: fieldValue("namespace"), name: fieldValue("name") });
+      const endpoint = `${signerRoot?.dataset.apiOrigin}/v1/capabilities/${encodeURIComponent(keyId)}/check?${query}`;
+      const attempt = async (deadlineMs: number): Promise<Response> => {
+        const timeout = new AbortController();
+        const relayAbort = () => timeout.abort();
+        const timer = window.setTimeout(() => timeout.abort(), deadlineMs);
+        signal.addEventListener("abort", relayAbort, { once: true });
+        try {
+          return await fetch(endpoint, { signal: timeout.signal, headers: { accept: "application/json" } });
+        } catch (error) {
+          if (timeout.signal.aborted && !signal.aborted) throw new WorkflowError("errorCapabilityCheckTimeout");
+          throw error;
+        } finally {
+          window.clearTimeout(timer);
+          signal.removeEventListener("abort", relayAbort);
+        }
       };
-      return output;
+      let response: Response;
+      try {
+        response = await attempt(6_500);
+        if (response.status >= 500) {
+          setStatus("retryingCapability");
+          await new Promise((resolve) => window.setTimeout(resolve, 220));
+          response = await attempt(4_000);
+        }
+      } catch (error) {
+        if (signal.aborted || navigator.onLine === false) throw error;
+        setStatus("retryingCapability");
+        await new Promise((resolve) => window.setTimeout(resolve, 220));
+        response = await attempt(4_000);
+      }
+      const parsed = await readApiResponse(response);
+      if (!response.ok) throw new WorkflowError("errorCapabilityCheck", JSON.stringify({ status: response.status, response: parsed }, null, 2));
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed)) throw new WorkflowError("errorCapabilityCheckResponse");
+      const check = parsed as Partial<CapabilityCheck>;
+      if (
+        check.key_id !== keyId
+        || !Array.isArray(check.scopes)
+        || typeof check.expires_at !== "string"
+        || !check.namespace
+        || !check.allows
+        || typeof check.usable_for_publish !== "boolean"
+        || !Array.isArray(check.reasons)
+      ) throw new WorkflowError("errorCapabilityCheckResponse");
+      renderCapabilityCheck(check as CapabilityCheck);
+      if (!check.usable_for_publish) {
+        throw new WorkflowError("errorCapabilityNotUsable", JSON.stringify({ reasons: check.reasons }, null, 2));
+      }
+      confirmedCapabilityKeyId = keyId;
+      setStatus(successKey, "ok");
+      syncWorkflow();
+    };
+    const submitCapability = async () => {
+      const payload = parsePayload();
+      const signature = await signatureForPayload(payload);
+      const response = await fetch(`${signerRoot?.dataset.apiOrigin}/v1/capabilities`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ payload, wallet_signature: signature }),
+        signal,
+      });
+      const parsed = await readApiResponse(response);
+      if (!response.ok) throw new WorkflowError("errorCapabilityRejected", JSON.stringify({ status: response.status, response: parsed }, null, 2));
+      if (!parsed || typeof parsed !== "object" || Array.isArray(parsed) || typeof (parsed as Record<string, unknown>).key_id !== "string") {
+        throw new WorkflowError("errorCapabilityCheckResponse");
+      }
+      const keyId = String((parsed as Record<string, unknown>).key_id).trim().toLowerCase();
+      if (!/^cap_[0-9a-f]{32}$/.test(keyId)) throw new WorkflowError("errorCapabilityCheckResponse");
+      capabilitySubmitted = true;
+      submittedCapabilityKeyId = keyId;
+      setStatus("submitted", "ok");
+    };
+    const claimNamespace = async () => {
+      const namespace = fieldValue("namespace");
+      const name = fieldValue("name");
+      if (!namespace) throw new WorkflowError("errorNamespaceRequired");
+      const payload = parsePayload();
+      const scopes = Array.isArray(payload.requested_scopes) ? payload.requested_scopes.filter((scope): scope is string => typeof scope === "string") : [];
+      if (!scopes.includes(`publish:${namespace}/${name}`) && !scopes.includes(`publish:${namespace}/*`)) {
+        throw new WorkflowError("errorScope");
+      }
+      const signature = await signatureForPayload(payload);
+      const response = await fetch(`${signerRoot?.dataset.apiOrigin}/v1/namespaces/claim`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ namespace, payload, wallet_signature: signature }),
+        signal,
+      });
+      const parsed = await readApiResponse(response);
+      if (!response.ok) throw new WorkflowError("errorClaimRejected", JSON.stringify({ status: response.status, response: parsed }, null, 2));
+      const claimStatus = parsed && typeof parsed === "object" && !Array.isArray(parsed)
+        ? (parsed as Record<string, unknown>).status
+        : undefined;
+      if (claimStatus !== "active") {
+        namespaceClaimed = false;
+        namespaceReviewPending = true;
+        setStatus("namespaceReviewPending", "idle");
+        return;
+      }
+      namespaceClaimed = true;
+      namespaceReviewPending = false;
+      await checkCapabilityKey(submittedCapabilityKeyId, "capabilityConfirmed");
     };
 
-    connectButton?.addEventListener("click", async () => {
-      connectButton.disabled = true;
-      try {
-        await ensureJoyIdSigner();
-      } catch (error) {
-        setCapabilityStatus(error instanceof Error ? error.message : "JoyID connection failed", "error");
-      } finally {
-        connectButton.disabled = false;
-      }
-    });
-
-    signButton?.addEventListener("click", async () => {
-      signButton.disabled = true;
-      try {
-        const signature = await signCapabilityPayload();
-        if (signatureOutput) signatureOutput.value = JSON.stringify(signature, null, 2);
-        copySignatureButton?.setAttribute("data-copy-text", JSON.stringify(signature, null, 2));
-        setCapabilityStatus("Capability payload signed", "ok");
-      } catch (error) {
-        setCapabilityStatus(error instanceof Error ? error.message : "Signing failed", "error");
-      } finally {
-        signButton.disabled = false;
-      }
-    });
-
-    submitButton?.addEventListener("click", async () => {
-      submitButton.disabled = true;
-      try {
-        const payload = parsePayload();
-        const signature = signatureOutput?.value.trim()
-          ? JSON.parse(signatureOutput.value) as CapabilitySignature
-          : await signCapabilityPayload();
-        if (signatureOutput && !signatureOutput.value.trim()) signatureOutput.value = JSON.stringify(signature, null, 2);
-        copySignatureButton?.setAttribute("data-copy-text", JSON.stringify(signature, null, 2));
-        const apiBase = (apiInput?.value || "https://api.registry.cellscript.dev").trim().replace(/\/+$/, "");
-        const response = await fetch(`${apiBase}/v1/capabilities`, {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ payload, joyid_signature: signature }),
-        });
-        const text = await response.text();
-        let parsed: unknown;
+    for (const button of capabilityActionButtons) {
+      button.addEventListener("click", () => {
+        void (async () => {
+          busy = true;
+          clearTechnical();
+          syncWorkflow();
+          const action = button.dataset.capabilityAction;
+          try {
+            if (!coordinateValid()) throw new WorkflowError("invalidCoordinate");
+            if (authorisationMode !== "new") throw new WorkflowError("chooseAuthorisationPath");
+            if (action === "connect") {
+              await ensureWalletSigner();
+            } else if (action === "sign") {
+              if (authorisationSessionMode) {
+                await prepareAuthorisationSessionChallenge();
+                writeSignature(await signCapabilityPayload());
+                setStatus("signed", "ok");
+                await completeAuthorisationSession();
+              } else {
+                parsePayload();
+                writeSignature(await signCapabilityPayload());
+                setStatus("signed", "ok");
+              }
+            } else if (action === "submit") {
+              await submitCapability();
+            } else if (action === "claim") {
+              await claimNamespace();
+            }
+          } catch (error) {
+            let recovered = false;
+            if (authorisationSessionMode && action === "sign") {
+              try {
+                await loadAuthorisationSession();
+                recovered = authorisationSessionFinished;
+              } catch {
+                // Keep the original signing or submission error.
+              }
+              // Preserve an unchanged signed request when the terminal state is
+              // temporarily unreachable. A retry must never require a new
+              // signature unless the coordinate, scope or payload changes.
+            }
+            const fallback = action === "connect"
+              ? "errorWallet"
+              : action === "sign"
+                ? "errorSigning"
+                : action === "submit"
+                  ? "errorSubmit"
+                  : "errorClaim";
+            if (!recovered) setError(error, fallback);
+          } finally {
+            busy = false;
+            syncWorkflow();
+          }
+        })();
+      }, { signal });
+    }
+    for (const button of changeWalletButtons) {
+      button.addEventListener("click", () => {
+        void (async () => {
+          busy = true;
+          syncWorkflow();
+          try {
+            await resetWallet(true);
+            await ensureWalletSigner();
+          } catch (error) {
+            setError(error, "errorWallet");
+          } finally {
+            busy = false;
+            syncWorkflow();
+          }
+        })();
+      }, { signal });
+    }
+    openManualPublish?.addEventListener("click", () => {
+      if (publishEntry) publishEntry.hidden = true;
+      if (manualPublish) manualPublish.hidden = false;
+      persistSubmitDraft();
+      closeManualPublish?.focus({ preventScroll: true });
+      manualPublish?.scrollIntoView({ behavior: preferredScrollBehavior, block: "start" });
+    }, { signal });
+    closeManualPublish?.addEventListener("click", () => {
+      if (manualPublish) manualPublish.hidden = true;
+      if (publishEntry) publishEntry.hidden = false;
+      persistSubmitDraft();
+      publishEntry?.scrollIntoView({ behavior: preferredScrollBehavior, block: "start" });
+      openManualPublish?.focus({ preventScroll: true });
+    }, { signal });
+    sessionRetry?.addEventListener("click", () => {
+      void (async () => {
+        if (sessionPanel) sessionPanel.dataset.state = "loading";
+        setSessionCopy("pending");
+        setStatus("sessionLoading");
+        sessionRetry.disabled = true;
         try {
-          parsed = JSON.parse(text);
-        } catch {
-          parsed = { response: text };
+          await loadAuthorisationSession();
+        } catch (error) {
+          if (sessionPanel) sessionPanel.dataset.state = "error";
+          setSessionCopy("error");
+          setError(error, "errorSessionLoad");
+        } finally {
+          sessionRetry.disabled = false;
+          syncWorkflow();
         }
-        if (responseOutput) {
-          responseOutput.hidden = false;
-          responseOutput.textContent = JSON.stringify(parsed, null, 2);
+      })();
+    }, { signal });
+    for (const button of authorisationModes) {
+      button.addEventListener("click", () => {
+        if (!coordinateValid()) {
+          coordinateError?.removeAttribute("hidden");
+          (namespaceInput?.validity.valid ? nameInput : namespaceInput)?.focus();
+          setStatus("invalidCoordinate", "error");
+          return;
         }
-        if (!response.ok) {
-          throw new Error(`Registry API rejected the capability: HTTP ${response.status}`);
+        authorisationMode = button.dataset.authorisationMode === "existing" ? "existing" : "new";
+        clearTechnical();
+        if (confirmedCapabilityKeyId) setStatus("capabilityConfirmed", "ok");
+        else if (authorisationMode === "existing") setStatus("existingCapabilityIdle");
+        else if (activeWalletSigner || activeExternalWallet) setStatus(activeExternalWallet ? "walletExternalReady" : "walletConnected", "ok");
+        else setStatus("walletIdle");
+        syncWorkflow();
+        persistSubmitDraft();
+        if (authorisationMode === "existing") existingCapabilityKey?.focus();
+      }, { signal });
+    }
+    existingCapabilityCheck?.addEventListener("click", () => {
+      void (async () => {
+        busy = true;
+        clearTechnical();
+        syncWorkflow();
+        try {
+          await checkCapabilityKey(existingCapabilityKey?.value ?? "", "existingCapabilityConfirmed");
+        } catch (error) {
+          setError(error, "errorCapabilityCheck");
+        } finally {
+          busy = false;
+          syncWorkflow();
         }
-        setCapabilityStatus("Capability submitted", "ok");
-      } catch (error) {
-        setCapabilityStatus(error instanceof Error ? error.message : "Capability submit failed", "error");
-      } finally {
-        submitButton.disabled = false;
+      })();
+    }, { signal });
+    walletClose?.addEventListener("click", () => walletDialog?.close(), { signal });
+    walletBack?.addEventListener("click", renderWalletChoices, { signal });
+    walletDialog?.addEventListener("close", () => {
+      const picker = walletPicker;
+      if (picker && !picker.settled) {
+        picker.settled = true;
+        picker.reject(new WorkflowError("errorNoWallet"));
       }
-    });
+      walletPicker = null;
+    }, { signal });
+    existingCapabilityKey?.addEventListener("input", () => {
+      if (existingCapabilityKey.value.trim().toLowerCase() !== confirmedCapabilityKeyId) clearCapabilityConfirmation();
+      clearTechnical();
+      setStatus("existingCapabilityIdle");
+      syncWorkflow();
+    }, { signal });
+    payloadInput?.addEventListener("input", () => {
+      syncExternalPrincipal();
+      clearSignature(true);
+      clearTechnical();
+      syncWorkflow();
+    }, { signal });
+    signatureOutput?.addEventListener("input", () => {
+      if (!activeExternalWallet) return;
+      capabilitySubmitted = false;
+      submittedCapabilityKeyId = "";
+      namespaceClaimed = false;
+      namespaceReviewPending = false;
+      clearCapabilityConfirmation();
+      clearTechnical();
+      syncWorkflow();
+    }, { signal });
+    form?.addEventListener("input", (event) => {
+      const coordinate = `${fieldValue("namespace")}/${fieldValue("name")}`;
+      if (lastCoordinate && coordinate !== lastCoordinate && event.target !== pathInput) {
+        clearSignature(true);
+        if (authorisationMode === "existing") setStatus("existingCapabilityIdle");
+      }
+      lastCoordinate = coordinate;
+      syncArtifactKind();
+      syncWorkflow();
+      persistSubmitDraft();
+    }, { signal });
+    pathInput?.addEventListener("input", () => {
+      syncWorkflow();
+      persistSubmitDraft();
+    }, { signal });
+    profileBuilder?.addEventListener("toggle", persistSubmitDraft, { signal });
+    window.addEventListener("cellscript:locale-change", () => {
+      setStatus(statusKey, statusTone, statusSuffix);
+      if (lastCapabilityCheck) renderCapabilityCheck(lastCapabilityCheck);
+      if (authorisationSession && sessionKind) sessionKind.textContent = artifactKindLabel(authorisationSession.artifact.kind);
+      if (walletDialog?.open) renderWalletChoices();
+      syncArtifactKind();
+      syncWorkflow();
+    }, { signal });
+    document.addEventListener("astro:before-swap", () => {
+      if (walletPicker && !walletPicker.settled) {
+        walletPicker.settled = true;
+        walletPicker.reject(new WorkflowError("errorNoWallet"));
+      }
+      walletDialog?.close();
+      walletController?.disconnect?.();
+      lifecycle.abort();
+    }, { once: true, signal });
+
+    restoreSubmitDraft();
+    lastCoordinate = `${fieldValue("namespace")}/${fieldValue("name")}`;
+    syncArtifactKind();
+    syncWorkflow();
+    persistSubmitDraft();
+    if (authorisationSessionMode) {
+      void loadAuthorisationSession().catch((error) => {
+        if (sessionPanel) sessionPanel.dataset.state = "error";
+        setSessionCopy("error");
+        setError(error, "errorSessionLoad");
+        syncWorkflow();
+      });
+    }
+    };
+
+    document.addEventListener("astro:page-load", setupSubmitPage);
   </script>
 </RegistryLayout>

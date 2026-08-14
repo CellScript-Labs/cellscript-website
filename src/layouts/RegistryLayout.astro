@@ -2,9 +2,16 @@
 import "../styles/global.css";
 import "../styles/registry.css";
 import SiteHeader from "../components/SiteHeader.astro";
+import SitePreferencesBootstrap from "../components/SitePreferencesBootstrap.astro";
 import { ClientRouter } from "astro:transitions";
 import { defaultLocale, translations } from "../i18n/translations";
 import { registrySections } from "../lib/registry";
+import { isTestnetSandbox, registryRuntime } from "../lib/registry-runtime";
+import bracketsCurlyIcon from "@phosphor-icons/core/regular/brackets-curly.svg?raw";
+import magnifyingGlassIcon from "@phosphor-icons/core/regular/magnifying-glass.svg?raw";
+import terminalWindowIcon from "@phosphor-icons/core/regular/terminal-window.svg?raw";
+import uploadSimpleIcon from "@phosphor-icons/core/regular/upload-simple.svg?raw";
+import arrowUpRightIcon from "@phosphor-icons/core/regular/arrow-up-right.svg?raw";
 
 interface Props {
   title: string;
@@ -13,12 +20,30 @@ interface Props {
   // heading and description, so the layout can re-render them on locale
   // change. Omit for pages whose heading is a dynamic identifier (e.g. a
   // package coordinate) that should not be localized.
+  eyebrowKey?: string;
   headingKey?: string;
   descriptionKey?: string;
-  active: "search" | "submit" | "manage" | "package";
+  titleKey?: string;
+  active: "search" | "submit" | "interface" | "api" | "manage" | "package";
+  compactHeader?: boolean;
+  showSubmitCta?: boolean;
+  showHeader?: boolean;
+  showTabs?: boolean;
 }
 
-const { title, description, headingKey, descriptionKey, active } = Astro.props;
+const {
+  title,
+  description,
+  eyebrowKey,
+  headingKey,
+  descriptionKey,
+  titleKey,
+  active,
+  compactHeader = false,
+  showSubmitCta = true,
+  showHeader = true,
+  showTabs = true,
+} = Astro.props;
 const locale = defaultLocale;
 const t = translations[locale];
 
@@ -34,72 +59,100 @@ const resolveKey = (key: string | undefined): string | undefined => {
 };
 const headingText = resolveKey(headingKey) ?? title.replace("CellScript Registry: ", "");
 const descriptionText = resolveKey(descriptionKey) ?? description;
+const eyebrowText = resolveKey(eyebrowKey);
+const titleSuffix = headingKey ? undefined : title.split(": ").slice(1).join(": ") || undefined;
+const headerIcons: Partial<Record<Props["active"], string>> = {
+  search: magnifyingGlassIcon,
+  submit: uploadSimpleIcon,
+  interface: bracketsCurlyIcon,
+  api: terminalWindowIcon,
+};
+const headerIcon = headerIcons[active];
 const activeHref =
-  active === "submit" ? "/registry/submit" : active === "manage" ? "/registry/manage" : "/registry";
+  active === "submit"
+    ? "/registry/submit"
+    : active === "interface"
+      ? "/registry/LS-IDL"
+      : active === "api"
+        ? "/registry/api"
+        : "/registry";
 ---
 
 <!doctype html>
-<html lang={locale}>
+<html lang={locale} data-theme="light" data-locale={locale} data-registry-environment={registryRuntime.environment} data-registry-network={registryRuntime.network} data-registry-title-key={titleKey} data-registry-title-suffix={titleSuffix}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="color-scheme" content="light dark" />
     <meta name="description" content={description} />
+    {isTestnetSandbox && <meta name="robots" content="noindex,nofollow,noarchive" />}
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <link rel="icon" type="image/png" href={`${import.meta.env.BASE_URL}cellscript-logo.png`} />
     <link rel="icon" type="image/png" media="(prefers-color-scheme: light)" href={`${import.meta.env.BASE_URL}cellscript-logo-light.png`} />
     <link rel="icon" type="image/png" media="(prefers-color-scheme: dark)" href={`${import.meta.env.BASE_URL}cellscript-logo-dark.png`} />
     <title>{title}</title>
-    <script is:inline>
+    <SitePreferencesBootstrap />
+    <script is:inline data-astro-rerun>
       (() => {
-        try {
-          const storedTheme = localStorage.getItem("cellscript-theme");
-          const storedLocale = localStorage.getItem("cellscript-locale");
-          document.documentElement.dataset.theme = storedTheme === "light" || storedTheme === "dark" ? storedTheme : "light";
-          document.documentElement.dataset.locale = storedLocale === "zh" ? "zh" : "en";
-          document.documentElement.lang = document.documentElement.dataset.locale;
-        } catch {
-          document.documentElement.dataset.theme = "light";
-          document.documentElement.dataset.locale = "en";
-          document.documentElement.lang = "en";
-        }
+        const root = document.documentElement;
+        if (root.dataset.locale === "zh") root.dataset.registryLocalePending = "true";
+        else delete root.dataset.registryLocalePending;
       })();
     </script>
+    <style is:inline>html[data-registry-locale-pending="true"] body { visibility: hidden; }</style>
     <ClientRouter />
   </head>
-  <body>
+  <body class="registry-body">
     <a class="skip-link" href="#registry-main" data-i18n="a11y.skipToContent">{t.a11y.skipToContent}</a>
     <SiteHeader page="registry" />
-    <main id="registry-main" class="registry-app">
-      <header class="registry-topbar" aria-label={t.registry.appLabel} data-i18n-aria-label="registry.appLabel">
-        <div>
-          <p class="registry-eyebrow" data-i18n="registry.eyebrow">{t.registry.eyebrow}</p>
-          <h1 data-registry-heading data-registry-heading-key={headingKey}>{headingText}</h1>
-          <p data-registry-description data-registry-description-key={descriptionKey}>{descriptionText}</p>
+    <main id="registry-main" class:list={["registry-app", showHeader && "registry-app-framed"]}>
+      <section class:list={["registry-hero", !showHeader && "registry-hero-no-header", !showTabs && "registry-hero-no-tabs"]} data-registry-hero>
+        <div class:list={["registry-shell-bar", !showHeader && "registry-shell-bar-context-only"]}>
+          {showHeader && <header class:list={["registry-topbar", compactHeader && "registry-topbar-compact"]} transition:name="registry-header" data-registry-section={active} aria-label={t.registry.appLabel} data-i18n-aria-label="registry.appLabel">
+            <div class="registry-topbar-copy">
+              {eyebrowText && <p class="registry-topbar-kicker">
+                {headerIcon && <span class="registry-topbar-kicker-icon" aria-hidden="true" set:html={headerIcon}></span>}
+                <span data-i18n={eyebrowKey}>{eyebrowText}</span>
+              </p>}
+              <h1 data-registry-heading data-registry-heading-key={headingKey}>{headingText}</h1>
+              <p data-registry-description data-registry-description-key={descriptionKey}>{descriptionText}</p>
+            </div>
+            {showSubmitCta && <a class="registry-button primary registry-topbar-cta" href="/registry/submit" data-registry-topbar-cta data-i18n="registry.submitPackage">{t.registry.submitPackage}</a>}
+          </header>}
+          <aside class:list={["registry-environment-bar", "registry-network-card", isTestnetSandbox && "is-testnet"]} transition:persist="registry-environment" aria-label={isTestnetSandbox ? t.registry.sandboxTitle : t.registry.productionTitle}>
+            <p class="registry-network-label" data-i18n="registry.currentNetwork">{t.registry.currentNetwork}</p>
+            <div class="registry-network-heading">
+              <span class="registry-environment-identity">
+                <i aria-hidden="true"></i>
+                <strong data-i18n={isTestnetSandbox ? "registry.sandboxTitle" : "registry.productionTitle"}>{isTestnetSandbox ? t.registry.sandboxTitle : t.registry.productionTitle}</strong>
+              </span>
+              <span class="registry-network-code">CKB</span>
+            </div>
+            <p class="registry-network-body" data-i18n={isTestnetSandbox ? "registry.sandboxBody" : "registry.productionBody"}>{isTestnetSandbox ? t.registry.sandboxBody : t.registry.productionBody}</p>
+            <a class="registry-network-switch" href={registryRuntime.alternateOrigin}>
+              <span data-i18n={isTestnetSandbox ? "registry.openProduction" : "registry.openSandbox"}>{isTestnetSandbox ? t.registry.openProduction : t.registry.openSandbox}</span>
+              <span aria-hidden="true" set:html={arrowUpRightIcon}></span>
+            </a>
+          </aside>
         </div>
-        <a class="registry-button primary registry-topbar-cta" href="/registry/submit" data-i18n="registry.submitPackage">{t.registry.submitPackage}</a>
-      </header>
 
-      <nav class="registry-tabs" aria-label={t.registry.sectionsLabel} data-i18n-aria-label="registry.sectionsLabel">
-        {registrySections.map((section) => (
-          <a
-            href={section.href}
-            class:list={[
-              section.href === activeHref && "active",
-              "soon" in section && section.soon && "registry-tabs-soon",
-            ]}
-            aria-current={section.href === activeHref ? "page" : undefined}
-          >
-            <span data-i18n={section.i18nKey}>{section.label}</span>
-            {"soon" in section && section.soon && section.soonLabel && (
-              <span class="registry-tabs-soon-tag" data-i18n={section.soonI18nKey}>{section.soonLabel}</span>
-            )}
-          </a>
-        ))}
-      </nav>
+        {showTabs && <nav class="registry-tabs" transition:persist="registry-tabs" aria-label={t.registry.sectionsLabel} data-i18n-aria-label="registry.sectionsLabel">
+          {registrySections.map((section) => (
+            <a
+              href={section.href}
+              class:list={[section.href === activeHref && "active"]}
+              aria-current={section.href === activeHref ? "page" : undefined}
+            >
+              <span data-i18n={section.i18nKey}>{section.label}</span>
+            </a>
+          ))}
+        </nav>}
+      </section>
 
-      <slot />
+      <div class="registry-route" transition:name="registry-route">
+        <slot />
+      </div>
     </main>
 
     <!-- Full i18n message table, embedded so the topbar's language
@@ -125,7 +178,10 @@ const activeHref =
         const nextLocale = locale === "zh" ? "zh" : "en";
         document.documentElement.dataset.locale = nextLocale;
         document.documentElement.lang = nextLocale;
-        if (!i18nMessages) return;
+        if (!i18nMessages) {
+          delete document.documentElement.dataset.registryLocalePending;
+          return;
+        }
         document.querySelectorAll<HTMLElement>("[data-i18n]").forEach((el) => {
           const v = getMessage(el.dataset.i18n ?? "", nextLocale);
           if (typeof v === "string") el.textContent = v;
@@ -146,12 +202,21 @@ const activeHref =
         const desc = document.querySelector<HTMLElement>("[data-registry-description]");
         const descKey = desc?.dataset.registryDescriptionKey;
         if (desc && descKey) desc.textContent = getMessage(descKey, nextLocale) ?? desc.textContent;
-        if (headingKey) document.title = `${getMessage("registry.eyebrow", nextLocale)}: ${getMessage(headingKey, nextLocale)}`;
+        const titleKey = document.documentElement.dataset.registryTitleKey;
+        if (titleKey) {
+          const pageTitle = getMessage(titleKey, nextLocale);
+          const shellTitle = getMessage("registry.shellTitle", nextLocale);
+          document.title = pageTitle === shellTitle ? shellTitle : `${pageTitle} · ${shellTitle}`;
+        } else if (headingKey) document.title = `${getMessage("registry.eyebrow", nextLocale)}: ${getMessage(headingKey, nextLocale)}`;
+        else if (document.documentElement.dataset.registryTitleSuffix) {
+          document.title = `${getMessage("registry.eyebrow", nextLocale)}: ${document.documentElement.dataset.registryTitleSuffix}`;
+        }
         try {
           localStorage.setItem("cellscript-locale", nextLocale);
         } catch {
           // Locale switching still works even when storage is unavailable.
         }
+        delete document.documentElement.dataset.registryLocalePending;
       };
 
       const reapplyRegistryLocale = () => {
@@ -159,15 +224,53 @@ const activeHref =
         applyLocale(readLocale());
       };
 
+      const normaliseRegistryPath = (pathname: string) => pathname.replace(/\/+$/, "") || "/";
+      const syncRegistryTabs = () => {
+        const tabs = document.querySelector<HTMLElement>(".registry-tabs");
+        if (!tabs) return;
+        const currentPath = normaliseRegistryPath(window.location.pathname);
+        let activeLink: HTMLAnchorElement | undefined;
+        tabs.querySelectorAll<HTMLAnchorElement>("a[href]").forEach((link) => {
+          const targetPath = normaliseRegistryPath(new URL(link.href, window.location.href).pathname);
+          const isActive = targetPath === currentPath;
+          link.classList.toggle("active", isActive);
+          if (isActive) {
+            link.setAttribute("aria-current", "page");
+            activeLink = link;
+          }
+          else link.removeAttribute("aria-current");
+        });
+        if (!activeLink) {
+          delete tabs.dataset.indicatorReady;
+          return;
+        }
+        const tabsRect = tabs.getBoundingClientRect();
+        const activeRect = activeLink.getBoundingClientRect();
+        tabs.style.setProperty("--registry-tab-indicator-x", `${activeRect.left - tabsRect.left + tabs.scrollLeft}px`);
+        tabs.style.setProperty("--registry-tab-indicator-width", `${activeRect.width}px`);
+        if (!tabs.dataset.indicatorReady) {
+          requestAnimationFrame(() => {
+            if (tabs.isConnected) tabs.dataset.indicatorReady = "true";
+          });
+        }
+      };
+
+      const syncRegistryShell = () => {
+        reapplyRegistryLocale();
+        syncRegistryTabs();
+      };
+
       // React to the topbar's locale-change event (it dispatches after
       // updating <html data-locale>) and after Astro swaps page content.
       if (!(window as any).__cellscriptRegistryLayoutLocaleBound) {
         window.addEventListener("cellscript:locale-change", reapplyRegistryLocale);
-        document.addEventListener("astro:page-load", reapplyRegistryLocale);
+        window.addEventListener("resize", syncRegistryTabs, { passive: true });
+        document.addEventListener("astro:after-swap", syncRegistryShell);
+        document.addEventListener("astro:page-load", syncRegistryShell);
         (window as any).__cellscriptRegistryLayoutLocaleBound = true;
       }
       // Apply the stored locale once on load so a refresh honours it.
-      reapplyRegistryLocale();
+      syncRegistryShell();
     </script>
 
     <script is:inline>

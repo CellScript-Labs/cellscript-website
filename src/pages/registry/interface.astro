@@ -1,0 +1,21 @@
+---
+// LS-IDL now has a route named after the interface itself. Keep this static
+// redirect so existing bookmarks continue to work on every website host.
+const destination = "/registry/LS-IDL";
+const canonical = "https://cellscript.dev/registry/LS-IDL";
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta http-equiv="refresh" content={`0; url=${destination}`} />
+    <link rel="canonical" href={canonical} />
+    <title>CellScript Registry LS-IDL — moved</title>
+    <script is:inline define:vars={{ destination }}>
+      window.location.replace(destination);
+    </script>
+  </head>
+  <body>
+    <p>Moved to <a href={destination}>CellScript Registry LS-IDL</a>.</p>
+  </body>
+</html>

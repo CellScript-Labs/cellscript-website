@@ -1,194 +1,611 @@
 ---
 import RegistryLayout from "../../layouts/RegistryLayout.astro";
-import { registryPackages, shortHash } from "../../lib/registry";
+import { registryPackages, registryStatusTone, registryStatusTones } from "../../lib/registry";
 import { defaultLocale, translations } from "../../i18n/translations";
+import { isTestnetSandbox, registryRuntime } from "../../lib/registry-runtime";
+import arrowLeftIcon from "@phosphor-icons/core/regular/arrow-left.svg?raw";
 
 const t = translations[defaultLocale];
 const description = t.registry.manage.description;
-const first = registryPackages[0];
+const availablePackages = isTestnetSandbox ? [] : registryPackages;
+const first = availablePackages[0];
+const initialCoordinate = first?.coordinate ?? "";
+const initialStatus = first
+  ? (t.registry.statuses as Record<string, string>)[first.status] ?? first.status.replaceAll("_", " ")
+  : t.registry.manage.notRecorded;
+const apiOrigin = registryRuntime.apiOrigin;
 ---
 
-<RegistryLayout title="CellScript Registry: Manage" description={description} headingKey="registry.manage.title" descriptionKey="registry.manage.description" active="manage">
-  {registryPackages.length > 0 ? (
-    <section class="registry-manage" aria-label={t.registry.manage.manageAria} data-i18n-aria-label="registry.manage.manageAria" data-manage-app>
-      <aside class="registry-manage-list" aria-label={t.registry.manage.packagesAria} data-i18n-aria-label="registry.manage.packagesAria">
-        <span class="registry-manage-list-label" data-i18n="registry.manage.packagesLabel">{t.registry.manage.packagesLabel}</span>
-        <ul>
-          {registryPackages.map((pkg, index) => (
-            <li>
-              <button
-                type="button"
-                class:list={["registry-manage-item", index === 0 && "active"]}
-                data-manage-item={pkg.coordinate}
-              >
-                <span class="registry-manage-item-name">{pkg.coordinate}</span>
-                <span class="registry-manage-item-meta">v{pkg.latest_version || "—"}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </aside>
+<RegistryLayout
+  title="CellScript Artifact Registry: Maintenance"
+  description={description}
+  headingKey="registry.manage.title"
+  descriptionKey="registry.manage.description"
+  active="manage"
+  showSubmitCta={false}
+  showHeader={false}
+  showTabs={false}
+>
+  <section
+    class="registry-maintainer"
+    aria-label={t.registry.manage.manageAria}
+    data-i18n-aria-label="registry.manage.manageAria"
+    data-manage-app
+    data-api-origin={apiOrigin}
+    data-registry-network={registryRuntime.network}
+    data-status-tones={JSON.stringify(registryStatusTones)}
+  >
+    <a class="registry-maintainer-back" href="/registry" data-manage-back>
+      <span aria-hidden="true" set:html={arrowLeftIcon}></span>
+      <span data-i18n="registry.manage.backToPackage">{t.registry.manage.backToPackage}</span>
+    </a>
 
-      <div class="registry-manage-detail">
-        <header class="registry-manage-head">
-          <div>
-            <span class="registry-label" data-i18n="registry.manage.workspaceLabel">{t.registry.manage.workspaceLabel}</span>
-            <h2 data-manage-title>{first.coordinate}</h2>
-            <p class="registry-manage-sub" data-manage-sub>
-              {t.registry.manage.version} {first.latest_version || t.registry.manage.notRecorded} · {first.deployment.networks.join(", ") || t.registry.package.sourceOnly} · {shortHash(first.latest?.source_hash)}
-            </p>
-          </div>
-        </header>
+    <div class="registry-maintainer-context">
+      <div class="registry-maintainer-package">
+        <span class="registry-label" data-i18n="registry.manage.packageContext">{t.registry.manage.packageContext}</span>
+        <h1 data-manage-title>{initialCoordinate || t.registry.manage.packagePlaceholder}</h1>
+        <p data-manage-sub>
+          {t.registry.manage.version} {first?.latest_version || t.registry.manage.notRecorded} · <span class="registry-status" data-state={registryStatusTone(first?.status ?? "source_published")}>{initialStatus}</span>
+        </p>
+      </div>
+      <p class="registry-maintainer-description" data-i18n="registry.manage.description">{t.registry.manage.description}</p>
+    </div>
 
-        <div class="registry-manage-body">
-          <form class="registry-manage-form" data-manage-form>
+    <div class="registry-maintainer-workbench">
+      <form class="registry-maintainer-tasks" data-manage-form novalidate>
+        <details class="registry-maintainer-options" open={!initialCoordinate}>
+          <summary data-i18n="registry.manage.optionsSummary">{t.registry.manage.optionsSummary}</summary>
+          <div class="registry-manage-context-fields">
             <label class="registry-builder-field">
-              <span data-i18n="registry.manage.actionLabel">{t.registry.manage.actionLabel}</span>
-              <select class="registry-select" name="action">
-                <option value="add-version" data-i18n="registry.manage.actionAddVersion">{t.registry.manage.actionAddVersion}</option>
-                <option value="yank" data-i18n="registry.manage.actionYankVersion">{t.registry.manage.actionYankVersion}</option>
-                <option value="metadata" data-i18n="registry.manage.actionUpdateMetadata">{t.registry.manage.actionUpdateMetadata}</option>
-                <option value="deployment" data-i18n="registry.manage.actionReviewDeployment">{t.registry.manage.actionReviewDeployment}</option>
-              </select>
+              <span data-i18n="registry.manage.packageCoordinate">{t.registry.manage.packageCoordinate}</span>
+              <input
+                class="registry-input"
+                name="coordinate"
+                value={initialCoordinate}
+                list="manage-package-options"
+                placeholder={t.registry.manage.packagePlaceholder}
+                data-i18n-placeholder="registry.manage.packagePlaceholder"
+                autocomplete="off"
+                required
+                pattern="[a-z0-9](?:(?:[a-z0-9_]|-){0,62}[a-z0-9])?/[a-z0-9](?:(?:[a-z0-9_]|-){0,62}[a-z0-9])?"
+                aria-describedby="manage-coordinate-error"
+                data-manage-package
+              />
+              <small class="registry-field-error" id="manage-coordinate-error" data-manage-coordinate-error hidden data-i18n="registry.manage.invalidPackage">{t.registry.manage.invalidPackage}</small>
             </label>
+            <datalist id="manage-package-options">
+              {availablePackages.map((pkg) => <option value={pkg.coordinate}></option>)}
+            </datalist>
+            <label class="registry-builder-field">
+              <span data-i18n="registry.manage.localPath">{t.registry.manage.localPath}</span>
+              <input class="registry-input" name="path" autocomplete="off" placeholder="./path/to/package" />
+              <small class="registry-field-hint" data-i18n="registry.manage.localPathHint">{t.registry.manage.localPathHint}</small>
+            </label>
+          </div>
+        </details>
+        <output class="registry-manage-remote-status" data-manage-remote-status role="status" aria-live="polite" hidden></output>
+
+        <section class="registry-current-task" aria-live="polite">
+          <span class="registry-label" data-i18n="registry.manage.nextTask">{t.registry.manage.nextTask}</span>
+          <strong data-manage-current-title>{t.registry.manage.taskPublish}</strong>
+          <p data-manage-current-body>{t.registry.manage.taskPublishBody}</p>
+        </section>
+
+        <details class="registry-maintainer-task-menu" data-manage-task-menu open>
+          <summary data-i18n="registry.manage.changeTask">{t.registry.manage.changeTask}</summary>
+          <fieldset class="registry-task-picker">
+            <legend data-i18n="registry.manage.chooseTask">{t.registry.manage.chooseTask}</legend>
+            <div class="registry-task-options">
+            <div class="registry-task-cluster" data-task-tone="primary">
+              <span class="registry-task-cluster-label" data-i18n="registry.manage.primaryAction">{t.registry.manage.primaryAction}</span>
+              <div class="registry-task-option">
+                <input id="manage-task-publish" type="radio" name="action" value="publish" checked />
+                <label for="manage-task-publish">
+                  <strong data-i18n="registry.manage.taskPublish">{t.registry.manage.taskPublish}</strong>
+                  <span data-i18n="registry.manage.taskPublishBody">{t.registry.manage.taskPublishBody}</span>
+                  <i aria-hidden="true">01</i>
+                </label>
+              </div>
+            </div>
+            <div class="registry-task-cluster" data-task-tone="read">
+              <span class="registry-task-cluster-label" data-i18n="registry.manage.readOnlyActions">{t.registry.manage.readOnlyActions}</span>
+              <div class="registry-task-cluster-grid">
+                <div class="registry-task-option">
+                  <input id="manage-task-package" type="radio" name="action" value="package" />
+                  <label for="manage-task-package">
+                    <strong data-i18n="registry.manage.taskVerifyPackage">{t.registry.manage.taskVerifyPackage}</strong>
+                    <span data-i18n="registry.manage.taskVerifyPackageBody">{t.registry.manage.taskVerifyPackageBody}</span>
+                    <i aria-hidden="true">02</i>
+                  </label>
+                </div>
+                <div class="registry-task-option">
+                  <input id="manage-task-live" type="radio" name="action" value="live" />
+                  <label for="manage-task-live">
+                    <strong data-i18n="registry.manage.taskVerifyLive">{t.registry.manage.taskVerifyLive}</strong>
+                    <span data-i18n="registry.manage.taskVerifyLiveBody">{t.registry.manage.taskVerifyLiveBody}</span>
+                    <i aria-hidden="true">03</i>
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div class="registry-task-cluster" data-task-tone="chain">
+              <span class="registry-task-cluster-label" data-i18n="registry.manage.chainActions">{t.registry.manage.chainActions}</span>
+              <div class="registry-task-cluster-grid">
+                <div class="registry-task-option">
+                  <input id="manage-task-reproduce" type="radio" name="action" value="reproduce" />
+                  <label for="manage-task-reproduce">
+                    <strong data-i18n="registry.manage.taskReproduce">{t.registry.manage.taskReproduce}</strong>
+                    <span data-i18n="registry.manage.taskReproduceBody">{t.registry.manage.taskReproduceBody}</span>
+                    <i aria-hidden="true">04</i>
+                  </label>
+                </div>
+                <div class="registry-task-option">
+                  <input id="manage-task-deployment" type="radio" name="action" value="deployment" />
+                  <label for="manage-task-deployment">
+                    <strong data-i18n="registry.manage.taskDeployment">{t.registry.manage.taskDeployment}</strong>
+                    <span data-i18n="registry.manage.taskDeploymentBody">{t.registry.manage.taskDeploymentBody}</span>
+                    <i aria-hidden="true">05</i>
+                  </label>
+                </div>
+                <div class="registry-task-option">
+                  <input id="manage-task-commitment" type="radio" name="action" value="commitment" />
+                  <label for="manage-task-commitment">
+                    <strong data-i18n="registry.manage.taskCommitment">{t.registry.manage.taskCommitment}</strong>
+                    <span data-i18n="registry.manage.taskCommitmentBody">{t.registry.manage.taskCommitmentBody}</span>
+                    <i aria-hidden="true">06</i>
+                  </label>
+                </div>
+              </div>
+            </div>
+            <div class="registry-task-cluster" data-task-tone="danger">
+              <span class="registry-task-cluster-label" data-i18n="registry.manage.dangerAction">{t.registry.manage.dangerAction}</span>
+              <div class="registry-task-option">
+                <input id="manage-task-yank" type="radio" name="action" value="yank" />
+                <label for="manage-task-yank">
+                  <strong data-i18n="registry.manage.taskYank">{t.registry.manage.taskYank}</strong>
+                  <span data-i18n="registry.manage.taskYankBody">{t.registry.manage.taskYankBody}</span>
+                  <i aria-hidden="true">07</i>
+                </label>
+              </div>
+            </div>
+            </div>
+          </fieldset>
+        </details>
+
+        <div class="registry-yank-fields" data-manage-yank-fields hidden>
+          <div class="registry-yank-grid">
             <label class="registry-builder-field">
               <span data-i18n="registry.manage.versionLabel">{t.registry.manage.versionLabel}</span>
-              <input class="registry-input" name="version" value="" placeholder="1.0.0" autocomplete="off" />
+              <input class="registry-input" name="version" list="manage-version-options" autocomplete="off" />
             </label>
             <label class="registry-builder-field">
-              <span data-i18n="registry.manage.reasonLabel">{t.registry.manage.reasonLabel}</span>
-              <input class="registry-input" name="note" value="" placeholder={t.registry.manage.reasonPlaceholder} data-i18n-placeholder="registry.manage.reasonPlaceholder" autocomplete="off" />
+              <span data-i18n="registry.manage.capabilityKeyLabel">{t.registry.manage.capabilityKeyLabel}</span>
+              <input class="registry-input" name="capability" autocomplete="off" placeholder="cap_…" pattern="cap_[0-9a-f]{32}" />
             </label>
-            <label class="registry-builder-field">
-              <span data-i18n="registry.manage.replacementLabel">{t.registry.manage.replacementLabel}</span>
-              <input class="registry-input" name="replacement" value="" placeholder="1.0.1" autocomplete="off" />
-            </label>
-          </form>
-
-          <div class="registry-manage-output">
-            <span class="registry-label" data-i18n="registry.manage.commandLabel">{t.registry.manage.commandLabel}</span>
-            <p class="registry-manage-help" data-manage-help>{t.registry.manage.helpDefault}</p>
-            <div class="registry-command-line">
-              <code data-manage-command>cellc registry edit</code>
-              <button class="registry-copy" type="button" data-manage-copy data-copy-text="" data-revert-label={t.registry.copy} data-i18n="registry.copy">{t.registry.copy}</button>
-            </div>
-            <dl class="registry-meta">
-              <div><dt data-i18n="registry.manage.latest">{t.registry.manage.latest}</dt><dd data-manage-latest></dd></div>
-              <div><dt data-i18n="registry.manage.status">{t.registry.manage.status}</dt><dd data-manage-status></dd></div>
-              <div><dt data-i18n="registry.manage.deployments">{t.registry.manage.deployments}</dt><dd data-manage-deployments></dd></div>
-            </dl>
-            <p class="registry-manage-note" data-i18n="registry.manage.noteBody">{t.registry.manage.noteBody}</p>
+          </div>
+          <datalist id="manage-version-options" data-manage-version-options></datalist>
+          <label class="registry-builder-field">
+            <span data-i18n="registry.manage.reasonLabel">{t.registry.manage.reasonLabel}</span>
+            <input class="registry-input" name="note" autocomplete="off" placeholder={t.registry.manage.reasonPlaceholder} data-i18n-placeholder="registry.manage.reasonPlaceholder" />
+          </label>
+          <div class="registry-yank-warning" role="note">
+            <strong data-i18n="registry.manage.yankWarningTitle">{t.registry.manage.yankWarningTitle}</strong>
+            <span data-i18n="registry.manage.yankWarningBody">{t.registry.manage.yankWarningBody}</span>
           </div>
         </div>
-      </div>
-    </section>
-  ) : (
-    <div class="registry-empty registry-manage-empty">
-      <h2 data-i18n="registry.manage.emptyTitle">{t.registry.manage.emptyTitle}</h2>
-      <p data-i18n="registry.manage.emptyBody">{t.registry.manage.emptyBody}</p>
+
+        <div class="registry-yank-fields" data-manage-artifact-fields hidden>
+          <div class="registry-yank-grid">
+            <label class="registry-builder-field">
+              <span data-i18n="registry.manage.versionLabel">{t.registry.manage.versionLabel}</span>
+              <input class="registry-input" name="artifact_version" list="manage-version-options" autocomplete="off" />
+            </label>
+          </div>
+          <div data-manage-reproduce-fields hidden>
+            <label class="registry-builder-field">
+              <span data-i18n="registry.manage.reportFiles">{t.registry.manage.reportFiles}</span>
+              <textarea class="registry-input registry-report-paths" name="reports" rows="4" autocomplete="off" placeholder="reproduction-builder-a.json&#10;reproduction-builder-b.json"></textarea>
+              <small class="registry-field-hint" data-i18n="registry.manage.reportFilesHint">{t.registry.manage.reportFilesHint}</small>
+            </label>
+          </div>
+          <div data-manage-deployment-fields hidden>
+            <div class="registry-yank-grid">
+              <label class="registry-builder-field"><span>code_hash</span><input class="registry-input" name="code_hash" placeholder="0x…" /></label>
+              <label class="registry-builder-field"><span>tx_hash</span><input class="registry-input" name="tx_hash" placeholder="0x…" /></label>
+            </div>
+            <div class="registry-yank-grid">
+              <label class="registry-builder-field"><span>hash_type</span><select class="registry-select" name="deployment_hash_type"><option value="data1">data1</option><option value="data2">data2</option><option value="data">data</option><option value="type">type</option></select></label>
+              <label class="registry-builder-field"><span>dep_type</span><select class="registry-select" name="deployment_dep_type"><option value="code">code</option><option value="dep_group">dep_group</option></select></label>
+              <label class="registry-builder-field"><span data-i18n="registry.manage.outputIndex">{t.registry.manage.outputIndex}</span><input class="registry-input" name="output_index" inputmode="numeric" value="0" pattern="[0-9]+" /></label>
+              <label class="registry-builder-field"><span data-i18n="registry.manage.capabilityKeyLabel">{t.registry.manage.capabilityKeyLabel}</span><input class="registry-input" name="deployment_capability" placeholder="cap_…" pattern="cap_[0-9a-f]{32}" /></label>
+            </div>
+          </div>
+        </div>
+      </form>
+
+      <aside class="registry-maintainer-command" data-manage-output data-tone="write" aria-live="polite">
+        <div class="registry-maintainer-command-head">
+          <span class="registry-label" data-i18n="registry.manage.commandLabel">{t.registry.manage.commandLabel}</span>
+          <span class="registry-command-kind" data-manage-kind>{t.registry.manage.kindRegistryWrite}</span>
+        </div>
+        <p class="registry-manage-help" data-manage-help>{t.registry.manage.helpPublish}</p>
+        <div class="registry-manage-validation" data-manage-validation role="alert" hidden></div>
+        <div class="registry-command-line">
+          <code data-manage-command>cellc package verify --json &amp;&amp; cellc publish --dry-run &amp;&amp; cellc publish</code>
+          <button
+            class="registry-copy"
+            type="button"
+            data-manage-copy
+            data-copy-text="cellc package verify --json && cellc publish --dry-run && cellc publish"
+            data-revert-label={t.registry.copy}
+            data-i18n="registry.copy"
+          >{t.registry.copy}</button>
+        </div>
+        <p class="registry-manage-note" data-manage-note>{t.registry.manage.noteWrite}</p>
+      </aside>
     </div>
-  )}
+  </section>
 
-  <script is:inline define:vars={{ packages: registryPackages }}>
-    const previousManageAbort = window.__cellscriptRegistryManageAbort;
-    previousManageAbort?.abort();
-    const manageAbort = new AbortController();
-    window.__cellscriptRegistryManageAbort = manageAbort;
-    const { signal } = manageAbort;
-    document.addEventListener("astro:before-swap", () => {
-      if (window.__cellscriptRegistryManageAbort === manageAbort) {
-        delete window.__cellscriptRegistryManageAbort;
+  <script is:inline define:vars={{ packages: availablePackages, registryApiFallback: apiOrigin, registryNetworkFallback: registryRuntime.network }}>
+    (() => {
+      const previous = window.__cellscriptRegistryManageAbort;
+      previous?.abort();
+      const lifecycle = new AbortController();
+      window.__cellscriptRegistryManageAbort = lifecycle;
+      const { signal } = lifecycle;
+      document.addEventListener("astro:before-swap", () => lifecycle.abort(), { once: true, signal });
+
+      const app = document.querySelector("[data-manage-app]");
+      const statusTones = JSON.parse(app?.getAttribute("data-status-tones") || "{}");
+      const form = app?.querySelector("[data-manage-form]");
+      const coordinateInput = app?.querySelector("[data-manage-package]");
+      const coordinateError = app?.querySelector("[data-manage-coordinate-error]");
+      const title = app?.querySelector("[data-manage-title]");
+      const sub = app?.querySelector("[data-manage-sub]");
+      const back = app?.querySelector("[data-manage-back]");
+      const command = app?.querySelector("[data-manage-command]");
+      const help = app?.querySelector("[data-manage-help]");
+      const note = app?.querySelector("[data-manage-note]");
+      const kind = app?.querySelector("[data-manage-kind]");
+      const output = app?.querySelector("[data-manage-output]");
+      const copy = app?.querySelector("[data-manage-copy]");
+      const yankFields = app?.querySelector("[data-manage-yank-fields]");
+      const artifactFields = app?.querySelector("[data-manage-artifact-fields]");
+      const reproduceFields = app?.querySelector("[data-manage-reproduce-fields]");
+      const deploymentFields = app?.querySelector("[data-manage-deployment-fields]");
+      const versionInput = form?.elements.namedItem("version");
+      const artifactVersionInput = form?.elements.namedItem("artifact_version");
+      const reasonInput = form?.elements.namedItem("note");
+      const capabilityInput = form?.elements.namedItem("capability");
+      const versionOptions = app?.querySelector("[data-manage-version-options]");
+      const remoteStatus = app?.querySelector("[data-manage-remote-status]");
+      const validation = app?.querySelector("[data-manage-validation]");
+      const taskMenu = app?.querySelector("[data-manage-task-menu]");
+      const currentTaskTitle = app?.querySelector("[data-manage-current-title]");
+      const currentTaskBody = app?.querySelector("[data-manage-current-body]");
+      const coordinatePattern = /^[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?\/[a-z0-9](?:[a-z0-9_-]{0,62}[a-z0-9])?$/;
+      const params = new URLSearchParams(window.location.search);
+      const allowedTasks = new Set(["publish", "yank", "package", "live", "reproduce", "deployment", "commitment"]);
+      const remoteLoadDebounceMs = 260;
+      const mobileLayoutMedia = "(max-width: 900px)";
+      const mobileScrollDelayMs = 80;
+      const requestedCoordinate = params.get("package")?.trim() || "";
+      const requestedTask = params.get("task")?.trim() || "";
+      let remotePackage = null;
+      let remoteRequest = null;
+      let remoteTimer = 0;
+
+      const i18n = window.__CELLSCRIPT_I18N__;
+      const locale = () => document.documentElement.dataset.locale === "zh" ? "zh" : "en";
+      const getMessage = (path) => path.split(".").reduce((value, key) => value?.[key], i18n?.[locale()]);
+      const g = (path) => getMessage(path) || "";
+      const statusLabel = (status) => g(`registry.statuses.${status}`) || String(status || "").replaceAll("_", " ");
+      const statusTone = (status) => statusTones[status] || "source";
+      const coordinate = () => coordinateInput?.value.trim() || "";
+      const field = (name) => {
+        const input = form?.elements.namedItem(name);
+        return input instanceof HTMLInputElement || input instanceof HTMLSelectElement || input instanceof HTMLTextAreaElement
+          ? input.value.trim()
+          : "";
+      };
+      const setFieldInvalid = (name, invalid) => {
+        const input = form?.elements.namedItem(name);
+        if (input instanceof HTMLInputElement || input instanceof HTMLSelectElement || input instanceof HTMLTextAreaElement) {
+          input.setAttribute("aria-invalid", String(invalid));
+        }
+      };
+      const selectedTask = () => form?.querySelector("input[name='action']:checked")?.value || "publish";
+      const taskKeys = {
+        publish: "Publish",
+        yank: "Yank",
+        package: "VerifyPackage",
+        live: "VerifyLive",
+        reproduce: "Reproduce",
+        deployment: "Deployment",
+        commitment: "Commitment",
+      };
+      const shellArg = (value) => `'${String(value).replace(/'/g, "'\\''")}'`;
+      const prefix = () => field("path") ? `cd ${shellArg(field("path"))} && ` : "";
+      const localPackage = () => packages.find((pkg) => pkg.coordinate === coordinate());
+      const selectedPackage = () => localPackage() ?? (remotePackage?.coordinate === coordinate() ? remotePackage : null);
+      const packageHref = () => {
+        const [namespace, name] = coordinate().split("/");
+        if (!coordinatePattern.test(coordinate())) return "/registry";
+        if (localPackage()) return `/registry/package/${encodeURIComponent(namespace)}/${encodeURIComponent(name)}`;
+        return `/registry/package/?${new URLSearchParams({ namespace, name })}`;
+      };
+
+      const syncUrl = () => {
+        const next = new URL(window.location.href);
+        if (coordinatePattern.test(coordinate())) next.searchParams.set("package", coordinate());
+        else next.searchParams.delete("package");
+        next.searchParams.set("task", selectedTask());
+        window.history.replaceState({}, "", next);
+      };
+
+      const syncPackage = () => {
+        const pkg = selectedPackage();
+        if (title) title.textContent = coordinate() || g("registry.manage.packagePlaceholder");
+        if (back) back.href = packageHref();
+        if (versionOptions) {
+          versionOptions.replaceChildren(...(pkg?.versions || []).map((item) => {
+            const option = document.createElement("option");
+            option.value = item.version;
+            return option;
+          }));
+        }
+        if (versionInput instanceof HTMLInputElement && versionInput.dataset.package !== coordinate()) {
+          versionInput.value = pkg?.latest_version || pkg?.versions?.[0]?.version || "";
+          versionInput.dataset.package = coordinate();
+        }
+        if (artifactVersionInput instanceof HTMLInputElement && artifactVersionInput.dataset.package !== coordinate()) {
+          artifactVersionInput.value = pkg?.latest_version || pkg?.versions?.[0]?.version || "";
+          artifactVersionInput.dataset.package = coordinate();
+        }
+        if (sub) {
+          sub.replaceChildren(document.createTextNode(`${g("registry.manage.version")} ${pkg?.latest_version || g("registry.manage.notRecorded")}`));
+          if (pkg) {
+            sub.append(document.createTextNode(" · "));
+            const status = document.createElement("span");
+            status.className = "registry-status";
+            status.dataset.state = statusTone(pkg.status);
+            status.textContent = statusLabel(pkg.status);
+            sub.append(status);
+          }
+          const registryNetwork = app?.dataset.registryNetwork || registryNetworkFallback;
+          const networks = (pkg?.deployment?.networks || []).filter((network) => network === registryNetwork);
+          if (networks.length) sub.append(document.createTextNode(` · ${networks.join(", ")}`));
+        }
+      };
+
+      const render = () => {
+        const valid = coordinatePattern.test(coordinate());
+        coordinateInput?.setAttribute("aria-invalid", String(Boolean(coordinate()) && !valid));
+        if (coordinateError) coordinateError.hidden = valid || !coordinate();
+        syncPackage();
+        const task = selectedTask();
+        const taskKey = taskKeys[task] || "Publish";
+        if (currentTaskTitle) currentTaskTitle.textContent = g(`registry.manage.task${taskKey}`);
+        if (currentTaskBody) currentTaskBody.textContent = g(`registry.manage.task${taskKey}Body`);
+        const isYank = task === "yank";
+        const isArtifactTask = ["reproduce", "deployment", "commitment"].includes(task);
+        if (yankFields) yankFields.hidden = !isYank;
+        if (artifactFields) artifactFields.hidden = !isArtifactTask;
+        if (reproduceFields) reproduceFields.hidden = task !== "reproduce";
+        if (deploymentFields) deploymentFields.hidden = task !== "deployment";
+        if (versionInput instanceof HTMLInputElement) versionInput.required = isYank;
+        if (reasonInput instanceof HTMLInputElement) reasonInput.required = isYank;
+        if (capabilityInput instanceof HTMLInputElement) capabilityInput.required = isYank;
+
+        const pkg = localPackage() || remotePackage;
+        const generic = pkg?.artifact?.profile && pkg.artifact.profile !== "cellscript_source";
+        let next = generic
+          ? `${prefix()}cellc publish --artifact-manifest Artifact.toml --dry-run && cellc publish --artifact-manifest Artifact.toml`
+          : `${prefix()}cellc package verify --json && cellc publish --dry-run && cellc publish`;
+        let helpKey = "registry.manage.helpPublish";
+        let noteKey = "registry.manage.noteWrite";
+        let kindKey = "registry.manage.kindRegistryWrite";
+        let tone = "write";
+        if (task === "yank") {
+          const version = field("version") || "<version>";
+          const reason = field("note");
+          const capability = field("capability") || "<key_id>";
+          next = `cellc artifact set-availability ${shellArg(`${coordinate()}@${version}`)} --status yanked --reason ${shellArg(reason || "<reason>")} --capability-key-id ${shellArg(capability)}`;
+          helpKey = "registry.manage.helpYank";
+          noteKey = "registry.manage.noteYank";
+          kindKey = "registry.manage.kindRegistryWrite";
+          tone = "danger";
+        } else if (task === "package") {
+          next = generic ? `${prefix()}cellc publish --artifact-manifest Artifact.toml --dry-run` : `${prefix()}cellc package verify --json`;
+          helpKey = "registry.manage.helpVerifyPackage";
+          noteKey = "registry.manage.noteReadOnly";
+          kindKey = "registry.manage.kindLocalCheck";
+          tone = "read";
+        } else if (task === "live") {
+          next = pkg?.artifact?.profile === "ckb_executable"
+            ? `cellc artifact cell-dep ${shellArg(`${coordinate()}@${field("version") || pkg?.latest_version || "<version>"}`)} --output CellDep.json --accept-hash-bound`
+            : `${prefix()}cellc registry verify --live --json`;
+          helpKey = "registry.manage.helpVerifyLive";
+          noteKey = "registry.manage.noteReadOnly";
+          kindKey = "registry.manage.kindLiveCheck";
+          tone = "read";
+        } else if (task === "reproduce") {
+          const selectedVersion = field("artifact_version") || pkg?.latest_version || "<version>";
+          const reportPaths = field("reports").split(/\r?\n/).map((path) => path.trim()).filter(Boolean);
+          const reportArguments = (reportPaths.length ? reportPaths : ["<builder-a.json>", "<builder-b.json>"])
+            .map((path) => `--report ${shellArg(path)}`)
+            .join(" ");
+          next = `cellc artifact reproduction-evidence ${shellArg(`${coordinate()}@${selectedVersion}`)} ${reportArguments} --output reproduced-build-promotion.json`;
+          helpKey = "registry.manage.helpReproduce";
+          noteKey = "registry.manage.noteReproduce";
+          kindKey = "registry.manage.kindLocalChange";
+          tone = "write";
+        } else if (task === "deployment") {
+          const selectedVersion = field("artifact_version") || pkg?.latest_version || "<version>";
+          const network = app?.dataset.registryNetwork || registryNetworkFallback;
+          next = `cellc artifact record-deployment ${shellArg(`${coordinate()}@${selectedVersion}`)} --network ${shellArg(network)} --api-url ${shellArg(app?.dataset.apiOrigin || registryApiFallback)} --code-hash ${shellArg(field("code_hash") || "<code_hash>")} --hash-type ${shellArg(field("deployment_hash_type"))} --dep-type ${shellArg(field("deployment_dep_type"))} --tx-hash ${shellArg(field("tx_hash") || "<tx_hash>")} --index ${shellArg(field("output_index") || "0")} --capability-key-id ${shellArg(field("deployment_capability") || "<key_id>")}`;
+          helpKey = "registry.manage.helpDeployment";
+          noteKey = "registry.manage.noteWrite";
+          kindKey = "registry.manage.kindRegistryWrite";
+          tone = "write";
+        } else if (task === "commitment") {
+          const selectedVersion = field("artifact_version") || pkg?.latest_version || "<version>";
+          next = `cellc artifact commitment ${shellArg(`${coordinate()}@${selectedVersion}`)} --output registry-commitment.json`;
+          helpKey = "registry.manage.helpCommitment";
+          noteKey = "registry.manage.noteCommitment";
+          kindKey = "registry.manage.kindWalletIntent";
+          tone = "write";
+        }
+        const issues = [];
+        for (const name of ["version", "note", "capability", "artifact_version", "reports", "code_hash", "tx_hash", "output_index", "deployment_capability"]) {
+          setFieldInvalid(name, false);
+        }
+        const requireField = (name, accepted, messageKey) => {
+          if (accepted) return;
+          issues.push(g(messageKey));
+          setFieldInvalid(name, true);
+        };
+        if (!valid) issues.push(g("registry.manage.validationCoordinate"));
+        if (isYank) {
+          requireField("version", Boolean(field("version")), "registry.manage.validationVersion");
+          requireField("note", Boolean(field("note")), "registry.manage.validationReason");
+          requireField("capability", /^cap_[0-9a-f]{32}$/.test(field("capability")), "registry.manage.validationCapability");
+        }
+        if (isArtifactTask) {
+          requireField("artifact_version", Boolean(field("artifact_version")), "registry.manage.validationVersion");
+        }
+        if (task === "reproduce") {
+          const reportCount = field("reports").split(/\r?\n/).map((path) => path.trim()).filter(Boolean).length;
+          requireField("reports", reportCount >= 2 && reportCount <= 16, "registry.manage.validationReports");
+        }
+        if (task === "deployment") {
+          requireField("code_hash", /^0x[0-9a-fA-F]{64}$/.test(field("code_hash")), "registry.manage.validationCodeHash");
+          requireField("tx_hash", /^0x[0-9a-fA-F]{64}$/.test(field("tx_hash")), "registry.manage.validationTxHash");
+          requireField("output_index", /^[0-9]+$/.test(field("output_index")), "registry.manage.validationOutputIndex");
+          requireField("deployment_capability", /^cap_[0-9a-f]{32}$/.test(field("deployment_capability")), "registry.manage.validationCapability");
+        }
+        if (validation) {
+          validation.replaceChildren(...issues.map((issue) => {
+            const item = document.createElement("p");
+            item.textContent = issue;
+            return item;
+          }));
+          validation.hidden = issues.length === 0;
+        }
+        if (command) command.textContent = valid ? next : g("registry.manage.invalidPackage");
+        if (help) help.textContent = g(helpKey);
+        if (note) note.textContent = g(noteKey);
+        if (kind) kind.textContent = g(kindKey);
+        if (output) output.dataset.tone = tone;
+        if (output) output.dataset.valid = String(issues.length === 0);
+        if (copy) {
+          copy.disabled = issues.length > 0;
+          copy.dataset.copyText = issues.length === 0 ? next : "";
+        }
+        syncUrl();
+      };
+
+      const showRemoteStatus = (messageKey, tone = "info") => {
+        if (!remoteStatus) return;
+        remoteStatus.hidden = !messageKey;
+        remoteStatus.dataset.tone = tone;
+        remoteStatus.textContent = messageKey ? g(messageKey) : "";
+      };
+
+      const loadRemote = async () => {
+        remoteRequest?.abort();
+        const request = new AbortController();
+        remoteRequest = request;
+        const current = coordinate();
+        if (!coordinatePattern.test(current) || localPackage()) {
+          showRemoteStatus("");
+          return;
+        }
+        const [namespace, name] = current.split("/");
+        showRemoteStatus("registry.manage.remoteLoading");
+        let timedOut = false;
+        const timeout = window.setTimeout(() => {
+          timedOut = true;
+          request.abort();
+        }, 10_000);
+        try {
+          const response = await fetch(`${app?.dataset.apiOrigin}/v1/artifacts/${encodeURIComponent(namespace)}/${encodeURIComponent(name)}`, {
+            headers: { accept: "application/json" },
+            signal: request.signal,
+          });
+          if (!response.ok) {
+            throw new Error(response.status === 404 ? g("registry.manage.remoteNotFound") : g("registry.manage.remoteFailed"));
+          }
+          const payload = await response.json();
+          if (coordinate() !== current) return;
+          if (
+            payload?.schema !== "cellscript-registry-artifact"
+            || payload.coordinate !== current
+            || !payload.artifact
+            || !Array.isArray(payload.releases)
+          ) throw new Error(g("registry.manage.remoteInvalid"));
+          const projectedStatus = payload.availability_status && payload.availability_status !== "active"
+            ? payload.availability_status
+            : payload.deployment_status === "chain_verified"
+              ? payload.deployment_status
+              : payload.verification_status || "pending";
+          remotePackage = {
+            coordinate: current,
+            latest_version: payload.latest_release || payload.releases?.[0]?.release || "",
+            versions: Array.isArray(payload.releases) ? payload.releases.map((release) => ({
+              ...release,
+              version: release.release,
+              status: release.availability_status && release.availability_status !== "active"
+                ? release.availability_status
+                : release.deployment_status === "chain_verified"
+                  ? release.deployment_status
+                  : release.verification_status || "pending",
+            })) : [],
+            status: projectedStatus,
+            artifact: payload.artifact,
+            deployment: { networks: payload.network ? [payload.network] : [] },
+          };
+          showRemoteStatus("registry.manage.remoteLoaded", "success");
+          render();
+        } catch (error) {
+          if (error?.name === "AbortError" && !timedOut) return;
+          remotePackage = null;
+          showRemoteStatus(timedOut ? "registry.manage.remoteTimedOut" : "", "error");
+          if (!timedOut && remoteStatus) {
+            remoteStatus.hidden = false;
+            remoteStatus.dataset.tone = "error";
+            remoteStatus.textContent = error instanceof Error ? error.message : g("registry.manage.remoteFailed");
+          }
+          render();
+        } finally {
+          window.clearTimeout(timeout);
+        }
+      };
+
+      if (requestedCoordinate) coordinateInput.value = requestedCoordinate;
+      if (allowedTasks.has(requestedTask)) {
+        const input = form?.querySelector(`input[name='action'][value='${requestedTask}']`);
+        if (input instanceof HTMLInputElement) input.checked = true;
+        if (taskMenu instanceof HTMLDetailsElement) taskMenu.open = false;
       }
-      manageAbort.abort();
-    }, { once: true, signal });
-
-    const app = document.querySelector("[data-manage-app]");
-    const items = Array.from(app?.querySelectorAll("[data-manage-item]") ?? []);
-    const form = document.querySelector("[data-manage-form]");
-    const title = document.querySelector("[data-manage-title]");
-    const sub = document.querySelector("[data-manage-sub]");
-    const command = document.querySelector("[data-manage-command]");
-    const help = document.querySelector("[data-manage-help]");
-    const copy = document.querySelector("[data-manage-copy]");
-    const latest = document.querySelector("[data-manage-latest]");
-    const status = document.querySelector("[data-manage-status]");
-    const deployments = document.querySelector("[data-manage-deployments]");
-
-    // i18n helpers mirror RegistryLayout's runtime layer so the
-    // dynamically-composed sub line and nextHelp can localize.
-    const i18n = window.__CELLSCRIPT_I18N__;
-    const readLocale = () => document.documentElement.dataset.locale === "zh" ? "zh" : "en";
-    const getMessage = (path, locale = readLocale()) =>
-      path.split(".").reduce((v, k) => (v == null ? v : v[k]), i18n == null ? i18n : i18n[locale]);
-    const g = (key) => getMessage(key) ?? "";
-
-    let activeCoordinate = packages[0]?.coordinate;
-
-    const field = (name) => {
-      const input = form?.elements.namedItem(name);
-      return input instanceof HTMLInputElement || input instanceof HTMLSelectElement ? input.value.trim() : "";
-    };
-
-    const selectedPackage = () => packages.find((pkg) => pkg.coordinate === activeCoordinate) ?? packages[0];
-
-    // Localized "Version X · networks · shortHash" sub line.
-    const renderSub = (pkg) => {
-      const versionLabel = g("registry.manage.version");
-      const notRecorded = g("registry.manage.notRecorded");
-      const sourceOnly = g("registry.package.sourceOnly");
-      const hash = (pkg.latest?.source_hash || "").slice(0, 12) || "—";
-      return `${versionLabel} ${pkg.latest_version || notRecorded} · ${pkg.deployment.networks.join(", ") || sourceOnly} · ${hash}`;
-    };
-
-    const update = () => {
-      const pkg = selectedPackage();
-      if (!pkg) return;
-      if (title) title.textContent = pkg.coordinate;
-      if (sub) sub.textContent = renderSub(pkg);
-
-      const action = field("action");
-      const version = field("version") || pkg.latest_version || "<version>";
-      const note = field("note");
-      const replacement = field("replacement");
-      let next = pkg.edit_command;
-      let nextHelp = g("registry.manage.helpDefault");
-
-      if (action === "add-version") {
-        next = pkg.publish_command;
-        nextHelp = g("registry.manage.helpAddVersion");
-      } else if (action === "yank") {
-        next = `${pkg.edit_command} --yank ${version}${note ? ` --reason '${note.replace(/'/g, "'\\''")}'` : ""}${replacement ? ` --replaced-by ${replacement}` : ""}`;
-        nextHelp = g("registry.manage.helpYankVersion");
-      } else if (action === "metadata") {
-        next = `${pkg.package_command_prefix} && cellc package verify --json`;
-        nextHelp = g("registry.manage.helpUpdateMetadata");
-      } else if (action === "deployment") {
-        next = pkg.verify_command;
-        nextHelp = g("registry.manage.helpReviewDeployment");
-      }
-
-      if (command) command.textContent = next;
-      if (help) help.textContent = nextHelp;
-      copy?.setAttribute("data-copy-text", next);
-      if (latest) latest.textContent = pkg.latest_version || g("registry.manage.notRecorded");
-      if (status) status.textContent = pkg.status;
-      if (deployments) deployments.textContent = String(pkg.deployment.active_count);
-    };
-
-    items.forEach((item) => {
-      item.addEventListener("click", () => {
-        activeCoordinate = item.getAttribute("data-manage-item");
-        items.forEach((i) => i.classList.toggle("active", i === item));
-        update();
+      form?.addEventListener("input", () => {
+        remotePackage = null;
+        render();
+        window.clearTimeout(remoteTimer);
+        remoteTimer = window.setTimeout(loadRemote, remoteLoadDebounceMs);
       }, { signal });
-    });
-
-    form?.addEventListener("input", update, { signal });
-    update();
-
-    // Re-render dynamic strings when the locale changes.
-    window.addEventListener("cellscript:locale-change", () => {
-      if (document.querySelector("[data-manage-app]")) update();
-    }, { signal });
+      for (const action of form?.querySelectorAll("input[name='action']") || []) {
+        action.addEventListener("change", () => {
+          if (taskMenu instanceof HTMLDetailsElement) taskMenu.open = false;
+          if (window.matchMedia(mobileLayoutMedia).matches) {
+            window.setTimeout(() => output?.scrollIntoView({ behavior: "smooth", block: "nearest" }), mobileScrollDelayMs);
+          }
+        }, { signal });
+      }
+      window.addEventListener("cellscript:locale-change", render, { signal });
+      signal.addEventListener("abort", () => remoteRequest?.abort(), { once: true });
+      render();
+      loadRemote();
+    })();
   </script>
 </RegistryLayout>

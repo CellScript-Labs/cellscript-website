@@ -17,7 +17,8 @@ const escapeHtml = (value: string) =>
 const tokenGroups = {
   keyword: new Set([
     "module", "use", "has", "action", "lock", "fn", "verification", "const",
-    "struct", "enum", "invariant",
+    "struct", "enum", "invariant", "phantom", "copy", "drop", "fixed",
+    "serializable", "non_linear", "cell", "public", "private", "package",
   ]),
   cellKind: new Set(["resource", "shared", "receipt", "flow"]),
   cellEffect: new Set([
@@ -31,18 +32,21 @@ const tokenGroups = {
     "assert_distinct", "assert_singleton", "require",
   ]),
   control: new Set([
-    "if", "else", "for", "in", "while", "match", "return", "let",
+    "if", "else", "for", "in", "while", "match", "return", "break", "continue", "label", "let",
     "mut", "ref", "transition", "read", "protected", "witness",
     "lock_args", "as", "from", "by",
   ]),
   builtin: new Set([
     "u8", "u16", "u32", "i32", "u64", "u128", "usize", "isize",
     "bool", "Address", "Hash",
-    "String", "Vec", "env", "std", "self", "true", "false", "source",
-    "witness", "ckb", "identity", "field", "script_args", "ckb_type_id",
+    "String", "Option", "Vec", "env", "std", "self", "true", "false", "source",
+    "witness", "ckb", "script", "verifier", "identity", "field", "script_args", "ckb_type_id",
     "singleton_type", "type_id", "identity_field", "with_lock",
     "with_capacity", "with_capacity_floor", "with_default_hash_type",
     "none", "data", "Data", "type", "Type", "hash_blake2b",
+    "hash_sha256", "hash_sha256d", "hash_sha256_pair", "hash_sha256d_pair",
+    "require_sha256d_merkle_root", "require_bounded_cell_dep_data_hash",
+    "require_cell_data_hash", "require_signature", "require_signature_from_cell_dep",
     "min", "max", "math_min", "isqrt", "spawn", "wait", "process_id",
     "pipe", "pipe_read", "pipe_write", "inherited_fd", "close",
     "require_time", "require_maturity", "require_epoch_after",
@@ -80,7 +84,7 @@ export const classifyCellToken = (token: string, context?: HighlightContext): st
   if (/^(?:0x[0-9a-fA-F]+|\d+)$/.test(token)) return "number";
   if (token === "->" || token === "=>") return "arrow";
   if (/^[{}()[\]#;:,.]$/.test(token)) return "punctuation";
-  if (/^[<>+\-*/%=&|!]$/.test(token) || ["==", "!=", "<=", ">=", "&&", "||"].includes(token))
+  if (/^[<>+\-*/%=&|!^]$/.test(token) || ["<<", ">>", "==", "!=", "<=", ">=", "&&", "||"].includes(token))
     return "operator";
   if (token.includes("::")) {
     const root = token.split("::")[0] ?? "";
@@ -159,7 +163,7 @@ const readToken = (source: string, start: number): string | undefined => {
   if (source.startsWith("b\"", start)) return readQuotedToken(source, start, start + 1);
   if (char === "\"" || char === "'") return readQuotedToken(source, start, start);
 
-  for (const operator of ["->", "=>", "==", "!=", "<=", ">=", "&&", "||"]) {
+  for (const operator of ["->", "=>", "<<", ">>", "==", "!=", "<=", ">=", "&&", "||"]) {
     if (source.startsWith(operator, start)) return operator;
   }
 
@@ -174,7 +178,7 @@ const readToken = (source: string, start: number): string | undefined => {
     return source.slice(start, cursor);
   }
   if (isIdentifierStart(char)) return readIdentifierToken(source, start);
-  if ("{}()[]#;:,.<>+-*/%=&|!".includes(char ?? "")) return char;
+  if ("{}()[]#;:,.<>+-*/%=&|!^".includes(char ?? "")) return char;
   return undefined;
 };
 

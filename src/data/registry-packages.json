@@ -1,6 +1,12 @@
 {
   "packages": [
     {
+      "artifact": {
+        "consumption_mode": "dependency",
+        "kind": "profile_library",
+        "language": "cellscript",
+        "profile": "cellscript_source"
+      },
       "categories": [
         "protocol",
         "asset",
@@ -98,8 +104,11 @@
       "publish_dry_run_command": "cd proposals/evolving-dob/evolving-dob-profile-v1 && cellc publish --dry-run",
       "registry_path": "proposals/evolving-dob/evolving-dob-profile-v1/registry.json",
       "repository": "https://github.com/CellScript-Labs/dob-evo",
+      "source_package_path": "",
+      "source_registry_path": "registry.json",
+      "source_repository": "https://github.com/CellScript-Labs/dob-evo",
       "source_revision": "30709c97bc8972ea255bbc5b9bf9fba484bb99cc",
-      "status": "active",
+      "status": "deployed",
       "verify_command": "cd proposals/evolving-dob/evolving-dob-profile-v1 && cellc registry verify --live --json",
       "versions": [
         {

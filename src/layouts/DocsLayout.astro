@@ -1,10 +1,14 @@
 ---
 import "../styles/global.css";
 import SiteHeader from "../components/SiteHeader.astro";
+import SitePreferencesBootstrap from "../components/SitePreferencesBootstrap.astro";
 import { ClientRouter } from "astro:transitions";
 import { defaultLocale, translations } from "../i18n/translations";
 import type { DocsNeighbor, DocsPage } from "../lib/docs";
-import { ArrowLeft, ArrowRight, ListTree, Search } from "lucide-astro";
+import arrowLeftIcon from "@phosphor-icons/core/regular/arrow-left.svg?raw";
+import arrowRightIcon from "@phosphor-icons/core/regular/arrow-right.svg?raw";
+import listIcon from "@phosphor-icons/core/regular/list-bullets.svg?raw";
+import searchIcon from "@phosphor-icons/core/regular/magnifying-glass.svg?raw";
 
 interface Props {
   page: DocsPage;
@@ -20,7 +24,7 @@ const title = `${page.title} — CellScript Docs`;
 ---
 
 <!doctype html>
-<html lang={locale}>
+<html lang={locale} data-theme="light" data-locale={locale}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -32,21 +36,7 @@ const title = `${page.title} — CellScript Docs`;
     <link rel="icon" type="image/png" media="(prefers-color-scheme: light)" href={`${import.meta.env.BASE_URL}cellscript-logo-light.png`} />
     <link rel="icon" type="image/png" media="(prefers-color-scheme: dark)" href={`${import.meta.env.BASE_URL}cellscript-logo-dark.png`} />
     <title>{title}</title>
-    <script is:inline>
-      (() => {
-        try {
-          const storedTheme = localStorage.getItem("cellscript-theme");
-          const storedLocale = localStorage.getItem("cellscript-locale");
-          document.documentElement.dataset.theme = storedTheme === "light" || storedTheme === "dark" ? storedTheme : "light";
-          document.documentElement.dataset.locale = storedLocale === "zh" ? "zh" : "en";
-          document.documentElement.lang = document.documentElement.dataset.locale;
-        } catch {
-          document.documentElement.dataset.theme = "light";
-          document.documentElement.dataset.locale = "en";
-          document.documentElement.lang = "en";
-        }
-      })();
-    </script>
+    <SitePreferencesBootstrap />
     <ClientRouter />
   </head>
   <body class="docs-body">
@@ -56,11 +46,11 @@ const title = `${page.title} — CellScript Docs`;
     <main class="docs-shell" id="docs-content">
       <aside class="docs-sidebar" aria-label="Docs pages">
         <div class="docs-sidebar-head">
-          <ListTree aria-hidden="true" />
+          <span class="docs-sidebar-icon" aria-hidden="true" set:html={listIcon}></span>
           <span>Docs</span>
         </div>
         <div class="docs-search-box">
-          <Search class="docs-search-icon" aria-hidden="true" />
+          <span class="docs-search-icon" aria-hidden="true" set:html={searchIcon}></span>
           <input
             type="search"
             class="docs-search-input"
@@ -90,7 +80,7 @@ const title = `${page.title} — CellScript Docs`;
         <nav class="docs-pagination" aria-label="Docs pagination">
           {previous ? (
             <a class="docs-page-card" href={previous.href}>
-              <ArrowLeft aria-hidden="true" />
+              <span class="docs-page-icon" aria-hidden="true" set:html={arrowLeftIcon}></span>
               <span>
                 <small>Previous</small>
                 <strong>{previous.title}</strong>
@@ -103,7 +93,7 @@ const title = `${page.title} — CellScript Docs`;
                 <small>Next</small>
                 <strong>{next.title}</strong>
               </span>
-              <ArrowRight aria-hidden="true" />
+              <span class="docs-page-icon" aria-hidden="true" set:html={arrowRightIcon}></span>
             </a>
           )}
         </nav>
@@ -144,28 +134,54 @@ const title = `${page.title} — CellScript Docs`;
 
     <script>
       let mermaidModule: typeof import("mermaid") | undefined;
+      let mermaidRenderVersion = 0;
 
       const renderMermaid = async () => {
-        if (!document.querySelector(".docs-content pre.mermaid")) return;
+        const blocks = Array.from(document.querySelectorAll<HTMLElement>(".docs-content pre.mermaid"));
+        if (!blocks.length) return;
+        blocks.forEach((block) => {
+          block.dataset.mermaidSource ||= block.textContent || "";
+        });
+
+        const renderVersion = ++mermaidRenderVersion;
         mermaidModule ??= await import("mermaid");
+        if (renderVersion !== mermaidRenderVersion) return;
+
         const mermaid = mermaidModule.default;
-        const theme = document.documentElement.dataset.theme === "dark" ? "dark" : "default";
+        const root = document.documentElement;
+        const styles = getComputedStyle(root);
+        const token = (name: string) => styles.getPropertyValue(name).trim();
+        const darkMode = root.dataset.theme === "dark";
         mermaid.initialize({
           startOnLoad: false,
           securityLevel: "strict",
-          theme,
+          theme: "base",
           themeVariables: {
-            primaryColor: theme === "dark" ? "#0f1d18" : "#eef8f3",
-            primaryTextColor: theme === "dark" ? "#eff8f4" : "#13231e",
-            primaryBorderColor: "#0a8f63",
-            lineColor: theme === "dark" ? "#74d8ad" : "#087c57",
+            darkMode,
+            background: token("--diagram-background"),
+            primaryColor: token("--diagram-primary"),
+            primaryTextColor: token("--diagram-primary-text"),
+            primaryBorderColor: token("--diagram-primary-border"),
+            secondaryColor: token("--diagram-secondary"),
+            secondaryTextColor: token("--diagram-secondary-text"),
+            secondaryBorderColor: token("--diagram-secondary-border"),
+            tertiaryColor: token("--diagram-tertiary"),
+            tertiaryTextColor: token("--diagram-tertiary-text"),
+            tertiaryBorderColor: token("--diagram-tertiary-border"),
+            lineColor: token("--diagram-line"),
+            textColor: token("--diagram-primary-text"),
+            edgeLabelBackground: token("--diagram-edge-label"),
+            noteBkgColor: token("--diagram-note"),
+            noteTextColor: token("--diagram-note-text"),
+            noteBorderColor: token("--diagram-note-border"),
             fontFamily: "Outfit, system-ui, sans-serif",
           },
         });
-        document.querySelectorAll<HTMLElement>(".docs-content pre.mermaid").forEach((block) => {
+        blocks.forEach((block) => {
+          block.textContent = block.dataset.mermaidSource || "";
           block.removeAttribute("data-processed");
         });
-        mermaid.run({ querySelector: ".docs-content pre.mermaid" }).catch(() => {});
+        await mermaid.run({ nodes: blocks }).catch(() => {});
       };
 
       renderMermaid().catch(() => {});

@@ -1,0 +1,20 @@
+<script is:inline data-astro-rerun>
+  (() => {
+    const root = document.documentElement;
+    let theme = root.dataset.theme === "dark" ? "dark" : "light";
+    let locale = root.dataset.locale === "zh" ? "zh" : "en";
+
+    try {
+      const storedTheme = localStorage.getItem("cellscript-theme");
+      const storedLocale = localStorage.getItem("cellscript-locale");
+      if (storedTheme === "light" || storedTheme === "dark") theme = storedTheme;
+      if (storedLocale === "zh") locale = "zh";
+    } catch {
+      // The deterministic light/en defaults remain usable without storage.
+    }
+
+    root.dataset.theme = theme;
+    root.dataset.locale = locale;
+    root.lang = locale;
+  })();
+</script>

@@ -1,7 +1,7 @@
 ---
 import githubActivity from "../data/github-activity.json";
 import { defaultLocale, translations } from "../i18n/translations";
-import { Radio } from "lucide-astro";
+import radioIcon from "@phosphor-icons/core/regular/radio.svg?raw";
 
 interface Props {
   compact?: boolean;
@@ -16,7 +16,7 @@ const release = releases[0];
 <aside class:list={["hero-status", compact && "hero-status-compact"]} aria-label={t.heroStatus.activity}>
   {release && (
     <a class="hero-release-tag" href={release.url} target="_blank" rel="noopener noreferrer" aria-label={`${t.heroStatus.release} ${release.tag}`}>
-      <Radio aria-hidden="true" />
+      <span class="hero-release-icon" aria-hidden="true" set:html={radioIcon}></span>
       <small data-i18n="heroStatus.release">{t.heroStatus.release}</small>
       <strong>{release.tag}</strong>
       <time>{release.date}</time>

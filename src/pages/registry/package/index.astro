@@ -1,0 +1,18 @@
+---
+import RegistryPackageDetail from "../../../components/RegistryPackageDetail.astro";
+import { registryRuntime } from "../../../lib/registry-runtime";
+import RegistryLayout from "../../../layouts/RegistryLayout.astro";
+import { defaultLocale, translations } from "../../../i18n/translations";
+
+const t = translations[defaultLocale];
+const apiOrigin = registryRuntime.apiOrigin;
+---
+
+<RegistryLayout
+  title="CellScript Artifact Registry: Artifact"
+  description={t.registry.package.liveDescription}
+  active="package"
+  showHeader={false}
+>
+  <RegistryPackageDetail apiOrigin={apiOrigin} network={registryRuntime.network} />
+</RegistryLayout>

@@ -1,0 +1,108 @@
+---
+import RegistryLayout from "../../layouts/RegistryLayout.astro";
+import { defaultLocale, translations } from "../../i18n/translations";
+import { registryRuntime } from "../../lib/registry-runtime";
+import arrowSquareOutIcon from "@phosphor-icons/core/regular/arrow-square-out.svg?raw";
+
+const t = translations[defaultLocale];
+const apiOrigin = registryRuntime.apiOrigin;
+const registryNetwork = registryRuntime.network;
+const readEndpoints = [
+  { method: "GET", path: "/v1/artifacts", description: t.registry.api.listArtifacts, key: "listArtifacts", href: `${apiOrigin}/v1/artifacts?limit=20` },
+  { method: "GET", path: "/v1/artifacts/:namespace/:name", description: t.registry.api.artifactDetail, key: "artifactDetail" },
+  { method: "GET", path: "/v1/artifacts/:namespace/:name/releases/:release/evidence", description: t.registry.api.releaseEvidence, key: "releaseEvidence" },
+  { method: "GET", path: "/v1/artifacts/:namespace/:name/releases/:release/commitment", description: t.registry.api.releaseCommitment, key: "releaseCommitment" },
+  { method: "GET", path: "/v1/ckb/scripts/:code_hash/interfaces/ls-idl", description: t.registry.api.lsIdlLookup, key: "lsIdlLookup" },
+  { method: "GET", path: "/idl/:code_hash", description: t.registry.api.lsIdlCompatibility, key: "lsIdlCompatibility" },
+  { method: "GET", path: "/v1/capabilities/:key_id/check?namespace=:namespace&name=:name", description: t.registry.api.capabilityCheck, key: "capabilityCheck" },
+];
+const writeEndpoints = [
+  { method: "POST", path: "/v1/artifacts/:namespace/:name/releases", description: t.registry.api.publishRelease, key: "publishRelease" },
+  { method: "POST", path: "/v1/artifacts/:namespace/:name/releases/:release/deployments", description: t.registry.api.publishDeployment, key: "publishDeployment" },
+  { method: "POST", path: "/v1/artifacts/:namespace/:name/releases/:release/availability", description: t.registry.api.publishAvailability, key: "publishAvailability" },
+];
+---
+
+<RegistryLayout
+  title="CellScript Registry: API"
+  description={t.registry.headers.api.description}
+  eyebrowKey="registry.headers.api.eyebrow"
+  headingKey="registry.headers.api.title"
+  descriptionKey="registry.headers.api.description"
+  titleKey="registry.nav.api"
+  active="api"
+  showSubmitCta={false}
+>
+  <section class="registry-api" aria-label={t.registry.nav.api} data-i18n-aria-label="registry.nav.api">
+    <section class="registry-api-group" aria-labelledby="registry-api-read-title">
+      <div class="registry-api-group-heading">
+        <h2 id="registry-api-read-title" data-i18n="registry.api.readTitle">{t.registry.api.readTitle}</h2>
+        <a class="registry-api-health" href={`${apiOrigin}/health`} target="_blank" rel="noopener noreferrer">
+          <span data-i18n="registry.api.health">{t.registry.api.health}</span>
+          <span aria-hidden="true" set:html={arrowSquareOutIcon}></span>
+        </a>
+      </div>
+      <div class="registry-api-endpoints">
+        {readEndpoints.map((endpoint) => (
+          <div class="registry-api-endpoint">
+            <span class="registry-api-method" data-method={endpoint.method.toLowerCase()}>{endpoint.method}</span>
+            <code>{endpoint.path}</code>
+            <p data-i18n={`registry.api.${endpoint.key}`}>{endpoint.description}</p>
+            {endpoint.href && (
+              <a href={endpoint.href} target="_blank" rel="noopener noreferrer" aria-label={t.registry.api.openEndpoint} data-i18n-aria-label="registry.api.openEndpoint">
+                <span aria-hidden="true" set:html={arrowSquareOutIcon}></span>
+              </a>
+            )}
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section class="registry-api-group" aria-labelledby="registry-api-write-title">
+      <h2 id="registry-api-write-title" data-i18n="registry.api.writeTitle">{t.registry.api.writeTitle}</h2>
+      <div class="registry-api-endpoints">
+        {writeEndpoints.map((endpoint) => (
+          <div class="registry-api-endpoint">
+            <span class="registry-api-method" data-method={endpoint.method.toLowerCase()}>{endpoint.method}</span>
+            <code>{endpoint.path}</code>
+            <p data-i18n={`registry.api.${endpoint.key}`}>{endpoint.description}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+
+    <section class="registry-api-example" aria-labelledby="registry-api-example-title">
+      <div>
+        <h2 id="registry-api-example-title" data-i18n="registry.api.exampleTitle">{t.registry.api.exampleTitle}</h2>
+        <p data-i18n="registry.api.exampleBody">{t.registry.api.exampleBody}</p>
+      </div>
+      <div class="registry-step-code">
+        <code>{`curl --fail '${apiOrigin}/v1/artifacts?kind=deployable_contract&deployment=chain_verified'`}</code>
+        <button
+          class="registry-copy"
+          type="button"
+          data-copy-text={`curl --fail '${apiOrigin}/v1/artifacts?kind=deployable_contract&deployment=chain_verified'`}
+          data-revert-label={t.registry.copy}
+          data-i18n="registry.copy"
+        >{t.registry.copy}</button>
+      </div>
+    </section>
+
+    <section class="registry-api-example" aria-labelledby="registry-api-ls-idl-title">
+      <div>
+        <h2 id="registry-api-ls-idl-title">LS-IDL</h2>
+        <p data-i18n="registry.api.lsIdlExactBytes">{t.registry.api.lsIdlExactBytes}</p>
+      </div>
+      <div class="registry-step-code">
+        <code>{`curl --fail '${apiOrigin}/v1/ckb/scripts/0x<code_hash>/interfaces/ls-idl?network=${registryNetwork}&hash_type=data1' --output idl.json`}</code>
+        <button
+          class="registry-copy"
+          type="button"
+          data-copy-text={`curl --fail '${apiOrigin}/v1/ckb/scripts/0x<code_hash>/interfaces/ls-idl?network=${registryNetwork}&hash_type=data1' --output idl.json`}
+          data-revert-label={t.registry.copy}
+          data-i18n="registry.copy"
+        >{t.registry.copy}</button>
+      </div>
+    </section>
+  </section>
+</RegistryLayout>

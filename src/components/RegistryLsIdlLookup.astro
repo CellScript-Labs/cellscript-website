@@ -1,0 +1,144 @@
+---
+import { defaultLocale, translations } from "../i18n/translations";
+import type { RegistryNetwork } from "../lib/registry-runtime";
+
+interface Props {
+  apiOrigin: string;
+  network: RegistryNetwork;
+}
+
+const { apiOrigin, network } = Astro.props;
+const t = translations[defaultLocale];
+---
+
+<section class="registry-ls-idl-tools" data-ls-idl-lookup data-api-origin={apiOrigin.replace(/\/$/, "")} data-registry-network={network} aria-label={t.registry.browse.lsIdlLabel} data-i18n-aria-label="registry.browse.lsIdlLabel">
+  <div class="registry-ls-idl-panel">
+    <p class="registry-ls-idl-boundary" data-i18n="registry.browse.lsIdlBody">{t.registry.browse.lsIdlBody}</p>
+    <form class="registry-ls-idl-lookup-form" data-ls-idl-form aria-label={t.registry.browse.lsIdlLabel} data-i18n-aria-label="registry.browse.lsIdlLabel">
+        <label class="registry-ls-idl-code-hash">
+          <span data-i18n="registry.browse.lsIdlCodeHash">{t.registry.browse.lsIdlCodeHash}</span>
+          <input class="registry-input" name="code_hash" required pattern="0x[0-9a-fA-F]{64}" placeholder="0x…" autocomplete="off" />
+        </label>
+        <label class="registry-ls-idl-hash-type">
+          <span data-i18n="registry.browse.lsIdlHashType">{t.registry.browse.lsIdlHashType}</span>
+          <select class="registry-select" name="hash_type" data-ls-idl-hash-type>
+            <option value="data1">data1</option>
+            <option value="data2">data2</option>
+            <option value="data">data</option>
+            <option value="type">type</option>
+          </select>
+        </label>
+        <label class="registry-ls-idl-network">
+          <span data-i18n="registry.browse.lsIdlNetwork">{t.registry.browse.lsIdlNetwork}</span>
+          <select class="registry-select" name="network">
+            <option value="mainnet" selected={network === "mainnet"}>mainnet</option>
+            <option value="testnet" selected={network === "testnet"}>testnet</option>
+          </select>
+        </label>
+        <label class="registry-ls-idl-data-hash" data-ls-idl-data-hash-field hidden>
+          <span data-i18n="registry.browse.lsIdlDataHash">{t.registry.browse.lsIdlDataHash}</span>
+          <input class="registry-input" name="data_hash" pattern="0x[0-9a-fA-F]{64}" placeholder="0x…" autocomplete="off" data-ls-idl-data-hash />
+        </label>
+      <button class="registry-button primary" type="submit" data-ls-idl-submit data-i18n="registry.browse.lsIdlLookup">{t.registry.browse.lsIdlLookup}</button>
+    </form>
+    <output class="registry-ls-idl-result" data-ls-idl-result role="status" aria-live="polite" hidden>
+      <span data-ls-idl-status></span>
+      <a data-ls-idl-download hidden download="idl.json" data-i18n="registry.browse.lsIdlDownload">{t.registry.browse.lsIdlDownload}</a>
+      <pre data-ls-idl-document hidden></pre>
+    </output>
+  </div>
+</section>
+
+<script>
+  const setupLsIdlLookup = () => {
+    const root = document.querySelector<HTMLElement>("[data-ls-idl-lookup]");
+    const form = root?.querySelector<HTMLFormElement>("[data-ls-idl-form]");
+    const result = root?.querySelector<HTMLOutputElement>("[data-ls-idl-result]");
+    const status = root?.querySelector<HTMLElement>("[data-ls-idl-status]");
+    const documentNode = root?.querySelector<HTMLElement>("[data-ls-idl-document]");
+    const download = root?.querySelector<HTMLAnchorElement>("[data-ls-idl-download]");
+    const submit = root?.querySelector<HTMLButtonElement>("[data-ls-idl-submit]");
+    const hashTypeSelect = root?.querySelector<HTMLSelectElement>("[data-ls-idl-hash-type]");
+    const dataHashField = root?.querySelector<HTMLElement>("[data-ls-idl-data-hash-field]");
+    const dataHashInput = root?.querySelector<HTMLInputElement>("[data-ls-idl-data-hash]");
+    if (!root || !form || !result || !status || !documentNode || !download || !submit || !hashTypeSelect || !dataHashField || !dataHashInput) return;
+    const previous = (window as any).__cellscriptLsIdlLookupAbort as AbortController | undefined;
+    previous?.abort();
+    const lifecycle = new AbortController();
+    (window as any).__cellscriptLsIdlLookupAbort = lifecycle;
+    const message = (path: string): string => {
+      const locale = document.documentElement.dataset.locale === "zh" ? "zh" : "en";
+      return path.split(".").reduce<any>((value, key) => value?.[key], (window as any).__CELLSCRIPT_I18N__?.[locale]) || path;
+    };
+    let objectUrl = "";
+    const revokeDownload = () => {
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
+      objectUrl = "";
+    };
+    lifecycle.signal.addEventListener("abort", revokeDownload, { once: true });
+    document.addEventListener("astro:before-swap", () => lifecycle.abort(), { once: true, signal: lifecycle.signal });
+    const syncDataHashField = () => {
+      const needsDataHash = hashTypeSelect.value === "type";
+      dataHashField.hidden = !needsDataHash;
+      dataHashInput.required = needsDataHash;
+      if (!needsDataHash) dataHashInput.value = "";
+    };
+    hashTypeSelect.addEventListener("change", syncDataHashField, { signal: lifecycle.signal });
+    syncDataHashField();
+    form.addEventListener("submit", async (event) => {
+      event.preventDefault();
+      if (!form.reportValidity()) return;
+      revokeDownload();
+      result.hidden = false;
+      documentNode.hidden = true;
+      download.hidden = true;
+      status.textContent = message("registry.browse.lsIdlLoading");
+      submit.disabled = true;
+      const data = new FormData(form);
+      const codeHash = String(data.get("code_hash") || "").toLowerCase();
+      const hashType = String(data.get("hash_type") || "data1");
+      const dataHash = String(data.get("data_hash") || "").toLowerCase();
+      if (hashType === "type" && !dataHash) {
+        status.textContent = message("registry.browse.lsIdlTypeNeedsDataHash");
+        submit.disabled = false;
+        return;
+      }
+      const params = new URLSearchParams({ network: String(data.get("network") || root.dataset.registryNetwork), hash_type: hashType });
+      if (dataHash) params.set("data_hash", dataHash);
+      try {
+        const response = await fetch(`${root.dataset.apiOrigin}/v1/ckb/scripts/${encodeURIComponent(codeHash)}/interfaces/ls-idl?${params}`, {
+          headers: { accept: "application/vnd.ckb.ls-idl+json" },
+          signal: lifecycle.signal,
+        });
+        if (!response.ok) throw new Error(response.status === 404 ? message("registry.browse.lsIdlNotFound") : message("registry.browse.lsIdlFailed"));
+        const contentType = response.headers.get("content-type")?.split(";", 1)[0]?.trim();
+        const verification = response.headers.get("x-ls-idl-verification");
+        if (contentType !== "application/vnd.ckb.ls-idl+json" || verification !== "schema-and-suffix-bound") {
+          throw new Error(message("registry.browse.lsIdlUnverified"));
+        }
+        const bytes = await response.arrayBuffer();
+        if (bytes.byteLength === 0 || bytes.byteLength > 256 * 1024) throw new Error(message("registry.browse.lsIdlFailed"));
+        const declaredDigest = response.headers.get("x-ls-idl-sha256")?.replace(/^0x/i, "").toLowerCase();
+        const actualDigest = Array.from(new Uint8Array(await crypto.subtle.digest("SHA-256", bytes)))
+          .map((byte) => byte.toString(16).padStart(2, "0"))
+          .join("");
+        if (!declaredDigest || declaredDigest !== actualDigest) throw new Error(message("registry.browse.lsIdlDigestMismatch"));
+        const text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
+        JSON.parse(text);
+        documentNode.textContent = text;
+        documentNode.hidden = false;
+        objectUrl = URL.createObjectURL(new Blob([bytes], { type: "application/vnd.ckb.ls-idl+json" }));
+        download.href = objectUrl;
+        download.hidden = false;
+        status.textContent = `${message("registry.browse.lsIdlFound")} · SHA-256 ${actualDigest}`;
+      } catch (error) {
+        if (lifecycle.signal.aborted) return;
+        status.textContent = error instanceof Error ? error.message : message("registry.browse.lsIdlFailed");
+      } finally {
+        submit.disabled = false;
+      }
+    }, { signal: lifecycle.signal });
+  };
+
+  document.addEventListener("astro:page-load", setupLsIdlLookup);
+</script>

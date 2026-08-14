@@ -18,6 +18,9 @@ The static architecture is intentional. Most pages are generated from committed 
 
 - A first-page overview of CellScript and its CKB contract workflow.
 - A registry browser backed by generated package metadata.
+- A Registry submit flow whose compact chooser includes the complete official
+  CKB wallet directory: detected CCC CKB signers connect in-browser, while
+  other wallets hand off to the same verifiable external-signature contract.
 - A playground page with the current web-facing compiler assets.
 - Learning and documentation entry points.
 - Design and audit notes under `docs/`.
@@ -46,6 +49,39 @@ docs can be embedded:
 CELLSCRIPT_REPO_ROOT=/path/to/CellScript npm run build
 ```
 
+The wallet directory is deliberately separate from runtime signer discovery.
+All twelve official CKB wallet entries remain visible; a wallet is labelled as
+direct only when CCC exposes a compatible CKB signer. Other entries open the
+wallet's official surface and accept a complete `wallet-signature.json`
+handoff. The Registry never accepts recovery phrases, and the API applies the
+same public-key, canonical-challenge, and recoverable-signature checks to both
+paths. Registry wallet authorisation is mainnet-only; the chooser does not
+offer a network switch or construct a testnet CCC client.
+
+Wallet marks under `public/wallets/` are the official SVG assets published by
+the Nervos CKB documentation wallet directory. They are committed locally so
+the chooser does not depend on third-party favicon services or runtime image
+hotlinks; provenance is recorded beside the assets.
+
+## Deploy To Production
+
+The checked-in nginx deployment serves the generated site from a read-only
+mount and runs with a read-only root filesystem, bounded temporary filesystems,
+health checks, log rotation, `no-new-privileges`, and conservative browser
+security headers. It expects the external `stack-network` used by the TLS
+reverse proxy.
+
+```bash
+cp deploy/.env.example deploy/.env
+# Set CELLSCRIPT_SITE_DIST to the absolute generated-site directory.
+docker compose --env-file deploy/.env -f deploy/docker-compose.production.yml config
+docker compose --env-file deploy/.env -f deploy/docker-compose.production.yml up -d
+```
+
+TLS terminates at the shared reverse proxy. The origin still emits HSTS and
+anti-embedding/security headers so the HTTPS response retains them through the
+proxy.
+
 ## Registry Data
 
 The site includes generated registry metadata at:
@@ -54,7 +90,14 @@ The site includes generated registry metadata at:
 src/data/registry-packages.json
 ```
 
-When this repository is checked out as a submodule inside the main CellScript repository, the generator can scan the parent checkout for package metadata. When this repository is used standalone and no package sources are present, the generator keeps the committed registry data instead of erasing it.
+When this repository is checked out as a submodule inside the main CellScript
+repository, the generator scans the parent checkout for package metadata. It
+fails closed when no `registry.json` source exists, when the source has no git
+revision, or when its origin is not a credential-free HTTPS URL; it never
+silently retains an older generated file. Build-time CellScript packages are
+classified as `profile_library` when `Cell.toml` declares `metadata.profile`,
+otherwise as `source_library`. Source links are pinned to the package
+repository revision rather than a moving branch.
 
 Manual regeneration:
 

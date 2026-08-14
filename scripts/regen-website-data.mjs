@@ -6,7 +6,7 @@ import {
   mkdirSync,
   mkdtempSync,
   readFileSync,
-  rmdirSync,
+  rmSync,
   statSync,
   unlinkSync,
   writeFileSync,
@@ -26,6 +26,7 @@ const FRAGMENTS_OUT = resolve(DATA_DIR, "pipeline-fragments.json");
 const ASSURANCE_OUT = resolve(DATA_DIR, "assurance-metadata.json");
 const HERO_EXAMPLES = { token: "token.cell", nft: "nft.cell", amm: "amm_pool.cell", vesting: "vesting.cell" };
 const PIPELINE_EXAMPLE = "token";
+// Fixed excerpt budgets keep generated homepage cards stable and reviewable.
 const SOURCE_LINES = 8;
 const AST_LINES = 24;
 const ASM_LINES = 28;
@@ -63,6 +64,7 @@ function collectGlobalTypeNames(metadatas) {
       }
     }
   }
+  // The canonical token example's type hash predates named type metadata.
   names.set("a2fb2f9b3990cd9b473352ff466d94a720c6a8c56ce9e014536872ea71c808d1", "Token");
   return names;
 }
@@ -210,5 +212,5 @@ try {
   console.error(`error: ${error.message}`);
   process.exitCode = error.status || 1;
 } finally {
-  rmdirSync(temporary);
+  rmSync(temporary, { recursive: true, force: true });
 }
