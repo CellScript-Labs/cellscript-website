@@ -12,6 +12,7 @@ import cpuIcon from "@phosphor-icons/core/regular/cpu.svg?raw";
 import cubeIcon from "@phosphor-icons/core/regular/cube.svg?raw";
 import copyIcon from "@phosphor-icons/core/regular/copy.svg?raw";
 import { isTestnetSandbox, registryRuntime } from "../lib/registry-runtime";
+import { registryEvidenceDepth, registryEvidenceDescriptionKey } from "../lib/registry-visual-language.mjs";
 
 const t = translations[defaultLocale];
 const apiOrigin = registryRuntime.apiOrigin;
@@ -39,15 +40,13 @@ const kindIcons: Record<string, string> = {
   reproducible_binary: packageIcon,
   template: copyIcon,
 };
-const evidenceLevel = (pkg: (typeof fallbackPackages)[number]) => {
-  if (pkg.deployment_status === "chain_verified") return 4;
-  const state = pkg.guidance.usageState;
-  if (state === "ready") return 3;
-  if (state === "hash_bound") return 2;
-  if (state === "source_only") return 1;
-  return 0;
+const evidenceDescription = (pkg: (typeof fallbackPackages)[number]) => {
+  const key = registryEvidenceDescriptionKey(pkg) as keyof typeof t.registry.browse;
+  return String(t.registry.browse[key]);
 };
-const evidenceAria = (level: number) => t.registry.browse.evidenceAria.replaceAll("{n}", String(level));
+const evidenceAria = (pkg: (typeof fallbackPackages)[number]) => t.registry.browse.evidenceAria
+  .replaceAll("{label}", evidenceDescription(pkg))
+  .replaceAll("{n}", String(registryEvidenceDepth(pkg)));
 const fallbackPayload = JSON.stringify(fallbackPackages).replaceAll("<", "\\u003c");
 const kindFilters = [
   { value: "", label: t.registry.browse.allKinds, i18nKey: "registry.browse.allKinds" },
@@ -140,8 +139,9 @@ const intentFilters = [
             <div class="registry-row-meta">
               <div class="registry-badges">
                 <span class="registry-badge" data-kind="artifact">{pkg.artifact.kind.replaceAll("_", " ")}</span>
-                <span class="registry-evidence" role="img" aria-label={evidenceAria(evidenceLevel(pkg))} data-level={evidenceLevel(pkg)} data-usage-state={pkg.guidance.usageState}>
-                  <i></i><i></i><i></i><i></i>
+                <span class="registry-evidence" role="img" aria-label={evidenceAria(pkg)} title={evidenceDescription(pkg)} data-level={registryEvidenceDepth(pkg)} data-usage-state={pkg.guidance.usageState}>
+                  <span class="registry-evidence-label" data-i18n="registry.browse.evidenceLabel">{t.registry.browse.evidenceLabel}</span>
+                  <span class="registry-evidence-bars" aria-hidden="true"><i></i><i></i><i></i><i></i></span>
                 </span>
               </div>
               <time datetime={pkg.latest_release_at}>{t.registry.browse.released} {registryDateLabel(pkg.latest_release_at, t.registry.package.notRecorded, defaultLocale)}</time>
@@ -174,6 +174,12 @@ const intentFilters = [
   <script>
     import { deriveArtifactGuidance, registryDateLabel, type RegistryArtifactGuidance } from "../lib/registry";
     import { readRegistryBrowseState, registryBrowseStateUrl } from "../lib/registry-browse-state.mjs";
+    import {
+      registryEvidenceDepth,
+      registryEvidenceDescriptionKey,
+      registryFacetSummary,
+      registryPackageMatchesFacet,
+    } from "../lib/registry-visual-language.mjs";
     import rowArrowIcon from "@phosphor-icons/core/regular/arrow-right.svg?raw";
     import kindPackageIcon from "@phosphor-icons/core/regular/package.svg?raw";
     import kindBracketsIcon from "@phosphor-icons/core/regular/brackets-curly.svg?raw";
@@ -397,21 +403,7 @@ const intentFilters = [
         || pkg.updated_at;
       const matchesIntent = (pkg: BrowsePackage) => {
         const guidance = guidanceFor(pkg);
-        if (!intent) return true;
-        if (intent === "ready") return guidance.usageState === "ready" && pkg.deployment_status !== "chain_verified";
-        if (intent === "chain_verified") return pkg.deployment_status === "chain_verified";
-        if (intent === "verified") return pkg.verification_status === "verified" && guidance.usageState !== "ready" && pkg.deployment_status !== "chain_verified";
-        if (intent === "source_only") return guidance.usageState === "source_only" || guidance.usageState === "hash_bound";
-        if (intent === "needs_evidence") return guidance.usageState === "needs_evidence";
-        if (intent === "deprecated") return guidance.usageState === "deprecated";
-        return true;
-      };
-      const evidenceLevelOf = (pkg: BrowsePackage, guidance: RegistryArtifactGuidance) => {
-        if (pkg.deployment_status === "chain_verified") return 4;
-        if (guidance.usageState === "ready") return 3;
-        if (guidance.usageState === "hash_bound") return 2;
-        if (guidance.usageState === "source_only") return 1;
-        return 0;
+        return registryPackageMatchesFacet(pkg, guidance, intent);
       };
       const detailHref = (pkg: BrowsePackage) => {
         if (pkg.source === "bundled" && pkg.href) return pkg.href;
@@ -419,23 +411,13 @@ const intentFilters = [
         return `/registry/package/?${detail}`;
       };
       const facetStates = [
-        { value: "ready", labelKey: "registry.browse.facetReady", color: "var(--status-active)" },
-        { value: "chain_verified", labelKey: "registry.browse.facetChainVerified", color: "var(--accent-strong)" },
-        { value: "verified", labelKey: "registry.browse.facetVerified", color: "var(--status-info)" },
-        { value: "source_only", labelKey: "registry.browse.facetSourceOnly", color: "var(--substrate-accent-dim)" },
-        { value: "needs_evidence", labelKey: "registry.browse.facetNeedsEvidence", color: "var(--status-warning-text)" },
-        { value: "deprecated", labelKey: "registry.browse.facetDeprecated", color: "var(--dim)" },
+        { value: "ready", labelKey: "registry.browse.facetReady" },
+        { value: "chain_verified", labelKey: "registry.browse.facetChainVerified" },
+        { value: "verified", labelKey: "registry.browse.facetVerified" },
+        { value: "source_only", labelKey: "registry.browse.facetSourceOnly" },
+        { value: "needs_evidence", labelKey: "registry.browse.facetNeedsEvidence" },
+        { value: "deprecated", labelKey: "registry.browse.facetDeprecated" },
       ] as const;
-      const facetClassOf = (pkg: BrowsePackage): string => {
-        const guidance = guidanceFor(pkg);
-        if (pkg.deployment_status === "chain_verified") return "chain_verified";
-        if (guidance.usageState === "ready") return "ready";
-        if (pkg.verification_status === "verified") return "verified";
-        if (guidance.usageState === "source_only" || guidance.usageState === "hash_bound") return "source_only";
-        if (guidance.usageState === "needs_evidence") return "needs_evidence";
-        if (guidance.usageState === "deprecated") return "deprecated";
-        return "needs_evidence";
-      };
       const renderFacets = () => {
         if (!facets || !facetsRow) return;
         const scope = packages.filter((pkg) => (!kind || pkg.artifact?.kind === kind) && (!query || [
@@ -448,17 +430,13 @@ const intentFilters = [
           ...(pkg.keywords || []),
           ...(pkg.categories || []),
         ].filter(Boolean).join(" ").toLowerCase().includes(query.toLowerCase())));
-        const counts = new Map<string, number>();
-        for (const pkg of scope) {
-          const state = facetClassOf(pkg);
-          counts.set(state, (counts.get(state) || 0) + 1);
-        }
-        const total = scope.length;
-        facets.hidden = total === 0;
-        if (total === 0) return;
         facetsRow.replaceChildren();
-        for (const state of facetStates) {
-          const count = counts.get(state.value) || 0;
+        const summary = registryFacetSummary(scope, guidanceFor, { intent, nextOffset });
+        facets.hidden = summary.length === 0;
+        if (summary.length === 0) return;
+        for (const item of summary) {
+          const state = facetStates.find(({ value }) => value === item.state);
+          if (!state) continue;
           const chip = document.createElement("button");
           chip.type = "button";
           chip.className = "registry-facet";
@@ -470,7 +448,7 @@ const intentFilters = [
           label.textContent = message(state.labelKey);
           const tally = document.createElement("span");
           tally.className = "registry-facet-count";
-          tally.textContent = String(count);
+          tally.textContent = String(item.count);
           chip.append(dot, label, tally);
           chip.addEventListener("click", () => {
             if (!intentInput) return;
@@ -556,14 +534,23 @@ const intentFilters = [
           artifact.dataset.kind = "artifact";
           artifact.textContent = kindLabel(pkg.artifact?.kind);
           badges.append(artifact);
-          const level = evidenceLevelOf(pkg, guidance);
+          const level = registryEvidenceDepth(pkg);
+          const evidenceDescription = message(`registry.browse.${registryEvidenceDescriptionKey(pkg)}`);
           const evidence = document.createElement("span");
           evidence.className = "registry-evidence";
           evidence.dataset.level = String(level);
           evidence.dataset.usageState = guidance.usageState;
           evidence.setAttribute("role", "img");
-          evidence.setAttribute("aria-label", format(message("registry.browse.evidenceAria"), { n: level }));
-          for (let i = 0; i < 4; i += 1) evidence.append(document.createElement("i"));
+          evidence.setAttribute("aria-label", format(message("registry.browse.evidenceAria"), { label: evidenceDescription, n: level }));
+          evidence.title = evidenceDescription;
+          const evidenceLabel = document.createElement("span");
+          evidenceLabel.className = "registry-evidence-label";
+          evidenceLabel.textContent = message("registry.browse.evidenceLabel");
+          const evidenceBars = document.createElement("span");
+          evidenceBars.className = "registry-evidence-bars";
+          evidenceBars.setAttribute("aria-hidden", "true");
+          for (let i = 0; i < 4; i += 1) evidenceBars.append(document.createElement("i"));
+          evidence.append(evidenceLabel, evidenceBars);
           badges.append(evidence);
           const released = document.createElement("time");
           const releasedAt = latestReleaseAt(pkg);
