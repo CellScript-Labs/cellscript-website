@@ -488,6 +488,28 @@ export const translations = {
       eyebrow: "CellScript Artifact Registry",
       shellTitle: "Artifact Registry",
       shellDescription: "Browse verified CKB artifacts and deployment records.",
+      headers: {
+        browse: {
+          eyebrow: "Discover",
+          title: "Find CKB artifacts you can inspect and use.",
+          description: "Search packages, deployed Scripts, reproducible builds and templates, then open the evidence behind each release.",
+        },
+        submit: {
+          eyebrow: "Publish",
+          title: "Move a checked artifact into the Registry.",
+          description: "Start in cellc, approve one scoped permission with your CKB wallet, and let the CLI finish the release.",
+        },
+        interface: {
+          eyebrow: "Lock Script interface",
+          title: "Resolve LS-IDL from a deployed Script.",
+          description: "Fetch the exact interface bytes bound to a CKB code hash and verify the executable's SHA-256 suffix commitment.",
+        },
+        api: {
+          eyebrow: "Developer API",
+          title: "Read Registry evidence through one stable API.",
+          description: "Query artifacts, releases, deployments and LS-IDL without a wallet; use scoped authorisation only for writes.",
+        },
+      },
       productionTitle: "Mainnet",
       productionBody: "Persistent, production-facing records",
       sandboxTitle: "Pudge Testnet Sandbox",
@@ -1639,6 +1661,28 @@ export const translations = {
       eyebrow: "CellScript 产物注册表",
       shellTitle: "产物注册表",
       shellDescription: "浏览已验证的 CKB 产物与部署记录。",
+      headers: {
+        browse: {
+          eyebrow: "发现",
+          title: "查找可核验、可使用的 CKB 产物。",
+          description: "搜索源码包、已部署 Script、可复现构建与模板，再打开每个发布版本背后的证据。",
+        },
+        submit: {
+          eyebrow: "发布",
+          title: "把通过本地检查的产物发布到 Registry。",
+          description: "从 cellc 发起流程，用 CKB 钱包批准一项精确权限，再由 CLI 完成发布。",
+        },
+        interface: {
+          eyebrow: "Lock Script 接口",
+          title: "从已部署 Script 查询 LS-IDL。",
+          description: "获取绑定到 CKB code hash 的原始接口字节，并核验可执行文件末尾的 SHA-256 承诺。",
+        },
+        api: {
+          eyebrow: "开发者 API",
+          title: "通过一套稳定 API 读取 Registry 证据。",
+          description: "无需钱包即可查询产物、发布、部署和 LS-IDL；只有写入操作需要限定作用域的授权。",
+        },
+      },
       productionTitle: "主网",
       productionBody: "长期保留、面向生产的记录",
       sandboxTitle: "Pudge 测试网沙盒",

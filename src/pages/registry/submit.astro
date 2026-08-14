@@ -7,11 +7,20 @@ import checkIcon from "@phosphor-icons/core/regular/check.svg?raw";
 import xIcon from "@phosphor-icons/core/regular/x.svg?raw";
 
 const t = translations[defaultLocale];
-const description = t.registry.submit.description;
+const description = t.registry.headers.submit.description;
 const apiOrigin = registryRuntime.apiOrigin;
 ---
 
-<RegistryLayout title="CellScript Artifact Registry: Publish" description={description} headingKey="registry.shellTitle" descriptionKey="registry.shellDescription" titleKey="registry.nav.submit" active="submit" showSubmitCta={false}>
+<RegistryLayout
+  title="CellScript Artifact Registry: Publish"
+  description={description}
+  eyebrowKey="registry.headers.submit.eyebrow"
+  headingKey="registry.headers.submit.title"
+  descriptionKey="registry.headers.submit.description"
+  titleKey="registry.nav.submit"
+  active="submit"
+  showSubmitCta={false}
+>
   <section class="registry-flow" aria-label={t.registry.nav.submit} data-i18n-aria-label="registry.nav.submit">
     <section class="registry-publish-entry" data-publish-entry aria-labelledby="registry-publish-entry-title">
       <div class="registry-publish-entry-main">

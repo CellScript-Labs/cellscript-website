@@ -7,6 +7,10 @@ import { ClientRouter } from "astro:transitions";
 import { defaultLocale, translations } from "../i18n/translations";
 import { registrySections } from "../lib/registry";
 import { isTestnetSandbox, registryRuntime } from "../lib/registry-runtime";
+import bracketsCurlyIcon from "@phosphor-icons/core/regular/brackets-curly.svg?raw";
+import magnifyingGlassIcon from "@phosphor-icons/core/regular/magnifying-glass.svg?raw";
+import terminalWindowIcon from "@phosphor-icons/core/regular/terminal-window.svg?raw";
+import uploadSimpleIcon from "@phosphor-icons/core/regular/upload-simple.svg?raw";
 
 interface Props {
   title: string;
@@ -15,6 +19,7 @@ interface Props {
   // heading and description, so the layout can re-render them on locale
   // change. Omit for pages whose heading is a dynamic identifier (e.g. a
   // package coordinate) that should not be localized.
+  eyebrowKey?: string;
   headingKey?: string;
   descriptionKey?: string;
   titleKey?: string;
@@ -28,6 +33,7 @@ interface Props {
 const {
   title,
   description,
+  eyebrowKey,
   headingKey,
   descriptionKey,
   titleKey,
@@ -52,7 +58,15 @@ const resolveKey = (key: string | undefined): string | undefined => {
 };
 const headingText = resolveKey(headingKey) ?? title.replace("CellScript Registry: ", "");
 const descriptionText = resolveKey(descriptionKey) ?? description;
+const eyebrowText = resolveKey(eyebrowKey);
 const titleSuffix = headingKey ? undefined : title.split(": ").slice(1).join(": ") || undefined;
+const headerIcons: Partial<Record<Props["active"], string>> = {
+  search: magnifyingGlassIcon,
+  submit: uploadSimpleIcon,
+  interface: bracketsCurlyIcon,
+  api: terminalWindowIcon,
+};
+const headerIcon = headerIcons[active];
 const activeHref =
   active === "submit"
     ? "/registry/submit"
@@ -93,8 +107,12 @@ const activeHref =
     <SiteHeader page="registry" />
     <main id="registry-main" class="registry-app">
       <div class:list={["registry-shell-bar", !showHeader && "registry-shell-bar-context-only"]}>
-        {showHeader && <header class:list={["registry-topbar", compactHeader && "registry-topbar-compact"]} transition:persist="registry-header" aria-label={t.registry.appLabel} data-i18n-aria-label="registry.appLabel">
-          <div>
+        {showHeader && <header class:list={["registry-topbar", compactHeader && "registry-topbar-compact"]} transition:name="registry-header" data-registry-section={active} aria-label={t.registry.appLabel} data-i18n-aria-label="registry.appLabel">
+          <div class="registry-topbar-copy">
+            {eyebrowText && <p class="registry-topbar-kicker">
+              {headerIcon && <span class="registry-topbar-kicker-icon" aria-hidden="true" set:html={headerIcon}></span>}
+              <span data-i18n={eyebrowKey}>{eyebrowText}</span>
+            </p>}
             <h1 data-registry-heading data-registry-heading-key={headingKey}>{headingText}</h1>
             <p data-registry-description data-registry-description-key={descriptionKey}>{descriptionText}</p>
           </div>
@@ -200,13 +218,30 @@ const activeHref =
         const tabs = document.querySelector<HTMLElement>(".registry-tabs");
         if (!tabs) return;
         const currentPath = normaliseRegistryPath(window.location.pathname);
+        let activeLink: HTMLAnchorElement | undefined;
         tabs.querySelectorAll<HTMLAnchorElement>("a[href]").forEach((link) => {
           const targetPath = normaliseRegistryPath(new URL(link.href, window.location.href).pathname);
           const isActive = targetPath === currentPath;
           link.classList.toggle("active", isActive);
-          if (isActive) link.setAttribute("aria-current", "page");
+          if (isActive) {
+            link.setAttribute("aria-current", "page");
+            activeLink = link;
+          }
           else link.removeAttribute("aria-current");
         });
+        if (!activeLink) {
+          delete tabs.dataset.indicatorReady;
+          return;
+        }
+        const tabsRect = tabs.getBoundingClientRect();
+        const activeRect = activeLink.getBoundingClientRect();
+        tabs.style.setProperty("--registry-tab-indicator-x", `${activeRect.left - tabsRect.left + tabs.scrollLeft}px`);
+        tabs.style.setProperty("--registry-tab-indicator-width", `${activeRect.width}px`);
+        if (!tabs.dataset.indicatorReady) {
+          requestAnimationFrame(() => {
+            if (tabs.isConnected) tabs.dataset.indicatorReady = "true";
+          });
+        }
       };
 
       const syncRegistryShell = () => {
@@ -218,7 +253,8 @@ const activeHref =
       // updating <html data-locale>) and after Astro swaps page content.
       if (!(window as any).__cellscriptRegistryLayoutLocaleBound) {
         window.addEventListener("cellscript:locale-change", reapplyRegistryLocale);
-        document.addEventListener("astro:after-swap", syncRegistryTabs);
+        window.addEventListener("resize", syncRegistryTabs, { passive: true });
+        document.addEventListener("astro:after-swap", syncRegistryShell);
         document.addEventListener("astro:page-load", syncRegistryShell);
         (window as any).__cellscriptRegistryLayoutLocaleBound = true;
       }

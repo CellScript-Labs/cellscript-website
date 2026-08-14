@@ -128,23 +128,21 @@ for (const [name, html] of [
   expectContains(name, html, "cellscript-theme");
 }
 
-for (const [name, html] of [
-  ["registry", registryHtml],
-  ["registry submit", registrySubmitHtml],
-  ["registry api", registryApiHtml],
+for (const [name, html, eyebrow, heading, description] of [
+  ["registry", registryHtml, "Discover", "Find CKB artifacts you can inspect and use.", "Search packages, deployed Scripts, reproducible builds and templates, then open the evidence behind each release."],
+  ["registry submit", registrySubmitHtml, "Publish", "Move a checked artifact into the Registry.", "Start in cellc, approve one scoped permission with your CKB wallet, and let the CLI finish the release."],
+  ["registry interface", registryInterfaceHtml, "Lock Script interface", "Resolve LS-IDL from a deployed Script.", "Fetch the exact interface bytes bound to a CKB code hash and verify the executable's SHA-256 suffix commitment."],
+  ["registry api", registryApiHtml, "Developer API", "Read Registry evidence through one stable API.", "Query artifacts, releases, deployments and LS-IDL without a wallet; use scoped authorisation only for writes."],
 ]) {
-  expectContains(name, html, ">Artifact Registry</h1>");
-  expectContains(name, html, "Browse verified CKB artifacts and deployment records.");
-  expectContains(name, html, 'data-astro-transition-persist="registry-header"');
+  expectContains(name, html, `>${eyebrow}</span>`);
+  expectContains(name, html, `>${heading}</h1>`);
+  expectContains(name, html, description);
+  expectNotContains(name, html, 'data-astro-transition-persist="registry-header"');
   expectContains(name, html, 'data-astro-transition-persist="registry-environment"');
   expectContains(name, html, 'data-astro-transition-persist="registry-tabs"');
   expectContains(name, html, 'data-i18n-aria-label="nav.registryBrowse"');
 }
 
-expectContains("registry interface", registryInterfaceHtml, ">Resolve a Lock Script LS-IDL</h1>");
-expectContains("registry interface", registryInterfaceHtml, 'data-astro-transition-persist="registry-header"');
-expectContains("registry interface", registryInterfaceHtml, 'data-astro-transition-persist="registry-environment"');
-expectContains("registry interface", registryInterfaceHtml, 'data-astro-transition-persist="registry-tabs"');
 expectContains("registry interface", registryInterfaceHtml, 'data-registry-title-key="registry.nav.interface"');
 expectContains("registry interface", registryInterfaceHtml, 'data-i18n="registry.nav.interface">LS-IDL');
 expectNotContains("registry interface", registryInterfaceHtml, "registry-tool-back");
@@ -251,7 +249,9 @@ expectContains("registry source", registryBrowseSourceText, "closeFilterMenus");
 expectContains("registry source", registryBrowseSourceText, '["ArrowDown", "ArrowUp", "Home", "End"]');
 expectContains("registry source", registryBrowseSourceText, 'document.addEventListener("astro:page-load", setupRegistryBrowse)');
 expectContains("registry source", registryBrowseSourceText, 'search.set("availability", "deprecated")');
-expectContains("registry layout", registryLayoutSourceText, 'document.addEventListener("astro:after-swap", syncRegistryTabs)');
+expectContains("registry layout", registryLayoutSourceText, 'transition:name="registry-header"');
+expectContains("registry layout", registryLayoutSourceText, 'document.addEventListener("astro:after-swap", syncRegistryShell)');
+expectContains("registry layout", registryLayoutSourceText, 'tabs.dataset.indicatorReady = "true"');
 expectContains("registry package detail", registryPackageDetailSourceText, "const setupRegistryPackageDetail = () =>");
 expectContains("registry package detail", registryPackageDetailSourceText, 'document.addEventListener("astro:page-load", setupRegistryPackageDetail)');
 expectContains("registry package detail", registryPackageDetailSourceText, "renderGuidanceText();\n    load();");
@@ -262,6 +262,9 @@ expectContains("registry manage", registryManageHtml, "data-manage-current-title
 expectContains("registry manage", registryManageHtml, "data-manage-task-menu");
 expectContains("registry CSS", cssText, "::view-transition-old(registry-route)");
 expectContains("registry CSS", cssText, "::view-transition-new(registry-route)");
+expectContains("registry CSS", cssText, "::view-transition-old(registry-header)");
+expectContains("registry CSS", cssText, "::view-transition-new(registry-header)");
+expectContains("registry CSS", cssText, ".registry-tabs[data-indicator-ready");
 expectContains("registry source", registryBrowseSourceText, '"no-results"');
 expectContains("registry source", registryBrowseSourceText, '"mirror-empty"');
 expectNotContains("registry", registryHtml, "Live production index");

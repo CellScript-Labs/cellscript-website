@@ -111,6 +111,41 @@
   min-width: 0;
 }
 
+.registry-topbar-copy {
+  display: grid;
+  align-content: end;
+  min-height: 108px;
+}
+
+.registry-topbar-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  width: fit-content;
+  margin: 0 0 10px;
+  color: var(--accent);
+  font-size: 0.72rem;
+  font-weight: 680;
+  letter-spacing: 0.075em;
+  line-height: 1;
+  text-transform: uppercase;
+}
+
+.registry-topbar-kicker-icon {
+  display: inline-grid;
+  width: 25px;
+  height: 25px;
+  place-items: center;
+  border: 1px solid color-mix(in oklch, var(--accent) 22%, var(--line-soft));
+  border-radius: 7px;
+  background: color-mix(in oklch, var(--accent) 8%, var(--panel-soft));
+}
+
+.registry-topbar-kicker-icon svg {
+  width: 14px;
+  height: 14px;
+}
+
 .registry-topbar-cta {
   flex: 0 0 auto;
   align-self: flex-end;
@@ -180,6 +215,8 @@
 }
 
 .registry-tabs {
+  --registry-tab-indicator-width: 0px;
+  --registry-tab-indicator-x: 0px;
   position: relative;
   display: flex;
   gap: 28px;
@@ -189,8 +226,32 @@
   border-bottom: 1px solid var(--line-soft);
 }
 
+.registry-tabs::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  bottom: -1px;
+  left: 0;
+  width: var(--registry-tab-indicator-width);
+  height: 2px;
+  border-radius: 999px 999px 0 0;
+  background: var(--accent-quiet);
+  opacity: 0;
+  transform: translateX(var(--registry-tab-indicator-x));
+  transition:
+    width 240ms var(--ease-quick),
+    transform 240ms var(--ease-quick),
+    opacity 120ms var(--ease-standard);
+  pointer-events: none;
+}
+
+.registry-tabs[data-indicator-ready="true"]::after {
+  opacity: 1;
+}
+
 .registry-tabs a {
   position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   min-height: 44px;
@@ -241,10 +302,41 @@
   transform: scaleX(1);
 }
 
+.registry-tabs[data-indicator-ready="true"] a::after {
+  opacity: 0;
+  transition: none;
+}
+
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
+}
+
+::view-transition-old(registry-header) {
+  animation: registry-header-out 120ms var(--ease-standard) both;
+  mix-blend-mode: normal;
+}
+
+::view-transition-new(registry-header) {
+  animation: registry-header-in 220ms var(--ease-quick) both;
+  mix-blend-mode: normal;
+}
+
+@keyframes registry-header-out {
+  to {
+    opacity: 0;
+    filter: blur(2px);
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes registry-header-in {
+  from {
+    opacity: 0;
+    filter: blur(3px);
+    transform: translateY(7px);
+  }
 }
 
 ::view-transition-old(registry-route) {
@@ -5278,6 +5370,8 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(registry-header),
+  ::view-transition-new(registry-header),
   ::view-transition-old(registry-route),
   ::view-transition-new(registry-route),
   .registry-package-skeleton span,
@@ -5289,6 +5383,7 @@
   .registry-session-approval,
   .registry-manual-publish,
   .registry-tabs a::after,
+  .registry-tabs::after,
   .registry-submit-intro,
   .registry-progressive-panel,
   .registry-capability-command,
