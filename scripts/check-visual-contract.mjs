@@ -18,6 +18,8 @@ if (lightStart < 0) throw new Error("missing light-theme token block");
 const darkTokens = globalCss.slice(globalCss.indexOf(":root {"), lightStart);
 const lightTokens = globalCss.slice(lightStart, globalCss.indexOf("\n}", lightStart) + 2);
 
+const cssRuleBody = (selector) => globalCss.match(new RegExp(`${selector}\\s*\\{(?<body>[\\s\\S]*?)\\n\\}`))?.groups?.body || "";
+
 const readOklch = (block, name) => {
   const match = block.match(new RegExp(`--${name}:\\s*oklch\\(\\s*([0-9.]+)\\s+([0-9.]+)\\s+([0-9.]+)`));
   if (!match) throw new Error(`missing opaque OKLCH token --${name}`);
@@ -149,6 +151,17 @@ if (!docsShell.includes("minmax(0, var(--docs-reading-max))")) {
 }
 if (!globalCss.includes("--workbench-max: 1920px;")) {
   throw new Error("Playground workbench must have an explicit wide-screen frame");
+}
+const bodyRule = cssRuleBody("body");
+const substrateGrain = cssRuleBody("body::after");
+if (!bodyRule.includes("isolation: isolate;")) {
+  throw new Error("the page substrate must isolate its decorative layers from surrounding stacking contexts");
+}
+for (const token of ["z-index: -1;", "opacity: var(--noise-opacity);", "mask-image: var(--noise-mask);"]) {
+  if (!substrateGrain.includes(token)) throw new Error(`the substrate grain is missing ${token}`);
+}
+if (/--noise-dot:\s*oklch\([^)]*\//.test(darkTokens) || /--noise-dot:\s*oklch\([^)]*\//.test(lightTokens)) {
+  throw new Error("substrate grain strength must come from --noise-opacity instead of hidden color alpha");
 }
 const playgroundStage = globalCss.match(/\.pg-stage\s*\{(?<body>[\s\S]*?)\n\}/)?.groups?.body || "";
 const playgroundStudio = globalCss.match(/\.pg-studio-frame\s*\{(?<body>[\s\S]*?)\n\}/)?.groups?.body || "";
