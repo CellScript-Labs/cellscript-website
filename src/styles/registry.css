@@ -8,9 +8,15 @@
 
 .registry-app {
   --registry-route-start: clamp(28px, 3.2vw, 42px);
+  --registry-rail: clamp(28px, 4.6vw, 64px);
+  --registry-grid-gap: clamp(16px, 2.2vw, 30px);
   width: min(var(--max), calc(100% - var(--site-gutter)));
   margin: 0 auto;
   padding: clamp(20px, 2.8vw, 34px) 0 80px;
+}
+
+.registry-app-framed .registry-route {
+  padding-inline: var(--registry-rail);
 }
 
 .registry-hero {
@@ -33,10 +39,10 @@
 
 .registry-shell-bar {
   display: grid;
-  grid-template-columns: minmax(0, 1.55fr) minmax(270px, 0.45fr);
-  gap: clamp(38px, 6vw, 88px);
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--registry-grid-gap);
   align-items: stretch;
-  padding: clamp(38px, 5.2vw, 72px) clamp(28px, 4.6vw, 64px) clamp(32px, 4vw, 54px);
+  padding: clamp(38px, 5.2vw, 72px) var(--registry-rail) clamp(32px, 4vw, 54px);
 }
 
 .registry-shell-bar-context-only {
@@ -60,6 +66,10 @@
   background: color-mix(in oklch, var(--panel-strong) 78%, transparent);
   color: var(--muted);
   box-shadow: inset 0 1px 0 color-mix(in oklch, var(--text) 4%, transparent);
+}
+
+.registry-hero:not(.registry-hero-no-header) .registry-network-card {
+  grid-column: 9 / -1;
 }
 
 .registry-network-label {
@@ -178,6 +188,10 @@
   padding: 2px 0;
 }
 
+.registry-hero:not(.registry-hero-no-header) .registry-topbar {
+  grid-column: 1 / span 7;
+}
+
 .registry-topbar > div {
   min-width: 0;
 }
@@ -292,7 +306,7 @@
   display: flex;
   gap: 6px;
   min-height: 64px;
-  padding: 0 clamp(18px, 3.7vw, 52px);
+  padding: 0 calc(var(--registry-rail) - 16px);
   background: transparent;
   border-top: 1px solid color-mix(in oklch, var(--line-soft) 86%, var(--accent-line));
 }
@@ -445,7 +459,12 @@
 @media (max-width: 980px) {
   .registry-shell-bar {
     grid-template-columns: minmax(0, 1fr);
-    gap: 32px;
+    row-gap: 32px;
+  }
+
+  .registry-hero:not(.registry-hero-no-header) .registry-topbar,
+  .registry-hero:not(.registry-hero-no-header) .registry-network-card {
+    grid-column: 1 / -1;
   }
 
   .registry-environment-bar {
@@ -477,6 +496,7 @@
 @media (max-width: 640px) {
   .registry-app {
     --registry-route-start: 24px;
+    --registry-rail: 22px;
     padding-top: 14px;
   }
 
@@ -674,8 +694,8 @@
 
 .registry-api-endpoint {
   display: grid;
-  grid-template-columns: 62px minmax(380px, 1.1fr) minmax(280px, 0.9fr) 20px;
-  gap: 18px;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--registry-grid-gap);
   align-items: center;
   min-height: 66px;
   padding: 14px 0;
@@ -712,7 +732,26 @@
 
 .registry-api-endpoint > a {
   display: inline-flex;
+  justify-self: end;
   color: var(--accent);
+}
+
+@media (min-width: 901px) {
+  .registry-api-method {
+    grid-column: 1;
+  }
+
+  .registry-api-endpoint code {
+    grid-column: 2 / span 5;
+  }
+
+  .registry-api-endpoint p {
+    grid-column: 7 / span 5;
+  }
+
+  .registry-api-endpoint > a {
+    grid-column: 12;
+  }
 }
 
 .registry-api-example {
@@ -763,8 +802,9 @@
 
 .registry-ls-idl-panel {
   display: grid;
-  grid-template-columns: minmax(210px, 0.52fr) minmax(0, 1.48fr);
-  gap: clamp(28px, 4vw, 60px);
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  column-gap: var(--registry-grid-gap);
+  row-gap: 28px;
   padding: clamp(28px, 4vw, 46px);
   border: 1px solid var(--line-soft);
   border-radius: clamp(18px, 2vw, 24px);
@@ -773,6 +813,7 @@
 }
 
 .registry-ls-idl-boundary {
+  grid-column: 1 / span 3;
   max-width: 36ch;
   margin: 0;
   padding-left: 18px;
@@ -784,6 +825,7 @@
 
 .registry-ls-idl-lookup-form {
   display: grid;
+  grid-column: 4 / -1;
   grid-template-columns: minmax(130px, 1fr) minmax(130px, 1fr) auto;
   gap: 14px;
   align-items: end;
@@ -903,6 +945,11 @@
   .registry-ls-idl-panel {
     grid-template-columns: minmax(0, 1fr);
     gap: 26px;
+  }
+
+  .registry-ls-idl-boundary,
+  .registry-ls-idl-lookup-form {
+    grid-column: 1;
   }
 
   .registry-ls-idl-boundary {

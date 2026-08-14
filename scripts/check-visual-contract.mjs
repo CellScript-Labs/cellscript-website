@@ -116,6 +116,13 @@ if (!registryCss.includes(".registry-artifact-mark i {\n  display: none;")) {
 for (const token of [".registry-hero", ".registry-network-card", ".registry-api-group-heading"]) {
   if (!registryCss.includes(token)) throw new Error(`Registry unified layout is missing ${token}`);
 }
+for (const token of [
+  "--registry-rail: clamp(28px, 4.6vw, 64px);",
+  "grid-template-columns: repeat(12, minmax(0, 1fr));",
+  ".registry-app-framed .registry-route",
+]) {
+  if (!registryCss.includes(token)) throw new Error(`Registry alignment system is missing ${token}`);
+}
 if (!registryCss.includes("line-height: 1.72;")) {
   throw new Error("Registry hero and supporting copy must preserve the expanded reading rhythm");
 }
