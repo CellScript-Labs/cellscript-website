@@ -101,6 +101,39 @@ for (const geometryToken of [
 ]) {
   if (!darkTokens.includes(geometryToken)) throw new Error(`shared geometry system is missing ${geometryToken}`);
 }
+for (const materialToken of [
+  "--canvas:",
+  "--canvas-alt:",
+  "--field-brand:",
+  "--field-info:",
+  "--field-substrate:",
+  "--surface-1:",
+  "--surface-2:",
+  "--surface-raised:",
+  "--surface-code:",
+  "--surface-input:",
+  "--surface-output:",
+  "--surface-subtle:",
+  "--type-primitive:",
+]) {
+  if (!darkTokens.includes(materialToken) || !lightTokens.includes(materialToken)) {
+    throw new Error(`both themes must define the mineral material token ${materialToken}`);
+  }
+}
+if (!globalCss.includes('body::after {\n  content: "";')) {
+  throw new Error("the page canvas must keep its full-height material grain");
+}
+for (const materialContract of [
+  ".landing-page .section::before",
+  ".workflow-flow::before",
+  ".docs-article::before",
+  ".pg-source {\n  background: var(--surface-input);",
+  ".pg-output {\n  background: var(--surface-output);",
+]) {
+  if (!globalCss.includes(materialContract)) {
+    throw new Error(`global material system is missing ${materialContract}`);
+  }
+}
 if (visualSources.includes("lucide-astro")) {
   throw new Error("interactive site visuals must use the shared Phosphor icon family");
 }
@@ -115,6 +148,18 @@ if (!registryCss.includes(".registry-artifact-mark i {\n  display: none;")) {
 }
 for (const token of [".registry-hero", ".registry-network-card", ".registry-api-group-heading"]) {
   if (!registryCss.includes(token)) throw new Error(`Registry unified layout is missing ${token}`);
+}
+for (const materialContract of [
+  ".registry-route::before",
+  ':root[data-registry-environment="testnet-sandbox"] .registry-route::before',
+  ".registry-body .registry-hero.registry-hero-no-header",
+  ".registry-package-list",
+  ".registry-ls-idl-lookup-form",
+  ".registry-api-endpoints",
+]) {
+  if (!registryCss.includes(materialContract)) {
+    throw new Error(`Registry material system is missing ${materialContract}`);
+  }
 }
 for (const token of [
   "--registry-rail: clamp(28px, 4.6vw, 64px);",
