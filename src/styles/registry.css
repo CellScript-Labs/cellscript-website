@@ -30,6 +30,25 @@
   box-shadow: inset 0 1px 0 color-mix(in oklch, var(--text) 4%, transparent);
 }
 
+.registry-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 60% 80% at 100% 0%, color-mix(in oklch, var(--accent) 8%, transparent), transparent 60%),
+    repeating-linear-gradient(to right, var(--page-grid-x) 0 1px, transparent 1px 56px),
+    repeating-linear-gradient(to bottom, var(--page-grid-y) 0 1px, transparent 1px 56px);
+  -webkit-mask-image: linear-gradient(215deg, black 0%, transparent 62%);
+  mask-image: linear-gradient(215deg, black 0%, transparent 62%);
+  opacity: 0.55;
+}
+
+.registry-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
 :root[data-registry-environment="testnet-sandbox"] .registry-hero {
   border-color: color-mix(in oklch, var(--sandbox-line) 74%, var(--line-soft));
   background:
@@ -708,8 +727,24 @@
 }
 
 .registry-api-method {
-  color: var(--accent);
-  font-weight: 750;
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  min-height: 22px;
+  padding: 0 8px;
+  border: 1px solid var(--accent-line);
+  border-radius: 999px;
+  background: color-mix(in oklch, var(--accent-surface) 45%, transparent);
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.registry-api-method[data-method="post"] {
+  border-color: color-mix(in oklch, var(--substrate-accent-dim) 42%, transparent);
+  background: color-mix(in oklch, var(--substrate-bg) 76%, transparent);
+  color: var(--substrate-accent);
 }
 
 .registry-api-method[data-method="post"] {
@@ -1264,6 +1299,93 @@
   white-space: nowrap;
 }
 
+.registry-facets {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 14px;
+}
+
+.registry-facets[hidden] {
+  display: none;
+}
+
+.registry-facets-label {
+  margin: 0;
+  color: var(--dim);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.registry-facets-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  min-width: 0;
+}
+
+.registry-facet {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 1px solid var(--line-soft);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--text-soft);
+  font: inherit;
+  font-size: 0.74rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard),
+    color var(--duration-fast) var(--ease-standard);
+}
+
+.registry-facet i {
+  width: 8px;
+  height: 8px;
+  flex: 0 0 auto;
+  border-radius: 999px;
+  background: var(--dim);
+}
+
+.registry-facet[data-state="ready"] i { background: var(--status-active); }
+.registry-facet[data-state="chain_verified"] i { background: var(--accent-strong); }
+.registry-facet[data-state="verified"] i { background: var(--status-info); }
+.registry-facet[data-state="source_only"] i { background: var(--substrate-accent-dim); }
+.registry-facet[data-state="needs_evidence"] i { background: var(--status-warning-text); }
+.registry-facet[data-state="deprecated"] i { background: var(--dim); }
+
+.registry-facet-count {
+  color: var(--dim);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.registry-facet:hover {
+  border-color: var(--control-border-hover);
+  color: var(--control-text-hover);
+}
+
+.registry-facet[aria-pressed="true"] {
+  border-color: var(--accent-line);
+  background: var(--control-selected-surface);
+  color: var(--control-selected-text);
+}
+
+.registry-facet:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
 .registry-panel {
   padding: 18px;
 }
@@ -1459,34 +1581,57 @@
   border-radius: var(--radius-control);
   background: color-mix(in oklch, var(--panel-strong) 70%, transparent);
   color: var(--text-soft);
-  font-family: var(--font-mono);
+  transition:
+    border-color var(--duration-fast) var(--ease-standard),
+    background-color var(--duration-fast) var(--ease-standard);
 }
 
 .registry-artifact-mark::before {
   content: none;
 }
 
-.registry-artifact-mark::after {
-  content: "ART";
-  position: relative;
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.04em;
-}
-
 .registry-artifact-mark i {
   display: none;
 }
 
-.registry-artifact-mark[data-kind="source_library"]::after { content: "SRC"; }
-.registry-artifact-mark[data-kind="profile_library"]::after { content: "PRF"; }
-.registry-artifact-mark[data-kind="runtime_verifier"]::after { content: "VM"; }
-.registry-artifact-mark[data-kind="deployable_contract"]::after { content: "CKB"; }
-.registry-artifact-mark[data-kind="reproducible_binary"]::after { content: "BIN"; }
-.registry-artifact-mark[data-kind="template"]::after { content: "TPL"; }
+.registry-artifact-glyph,
+.registry-artifact-glyph svg {
+  width: 18px;
+  height: 18px;
+}
+
+.registry-artifact-glyph svg {
+  display: block;
+}
+
+.registry-artifact-mark[data-kind="source_library"],
+.registry-artifact-mark[data-kind="profile_library"],
+.registry-artifact-mark[data-kind="template"] {
+  border-color: color-mix(in oklch, var(--accent-line) 60%, var(--line-soft));
+  background: color-mix(in oklch, var(--accent-surface) 42%, transparent);
+  color: var(--accent);
+}
+
+.registry-artifact-mark[data-kind="deployable_contract"],
+.registry-artifact-mark[data-kind="reproducible_binary"] {
+  border-color: color-mix(in oklch, var(--substrate-accent-dim) 32%, var(--line-soft));
+  background: color-mix(in oklch, var(--substrate-bg) 72%, transparent);
+  color: var(--substrate-accent);
+}
+
+.registry-artifact-mark[data-kind="runtime_verifier"] {
+  border-color: color-mix(in oklch, var(--status-info) 26%, var(--line-soft));
+  background: color-mix(in oklch, var(--status-info-surface) 38%, transparent);
+  color: var(--status-info);
+}
+
+.registry-package-row:hover .registry-artifact-mark {
+  border-color: color-mix(in oklch, var(--accent-line) 78%, var(--line-soft));
+}
 
 .registry-package-row:hover {
   background: color-mix(in oklch, var(--accent-surface) 42%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklch, var(--accent-line) 42%, transparent);
 }
 
 .registry-browse[data-state="ready"] .registry-package-row {
@@ -1601,8 +1746,44 @@
 .registry-badges {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 6px;
   margin-top: 10px;
+}
+
+.registry-evidence {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-height: 22px;
+  padding: 0 2px 0 6px;
+}
+
+.registry-evidence i {
+  width: 16px;
+  height: 4px;
+  border-radius: 2px;
+  background: var(--bar-track);
+}
+
+.registry-evidence[data-level="1"] i:nth-child(-n + 1),
+.registry-evidence[data-level="2"] i:nth-child(-n + 2),
+.registry-evidence[data-level="3"] i:nth-child(-n + 3),
+.registry-evidence[data-level="4"] i:nth-child(-n + 4) {
+  background: var(--accent-quiet);
+}
+
+.registry-evidence[data-level="4"] i:nth-child(-n + 4) {
+  background: var(--status-active);
+}
+
+.registry-evidence[data-usage-state="needs_evidence"] i:first-child {
+  background: var(--status-warning-line);
+}
+
+.registry-evidence[data-usage-state="unavailable"] i,
+.registry-evidence[data-usage-state="deprecated"] i {
+  opacity: 0.5;
 }
 
 .registry-badge,
@@ -3924,10 +4105,22 @@
   .registry-empty {
     min-height: 0;
     padding: 24px 20px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .registry-empty-icon + .registry-empty-copy {
+    padding-left: 0;
+    border-left: 0;
   }
 
   .registry-empty h2 {
     font-size: 1.02rem;
+  }
+
+  .registry-facets-label {
+    width: 100%;
   }
 
   .registry-api-group-heading {
@@ -4872,6 +5065,20 @@
   background: var(--control-surface-hover);
   color: var(--control-text-hover);
   transform: translateY(-1px);
+}
+
+.registry-empty-icon,
+.registry-empty-icon svg {
+  width: 38px;
+  height: 38px;
+  flex: 0 0 auto;
+  color: var(--dim);
+  opacity: 0.7;
+}
+
+.registry-empty-icon + .registry-empty-copy {
+  padding-left: 18px;
+  border-left: 1px solid var(--line-soft);
 }
 
 .registry-empty-publish {

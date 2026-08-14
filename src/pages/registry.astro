@@ -5,6 +5,12 @@ import { packageHref, registryDateLabel, registryPackageDetailView, registryPack
 import { defaultLocale, translations } from "../i18n/translations";
 import searchIcon from "@phosphor-icons/core/regular/magnifying-glass.svg?raw";
 import arrowRightIcon from "@phosphor-icons/core/regular/arrow-right.svg?raw";
+import packageIcon from "@phosphor-icons/core/regular/package.svg?raw";
+import bracketsCurlyIcon from "@phosphor-icons/core/regular/brackets-curly.svg?raw";
+import stackIcon from "@phosphor-icons/core/regular/stack.svg?raw";
+import cpuIcon from "@phosphor-icons/core/regular/cpu.svg?raw";
+import cubeIcon from "@phosphor-icons/core/regular/cube.svg?raw";
+import copyIcon from "@phosphor-icons/core/regular/copy.svg?raw";
 import { isTestnetSandbox, registryRuntime } from "../lib/registry-runtime";
 
 const t = translations[defaultLocale];
@@ -25,6 +31,23 @@ const fallbackPackages = (isTestnetSandbox ? [] : registryPackages).map((pkg) =>
 const packageTranslations = t.registry.package as unknown as Record<string, string>;
 const pascalKey = (value: string) => value.split("_").map((part) => `${part[0]?.toUpperCase()}${part.slice(1)}`).join("");
 const guidanceTitle = (key: string) => packageTranslations[`guidance${pascalKey(key)}Title`] ?? key;
+const kindIcons: Record<string, string> = {
+  source_library: bracketsCurlyIcon,
+  profile_library: stackIcon,
+  runtime_verifier: cpuIcon,
+  deployable_contract: cubeIcon,
+  reproducible_binary: packageIcon,
+  template: copyIcon,
+};
+const evidenceLevel = (pkg: (typeof fallbackPackages)[number]) => {
+  if (pkg.deployment_status === "chain_verified") return 4;
+  const state = pkg.guidance.usageState;
+  if (state === "ready") return 3;
+  if (state === "hash_bound") return 2;
+  if (state === "source_only") return 1;
+  return 0;
+};
+const evidenceAria = (level: number) => t.registry.browse.evidenceAria.replaceAll("{n}", String(level));
 const fallbackPayload = JSON.stringify(fallbackPackages).replaceAll("<", "\\u003c");
 const kindFilters = [
   { value: "", label: t.registry.browse.allKinds, i18nKey: "registry.browse.allKinds" },
@@ -76,6 +99,11 @@ const intentFilters = [
       </div>
     </div>
 
+    <div class="registry-facets" data-registry-facets hidden>
+      <p class="registry-facets-label" data-i18n="registry.browse.facetsLabel">{t.registry.browse.facetsLabel}</p>
+      <div class="registry-facets-row" role="group" aria-label={t.registry.browse.facetsLabel} data-registry-facets-row></div>
+    </div>
+
     <div class="registry-service-state" data-registry-service-state role="status" aria-live="polite" hidden>
       <span data-registry-service-copy data-i18n="registry.browse.mirrorStatus">{t.registry.browse.mirrorStatus}</span>
       <button class="registry-service-retry" type="button" data-registry-retry hidden data-i18n="registry.browse.retry">{t.registry.browse.retry}</button>
@@ -101,7 +129,7 @@ const intentFilters = [
           data-usage-state={pkg.guidance.usageState}
           data-registry-search={`${pkg.coordinate} ${pkg.description || ""} ${pkg.latest_release || ""} ${pkg.artifact.kind} ${pkg.verification_status} ${pkg.deployment_status} ${pkg.keywords.join(" ")} ${pkg.categories.join(" ")}`.toLowerCase()}
         >
-          <span class="registry-artifact-mark" data-kind={pkg.artifact.kind} aria-hidden="true"><i></i></span>
+          <span class="registry-artifact-mark" data-kind={pkg.artifact.kind} aria-hidden="true"><i></i><span class="registry-artifact-glyph" set:html={kindIcons[pkg.artifact.kind] ?? packageIcon}></span></span>
           <div class="registry-row-copy">
             <div class="registry-row-headline">
               <strong class="registry-row-coordinate"><span>{pkg.namespace}/</span>{pkg.name}</strong>
@@ -112,6 +140,9 @@ const intentFilters = [
             <div class="registry-row-meta">
               <div class="registry-badges">
                 <span class="registry-badge" data-kind="artifact">{pkg.artifact.kind.replaceAll("_", " ")}</span>
+                <span class="registry-evidence" role="img" aria-label={evidenceAria(evidenceLevel(pkg))} data-level={evidenceLevel(pkg)} data-usage-state={pkg.guidance.usageState}>
+                  <i></i><i></i><i></i><i></i>
+                </span>
               </div>
               <time datetime={pkg.latest_release_at}>{t.registry.browse.released} {registryDateLabel(pkg.latest_release_at, t.registry.package.notRecorded, defaultLocale)}</time>
             </div>
@@ -122,6 +153,7 @@ const intentFilters = [
     </div>
 
     <div class="registry-empty" data-registry-empty role="status" aria-live="polite" aria-atomic="true" hidden>
+      <span class="registry-empty-icon" aria-hidden="true" set:html={packageIcon}></span>
       <div class="registry-empty-copy">
         <h2 data-registry-empty-title>{t.registry.browse.emptyTitle}</h2>
         <p data-registry-empty-body>{t.registry.browse.emptyBody}</p>
@@ -143,6 +175,22 @@ const intentFilters = [
     import { deriveArtifactGuidance, registryDateLabel, type RegistryArtifactGuidance } from "../lib/registry";
     import { readRegistryBrowseState, registryBrowseStateUrl } from "../lib/registry-browse-state.mjs";
     import rowArrowIcon from "@phosphor-icons/core/regular/arrow-right.svg?raw";
+    import kindPackageIcon from "@phosphor-icons/core/regular/package.svg?raw";
+    import kindBracketsIcon from "@phosphor-icons/core/regular/brackets-curly.svg?raw";
+    import kindStackIcon from "@phosphor-icons/core/regular/stack.svg?raw";
+    import kindCpuIcon from "@phosphor-icons/core/regular/cpu.svg?raw";
+    import kindCubeIcon from "@phosphor-icons/core/regular/cube.svg?raw";
+    import kindCopyIcon from "@phosphor-icons/core/regular/copy.svg?raw";
+    import emptySearchIcon from "@phosphor-icons/core/regular/magnifying-glass.svg?raw";
+
+    const kindIconSvgs: Record<string, string> = {
+      source_library: kindBracketsIcon,
+      profile_library: kindStackIcon,
+      runtime_verifier: kindCpuIcon,
+      deployable_contract: kindCubeIcon,
+      reproducible_binary: kindPackageIcon,
+      template: kindCopyIcon,
+    };
 
     interface BrowsePackage {
       coordinate: string;
@@ -190,6 +238,9 @@ const intentFilters = [
       const emptyTitle = app.querySelector<HTMLElement>("[data-registry-empty-title]");
       const emptyBody = app.querySelector<HTMLElement>("[data-registry-empty-body]");
       const emptySubmit = app.querySelector<HTMLElement>("[data-registry-empty-submit]");
+      const emptyIcon = app.querySelector<HTMLElement>(".registry-empty-icon");
+      const facets = app.querySelector<HTMLElement>("[data-registry-facets]");
+      const facetsRow = app.querySelector<HTMLElement>("[data-registry-facets-row]");
       const clearFilters = app.querySelector<HTMLButtonElement>("[data-registry-clear]");
       const service = app.querySelector<HTMLElement>("[data-registry-service-state]");
       const serviceCopy = app.querySelector<HTMLElement>("[data-registry-service-copy]");
@@ -347,18 +398,88 @@ const intentFilters = [
       const matchesIntent = (pkg: BrowsePackage) => {
         const guidance = guidanceFor(pkg);
         if (!intent) return true;
-        if (intent === "ready") return guidance.usageState === "ready";
+        if (intent === "ready") return guidance.usageState === "ready" && pkg.deployment_status !== "chain_verified";
         if (intent === "chain_verified") return pkg.deployment_status === "chain_verified";
-        if (intent === "verified") return pkg.verification_status === "verified";
+        if (intent === "verified") return pkg.verification_status === "verified" && guidance.usageState !== "ready" && pkg.deployment_status !== "chain_verified";
         if (intent === "source_only") return guidance.usageState === "source_only" || guidance.usageState === "hash_bound";
         if (intent === "needs_evidence") return guidance.usageState === "needs_evidence";
         if (intent === "deprecated") return guidance.usageState === "deprecated";
         return true;
       };
+      const evidenceLevelOf = (pkg: BrowsePackage, guidance: RegistryArtifactGuidance) => {
+        if (pkg.deployment_status === "chain_verified") return 4;
+        if (guidance.usageState === "ready") return 3;
+        if (guidance.usageState === "hash_bound") return 2;
+        if (guidance.usageState === "source_only") return 1;
+        return 0;
+      };
       const detailHref = (pkg: BrowsePackage) => {
         if (pkg.source === "bundled" && pkg.href) return pkg.href;
         const detail = new URLSearchParams({ namespace: pkg.namespace, name: pkg.name });
         return `/registry/package/?${detail}`;
+      };
+      const facetStates = [
+        { value: "ready", labelKey: "registry.browse.facetReady", color: "var(--status-active)" },
+        { value: "chain_verified", labelKey: "registry.browse.facetChainVerified", color: "var(--accent-strong)" },
+        { value: "verified", labelKey: "registry.browse.facetVerified", color: "var(--status-info)" },
+        { value: "source_only", labelKey: "registry.browse.facetSourceOnly", color: "var(--substrate-accent-dim)" },
+        { value: "needs_evidence", labelKey: "registry.browse.facetNeedsEvidence", color: "var(--status-warning-text)" },
+        { value: "deprecated", labelKey: "registry.browse.facetDeprecated", color: "var(--dim)" },
+      ] as const;
+      const facetClassOf = (pkg: BrowsePackage): string => {
+        const guidance = guidanceFor(pkg);
+        if (pkg.deployment_status === "chain_verified") return "chain_verified";
+        if (guidance.usageState === "ready") return "ready";
+        if (pkg.verification_status === "verified") return "verified";
+        if (guidance.usageState === "source_only" || guidance.usageState === "hash_bound") return "source_only";
+        if (guidance.usageState === "needs_evidence") return "needs_evidence";
+        if (guidance.usageState === "deprecated") return "deprecated";
+        return "needs_evidence";
+      };
+      const renderFacets = () => {
+        if (!facets || !facetsRow) return;
+        const scope = packages.filter((pkg) => (!kind || pkg.artifact?.kind === kind) && (!query || [
+          pkg.coordinate,
+          pkg.description,
+          pkg.latest_release,
+          pkg.artifact?.kind,
+          pkg.verification_status,
+          pkg.deployment_status,
+          ...(pkg.keywords || []),
+          ...(pkg.categories || []),
+        ].filter(Boolean).join(" ").toLowerCase().includes(query.toLowerCase())));
+        const counts = new Map<string, number>();
+        for (const pkg of scope) {
+          const state = facetClassOf(pkg);
+          counts.set(state, (counts.get(state) || 0) + 1);
+        }
+        const total = scope.length;
+        facets.hidden = total === 0;
+        if (total === 0) return;
+        facetsRow.replaceChildren();
+        for (const state of facetStates) {
+          const count = counts.get(state.value) || 0;
+          const chip = document.createElement("button");
+          chip.type = "button";
+          chip.className = "registry-facet";
+          chip.dataset.state = state.value;
+          chip.setAttribute("aria-pressed", String(intent === state.value));
+          const dot = document.createElement("i");
+          dot.setAttribute("aria-hidden", "true");
+          const label = document.createElement("span");
+          label.textContent = message(state.labelKey);
+          const tally = document.createElement("span");
+          tally.className = "registry-facet-count";
+          tally.textContent = String(count);
+          chip.append(dot, label, tally);
+          chip.addEventListener("click", () => {
+            if (!intentInput) return;
+            const next = intent === state.value ? "" : state.value;
+            intentInput.value = next;
+            intentInput.dispatchEvent(new Event("change", { bubbles: true }));
+          }, { signal });
+          facetsRow.append(chip);
+        }
       };
       const updateUrl = () => {
         window.history.replaceState({}, "", registryBrowseStateUrl(window.location.href, { q: query, kind, intent }));
@@ -403,6 +524,10 @@ const intentFilters = [
           mark.dataset.kind = pkg.artifact?.kind || "artifact";
           mark.setAttribute("aria-hidden", "true");
           mark.append(document.createElement("i"));
+          const glyph = document.createElement("span");
+          glyph.className = "registry-artifact-glyph";
+          glyph.innerHTML = kindIconSvgs[pkg.artifact?.kind || ""] ?? kindPackageIcon;
+          mark.append(glyph);
           const body = document.createElement("div");
           body.className = "registry-row-copy";
           const headline = document.createElement("div");
@@ -431,6 +556,15 @@ const intentFilters = [
           artifact.dataset.kind = "artifact";
           artifact.textContent = kindLabel(pkg.artifact?.kind);
           badges.append(artifact);
+          const level = evidenceLevelOf(pkg, guidance);
+          const evidence = document.createElement("span");
+          evidence.className = "registry-evidence";
+          evidence.dataset.level = String(level);
+          evidence.dataset.usageState = guidance.usageState;
+          evidence.setAttribute("role", "img");
+          evidence.setAttribute("aria-label", format(message("registry.browse.evidenceAria"), { n: level }));
+          for (let i = 0; i < 4; i += 1) evidence.append(document.createElement("i"));
+          badges.append(evidence);
           const released = document.createElement("time");
           const releasedAt = latestReleaseAt(pkg);
           if (releasedAt) released.dateTime = releasedAt;
@@ -451,11 +585,13 @@ const intentFilters = [
         if (empty) empty.hidden = visible !== 0;
         if (emptyTitle) emptyTitle.textContent = message(hasFilters ? "registry.browse.noMatchTitle" : "registry.browse.emptyTitle") || "";
         if (emptyBody) emptyBody.textContent = message(hasFilters ? "registry.browse.noMatchBody" : "registry.browse.emptyBody") || "";
+        if (emptyIcon) emptyIcon.innerHTML = hasFilters ? emptySearchIcon : kindPackageIcon;
         if (emptySubmit) emptySubmit.hidden = hasFilters;
         if (clearFilters) clearFilters.hidden = !hasFilters;
         if (more) more.hidden = nextOffset == null || source !== "live";
         list.hidden = visible === 0;
         skeleton.hidden = true;
+        renderFacets();
         app.setAttribute("aria-busy", "false");
         setViewState(visible > 0 ? "ready" : hasFilters ? "no-results" : source === "mirror" ? "mirror-empty" : "empty");
       };
@@ -493,6 +629,7 @@ const intentFilters = [
         if (count) count.textContent = "";
         if (list) list.hidden = true;
         if (empty) empty.hidden = true;
+        if (facets) facets.hidden = true;
         if (more) more.hidden = true;
         setServiceState("error");
         setViewState("error");
@@ -511,6 +648,7 @@ const intentFilters = [
           skeleton.hidden = true;
           list.hidden = true;
           empty.hidden = true;
+          if (facets) facets.hidden = true;
           setServiceState("loading");
         } else if (more) {
           more.disabled = true;
