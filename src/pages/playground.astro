@@ -309,6 +309,15 @@ if (ungroupedPlaygroundExamples.length > 0) {
                 <dd class="substrate-value" data-rail-mode></dd>
               </div>
             </dl>
+            <section class="pg-browser-boundary" role="note" aria-labelledby="pg-browser-boundary-title">
+              <strong id="pg-browser-boundary-title" data-i18n="playground.browserBoundaryTitle">{t.playground.browserBoundaryTitle}</strong>
+              <ul>
+                <li data-i18n="playground.browserBoundaryMetadata">{t.playground.browserBoundaryMetadata}</li>
+                <li data-i18n="playground.browserBoundaryElf">{t.playground.browserBoundaryElf}</li>
+                <li data-i18n="playground.browserBoundaryVm">{t.playground.browserBoundaryVm}</li>
+                <li data-i18n="playground.browserBoundaryEquivalence">{t.playground.browserBoundaryEquivalence}</li>
+              </ul>
+            </section>
             <section class="pg-inspector" data-inspector aria-live="polite"></section>
           </div>
         </div>
@@ -1809,13 +1818,28 @@ source_roots = ["src"]
             <button class="pg-inspector-source" type="button" data-jump-kind="type" data-jump-name="${escapeAttr(view.name)}">${escapeHtml(pg("showInSource"))}</button>`;
           return;
         }
+        const identityRow = (label: string, hash: string | null, copyLabel: string) => hash
+          ? `<div class="pg-identity-row">
+              <span>${escapeHtml(label)}</span>
+              <code>${escapeHtml(hash)}</code>
+              <button
+                class="copy-btn pg-identity-copy"
+                type="button"
+                data-copy-text="${escapeAttr(hash)}"
+                data-copy-aria="${escapeAttr(copyLabel)}"
+                data-copied-aria="${escapeAttr(pg("copiedHash"))}"
+                aria-label="${escapeAttr(copyLabel)}"
+                aria-live="polite"
+              ><span data-copy-label>${escapeHtml(pg("copyHash"))}</span></button>
+            </div>`
+          : "";
         inspector.innerHTML = `
           <div class="pg-inspector-head"><span>${escapeHtml(pg("projectSummary"))}</span></div>
           <strong class="pg-inspector-summary">${escapeHtml(fmt(pg("flowSummary"), { actions: String(view.actions), types: String(view.types) }))}</strong>
-          <div class="pg-inspector-runtime">
+          <div class="pg-inspector-identities">
             <span>${escapeHtml(pg("verificationIdentities"))}</span>
-            ${view.interfaceHash ? `<code title="${escapeAttr(view.interfaceHash)}">${escapeHtml(pg("interfaceHash"))}: ${escapeHtml(view.interfaceHash.slice(0, 12))}…</code>` : ""}
-            ${view.typedSemanticsHash ? `<code title="${escapeAttr(view.typedSemanticsHash)}">${escapeHtml(pg("typedSemanticsHash"))}: ${escapeHtml(view.typedSemanticsHash.slice(0, 12))}…</code>` : ""}
+            ${identityRow(pg("interfaceHash"), view.interfaceHash, pg("copyInterfaceHash"))}
+            ${identityRow(pg("typedSemanticsHash"), view.typedSemanticsHash, pg("copyTypedSemanticsHash"))}
           </div>
           <p>${escapeHtml(pg("flowSummaryBody"))}</p>`;
       };
@@ -2489,12 +2513,15 @@ source_roots = ["src"]
         navigator.clipboard.writeText(text).then(
           () => {
             btn.classList.add("is-copied");
-            const copiedAria = getMessage("a11y.copiedAria", readLocale()) ?? "Copied";
+            const copiedAria = btn.dataset.copiedAria ?? getMessage("a11y.copiedAria", readLocale()) ?? "Copied";
             btn.setAttribute("aria-label", copiedAria);
+            const label = btn.querySelector<HTMLElement>("[data-copy-label]");
+            if (label) label.textContent = pg("copiedHash");
             window.setTimeout(() => {
               btn.classList.remove("is-copied");
-              const copyAria = getMessage("a11y.copyAria", readLocale()) ?? "Copy";
+              const copyAria = btn.dataset.copyAria ?? getMessage("a11y.copyAria", readLocale()) ?? "Copy";
               btn.setAttribute("aria-label", copyAria);
+              if (label) label.textContent = pg("copyHash");
             }, 1600);
           },
           () => {
