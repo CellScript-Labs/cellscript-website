@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "tag": "v0.24.0",
+      "name": "CellScript 0.24.0",
+      "date": "2026-08-19",
+      "body": "Independent artifact checking, executable package scenarios, lock-authoritative package graphs, and byte-exact LS-IDL publication/discovery.",
+      "url": "https://github.com/CellScript-Labs/CellScript/releases/tag/v0.24.0"
+    },
+    {
       "tag": "v0.23.0",
       "name": "CellScript 0.23.0",
       "date": "2026-08-11",
