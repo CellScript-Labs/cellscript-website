@@ -35,9 +35,6 @@ export interface RegistryVersion {
   edition?: "2026";
   /** Resolved target/assurance/ABI/schema profile identity. */
   compatibility_profile_hash?: string;
-  /** Canonical 0.25 package interface identity and signed interface record. */
-  interface_hash?: string;
-  interface?: Record<string, unknown>;
   dependencies?: Record<string, { namespace: string; version: string }>;
   status: RegistryEntryStatus;
   yanked: boolean;

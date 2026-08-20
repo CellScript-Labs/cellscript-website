@@ -1812,11 +1812,6 @@ source_roots = ["src"]
         inspector.innerHTML = `
           <div class="pg-inspector-head"><span>${escapeHtml(pg("projectSummary"))}</span></div>
           <strong class="pg-inspector-summary">${escapeHtml(fmt(pg("flowSummary"), { actions: String(view.actions), types: String(view.types) }))}</strong>
-          <div class="pg-inspector-runtime">
-            <span>${escapeHtml(pg("verificationIdentities"))}</span>
-            ${view.interfaceHash ? `<code title="${escapeAttr(view.interfaceHash)}">${escapeHtml(pg("interfaceHash"))}: ${escapeHtml(view.interfaceHash.slice(0, 12))}…</code>` : ""}
-            ${view.typedSemanticsHash ? `<code title="${escapeAttr(view.typedSemanticsHash)}">${escapeHtml(pg("typedSemanticsHash"))}: ${escapeHtml(view.typedSemanticsHash.slice(0, 12))}…</code>` : ""}
-          </div>
           <p>${escapeHtml(pg("flowSummaryBody"))}</p>`;
       };
 
