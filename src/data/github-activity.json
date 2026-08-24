@@ -24,39 +24,39 @@
   ],
   "commits": [
     {
-      "sha": "04b4de8",
-      "message": "fix: use canonical installer release origin",
+      "sha": "b3dfb5d",
+      "message": "Remove roadmap documents from repository contract",
       "author": "Arthur",
-      "date": "2026-08-11",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/04b4de85e3e89aee49b5b4ec1b715a24e36288fc"
+      "date": "2026-08-24",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/b3dfb5dba9f7a1dc974e09a6660160d828aa5c0d"
     },
     {
-      "sha": "dc66c6e",
-      "message": "Add 0.23 roadmap: registry production, Rust tooling port, RGB++/Fiber, off-chai\u2026",
+      "sha": "8743daf",
+      "message": "Merge CellScript 0.24 release line into main",
       "author": "Arthur",
-      "date": "2026-07-27",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/dc66c6e7a14abcb1ae709957a28aab68fcfa302b"
+      "date": "2026-08-24",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/8743daf6ccd152249f59c815cba6489273012ebd"
     },
     {
-      "sha": "1f1ce09",
-      "message": "Update website for CellScript 0.22.0",
+      "sha": "11090dd",
+      "message": "Keep Clippy config out of crate packages",
       "author": "Arthur",
-      "date": "2026-07-26",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/1f1ce0913ac1035aa957466863e99728af0c8104"
+      "date": "2026-08-22",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/11090dd33430cb76b9208c699b649e88c37edd91"
     },
     {
-      "sha": "e9f553a",
-      "message": "Refresh README for 0.22 release",
+      "sha": "c31fd84",
+      "message": "Make Clippy lint policy self-contained",
       "author": "Arthur",
-      "date": "2026-07-25",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/e9f553a435b77aeb120e38e8c480263cf5504f8c"
+      "date": "2026-08-22",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/c31fd84e916ab97d87256d805fb72b9607ee817d"
     },
     {
-      "sha": "830b597",
-      "message": "Require Docker for release WASM builds",
+      "sha": "0fe90e3",
+      "message": "Finalize CellScript 0.24 release hardening",
       "author": "Arthur",
-      "date": "2026-07-25",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/830b5971237401a74dd7848b200f48b4d2ed79f4"
+      "date": "2026-08-22",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/0fe90e30fbafd055003bc92fd68518a6262f254d"
     }
   ]
 }
