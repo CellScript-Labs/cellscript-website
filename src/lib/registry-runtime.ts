@@ -1,4 +1,5 @@
 export type RegistryEnvironment = "production" | "testnet-sandbox";
+export type RegistryNetwork = "mainnet" | "testnet";
 
 const environmentValue = import.meta.env.PUBLIC_REGISTRY_ENVIRONMENT || "production";
 

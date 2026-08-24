@@ -7,16 +7,24 @@ import checkIcon from "@phosphor-icons/core/regular/check.svg?raw";
 import xIcon from "@phosphor-icons/core/regular/x.svg?raw";
 
 const t = translations[defaultLocale];
-const description = t.registry.submit.description;
+const description = t.registry.headers.submit.description;
 const apiOrigin = registryRuntime.apiOrigin;
 ---
 
-<RegistryLayout title="CellScript Artifact Registry: Publish" description={description} headingKey="registry.shellTitle" descriptionKey="registry.shellDescription" titleKey="registry.nav.submit" active="submit" showSubmitCta={false}>
+<RegistryLayout
+  title="CellScript Artifact Registry: Publish"
+  description={description}
+  eyebrowKey="registry.headers.submit.eyebrow"
+  headingKey="registry.headers.submit.title"
+  descriptionKey="registry.headers.submit.description"
+  titleKey="registry.nav.submit"
+  active="submit"
+  showSubmitCta={false}
+>
   <section class="registry-flow" aria-label={t.registry.nav.submit} data-i18n-aria-label="registry.nav.submit">
-    <section class="registry-publish-entry" data-publish-entry aria-labelledby="registry-publish-entry-title">
+    <section class="registry-publish-entry" data-publish-entry aria-label={t.registry.submit.entryLabel} data-i18n-aria-label="registry.submit.entryLabel">
       <div class="registry-publish-entry-main">
         <p class="registry-context-label" data-i18n="registry.submit.entryLabel">{t.registry.submit.entryLabel}</p>
-        <h2 id="registry-publish-entry-title" data-i18n="registry.submit.entryTitle">{t.registry.submit.entryTitle}</h2>
         <p class="registry-publish-entry-lead" data-i18n="registry.submit.entryBody">{t.registry.submit.entryBody}</p>
         <div class="registry-publish-command" aria-label={t.registry.submit.entryCommandLabel} data-i18n-aria-label="registry.submit.entryCommandLabel">
           <span>

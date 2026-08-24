@@ -35,9 +35,6 @@ export interface RegistryVersion {
   edition?: "2026";
   /** Resolved target/assurance/ABI/schema profile identity. */
   compatibility_profile_hash?: string;
-  /** Canonical 0.25 package interface identity and signed interface record. */
-  interface_hash?: string;
-  interface?: Record<string, unknown>;
   dependencies?: Record<string, { namespace: string; version: string }>;
   status: RegistryEntryStatus;
   yanked: boolean;
@@ -73,6 +70,7 @@ export interface RegistryRelease {
   abi_hash?: string;
   build_recipe_hash?: string;
   profile_contract?: Record<string, any>;
+  interface?: RegistryLsIdlInterface;
   verification_status: "pending" | "hash_bound" | "verified" | "evidence_required" | "rejected";
   deployment_status: "not_applicable" | "undeployed" | "deployed" | "chain_verified";
   availability_status: "active" | "deprecated" | "yanked" | "quarantined";
@@ -84,6 +82,19 @@ export interface RegistryRelease {
   expires_at?: string;
   purge_after?: string;
   evidence?: RegistryEvidence[];
+}
+
+export interface RegistryLsIdlInterface {
+  schema: "cellscript-registry-ls-idl-interface-v1";
+  format: "ls-idl";
+  format_version: "0.1";
+  content_type: "application/vnd.ckb.ls-idl+json";
+  encoding: "linear-le-v0";
+  commitment: {
+    algorithm: "sha256";
+    placement: "code-cell-data-suffix-32";
+    digest: string;
+  };
 }
 
 export interface RegistryDeployment {
@@ -121,6 +132,7 @@ export interface RegistryEvidence {
   dep_type?: string;
   out_point?: string | { tx_hash: string; index: number };
   chain_verification?: string;
+  interface?: RegistryLsIdlInterface;
   evidence?: Record<string, unknown>;
 }
 
@@ -145,6 +157,18 @@ export interface RegistryPackageDetailView {
   evidenceUrl: string;
   maintainUrl: string;
   guidance: RegistryArtifactGuidance;
+  lsIdl?: RegistryLsIdlView;
+}
+
+export interface RegistryLsIdlView {
+  contract: RegistryLsIdlInterface;
+  codeHash?: string;
+  dataHash?: string;
+  hashType?: string;
+  network: string;
+  lookupUrl?: string;
+  compatibilityUrl?: string;
+  fetchCommand?: string;
 }
 
 export interface RegistryPackageView {
@@ -228,8 +252,9 @@ export interface RegistrySection {
 }
 
 export const registrySections: RegistrySection[] = [
-  { href: "/registry", label: "Registry", i18nKey: "registry.nav.browse" },
+  { href: "/registry", label: "Browse", i18nKey: "registry.nav.browse" },
   { href: "/registry/submit", label: "Submit", i18nKey: "registry.nav.submit" },
+  { href: "/registry/LS-IDL", label: "LS-IDL", i18nKey: "registry.nav.interface" },
   { href: "/registry/api", label: "API", i18nKey: "registry.nav.api" },
 ];
 
@@ -420,7 +445,11 @@ export function registryDateLabel(value?: string, missingLabel = "not recorded",
   }).format(date);
 }
 
-export function registryPackageDetailView(pkg: RegistryPackageView, apiOrigin: string): RegistryPackageDetailView {
+export function registryPackageDetailView(
+  pkg: RegistryPackageView,
+  apiOrigin: string,
+  defaultNetwork: "mainnet" | "testnet" = "mainnet",
+): RegistryPackageDetailView {
   const releases: RegistryReleaseView[] = pkg.releases.map((release) => ({
     ...release,
     evidence: (release.evidence ?? []).map(evidenceView),
@@ -461,6 +490,33 @@ export function registryPackageDetailView(pkg: RegistryPackageView, apiOrigin: s
     recordUrl,
     maintainUrl,
   });
+  const interfaceContract = firstRelease?.interface
+    ?? (isRegistryLsIdlInterface(profileContract?.interface) ? profileContract.interface : undefined);
+  const interfaceDeployment = deployments.find((item) => item.code_hash) ?? pkg.deployments.find((item) => item.code_hash);
+  const network = interfaceDeployment?.network ?? firstRelease?.network ?? defaultNetwork;
+  let lsIdl: RegistryLsIdlView | undefined;
+  if (interfaceContract) {
+    const codeHash = interfaceDeployment?.code_hash;
+    const hashType = interfaceDeployment?.hash_type ?? "data1";
+    const dataHash = interfaceDeployment?.data_hash;
+    const lookupParams = new URLSearchParams({ network, hash_type: hashType });
+    if (dataHash) lookupParams.set("data_hash", dataHash);
+    const lookupUrl = codeHash
+      ? `${cleanApiOrigin}/v1/ckb/scripts/${encodeURIComponent(codeHash)}/interfaces/ls-idl?${lookupParams}`
+      : undefined;
+    lsIdl = {
+      contract: interfaceContract,
+      codeHash,
+      dataHash,
+      hashType,
+      network,
+      lookupUrl,
+      compatibilityUrl: codeHash ? `${cleanApiOrigin}/idl/${encodeURIComponent(codeHash)}` : undefined,
+      fetchCommand: codeHash
+        ? `cellc artifact ls-idl fetch --code-hash ${codeHash} --hash-type ${hashType}${dataHash ? ` --data-hash ${dataHash}` : ""} --network ${network} --output idl.json${apiArg}`
+        : undefined,
+    };
+  }
 
   return {
     pkg,
@@ -475,7 +531,20 @@ export function registryPackageDetailView(pkg: RegistryPackageView, apiOrigin: s
     evidenceUrl,
     maintainUrl,
     guidance,
+    lsIdl,
   };
+}
+
+function isRegistryLsIdlInterface(value: unknown): value is RegistryLsIdlInterface {
+  if (!isRecord(value) || !isRecord(value.commitment)) return false;
+  return value.schema === "cellscript-registry-ls-idl-interface-v1"
+    && value.format === "ls-idl"
+    && value.format_version === "0.1"
+    && value.content_type === "application/vnd.ckb.ls-idl+json"
+    && value.encoding === "linear-le-v0"
+    && value.commitment.algorithm === "sha256"
+    && value.commitment.placement === "code-cell-data-suffix-32"
+    && /^(?:0x)?[0-9a-f]{64}$/i.test(String(value.commitment.digest ?? ""));
 }
 
 const artifactKinds = new Set<RegistryArtifactKind>([
@@ -560,6 +629,7 @@ export function registryPackageViewFromApi(value: unknown): RegistryPackageView 
       || !availabilityStatuses.has(availabilityStatus)
       || !evidence
       || (candidate.profile_contract !== undefined && !isRecord(candidate.profile_contract))
+      || (candidate.interface !== undefined && !isRegistryLsIdlInterface(candidate.interface))
       || (candidate.immutable_bundle !== undefined && !isRecord(candidate.immutable_bundle))
     ) return undefined;
     releases.push({ ...candidate, evidence } as unknown as RegistryRelease);

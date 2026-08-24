@@ -1,0 +1,23 @@
+---
+import RegistryLsIdlLookup from "../../components/RegistryLsIdlLookup.astro";
+import RegistryLayout from "../../layouts/RegistryLayout.astro";
+import { defaultLocale, translations } from "../../i18n/translations";
+import { registryRuntime } from "../../lib/registry-runtime";
+
+const t = translations[defaultLocale];
+---
+
+<RegistryLayout
+  title="CellScript Registry: LS-IDL lookup"
+  description={t.registry.headers.interface.description}
+  eyebrowKey="registry.headers.interface.eyebrow"
+  headingKey="registry.headers.interface.title"
+  descriptionKey="registry.headers.interface.description"
+  titleKey="registry.nav.interface"
+  active="interface"
+  showSubmitCta={false}
+>
+  <div class="registry-tool-route">
+    <RegistryLsIdlLookup apiOrigin={registryRuntime.apiOrigin} network={registryRuntime.network} />
+  </div>
+</RegistryLayout>

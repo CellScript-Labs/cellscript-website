@@ -7,6 +7,11 @@ import { ClientRouter } from "astro:transitions";
 import { defaultLocale, translations } from "../i18n/translations";
 import { registrySections } from "../lib/registry";
 import { isTestnetSandbox, registryRuntime } from "../lib/registry-runtime";
+import bracketsCurlyIcon from "@phosphor-icons/core/regular/brackets-curly.svg?raw";
+import magnifyingGlassIcon from "@phosphor-icons/core/regular/magnifying-glass.svg?raw";
+import terminalWindowIcon from "@phosphor-icons/core/regular/terminal-window.svg?raw";
+import uploadSimpleIcon from "@phosphor-icons/core/regular/upload-simple.svg?raw";
+import arrowUpRightIcon from "@phosphor-icons/core/regular/arrow-up-right.svg?raw";
 
 interface Props {
   title: string;
@@ -15,10 +20,11 @@ interface Props {
   // heading and description, so the layout can re-render them on locale
   // change. Omit for pages whose heading is a dynamic identifier (e.g. a
   // package coordinate) that should not be localized.
+  eyebrowKey?: string;
   headingKey?: string;
   descriptionKey?: string;
   titleKey?: string;
-  active: "search" | "submit" | "api" | "manage" | "package";
+  active: "search" | "submit" | "interface" | "api" | "manage" | "package";
   compactHeader?: boolean;
   showSubmitCta?: boolean;
   showHeader?: boolean;
@@ -28,6 +34,7 @@ interface Props {
 const {
   title,
   description,
+  eyebrowKey,
   headingKey,
   descriptionKey,
   titleKey,
@@ -52,9 +59,23 @@ const resolveKey = (key: string | undefined): string | undefined => {
 };
 const headingText = resolveKey(headingKey) ?? title.replace("CellScript Registry: ", "");
 const descriptionText = resolveKey(descriptionKey) ?? description;
+const eyebrowText = resolveKey(eyebrowKey);
 const titleSuffix = headingKey ? undefined : title.split(": ").slice(1).join(": ") || undefined;
+const headerIcons: Partial<Record<Props["active"], string>> = {
+  search: magnifyingGlassIcon,
+  submit: uploadSimpleIcon,
+  interface: bracketsCurlyIcon,
+  api: terminalWindowIcon,
+};
+const headerIcon = headerIcons[active];
 const activeHref =
-  active === "submit" ? "/registry/submit" : active === "api" ? "/registry/api" : "/registry";
+  active === "submit"
+    ? "/registry/submit"
+    : active === "interface"
+      ? "/registry/LS-IDL"
+      : active === "api"
+        ? "/registry/api"
+        : "/registry";
 ---
 
 <!doctype html>
@@ -85,34 +106,49 @@ const activeHref =
   <body class="registry-body">
     <a class="skip-link" href="#registry-main" data-i18n="a11y.skipToContent">{t.a11y.skipToContent}</a>
     <SiteHeader page="registry" />
-    <main id="registry-main" class="registry-app">
-      <aside class:list={["registry-environment-bar", isTestnetSandbox && "is-testnet"]} transition:persist="registry-environment" aria-label={isTestnetSandbox ? t.registry.sandboxTitle : t.registry.productionTitle}>
-        <span class="registry-environment-identity">
-          <i aria-hidden="true"></i>
-          <strong data-i18n={isTestnetSandbox ? "registry.sandboxTitle" : "registry.productionTitle"}>{isTestnetSandbox ? t.registry.sandboxTitle : t.registry.productionTitle}</strong>
-          <span data-i18n={isTestnetSandbox ? "registry.sandboxBody" : "registry.productionBody"}>{isTestnetSandbox ? t.registry.sandboxBody : t.registry.productionBody}</span>
-        </span>
-        <a href={registryRuntime.alternateOrigin} data-i18n={isTestnetSandbox ? "registry.openProduction" : "registry.openSandbox"}>{isTestnetSandbox ? t.registry.openProduction : t.registry.openSandbox}</a>
-      </aside>
-      {showHeader && <header class:list={["registry-topbar", compactHeader && "registry-topbar-compact"]} transition:persist="registry-header" aria-label={t.registry.appLabel} data-i18n-aria-label="registry.appLabel">
-        <div>
-          <h1 data-registry-heading data-registry-heading-key={headingKey}>{headingText}</h1>
-          <p data-registry-description data-registry-description-key={descriptionKey}>{descriptionText}</p>
+    <main id="registry-main" class:list={["registry-app", showHeader && "registry-app-framed"]}>
+      <section class:list={["registry-hero", !showHeader && "registry-hero-no-header", !showTabs && "registry-hero-no-tabs"]} data-registry-hero>
+        <div class:list={["registry-shell-bar", !showHeader && "registry-shell-bar-context-only"]}>
+          {showHeader && <header class:list={["registry-topbar", compactHeader && "registry-topbar-compact"]} transition:name="registry-header" data-registry-section={active} aria-label={t.registry.appLabel} data-i18n-aria-label="registry.appLabel">
+            <div class="registry-topbar-copy">
+              {eyebrowText && <p class="registry-topbar-kicker">
+                {headerIcon && <span class="registry-topbar-kicker-icon" aria-hidden="true" set:html={headerIcon}></span>}
+                <span data-i18n={eyebrowKey}>{eyebrowText}</span>
+              </p>}
+              <h1 data-registry-heading data-registry-heading-key={headingKey}>{headingText}</h1>
+              <p data-registry-description data-registry-description-key={descriptionKey}>{descriptionText}</p>
+            </div>
+            {showSubmitCta && <a class="registry-button primary registry-topbar-cta" href="/registry/submit" data-registry-topbar-cta data-i18n="registry.submitPackage">{t.registry.submitPackage}</a>}
+          </header>}
+          <aside class:list={["registry-environment-bar", "registry-network-card", isTestnetSandbox && "is-testnet"]} transition:persist="registry-environment" aria-label={isTestnetSandbox ? t.registry.sandboxTitle : t.registry.productionTitle}>
+            <p class="registry-network-label" data-i18n="registry.currentNetwork">{t.registry.currentNetwork}</p>
+            <div class="registry-network-heading">
+              <span class="registry-environment-identity">
+                <i aria-hidden="true"></i>
+                <strong data-i18n={isTestnetSandbox ? "registry.sandboxTitle" : "registry.productionTitle"}>{isTestnetSandbox ? t.registry.sandboxTitle : t.registry.productionTitle}</strong>
+              </span>
+              <span class="registry-network-code">CKB</span>
+            </div>
+            <p class="registry-network-body" data-i18n={isTestnetSandbox ? "registry.sandboxBody" : "registry.productionBody"}>{isTestnetSandbox ? t.registry.sandboxBody : t.registry.productionBody}</p>
+            <a class="registry-network-switch" href={registryRuntime.alternateOrigin}>
+              <span data-i18n={isTestnetSandbox ? "registry.openProduction" : "registry.openSandbox"}>{isTestnetSandbox ? t.registry.openProduction : t.registry.openSandbox}</span>
+              <span aria-hidden="true" set:html={arrowUpRightIcon}></span>
+            </a>
+          </aside>
         </div>
-        {showSubmitCta && <a class="registry-button primary registry-topbar-cta" href="/registry/submit" data-registry-topbar-cta data-i18n="registry.submitPackage">{t.registry.submitPackage}</a>}
-      </header>}
 
-      {showTabs && <nav class="registry-tabs" transition:persist="registry-tabs" aria-label={t.registry.sectionsLabel} data-i18n-aria-label="registry.sectionsLabel">
-        {registrySections.map((section) => (
-          <a
-            href={section.href}
-            class:list={[section.href === activeHref && "active"]}
-            aria-current={section.href === activeHref ? "page" : undefined}
-          >
-            <span data-i18n={section.i18nKey}>{section.label}</span>
-          </a>
-        ))}
-      </nav>}
+        {showTabs && <nav class="registry-tabs" transition:persist="registry-tabs" aria-label={t.registry.sectionsLabel} data-i18n-aria-label="registry.sectionsLabel">
+          {registrySections.map((section) => (
+            <a
+              href={section.href}
+              class:list={[section.href === activeHref && "active"]}
+              aria-current={section.href === activeHref ? "page" : undefined}
+            >
+              <span data-i18n={section.i18nKey}>{section.label}</span>
+            </a>
+          ))}
+        </nav>}
+      </section>
 
       <div class="registry-route" transition:name="registry-route">
         <slot />
@@ -193,13 +229,30 @@ const activeHref =
         const tabs = document.querySelector<HTMLElement>(".registry-tabs");
         if (!tabs) return;
         const currentPath = normaliseRegistryPath(window.location.pathname);
+        let activeLink: HTMLAnchorElement | undefined;
         tabs.querySelectorAll<HTMLAnchorElement>("a[href]").forEach((link) => {
           const targetPath = normaliseRegistryPath(new URL(link.href, window.location.href).pathname);
           const isActive = targetPath === currentPath;
           link.classList.toggle("active", isActive);
-          if (isActive) link.setAttribute("aria-current", "page");
+          if (isActive) {
+            link.setAttribute("aria-current", "page");
+            activeLink = link;
+          }
           else link.removeAttribute("aria-current");
         });
+        if (!activeLink) {
+          delete tabs.dataset.indicatorReady;
+          return;
+        }
+        const tabsRect = tabs.getBoundingClientRect();
+        const activeRect = activeLink.getBoundingClientRect();
+        tabs.style.setProperty("--registry-tab-indicator-x", `${activeRect.left - tabsRect.left + tabs.scrollLeft}px`);
+        tabs.style.setProperty("--registry-tab-indicator-width", `${activeRect.width}px`);
+        if (!tabs.dataset.indicatorReady) {
+          requestAnimationFrame(() => {
+            if (tabs.isConnected) tabs.dataset.indicatorReady = "true";
+          });
+        }
       };
 
       const syncRegistryShell = () => {
@@ -211,7 +264,8 @@ const activeHref =
       // updating <html data-locale>) and after Astro swaps page content.
       if (!(window as any).__cellscriptRegistryLayoutLocaleBound) {
         window.addEventListener("cellscript:locale-change", reapplyRegistryLocale);
-        document.addEventListener("astro:after-swap", syncRegistryTabs);
+        window.addEventListener("resize", syncRegistryTabs, { passive: true });
+        document.addEventListener("astro:after-swap", syncRegistryShell);
         document.addEventListener("astro:page-load", syncRegistryShell);
         (window as any).__cellscriptRegistryLayoutLocaleBound = true;
       }

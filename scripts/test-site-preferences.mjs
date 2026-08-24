@@ -12,7 +12,7 @@ const assert = (condition, message) => {
 const extractScripts = (html) =>
   [...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)].map((match) => match[1]);
 
-const pages = ["registry/index.html", "registry/submit/index.html", "registry/api/index.html"];
+const pages = ["registry/index.html", "registry/submit/index.html", "registry/api/index.html", "registry/LS-IDL/index.html"];
 const pageScripts = pages.map((page) => {
   const html = read(resolve(dist, page));
   const script = extractScripts(html).find((candidate) => candidate.includes("__cellscriptTopbarDelegationBound"));

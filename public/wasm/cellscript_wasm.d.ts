@@ -5,7 +5,7 @@
  * Compile CellScript source to metadata JSON (path A, no ELF).
  *
  * Returns a JSON string. On success this is the serialized
- * `CompileMetadata` (module, types, actions with effect_class /
+ * browser metadata summary (module, types, actions with effect_class /
  * consume_set / create_set / estimated_cycles, etc.). On error it
  * is `{"error": "<message>"}`.
  *
@@ -18,7 +18,7 @@ export function compile_metadata_json(source: string, edition: string, target?: 
  * Compile CellScript source and return a stable result envelope for tools.
  *
  * On success the response is:
- * `{ "metadata": <CompileMetadata>, "diagnostic_count": 0, "error_count": 0, "warning_count": 0, "diagnostics": [] }`
+ * `{ "metadata": <browser summary>, "diagnostic_count": 0, "error_count": 0, "warning_count": 0, "diagnostics": [] }`
  *
  * On failure the response is:
  * `{ "metadata": null, "diagnostic_count": N, "error_count": E, "warning_count": W, "diagnostics": [{ message, severity, code, range }, ...] }`
@@ -39,16 +39,6 @@ export function compile_metadata_json_diagnostics(source: string, edition: strin
 export function compile_metadata_json_sources(sources_json: string, entry_path: string, edition: string, target?: string | null): string;
 
 /**
- * Query the in-process CellScript language service for browser tooling.
- *
- * `line` and `character` are zero-based UTF-16 positions, matching LSP.
- * The result contains completion, hover, definition and current document
- * diagnostics in one JSON payload so the playground can avoid multiple
- * WASM calls per cursor move.
- */
-export function language_service_json(source: string, line: number, character: number): string;
-
-/**
  * Return the compiler version string (e.g. "0.17.0").
  */
 export function version(): string;
@@ -60,7 +50,6 @@ export interface InitOutput {
     readonly compile_metadata_json: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
     readonly compile_metadata_json_diagnostics: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
     readonly compile_metadata_json_sources: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => [number, number];
-    readonly language_service_json: (a: number, b: number, c: number, d: number) => [number, number];
     readonly version: () => [number, number];
     readonly __wbindgen_externrefs: WebAssembly.Table;
     readonly __wbindgen_malloc: (a: number, b: number) => number;

@@ -18,6 +18,8 @@ if (lightStart < 0) throw new Error("missing light-theme token block");
 const darkTokens = globalCss.slice(globalCss.indexOf(":root {"), lightStart);
 const lightTokens = globalCss.slice(lightStart, globalCss.indexOf("\n}", lightStart) + 2);
 
+const cssRuleBody = (selector) => globalCss.match(new RegExp(`${selector}\\s*\\{(?<body>[\\s\\S]*?)\\n\\}`))?.groups?.body || "";
+
 const readOklch = (block, name) => {
   const match = block.match(new RegExp(`--${name}:\\s*oklch\\(\\s*([0-9.]+)\\s+([0-9.]+)\\s+([0-9.]+)`));
   if (!match) throw new Error(`missing opaque OKLCH token --${name}`);
@@ -110,8 +112,37 @@ if (/\.textContent\s*=\s*["'][→←↗✓✕×]["']|>[→←↗✓✕×]</.test
 if (!globalCss.includes(".hero-aurora span:nth-child(2) {\n  display: none;")) {
   throw new Error("the landing hero must keep one ambient visual layer instead of stacked auroras");
 }
+if (!visualSources.includes('<div class="hero-brand-lockup">') || !visualSources.includes("<BrandMark />")) {
+  throw new Error("the landing hero must retain its animated CellScript brand lockup");
+}
+const heroLogoGlow = cssRuleBody("\\.hero-brand-lockup::before");
+const heroOrbit = cssRuleBody("\\.hero-orbit i");
+const heroOrbitTwo = cssRuleBody("\\.hero-orbit i:nth-child\\(2\\)");
+const heroOrbitThree = cssRuleBody("\\.hero-orbit i:nth-child\\(3\\)");
+if (!heroLogoGlow.includes("animation: hero-logo-breathe")) {
+  throw new Error("the landing hero logo must retain its breathing light animation");
+}
+if (!heroOrbit.includes("animation: hero-orbit-spin") || heroOrbit.includes("animation: none")) {
+  throw new Error("the landing hero logo must retain its orbit animation");
+}
+if (heroOrbitTwo.includes("display: none") || heroOrbitThree.includes("display: none")) {
+  throw new Error("all three landing hero logo orbit layers must remain visible");
+}
 if (!registryCss.includes(".registry-artifact-mark i {\n  display: none;")) {
   throw new Error("artifact identity marks must not reuse the network status-dot language");
+}
+for (const token of [".registry-hero", ".registry-network-card", ".registry-api-group-heading"]) {
+  if (!registryCss.includes(token)) throw new Error(`Registry unified layout is missing ${token}`);
+}
+for (const token of [
+  "--registry-rail: clamp(28px, 4.6vw, 64px);",
+  "grid-template-columns: repeat(12, minmax(0, 1fr));",
+  ".registry-app-framed .registry-route",
+]) {
+  if (!registryCss.includes(token)) throw new Error(`Registry alignment system is missing ${token}`);
+}
+if (!registryCss.includes("line-height: 1.72;")) {
+  throw new Error("Registry hero and supporting copy must preserve the expanded reading rhythm");
 }
 if (registryCss.includes("--line-strong")) {
   throw new Error("Registry controls must use defined shared border tokens");
@@ -136,6 +167,17 @@ if (!docsShell.includes("minmax(0, var(--docs-reading-max))")) {
 }
 if (!globalCss.includes("--workbench-max: 1920px;")) {
   throw new Error("Playground workbench must have an explicit wide-screen frame");
+}
+const bodyRule = cssRuleBody("body");
+const substrateGrain = cssRuleBody("body::after");
+if (!bodyRule.includes("isolation: isolate;")) {
+  throw new Error("the page substrate must isolate its decorative layers from surrounding stacking contexts");
+}
+for (const token of ["z-index: -1;", "opacity: var(--noise-opacity);", "mask-image: var(--noise-mask);"]) {
+  if (!substrateGrain.includes(token)) throw new Error(`the substrate grain is missing ${token}`);
+}
+if (/--noise-dot:\s*oklch\([^)]*\//.test(darkTokens) || /--noise-dot:\s*oklch\([^)]*\//.test(lightTokens)) {
+  throw new Error("substrate grain strength must come from --noise-opacity instead of hidden color alpha");
 }
 const playgroundStage = globalCss.match(/\.pg-stage\s*\{(?<body>[\s\S]*?)\n\}/)?.groups?.body || "";
 const playgroundStudio = globalCss.match(/\.pg-studio-frame\s*\{(?<body>[\s\S]*?)\n\}/)?.groups?.body || "";

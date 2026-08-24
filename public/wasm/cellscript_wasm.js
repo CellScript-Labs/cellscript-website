@@ -4,7 +4,7 @@
  * Compile CellScript source to metadata JSON (path A, no ELF).
  *
  * Returns a JSON string. On success this is the serialized
- * `CompileMetadata` (module, types, actions with effect_class /
+ * browser metadata summary (module, types, actions with effect_class /
  * consume_set / create_set / estimated_cycles, etc.). On error it
  * is `{"error": "<message>"}`.
  *
@@ -38,7 +38,7 @@ export function compile_metadata_json(source, edition, target) {
  * Compile CellScript source and return a stable result envelope for tools.
  *
  * On success the response is:
- * `{ "metadata": <CompileMetadata>, "diagnostic_count": 0, "error_count": 0, "warning_count": 0, "diagnostics": [] }`
+ * `{ "metadata": <browser summary>, "diagnostic_count": 0, "error_count": 0, "warning_count": 0, "diagnostics": [] }`
  *
  * On failure the response is:
  * `{ "metadata": null, "diagnostic_count": N, "error_count": E, "warning_count": W, "diagnostics": [{ message, severity, code, range }, ...] }`
@@ -100,33 +100,6 @@ export function compile_metadata_json_sources(sources_json, entry_path, edition,
         return getStringFromWasm0(ret[0], ret[1]);
     } finally {
         wasm.__wbindgen_free(deferred5_0, deferred5_1, 1);
-    }
-}
-
-/**
- * Query the in-process CellScript language service for browser tooling.
- *
- * `line` and `character` are zero-based UTF-16 positions, matching LSP.
- * The result contains completion, hover, definition and current document
- * diagnostics in one JSON payload so the playground can avoid multiple
- * WASM calls per cursor move.
- * @param {string} source
- * @param {number} line
- * @param {number} character
- * @returns {string}
- */
-export function language_service_json(source, line, character) {
-    let deferred2_0;
-    let deferred2_1;
-    try {
-        const ptr0 = passStringToWasm0(source, wasm.__wbindgen_malloc, wasm.__wbindgen_realloc);
-        const len0 = WASM_VECTOR_LEN;
-        const ret = wasm.language_service_json(ptr0, len0, line, character);
-        deferred2_0 = ret[0];
-        deferred2_1 = ret[1];
-        return getStringFromWasm0(ret[0], ret[1]);
-    } finally {
-        wasm.__wbindgen_free(deferred2_0, deferred2_1, 1);
     }
 }
 

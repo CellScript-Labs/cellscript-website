@@ -316,6 +316,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
                 <li data-i18n="playground.browserBoundaryElf">{t.playground.browserBoundaryElf}</li>
                 <li data-i18n="playground.browserBoundaryVm">{t.playground.browserBoundaryVm}</li>
                 <li data-i18n="playground.browserBoundaryEquivalence">{t.playground.browserBoundaryEquivalence}</li>
+                <li data-i18n="playground.browserBoundaryLanguage">{t.playground.browserBoundaryLanguage}</li>
               </ul>
             </section>
             <section class="pg-inspector" data-inspector aria-live="polite"></section>
@@ -423,7 +424,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
         role?: string;
       };
 
-      const compilerAssetVersion = "20260731-v0.22.0-9bb2d765";
+      const compilerAssetVersion = "20260824-v0.25.0-32dc571c";
       const workerUrl = new URL(`/playground-worker.js?v=${compilerAssetVersion}`, window.location.href);
       const previousPlaygroundAbort = (window as any).__cellscriptPlaygroundAbort as AbortController | undefined;
       previousPlaygroundAbort?.abort();
@@ -1151,7 +1152,7 @@ action inspect() -> u64 {
       const buildCellToml = (entry: string) => `[package]
 name = "playground"
 version = "0.1.0"
-cellscript_version = "0.22.0"
+cellscript_version = "0.25.0"
 entry = "${entry.replace(/"/g, "")}"
 source_roots = ["src"]
 `;
@@ -1818,29 +1819,9 @@ source_roots = ["src"]
             <button class="pg-inspector-source" type="button" data-jump-kind="type" data-jump-name="${escapeAttr(view.name)}">${escapeHtml(pg("showInSource"))}</button>`;
           return;
         }
-        const identityRow = (label: string, hash: string | null, copyLabel: string) => hash
-          ? `<div class="pg-identity-row">
-              <span>${escapeHtml(label)}</span>
-              <code>${escapeHtml(hash)}</code>
-              <button
-                class="copy-btn pg-identity-copy"
-                type="button"
-                data-copy-text="${escapeAttr(hash)}"
-                data-copy-aria="${escapeAttr(copyLabel)}"
-                data-copied-aria="${escapeAttr(pg("copiedHash"))}"
-                aria-label="${escapeAttr(copyLabel)}"
-                aria-live="polite"
-              ><span data-copy-label>${escapeHtml(pg("copyHash"))}</span></button>
-            </div>`
-          : "";
         inspector.innerHTML = `
           <div class="pg-inspector-head"><span>${escapeHtml(pg("projectSummary"))}</span></div>
           <strong class="pg-inspector-summary">${escapeHtml(fmt(pg("flowSummary"), { actions: String(view.actions), types: String(view.types) }))}</strong>
-          <div class="pg-inspector-identities">
-            <span>${escapeHtml(pg("verificationIdentities"))}</span>
-            ${identityRow(pg("interfaceHash"), view.interfaceHash, pg("copyInterfaceHash"))}
-            ${identityRow(pg("typedSemanticsHash"), view.typedSemanticsHash, pg("copyTypedSemanticsHash"))}
-          </div>
           <p>${escapeHtml(pg("flowSummaryBody"))}</p>`;
       };
 
