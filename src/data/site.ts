@@ -83,17 +83,17 @@ export const playgroundExamples = [
   { id: "launch", label: "Token launch", file: "examples/launch.cell" },
   { id: "multisig", label: "Multisig wallet", file: "examples/multisig.cell" },
   { id: "timelock", label: "Timelock escrow", file: "examples/timelock.cell" },
-  { id: "canonicalStyle", label: "Canonical style", file: "examples/language/canonical_style.cell" },
-  { id: "orderBook", label: "Order book", file: "examples/language/order_book.cell" },
-  { id: "languageRegistry", label: "Language registry", file: "examples/language/registry.cell" },
-  { id: "stdlib", label: "Stdlib constraints", file: "examples/language/stdlib.cell" },
-  { id: "ckbTypeIdCreate", label: "CKB TYPE_ID create", file: "examples/language/v0_14_ckb_type_id_create.cell" },
-  { id: "delegateVerify", label: "Delegate verify", file: "examples/language/v0_14_delegate_verify.cell" },
-  { id: "blake2bHash", label: "Blake2b hash lock", file: "examples/language/v0_14_hash_blake2b.cell" },
-  { id: "multiStepPipeline", label: "Spawn pipeline", file: "examples/language/v0_14_multi_step_pipeline.cell" },
-  { id: "witnessSource", label: "Witness source", file: "examples/language/v0_14_witness_source.cell" },
-  { id: "identityLifecycle", label: "Identity lifecycle", file: "examples/language/v0_15_identity_lifecycle.cell" },
-  { id: "scopedInvariant", label: "Scoped invariants", file: "examples/language/v0_15_scoped_invariant.cell" },
+  { id: "canonicalStyle", label: "Canonical style", file: "examples/language/core/canonical_style.cell" },
+  { id: "orderBook", label: "Order book", file: "examples/language/collections/order_book.cell" },
+  { id: "languageRegistry", label: "Language registry", file: "examples/language/collections/registry.cell" },
+  { id: "stdlib", label: "Stdlib constraints", file: "examples/language/core/stdlib.cell" },
+  { id: "ckbTypeIdCreate", label: "CKB TYPE_ID create", file: "examples/language/ckb/type_id_create.cell" },
+  { id: "delegateVerify", label: "Delegate verify", file: "examples/language/ckb/delegate_verify.cell" },
+  { id: "blake2bHash", label: "Blake2b hash lock", file: "examples/language/ckb/blake2b_hash.cell" },
+  { id: "multiStepPipeline", label: "Spawn pipeline", file: "examples/language/ckb/multi_step_pipeline.cell" },
+  { id: "witnessSource", label: "Witness source", file: "examples/language/ckb/witness_source.cell" },
+  { id: "identityLifecycle", label: "Identity lifecycle", file: "examples/language/ownership/identity_lifecycle.cell" },
+  { id: "scopedInvariant", label: "Scoped invariants", file: "examples/language/verification/scoped_invariant.cell" },
 ] as const;
 
 const playgroundSourceNotes: Record<string, readonly string[]> = {
@@ -334,8 +334,8 @@ export const modelCards = [
   {
     id: "lock",
     name: "lock",
-    source: "examples/language/canonical_style.cell",
-    code: "// examples/language/canonical_style.cell\nlock vault_owner(protected vault: Vault, lock_args owner: Address, witness claimed_owner: Address) -> bool {\n    let input = source::group_input(0)\n    let witness_lock = witness::lock(input)\n    // ... digest and ownership checks omitted\n}",
+    source: "examples/language/core/canonical_style.cell",
+    code: "// examples/language/core/canonical_style.cell\nlock vault_owner(protected vault: Vault, lock_args owner: Address, witness claimed_owner: Address) -> bool {\n    let input = source::group_input(0)\n    let witness_lock = witness::lock(input)\n    // ... digest and ownership checks omitted\n}",
   },
   {
     id: "flow",
@@ -346,8 +346,8 @@ export const modelCards = [
   {
     id: "invariant",
     name: "invariant",
-    source: "examples/language/v0_15_scoped_invariant.cell",
-    code: "// examples/language/v0_15_scoped_invariant.cell\ninvariant token_amount_conservation {\n    trigger: type_group\n    scope: group\n    reads: group_inputs<Token>.amount, group_outputs<Token>.amount\n    assert_sum(group_outputs<Token>.amount) == assert_sum(group_inputs<Token>.amount)\n}",
+    source: "examples/language/verification/scoped_invariant.cell",
+    code: "// examples/language/verification/scoped_invariant.cell\ninvariant token_amount_conservation {\n    trigger: type_group\n    scope: group\n    reads: group_inputs<Token>.amount, group_outputs<Token>.amount\n    assert_sum(group_outputs<Token>.amount) == assert_sum(group_inputs<Token>.amount)\n}",
   },
   {
     id: "structEnum",
@@ -358,8 +358,8 @@ export const modelCards = [
   {
     id: "identity",
     name: "identity",
-    source: "examples/language/v0_15_identity_lifecycle.cell",
-    code: "// examples/language/v0_15_identity_lifecycle.cell\naction mint_unique_nft(recipient: Address, tid: u64) -> UniqueNFT\nwhere\n    create_unique<UniqueNFT>(identity = field(token_id)) { token_id: tid, owner: recipient } with_lock(recipient)",
+    source: "examples/language/ownership/identity_lifecycle.cell",
+    code: "// examples/language/ownership/identity_lifecycle.cell\naction mint_unique_nft(recipient: Address, tid: u64) -> UniqueNFT\nwhere\n    create_unique<UniqueNFT>(identity = field(token_id)) { token_id: tid, owner: recipient } with_lock(recipient)",
   },
 ] as const;
 
@@ -403,20 +403,20 @@ export const exampleGroups = [
     items: [
       { path: "examples/multisig.cell", id: "multisig", tags: ["lock", "witness", "threshold"] },
       { path: "examples/timelock.cell", id: "timelock", tags: ["lock", "env", "timepoint"] },
-      { path: "examples/language/canonical_style.cell", id: "canonicalStyle", tags: ["protected", "witness", "sighash"] },
-      { path: "examples/language/v0_14_capacity_time.cell", id: "capacityTime", tags: ["capacity", "env", "time"] },
-      { path: "examples/language/v0_14_witness_source.cell", id: "witnessSource", tags: ["source", "witness", "boundary"] },
-      { path: "examples/language/v0_14_delegate_verify.cell", id: "delegateVerify", tags: ["delegate", "verify", "lock"] },
+      { path: "examples/language/core/canonical_style.cell", id: "canonicalStyle", tags: ["protected", "witness", "sighash"] },
+      { path: "examples/language/ckb/capacity_time.cell", id: "capacityTime", tags: ["capacity", "env", "time"] },
+      { path: "examples/language/ckb/witness_source.cell", id: "witnessSource", tags: ["source", "witness", "boundary"] },
+      { path: "examples/language/ckb/delegate_verify.cell", id: "delegateVerify", tags: ["delegate", "verify", "lock"] },
     ],
   },
   {
     id: "language",
     items: [
-      { path: "examples/language/v0_15_identity_lifecycle.cell", id: "identityLifecycle", tags: ["identity", "unique", "lifecycle"] },
-      { path: "examples/language/v0_15_scoped_invariant.cell", id: "scopedInvariant", tags: ["invariant", "assert_sum", "scope"] },
-      { path: "examples/language/order_book.cell", id: "orderBook", tags: ["orders", "matching", "state"] },
-      { path: "examples/language/registry.cell", id: "languageRegistry", tags: ["registry", "fields", "replace"] },
-      { path: "examples/language/v0_14_hash_blake2b.cell", id: "blake2bHash", tags: ["hash", "blake2b", "stdlib"] },
+      { path: "examples/language/ownership/identity_lifecycle.cell", id: "identityLifecycle", tags: ["identity", "unique", "lifecycle"] },
+      { path: "examples/language/verification/scoped_invariant.cell", id: "scopedInvariant", tags: ["invariant", "assert_sum", "scope"] },
+      { path: "examples/language/collections/order_book.cell", id: "orderBook", tags: ["orders", "matching", "state"] },
+      { path: "examples/language/collections/registry.cell", id: "languageRegistry", tags: ["registry", "fields", "replace"] },
+      { path: "examples/language/ckb/blake2b_hash.cell", id: "blake2bHash", tags: ["hash", "blake2b", "stdlib"] },
       { path: "examples/ickb_benchmark/ickb_logic.cell", id: "ickbLogic", tags: ["benchmark", "receipt", "logic"] },
     ],
   },
