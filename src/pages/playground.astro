@@ -424,7 +424,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
         role?: string;
       };
 
-      const compilerAssetVersion = "20260824-v0.25.0-32dc571c";
+      const compilerAssetVersion = "20260902-v0.25.0-34c09595";
       const workerUrl = new URL(`/playground-worker.js?v=${compilerAssetVersion}`, window.location.href);
       const previousPlaygroundAbort = (window as any).__cellscriptPlaygroundAbort as AbortController | undefined;
       previousPlaygroundAbort?.abort();
