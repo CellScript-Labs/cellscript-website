@@ -1,11 +1,11 @@
 {
   "releases": [
     {
-      "tag": "v0.24.0",
-      "name": "CellScript 0.24.0",
-      "date": "2026-08-22",
+      "tag": "v0.25.0",
+      "name": "CellScript 0.25.0",
+      "date": "2026-09-02",
       "body": "## Installation\n\n### One-line install\n\n```bash\ncurl -fsSL https://github.com/CellScript-Labs/CellScript/releases/latest/download/install.sh\u2026",
-      "url": "https://github.com/CellScript-Labs/CellScript/releases/tag/v0.24.0"
+      "url": "https://github.com/CellScript-Labs/CellScript/releases/tag/v0.25.0"
     },
     {
       "tag": "v0.22.0",
