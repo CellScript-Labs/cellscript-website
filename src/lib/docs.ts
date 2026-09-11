@@ -7,6 +7,8 @@ import { renderSource } from "./highlight";
 const here = dirname(fileURLToPath(import.meta.url));
 const repoRootCandidates = [
   process.env.CELLSCRIPT_REPO_ROOT,
+  resolve(process.cwd(), ".."),
+  process.cwd(),
   resolve(here, "..", "..", ".."),
 ].filter((candidate): candidate is string => Boolean(candidate));
 const repoRoot =
