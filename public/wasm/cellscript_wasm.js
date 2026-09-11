@@ -5,10 +5,13 @@
  *
  * Returns a JSON string. On success this is the serialized
  * browser metadata summary (module, types, actions with effect_class /
- * consume_set / create_set / estimated_cycles, etc.). On error it
+ * consume_set / create_set / estimated_cycles, plus module-wide fail-closed
+ * runtime features and their scoped reasons). On error it
  * is `{"error": "<message>"}`.
  *
- * `edition` is mandatory and currently only accepts `"2026"`.
+ * `edition` is mandatory and accepts stable `"2026"` or experimental
+ * `"2027"`. Edition 2027 remains a bounded preview rather than a stable
+ * browser-language contract.
  * The `target` argument is optional; pass `None` for the default target.
  * @param {string} source
  * @param {string} edition

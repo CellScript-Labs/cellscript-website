@@ -1,6 +1,6 @@
 let wasmModulePromise;
 let wasmModule;
-const COMPILER_ASSET_VERSION = "20260824-v0.25.0-32dc571c";
+const COMPILER_ASSET_VERSION = "20260911-v0.26.0-82e76c02";
 const CELLSCRIPT_EDITION = "2026";
 const COMPILER_LOAD_TIMEOUT_MS = 12_000;
 
