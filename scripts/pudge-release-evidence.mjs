@@ -4,7 +4,6 @@ import { createHash } from "node:crypto";
 import { lstat, mkdir, readFile, realpath, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 import process from "node:process";
-import { fileURLToPath } from "node:url";
 
 import { ccc } from "@ckb-ccc/core";
 import { ProxyAgent, setGlobalDispatcher } from "undici";
