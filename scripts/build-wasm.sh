@@ -30,12 +30,20 @@ if [[ "${CELLSCRIPT_WASM_CANONICAL_CONTAINER:-0}" != "1" ]]; then
   CKB_SDK_RUST_REPO="$(cd "$CKB_SDK_RUST_REPO" && pwd)"
 
   IMAGE="cellscript-wasm-builder:rust-1.97.1-wasm-bindgen-0.2.121-binaryen-131"
+  # A host-local proxy needs host networking on Linux. This affects downloads
+  # only; the pinned image, tool versions, and artifact checks stay identical.
+  DOCKER_NETWORK_ARGS=()
+  if [[ -n "${CELLSCRIPT_WASM_DOCKER_NETWORK:-}" ]]; then
+    DOCKER_NETWORK_ARGS=(--network "$CELLSCRIPT_WASM_DOCKER_NETWORK")
+  fi
   docker build \
+    "${DOCKER_NETWORK_ARGS[@]}" \
     --platform linux/amd64 \
     --tag "$IMAGE" \
     --file "$REPO/website/scripts/wasm-builder.Dockerfile" \
     "$REPO/website/scripts"
   docker run --rm \
+    "${DOCKER_NETWORK_ARGS[@]}" \
     --platform linux/amd64 \
     --env CELLSCRIPT_WASM_CANONICAL_CONTAINER=1 \
     --env CARGO_TARGET_DIR=/work/CellScript/target/wasm-reproducible \
