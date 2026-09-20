@@ -56,8 +56,8 @@ const registryPackageDetailSource = resolve(root, "src", "components", "Registry
 const siteHeaderSource = resolve(root, "src", "components", "SiteHeader.astro");
 const wikiRoot = resolve(root, "..", "docs", "wiki");
 const expectedReleaseTag = "v0.24.0";
-const expectedCompilerAssetVersion = "20260918-v0.30.0-419e8260";
-const expectedWasmSha256 = "419e8260c3c6acc9f950adf422de90163533c14af96043ebb7429f935b1393d6";
+const expectedCompilerAssetVersion = "20260919-v0.30.0-8df77dde";
+const expectedWasmSha256 = "8df77dde17da89b14dc31e1f08cb14e262a7e35516f415783b20f2bd68fcdb0d";
 
 expectFile(distIndex);
 expectFile(dist404);

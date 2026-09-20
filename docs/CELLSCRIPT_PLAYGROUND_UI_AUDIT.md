@@ -340,8 +340,8 @@ hover with a tooltip.
 ### U7 — `data-i18n` re-application is triggered by `cellscript:locale-change` but the compile button state defaults to `idle`  ·  **UX**
 When the user changes the language while the compile button is in
 `ready` state, `applyLocaleStrings` re-renders the label correctly
-("已编译 · 1ms"). Good. But if the user changes locale *while* a
-compile is in flight, the in-flight label reverts to "编译中" (the
+("Compiled · 1ms"). Good. But if the user changes locale *while* a
+compile is in flight, the in-flight label reverts to "Compiling" (the
 post-state `compiling` template) even if the actual compile is
 about to finish in the next frame. This is harmless but can flash.
 
@@ -530,12 +530,11 @@ also be the natural way to disambiguate `Custom` from
   output string). This is correct — error codes are part of the
   product surface, not the chrome. But a future i18n pass should
   consider whether errors should at least be wrapped in a
-  localised envelope (e.g. "Compilation failed · 查看错误" / "View
-  error").
+  localised envelope (e.g. "Compilation failed · View error").
 - The copy button `aria-label` is correctly re-applied on
   locale change (it uses `getMessage("a11y.copyAria", readLocale())`
   at the moment of copy, not at build time).
-- The Chinese locale uses `中` as the language label glyph,
+- The Chinese locale uses the U+4E2D character as the language label glyph,
   matching the existing site chrome.
 
 ---
