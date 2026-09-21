@@ -2,10 +2,10 @@
   "token": {
     "module": "cellscript::fungible_token",
     "target": "ckb",
-    "artifactSizeBytes": 78906,
-    "artifactHash": "bd044d0c63140ccb",
-    "sourceHash": "e4fd396578223af8",
-    "compilerVersion": "0.23.0",
+    "artifactSizeBytes": 52653,
+    "artifactHash": "16d022f7d7b2996a",
+    "sourceHash": "3fed105b34f211b6",
+    "compilerVersion": "0.30.0",
     "types": [
       {
         "name": "Token",
@@ -123,10 +123,10 @@
   "nft": {
     "module": "cellscript::nft",
     "target": "ckb",
-    "artifactSizeBytes": 507917,
-    "artifactHash": "a29c57fea42cb6cf",
-    "sourceHash": "7d5c6d86de39fbda",
-    "compilerVersion": "0.23.0",
+    "artifactSizeBytes": 352546,
+    "artifactHash": "ec7ee46b8a29862c",
+    "sourceHash": "d19a4ba36eb4bf2e",
+    "compilerVersion": "0.30.0",
     "types": [
       {
         "name": "Token",
@@ -269,7 +269,7 @@
             "binding": "listing"
           }
         ],
-        "estimatedCycles": 388,
+        "estimatedCycles": 404,
         "parallelizable": true
       },
       {
@@ -328,7 +328,7 @@
             "binding": "seller_payout"
           }
         ],
-        "estimatedCycles": 1416,
+        "estimatedCycles": 1468,
         "parallelizable": true
       },
       {
@@ -342,7 +342,7 @@
             "binding": "offer"
           }
         ],
-        "estimatedCycles": 256,
+        "estimatedCycles": 288,
         "parallelizable": true
       },
       {
@@ -387,7 +387,7 @@
             "binding": "seller_payout"
           }
         ],
-        "estimatedCycles": 1452,
+        "estimatedCycles": 1520,
         "parallelizable": true
       },
       {
@@ -449,10 +449,10 @@
   "amm": {
     "module": "cellscript::amm_pool",
     "target": "ckb",
-    "artifactSizeBytes": 501422,
-    "artifactHash": "2b675b5163cb715d",
-    "sourceHash": "3e7612535b8289a4",
-    "compilerVersion": "0.23.0",
+    "artifactSizeBytes": 196146,
+    "artifactHash": "b3b062807a44f89f",
+    "sourceHash": "e09c1334bb7cfd60",
+    "compilerVersion": "0.30.0",
     "types": [
       {
         "name": "Token",
@@ -549,7 +549,7 @@
             "binding": "token_out"
           }
         ],
-        "estimatedCycles": 1104,
+        "estimatedCycles": 1112,
         "parallelizable": false
       },
       {
@@ -627,10 +627,10 @@
   "vesting": {
     "module": "cellscript::vesting",
     "target": "ckb",
-    "artifactSizeBytes": 236779,
-    "artifactHash": "0ee81ae9172dd15c",
-    "sourceHash": "b1f0aa10f432ed21",
-    "compilerVersion": "0.23.0",
+    "artifactSizeBytes": 133895,
+    "artifactHash": "d9d729851195b326",
+    "sourceHash": "a0063283e5752967",
+    "compilerVersion": "0.30.0",
     "types": [
       {
         "name": "Token",
@@ -704,7 +704,7 @@
             "binding": "grant"
           }
         ],
-        "estimatedCycles": 624,
+        "estimatedCycles": 672,
         "parallelizable": false
       },
       {
@@ -729,7 +729,7 @@
             "binding": "updated_grant"
           }
         ],
-        "estimatedCycles": 748,
+        "estimatedCycles": 800,
         "parallelizable": true
       },
       {
@@ -754,7 +754,7 @@
             "binding": "completed_grant"
           }
         ],
-        "estimatedCycles": 636,
+        "estimatedCycles": 652,
         "parallelizable": true
       },
       {
@@ -779,7 +779,7 @@
             "binding": "admin_tokens"
           }
         ],
-        "estimatedCycles": 896,
+        "estimatedCycles": 948,
         "parallelizable": false
       }
     ]

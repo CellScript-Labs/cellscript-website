@@ -1,5 +1,5 @@
 {
-  "metadata_schema_version": 57,
+  "metadata_schema_version": 72,
   "module": "cellscript::vesting",
   "target_profile": "ckb",
   "types": [
@@ -53,7 +53,7 @@
       "create_set": [
         "grant"
       ],
-      "estimated_cycles": 624
+      "estimated_cycles": 672
     },
     {
       "name": "claim_vested",
@@ -65,7 +65,7 @@
         "tokens",
         "updated_grant"
       ],
-      "estimated_cycles": 748
+      "estimated_cycles": 800
     }
   ],
   "artifact_format": "RISC-V assembly"

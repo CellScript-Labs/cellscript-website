@@ -37,7 +37,14 @@ function repoRelative(candidate) {
 }
 
 function run(program, args) {
-  const result = spawnSync(program, args, { cwd: REPO, encoding: "utf8", stdio: ["ignore", "pipe", "pipe"] });
+  // Full compile metadata includes lowering and provenance records; it exceeds
+  // Node's default 1 MiB capture limit for the homepage examples in 0.30.
+  const result = spawnSync(program, args, {
+    cwd: REPO,
+    encoding: "utf8",
+    stdio: ["ignore", "pipe", "pipe"],
+    maxBuffer: 32 * 1024 * 1024,
+  });
   if (result.error) throw result.error;
   if (result.status !== 0) {
     const error = new Error(`command failed (${result.status}): ${program} ${args.join(" ")}\n${result.stderr || result.stdout}`);

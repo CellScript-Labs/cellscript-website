@@ -55,7 +55,7 @@ const registryLayoutSource = resolve(root, "src", "layouts", "RegistryLayout.ast
 const registryPackageDetailSource = resolve(root, "src", "components", "RegistryPackageDetail.astro");
 const siteHeaderSource = resolve(root, "src", "components", "SiteHeader.astro");
 const wikiRoot = resolve(root, "..", "docs", "wiki");
-const expectedReleaseTag = "v0.24.0";
+const expectedReleaseTag = "v0.30.0";
 const expectedCompilerAssetVersion = "20260919-v0.30.0-8df77dde";
 const expectedWasmSha256 = "8df77dde17da89b14dc31e1f08cb14e262a7e35516f415783b20f2bd68fcdb0d";
 
