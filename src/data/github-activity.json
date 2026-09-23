@@ -4,7 +4,7 @@
       "tag": "v0.30.0",
       "name": "CellScript 0.30.0",
       "date": "2026-09-23",
-      "body": "## Installation\n\n### One-line install (Global)\n\n```bash\ncurl -fsSL https://github.com/CellScript-Labs/CellScript/releases/download/v0.30.0/\u2026",
+      "body": "# CellScript 0.30.0\n\n0.30 brings the unpublished 0.26 and 0.26b work into the next stable release\nafter 0.25. It covers bounded Cell lifecy\u2026",
       "url": "https://github.com/CellScript-Labs/CellScript/releases/tag/v0.30.0"
     },
     {
