@@ -24,39 +24,39 @@
   ],
   "commits": [
     {
-      "sha": "b3dfb5d",
-      "message": "Remove roadmap documents from repository contract",
-      "author": "Arthur",
-      "date": "2026-08-24",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/b3dfb5dba9f7a1dc974e09a6660160d828aa5c0d"
+      "sha": "6196a7f",
+      "message": "test: make 0.31 cost acceptance reproducible and count static memory instructio\u2026",
+      "author": "yosei-tsukifune",
+      "date": "2026-09-24",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/6196a7fc60c5186240e3e9acf31bed2b764a580e"
     },
     {
-      "sha": "8743daf",
-      "message": "Merge CellScript 0.24 release line into main",
-      "author": "Arthur",
-      "date": "2026-08-24",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/8743daf6ccd152249f59c815cba6489273012ebd"
+      "sha": "65df937",
+      "message": "test: rebind 0.31 live acceptance recipes to optimized artifacts",
+      "author": "yosei-tsukifune",
+      "date": "2026-09-23",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/65df937f45c6ba5ab45cf5ee69778bfa3e05cdc5"
     },
     {
-      "sha": "11090dd",
-      "message": "Keep Clippy config out of crate packages",
-      "author": "Arthur",
-      "date": "2026-08-22",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/11090dd33430cb76b9208c699b649e88c37edd91"
+      "sha": "1a78bc6",
+      "message": "Serialize cost toolchain executable fixture checks",
+      "author": "yosei-tsukifune",
+      "date": "2026-09-23",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/1a78bc61303f9fa1135ce4b6defc05c8d2c5e461"
     },
     {
-      "sha": "c31fd84",
-      "message": "Make Clippy lint policy self-contained",
-      "author": "Arthur",
-      "date": "2026-08-22",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/c31fd84e916ab97d87256d805fb72b9607ee817d"
+      "sha": "1feb909",
+      "message": "test: bind business inventory to refreshed iCKB evidence",
+      "author": "yosei-tsukifune",
+      "date": "2026-09-23",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/1feb9092ecc813b5a6dffe736dcc92257f8a5db9"
     },
     {
-      "sha": "0fe90e3",
-      "message": "Finalize CellScript 0.24 release hardening",
-      "author": "Arthur",
-      "date": "2026-08-22",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/0fe90e30fbafd055003bc92fd68518a6262f254d"
+      "sha": "9f2ef93",
+      "message": "test: pin 0.31 iCKB evidence to the signed compiler implementation",
+      "author": "yosei-tsukifune",
+      "date": "2026-09-22",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/9f2ef9376bbe555495fce80fe1d492ca7f63e225"
     }
   ]
 }
