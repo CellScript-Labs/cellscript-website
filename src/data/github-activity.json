@@ -24,6 +24,13 @@
   ],
   "commits": [
     {
+      "sha": "648bb83",
+      "message": "test: close 0.31 cost attribution and boundary evidence",
+      "author": "Arthur",
+      "date": "2026-09-25",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/648bb8362a82586821c0d4ae9f8b2250dd56ab11"
+    },
+    {
       "sha": "6196a7f",
       "message": "test: make 0.31 cost acceptance reproducible and count static memory instructio\u2026",
       "author": "yosei-tsukifune",
@@ -50,13 +57,6 @@
       "author": "yosei-tsukifune",
       "date": "2026-09-23",
       "url": "https://github.com/CellScript-Labs/CellScript/commit/1feb9092ecc813b5a6dffe736dcc92257f8a5db9"
-    },
-    {
-      "sha": "9f2ef93",
-      "message": "test: pin 0.31 iCKB evidence to the signed compiler implementation",
-      "author": "yosei-tsukifune",
-      "date": "2026-09-22",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/9f2ef9376bbe555495fce80fe1d492ca7f63e225"
     }
   ]
 }
