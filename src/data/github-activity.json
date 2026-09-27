@@ -24,6 +24,13 @@
   ],
   "commits": [
     {
+      "sha": "54d639a",
+      "message": "Merge 0.30 release history into 0.31",
+      "author": "Arthur",
+      "date": "2026-09-27",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/54d639a7230060cc0bcc009dcf26e1830e2011c6"
+    },
+    {
       "sha": "648bb83",
       "message": "test: close 0.31 cost attribution and boundary evidence",
       "author": "Arthur",
@@ -45,18 +52,11 @@
       "url": "https://github.com/CellScript-Labs/CellScript/commit/65df937f45c6ba5ab45cf5ee69778bfa3e05cdc5"
     },
     {
-      "sha": "1a78bc6",
+      "sha": "352b495",
       "message": "Serialize cost toolchain executable fixture checks",
       "author": "yosei-tsukifune",
       "date": "2026-09-23",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/1a78bc61303f9fa1135ce4b6defc05c8d2c5e461"
-    },
-    {
-      "sha": "1feb909",
-      "message": "test: bind business inventory to refreshed iCKB evidence",
-      "author": "yosei-tsukifune",
-      "date": "2026-09-23",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/1feb9092ecc813b5a6dffe736dcc92257f8a5db9"
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/352b4950e7dc7489a4ee7e7ed6d6edf4c7fefd71"
     }
   ]
 }
