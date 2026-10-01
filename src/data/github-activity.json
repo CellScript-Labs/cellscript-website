@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "tag": "v0.31.0",
+      "name": "CellScript 0.31.0",
+      "date": "2026-10-01",
+      "body": "# CellScript 0.31.0\n\nRelease date: 2026-10-01. The maintainer explicitly authorized direct publication\nand waived the pending independent r\u2026",
+      "url": "https://github.com/CellScript-Labs/CellScript/releases/tag/v0.31.0"
+    },
+    {
       "tag": "v0.30.0",
       "name": "CellScript 0.30.0",
       "date": "2026-09-23",
@@ -13,50 +20,43 @@
       "date": "2026-09-02",
       "body": "## Installation\n\n### One-line install (Global)\n\n```bash\ncurl -fsSL https://raw.githubusercontent.com/CellScript-Labs/CellScript/main/script\u2026",
       "url": "https://github.com/CellScript-Labs/CellScript/releases/tag/v0.25.0"
-    },
-    {
-      "tag": "v0.24.0",
-      "name": "CellScript 0.24.0",
-      "date": "2026-08-22",
-      "body": "## Installation\n\n### One-line install (Global)\n\n```bash\ncurl -fsSL https://raw.githubusercontent.com/CellScript-Labs/CellScript/main/script\u2026",
-      "url": "https://github.com/CellScript-Labs/CellScript/releases/tag/v0.24.0"
     }
   ],
   "commits": [
     {
-      "sha": "54d639a",
-      "message": "Merge 0.30 release history into 0.31",
+      "sha": "5fd4c46",
+      "message": "Publish 0.31 with the maintainer-authorized evidence exception",
       "author": "Arthur",
-      "date": "2026-09-27",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/54d639a7230060cc0bcc009dcf26e1830e2011c6"
+      "date": "2026-10-01",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/5fd4c4690512b3df4cd5a46d64194d7d4d3b9491"
     },
     {
-      "sha": "648bb83",
-      "message": "test: close 0.31 cost attribution and boundary evidence",
+      "sha": "6c111a3",
+      "message": "Bind business and runtime-view evidence to the 0.31 package version",
       "author": "Arthur",
-      "date": "2026-09-25",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/648bb8362a82586821c0d4ae9f8b2250dd56ab11"
+      "date": "2026-10-01",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/6c111a30a9a9ddfb50dadbd12b8f2572647a7563"
     },
     {
-      "sha": "6196a7f",
-      "message": "test: make 0.31 cost acceptance reproducible and count static memory instructio\u2026",
-      "author": "yosei-tsukifune",
-      "date": "2026-09-24",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/6196a7fc60c5186240e3e9acf31bed2b764a580e"
+      "sha": "b479237",
+      "message": "Repin the bundled package graph with the 0.31 compiler",
+      "author": "Arthur",
+      "date": "2026-10-01",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/b4792373669c1b4523f49cef9bb480358174ec26"
     },
     {
-      "sha": "65df937",
-      "message": "test: rebind 0.31 live acceptance recipes to optimized artifacts",
-      "author": "yosei-tsukifune",
-      "date": "2026-09-23",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/65df937f45c6ba5ab45cf5ee69778bfa3e05cdc5"
+      "sha": "9e9775d",
+      "message": "Refresh 0.31 artifact identities and exact NovaSeal measurements",
+      "author": "Arthur",
+      "date": "2026-10-01",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/9e9775d6828988eee3ed4969cf2cb402c6629c86"
     },
     {
-      "sha": "352b495",
-      "message": "Serialize cost toolchain executable fixture checks",
-      "author": "yosei-tsukifune",
-      "date": "2026-09-23",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/352b4950e7dc7489a4ee7e7ed6d6edf4c7fefd71"
+      "sha": "c5eef5c",
+      "message": "Prepare the 0.31 release candidate with audit corrections",
+      "author": "Arthur",
+      "date": "2026-10-01",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/c5eef5cbaddb78fe1773cdde016cf7d81c0c23ae"
     }
   ]
 }
