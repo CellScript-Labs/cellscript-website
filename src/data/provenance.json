@@ -4,8 +4,8 @@
     "target": "ckb",
     "artifactSizeBytes": 52653,
     "artifactHash": "16d022f7d7b2996a",
-    "sourceHash": "3fed105b34f211b6",
-    "compilerVersion": "0.30.0",
+    "sourceHash": "d6d6e1a827992a22",
+    "compilerVersion": "0.31.0",
     "types": [
       {
         "name": "Token",
@@ -125,8 +125,8 @@
     "target": "ckb",
     "artifactSizeBytes": 352546,
     "artifactHash": "ec7ee46b8a29862c",
-    "sourceHash": "d19a4ba36eb4bf2e",
-    "compilerVersion": "0.30.0",
+    "sourceHash": "acc46cc8713869d8",
+    "compilerVersion": "0.31.0",
     "types": [
       {
         "name": "Token",
@@ -449,10 +449,10 @@
   "amm": {
     "module": "cellscript::amm_pool",
     "target": "ckb",
-    "artifactSizeBytes": 196146,
-    "artifactHash": "b3b062807a44f89f",
-    "sourceHash": "e09c1334bb7cfd60",
-    "compilerVersion": "0.30.0",
+    "artifactSizeBytes": 196139,
+    "artifactHash": "da657bf38ae3d860",
+    "sourceHash": "fe679b1768f08a55",
+    "compilerVersion": "0.31.0",
     "types": [
       {
         "name": "Token",
@@ -629,8 +629,8 @@
     "target": "ckb",
     "artifactSizeBytes": 133895,
     "artifactHash": "d9d729851195b326",
-    "sourceHash": "a0063283e5752967",
-    "compilerVersion": "0.30.0",
+    "sourceHash": "168716494cd4cc4c",
+    "compilerVersion": "0.31.0",
     "types": [
       {
         "name": "Token",

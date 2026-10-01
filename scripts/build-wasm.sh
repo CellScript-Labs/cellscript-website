@@ -42,9 +42,13 @@ if [[ "${CELLSCRIPT_WASM_CANONICAL_CONTAINER:-0}" != "1" ]]; then
     --tag "$IMAGE" \
     --file "$REPO/website/scripts/wasm-builder.Dockerfile" \
     "$REPO/website/scripts"
+  # Forward configured download proxies by name so credentials are not printed
+  # in command arguments. Loopback proxies require the host network option above.
   docker run --rm \
     "${DOCKER_NETWORK_ARGS[@]}" \
     --platform linux/amd64 \
+    --env HTTP_PROXY --env HTTPS_PROXY --env ALL_PROXY --env NO_PROXY \
+    --env http_proxy --env https_proxy --env all_proxy --env no_proxy \
     --env CELLSCRIPT_WASM_CANONICAL_CONTAINER=1 \
     --env CARGO_TARGET_DIR=/work/CellScript/target/wasm-reproducible \
     --env RUSTUP_TOOLCHAIN=1.97.1-x86_64-unknown-linux-gnu \

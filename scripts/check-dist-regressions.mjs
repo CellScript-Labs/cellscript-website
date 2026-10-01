@@ -56,8 +56,8 @@ const registryPackageDetailSource = resolve(root, "src", "components", "Registry
 const siteHeaderSource = resolve(root, "src", "components", "SiteHeader.astro");
 const wikiRoot = resolve(root, "..", "docs", "wiki");
 const expectedReleaseTag = "v0.30.0";
-const expectedCompilerAssetVersion = "20260919-v0.30.0-8df77dde";
-const expectedWasmSha256 = "9f5ed7be566bb865cae1be60310bc5fed32ddaece896ebb89cdcc76996555aa5";
+const expectedCompilerAssetVersion = "20261001-v0.31.0-2dfc01cf";
+const expectedWasmSha256 = "2dfc01cf5203df1b74b8a753a1c4cb0a3e610bc401d0028b3ded6152cbe0f874";
 
 expectFile(distIndex);
 expectFile(dist404);
@@ -347,7 +347,7 @@ expectContains("registry submit", registrySubmitHtml, 'form="registry-submit-for
 expectContains("registry submit", registrySubmitHtml, 'data-publish-step data-state="locked" aria-labelledby="registry-publish-heading" hidden');
 
 expectContains("playground bundle", jsText, expectedCompilerAssetVersion);
-expectContains("playground bundle", jsText, 'cellscript_version = "0.30.0"');
+expectContains("playground bundle", jsText, 'cellscript_version = "0.31.0"');
 expectNotContains("playground bundle", jsText, 'cellscript_version = "0.20.0-rc.1"');
 expectContains("playground worker", playgroundWorker, `const COMPILER_ASSET_VERSION = "${expectedCompilerAssetVersion}"`);
 expectContains("playground", playgroundHtml, "data-pg-studio");

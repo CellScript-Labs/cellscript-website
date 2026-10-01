@@ -424,7 +424,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
         role?: string;
       };
 
-      const compilerAssetVersion = "20260919-v0.30.0-8df77dde";
+      const compilerAssetVersion = "20261001-v0.31.0-2dfc01cf";
       const workerUrl = new URL(`/playground-worker.js?v=${compilerAssetVersion}`, window.location.href);
       const previousPlaygroundAbort = (window as any).__cellscriptPlaygroundAbort as AbortController | undefined;
       previousPlaygroundAbort?.abort();
@@ -1152,7 +1152,7 @@ action inspect() -> u64 {
       const buildCellToml = (entry: string) => `[package]
 name = "playground"
 version = "0.1.0"
-cellscript_version = "0.30.0"
+cellscript_version = "0.31.0"
 entry = "${entry.replace(/"/g, "")}"
 source_roots = ["src"]
 `;
