@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "tag": "v0.31.0",
+      "name": "CellScript 0.31.0",
+      "date": "2026-10-01",
+      "body": "Smaller RV64 immediates, shared policy decoders, compact private frames, scalar slot reuse, and coordinated 0.31 tooling.",
+      "url": "https://github.com/CellScript-Labs/CellScript/releases/tag/v0.31.0"
+    },
+    {
       "tag": "v0.30.0",
       "name": "CellScript 0.30.0",
       "date": "2026-09-21",
@@ -11,15 +18,8 @@
       "tag": "v0.25.0",
       "name": "CellScript 0.25.0",
       "date": "2026-09-02",
-      "body": "## Installation\n\n### One-line install (Global)\n\n```bash\ncurl -fsSL https://raw.githubusercontent.com/CellScript-Labs/CellScript/main/script\u2026",
+      "body": "## Installation\n\n### One-line install (Global)\n\n```bash\ncurl -fsSL https://raw.githubusercontent.com/CellScript-Labs/CellScript/main/script…",
       "url": "https://github.com/CellScript-Labs/CellScript/releases/tag/v0.25.0"
-    },
-    {
-      "tag": "v0.24.0",
-      "name": "CellScript 0.24.0",
-      "date": "2026-08-22",
-      "body": "## Installation\n\n### One-line install (Global)\n\n```bash\ncurl -fsSL https://raw.githubusercontent.com/CellScript-Labs/CellScript/main/script\u2026",
-      "url": "https://github.com/CellScript-Labs/CellScript/releases/tag/v0.24.0"
     }
   ],
   "commits": [
