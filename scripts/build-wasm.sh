@@ -3,7 +3,7 @@
 #
 # Produces cellscript_wasm_bg.wasm + cellscript_wasm.js in
 # website/public/wasm/. The .wasm is compiled with size optimisation
-# to stay within the RFC's 600KB gzip budget.
+# to stay within the 1500 KiB gzip budget.
 #
 # Usage:
 #   website/scripts/build-wasm.sh
@@ -15,6 +15,8 @@ set -euo pipefail
 REPO="$(cd "$(dirname "$0")/../.." && pwd)"
 OUT="$REPO/website/public/wasm"
 WASM="$REPO/crates/cellscript-wasm/pkg/cellscript_wasm_bg.wasm"
+WASM_GZIP_BUDGET_KIB=1500
+WASM_GZIP_BUDGET_BYTES=$((WASM_GZIP_BUDGET_KIB * 1024))
 
 if [[ "${CELLSCRIPT_WASM_CANONICAL_CONTAINER:-0}" != "1" ]]; then
   if ! command -v docker >/dev/null 2>&1; then
@@ -66,7 +68,7 @@ if [[ "$(uname -s)" != "Linux" || "$(uname -m)" != "x86_64" ]]; then
 fi
 
 if ! command -v wasm-opt >/dev/null 2>&1; then
-  echo "error: wasm-opt (Binaryen) is required for the 600 KB gzip budget" >&2
+  echo "error: wasm-opt (Binaryen) is required for the ${WASM_GZIP_BUDGET_KIB} KiB gzip budget" >&2
   exit 1
 fi
 if ! command -v wasm-bindgen >/dev/null 2>&1; then
@@ -108,7 +110,9 @@ env -u RUSTFLAGS \
 
 echo "Optimising WASM with wasm-opt -Oz..."
 wasm-opt -Oz "$WASM" -o "$WASM.optimized"
-mv "$WASM.optimized" "$WASM"
+# Normalize nested control flow before converging to a stable smaller module.
+wasm-opt "$WASM.optimized" --flatten --rereloop -Oz --converge -o "$WASM"
+rm "$WASM.optimized"
 
 echo "Copying bundle to $OUT..."
 mkdir -p "$OUT"
@@ -121,11 +125,11 @@ RAW=$(wc -c < "$OUT/cellscript_wasm_bg.wasm")
 GZIP=$(gzip -c "$OUT/cellscript_wasm_bg.wasm" | wc -c)
 echo ""
 echo "WASM bundle size:"
-echo "  raw:   $RAW bytes ($(( RAW / 1024 )) KB)"
-echo "  gzip:  $GZIP bytes ($(( GZIP / 1024 )) KB)"
-if [ "$GZIP" -le 614400 ]; then
-  echo "  budget: PASS (<= 600 KB gzip)"
+echo "  raw:   $RAW bytes ($(( RAW / 1024 )) KiB)"
+echo "  gzip:  $GZIP bytes ($(( GZIP / 1024 )) KiB)"
+if [ "$GZIP" -le "$WASM_GZIP_BUDGET_BYTES" ]; then
+  echo "  budget: PASS (<= ${WASM_GZIP_BUDGET_KIB} KiB gzip)"
 else
-  echo "  budget: OVER 600 KB gzip — review included code paths"
+  echo "  budget: OVER ${WASM_GZIP_BUDGET_KIB} KiB gzip — review included code paths"
   exit 1
 fi

@@ -337,7 +337,7 @@ export const modelCards = [
     id: "lock",
     name: "lock",
     source: "examples/language/core/canonical_style.cell",
-    code: "// examples/language/core/canonical_style.cell\nlock vault_owner(protected vault: Vault, lock_args owner: Address, witness claimed_owner: Address) -> bool {\n    let input = source::group_input(0)\n    let witness_lock = witness::lock(input)\n    // ... digest and ownership checks omitted\n}",
+    code: "// examples/language/core/canonical_style.cell\nlock vault_owner(protected vault: Vault, lock_args owner: Address, witness claimed_owner: Address) -> bool {\n    let input = source::group_input(0)\n    let witness_lock = witness::lock_exact32(input)\n    // ... digest and ownership checks omitted\n}",
   },
   {
     id: "flow",

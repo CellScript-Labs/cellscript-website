@@ -2,10 +2,10 @@
   "token": {
     "module": "cellscript::fungible_token",
     "target": "ckb",
-    "artifactSizeBytes": 52653,
-    "artifactHash": "16d022f7d7b2996a",
-    "sourceHash": "d6d6e1a827992a22",
-    "compilerVersion": "0.31.0",
+    "artifactSizeBytes": 53917,
+    "artifactHash": "6b394e6e3cf1b6a1",
+    "sourceHash": "3fed105b34f211b6",
+    "compilerVersion": "0.33.0-alpha.1",
     "types": [
       {
         "name": "Token",
@@ -123,10 +123,10 @@
   "nft": {
     "module": "cellscript::nft",
     "target": "ckb",
-    "artifactSizeBytes": 352546,
-    "artifactHash": "ec7ee46b8a29862c",
-    "sourceHash": "acc46cc8713869d8",
-    "compilerVersion": "0.31.0",
+    "artifactSizeBytes": 352503,
+    "artifactHash": "d252a7f86c7e9ce8",
+    "sourceHash": "d19a4ba36eb4bf2e",
+    "compilerVersion": "0.33.0-alpha.1",
     "types": [
       {
         "name": "Token",
@@ -449,10 +449,10 @@
   "amm": {
     "module": "cellscript::amm_pool",
     "target": "ckb",
-    "artifactSizeBytes": 196139,
-    "artifactHash": "da657bf38ae3d860",
-    "sourceHash": "fe679b1768f08a55",
-    "compilerVersion": "0.31.0",
+    "artifactSizeBytes": 195460,
+    "artifactHash": "116cca9da27f5a5a",
+    "sourceHash": "e09c1334bb7cfd60",
+    "compilerVersion": "0.33.0-alpha.1",
     "types": [
       {
         "name": "Token",
@@ -549,7 +549,7 @@
             "binding": "token_out"
           }
         ],
-        "estimatedCycles": 1112,
+        "estimatedCycles": 1104,
         "parallelizable": false
       },
       {
@@ -627,10 +627,10 @@
   "vesting": {
     "module": "cellscript::vesting",
     "target": "ckb",
-    "artifactSizeBytes": 133895,
-    "artifactHash": "d9d729851195b326",
-    "sourceHash": "168716494cd4cc4c",
-    "compilerVersion": "0.31.0",
+    "artifactSizeBytes": 136828,
+    "artifactHash": "edaf4db3029e3304",
+    "sourceHash": "a0063283e5752967",
+    "compilerVersion": "0.33.0-alpha.1",
     "types": [
       {
         "name": "Token",

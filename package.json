@@ -12,8 +12,8 @@
     "data:regen": "node scripts/regen-website-data.mjs",
     "dev": "npm run prepare:registry && astro dev --host 127.0.0.1",
     "build": "npm run prepare:registry && npm run build:ci",
-    "build:ci": "npm run test:registry-guidance && npm run test:registry-browse && npm run test:registry-visual-language && npm run test:session-storage && npm run test:submit-draft && npm run test:playground-focus && npm run test:playground-session && npm run test:playground-presentation && npm run check:visual && astro check && astro build && npm run check:homepage && npm run check:ls-idl && npm run test:site-preferences && PUBLIC_REGISTRY_ENVIRONMENT=testnet-sandbox astro build --outDir dist-testnet && node scripts/test-site-preferences.mjs dist-testnet && node scripts/check-ls-idl-regressions.mjs dist-testnet && node scripts/check-testnet-build.mjs && npm run check:registry-parity && npm run check:docs && npm run check:dist && npm run check:deploy",
-    "build:testnet": "npm run prepare:registry && npm run test:registry-guidance && npm run test:registry-browse && npm run test:registry-visual-language && npm run test:session-storage && npm run test:submit-draft && npm run test:playground-focus && npm run test:playground-session && npm run test:playground-presentation && npm run check:visual && PUBLIC_REGISTRY_ENVIRONMENT=testnet-sandbox astro check && PUBLIC_REGISTRY_ENVIRONMENT=testnet-sandbox astro build --outDir dist-testnet && node scripts/test-site-preferences.mjs dist-testnet && node scripts/check-ls-idl-regressions.mjs dist-testnet && node scripts/check-testnet-build.mjs",
+    "build:ci": "npm run test:registry-guidance && npm run test:registry-browse && npm run test:registry-visual-language && npm run test:session-storage && npm run test:submit-draft && npm run test:playground-focus && npm run test:playground-session && npm run test:playground-presentation && npm run test:playground-compiler && npm run check:visual && astro check && astro build && npm run check:homepage && npm run check:ls-idl && npm run test:site-preferences && PUBLIC_REGISTRY_ENVIRONMENT=testnet-sandbox astro build --outDir dist-testnet && node scripts/test-site-preferences.mjs dist-testnet && node scripts/check-ls-idl-regressions.mjs dist-testnet && node scripts/check-testnet-build.mjs && npm run check:registry-parity && npm run check:docs && npm run check:dist && npm run check:deploy",
+    "build:testnet": "npm run prepare:registry && npm run test:registry-guidance && npm run test:registry-browse && npm run test:registry-visual-language && npm run test:session-storage && npm run test:submit-draft && npm run test:playground-focus && npm run test:playground-session && npm run test:playground-presentation && npm run test:playground-compiler && npm run check:visual && PUBLIC_REGISTRY_ENVIRONMENT=testnet-sandbox astro check && PUBLIC_REGISTRY_ENVIRONMENT=testnet-sandbox astro build --outDir dist-testnet && node scripts/test-site-preferences.mjs dist-testnet && node scripts/check-ls-idl-regressions.mjs dist-testnet && node scripts/check-testnet-build.mjs",
     "test:registry-guidance": "node scripts/test-registry-guidance.mjs",
     "test:registry-browse": "node scripts/test-registry-browse-state.mjs",
     "test:registry-visual-language": "node scripts/test-registry-visual-language.mjs",
@@ -32,7 +32,8 @@
     "check:deploy": "node scripts/check-production-deploy.mjs",
     "deploy:pudge-release": "node scripts/pudge-release-evidence.mjs deploy-batch",
     "verify:pudge-release": "node scripts/pudge-release-evidence.mjs verify-release",
-    "preview": "astro preview --host 127.0.0.1"
+    "preview": "astro preview --host 127.0.0.1",
+    "test:playground-compiler": "node scripts/test-playground-compiler.mjs"
   },
   "dependencies": {
     "@astrojs/check": "^0.9.10",
