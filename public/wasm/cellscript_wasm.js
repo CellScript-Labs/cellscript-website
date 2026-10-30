@@ -4,7 +4,7 @@
  * Compile CellScript source to metadata JSON (path A, no ELF).
  *
  * Returns a JSON string. On success this is the serialized
- * browser metadata summary (module, types, actions with effect_class /
+ * browser metadata summary (module, types, actions with effects /
  * consume_set / create_set / estimated_cycles, plus module-wide fail-closed
  * runtime features and their scoped reasons). On error it
  * is `{"error": "<message>"}`.

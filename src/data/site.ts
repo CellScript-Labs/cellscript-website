@@ -92,7 +92,7 @@ export const playgroundExamples = [
   { id: "ckbTypeIdCreate", label: "CKB TYPE_ID create", file: "examples/language/ckb/type_id_create.cell" },
   { id: "delegateVerify", label: "Delegate verify", file: "examples/language/ckb/delegate_verify.cell" },
   { id: "blake2bHash", label: "Blake2b hash lock", file: "examples/language/ckb/blake2b_hash.cell" },
-  { id: "multiStepPipeline", label: "Spawn pipeline", file: "examples/language/ckb/multi_step_pipeline.cell" },
+  { id: "multiStepPipeline", label: "Pipe cleanup", file: "examples/language/ckb/multi_step_pipeline.cell" },
   { id: "witnessSource", label: "Witness source", file: "examples/language/ckb/witness_source.cell" },
   { id: "identityLifecycle", label: "Identity lifecycle", file: "examples/language/ownership/identity_lifecycle.cell" },
   { id: "scopedInvariant", label: "Scoped invariants", file: "examples/language/verification/scoped_invariant.cell" },
@@ -156,8 +156,8 @@ const playgroundSourceNotes: Record<string, readonly string[]> = {
     "Good for seeing how a lock returns true only after explicit checks pass.",
   ],
   multiStepPipeline: [
-    "Advanced: shows pipe descriptors and delegated verifier communication.",
-    "The teaching point is resource cleanup: every descriptor is closed before exit.",
+    "Creates a pipe, closes both endpoints, and checks each close status; no child or data transfer is implied.",
+    "Use the separate delegation and bounded byte-context examples for actual child transport.",
   ],
   witnessSource: [
     "Shows how protected Cells, lock args, witness data, and sighash relate.",

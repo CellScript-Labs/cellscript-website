@@ -365,6 +365,8 @@ if (ungroupedPlaygroundExamples.length > 0) {
         derivePlaygroundInspector,
         findPlaygroundSymbolLine,
       } from "../lib/playground-presentation.mjs";
+      import { actionEffectFacts, formatEffectFacts } from "../lib/effect-facts.mjs";
+      import compilerArtifact from "../data/compiler-artifact.json";
 
       (window as any).__cellscriptInitPlayground = () => {
       type CompileDiagnosticPosition = {
@@ -424,7 +426,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
         role?: string;
       };
 
-      const compilerAssetVersion = "20261001-v0.31.0-2dfc01cf";
+      const compilerAssetVersion = compilerArtifact.sha256;
       const workerUrl = new URL(`/playground-worker.js?v=${compilerAssetVersion}`, window.location.href);
       const previousPlaygroundAbort = (window as any).__cellscriptPlaygroundAbort as AbortController | undefined;
       previousPlaygroundAbort?.abort();
@@ -1370,14 +1372,10 @@ source_roots = ["src"]
         void importWorkspaceFiles(importInput.files);
       }, { signal });
 
-      // Effect class -> localized label. Falls back to the raw class
-      // name lowercased if it isn't one of the known classes.
-      const effectLabel = (effectClass: unknown): string => {
-        const key = String(effectClass);
-        const localized = getMessage(`playground.effects.${key}`, readLocale());
-        if (typeof localized === "string" && localized) return localized;
-        return key.toLowerCase();
-      };
+      const effectLabels = () => ({
+        reads: pg("effects.reads"), lifecycle: pg("effects.lifecycle"),
+        process: pg("effects.process"), empty: pg("effects.empty"),
+      });
 
       const buildHashToName = (types: any[] = []) => {
         const hashToName = new Map<string, string>();
@@ -1773,7 +1771,7 @@ source_roots = ["src"]
             </div>
             <span class="pg-flow-connector" aria-hidden="true"></span>
             <button class="pg-flow-action" type="button" data-inspect-kind="action" data-inspect-name="${escapeAttr(action.name)}">
-              <span class="pg-flow-action-kicker">${String(index + 1).padStart(2, "0")} · ${escapeHtml(effectLabel(action.effect))}</span>
+              <span class="pg-flow-action-kicker">${String(index + 1).padStart(2, "0")} · ${escapeHtml(formatEffectFacts(action.effects, effectLabels()))}</span>
               <code>${escapeHtml(action.name)}</code>
               ${action.cycles != null ? `<span>${escapeHtml(action.cycles.toLocaleString())} ${escapeHtml(pg("cycles"))}</span>` : ""}
             </button>
@@ -1797,7 +1795,7 @@ source_roots = ["src"]
             <div class="pg-inspector-head"><span>${escapeHtml(pg("selectedAction"))}</span><button type="button" data-inspector-clear>${escapeHtml(pg("showSummary"))}</button></div>
             <code class="pg-inspector-title">${escapeHtml(view.name)}</code>
             <dl class="pg-inspector-grid">
-              <div><dt>${escapeHtml(pg("effect"))}</dt><dd>${escapeHtml(effectLabel(view.effect))}</dd></div>
+              <div><dt>${escapeHtml(pg("effect"))}</dt><dd>${escapeHtml(formatEffectFacts(view.effects, effectLabels()))}</dd></div>
               <div><dt>${escapeHtml(pg("cycles"))}</dt><dd>${view.cycles == null ? "—" : escapeHtml(view.cycles.toLocaleString())}</dd></div>
               <div><dt>${escapeHtml(pg("consume"))}</dt><dd>${escapeHtml(String(view.inputs.length))}</dd></div>
               <div><dt>${escapeHtml(pg("create"))}</dt><dd>${escapeHtml(String(view.outputs.length))}</dd></div>
@@ -1857,7 +1855,7 @@ source_roots = ["src"]
           return `<li class="pg-action-item${inspectorSelection?.kind === "action" && inspectorSelection.name === a.name ? " is-selected" : ""}">
             <button class="pg-action-head" type="button" data-inspect-kind="action" data-inspect-name="${escapeAttr(a.name)}">
               <code class="pg-action-name">${escapeHtml(a.name)}</code>
-              <span class="pg-action-effect pg-effect-${String(a.effect_class).toLowerCase()}">${escapeHtml(effectLabel(a.effect_class))}</span>
+              <span class="pg-action-effect">${escapeHtml(formatEffectFacts(actionEffectFacts(a), effectLabels()))}</span>
             </button>
             <div class="pg-action-sets">
               <div class="pg-set"><span class="pg-set-label">${escapeHtml(pg("consume"))}</span><div class="pg-set-items">${consume || "<span class=\"pg-set-empty\">—</span>"}</div></div>

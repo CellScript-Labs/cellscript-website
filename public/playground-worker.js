@@ -1,6 +1,6 @@
 let wasmModulePromise;
 let wasmModule;
-const COMPILER_ASSET_VERSION = "20261001-v0.31.0-2dfc01cf";
+const COMPILER_ASSET_VERSION = new URL(self.location.href).searchParams.get("v");
 const CELLSCRIPT_EDITION = "2026";
 const COMPILER_LOAD_TIMEOUT_MS = 12_000;
 
@@ -15,6 +15,9 @@ const loadCompiler = async () => {
       }, COMPILER_LOAD_TIMEOUT_MS);
 
       try {
+        if (!/^[0-9a-f]{64}$/.test(COMPILER_ASSET_VERSION ?? "")) {
+          throw Object.assign(new Error("compiler asset SHA-256 is required"), { code: "compiler_asset_identity_required" });
+        }
         const mod = await import(`/wasm/cellscript_wasm.js?v=${COMPILER_ASSET_VERSION}`);
         const response = await fetch(`/wasm/cellscript_wasm_bg.wasm?v=${COMPILER_ASSET_VERSION}`, {
           cache: "force-cache",
@@ -66,17 +69,13 @@ self.addEventListener("message", async (event) => {
 
     const start = performance.now();
     let raw;
-    if (Array.isArray(sources) && sources.length && entryPath && mod.compile_metadata_json_sources) {
+    if (sources !== undefined) {
+      if (!Array.isArray(sources) || !sources.length || typeof entryPath !== "string" || !entryPath) {
+        throw new Error("compiler source set requires files and an entry path");
+      }
       raw = mod.compile_metadata_json_sources(JSON.stringify(sources), entryPath, CELLSCRIPT_EDITION, target || null);
     } else {
-      const compile =
-        mod.compile_metadata_json_diagnostics ||
-        ((src, edition, artifactTarget) => {
-          const fallbackRaw = mod.compile_metadata_json(src, edition, artifactTarget);
-          const parsed = JSON.parse(fallbackRaw);
-          return JSON.stringify(parsed.error ? { metadata: null, diagnostics: [{ message: parsed.error, severity: "error" }] } : { metadata: parsed, diagnostics: [] });
-        });
-      raw = compile(source || "", CELLSCRIPT_EDITION, target || null);
+      raw = mod.compile_metadata_json_diagnostics(source || "", CELLSCRIPT_EDITION, target || null);
     }
     const payload = JSON.parse(raw);
     self.postMessage({
