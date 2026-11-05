@@ -10,8 +10,7 @@
  * runtime features and their scoped reasons). On error it
  * is `{"error": "<message>"}`.
  *
- * `edition` is mandatory and accepts the default `"2026"` contract or the
- * opt-in bounded `"2027"` contract frozen for CellScript 0.30. This does not
+ * `edition` is mandatory and accepts only the current `"2027"` contract. This does not
  * extend the browser's metadata-only evidence boundary.
  * The `target` argument is optional; pass `None` for the default target.
  */

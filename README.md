@@ -25,6 +25,9 @@ The static architecture is intentional. Most pages are generated from committed 
 - Learning and documentation entry points.
 - Design and audit notes under `docs/`.
 
+The playground compiles Edition 2027. Every compile API validates the source
+edition before compiling.
+
 ## Run It Locally
 
 ```bash
@@ -92,9 +95,9 @@ src/data/registry-packages.json
 
 When this repository is checked out as a submodule inside the main CellScript
 repository, the generator scans the parent checkout for package metadata. It
-fails closed when no `registry.json` source exists, when the source has no git
-revision, or when its origin is not a credential-free HTTPS URL; it never
-silently retains an older generated file. Build-time CellScript packages are
+rejects a source with no git revision or an origin that is not a credential-free
+HTTPS URL. When no source catalogs exist, it writes an explicit empty catalog
+instead of retaining an older generated file. Build-time CellScript packages are
 classified as `profile_library` when `Cell.toml` declares `metadata.profile`,
 otherwise as `source_library`. Source links are pinned to the package
 repository revision rather than a moving branch.

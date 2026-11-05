@@ -32,7 +32,7 @@ export interface RegistryVersion {
   source_hash: string;
   cellscript_version?: string;
   /** Long-lived source-semantics epoch. */
-  edition?: "2026";
+  edition?: "2027";
   /** Resolved target/assurance/ABI/schema profile identity. */
   compatibility_profile_hash?: string;
   dependencies?: Record<string, { namespace: string; version: string }>;

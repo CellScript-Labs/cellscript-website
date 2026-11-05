@@ -1,10 +1,22 @@
 {
-  "metadata_schema_version": 74,
+  "metadata_schema_version": 75,
   "module": "cellscript::vesting",
   "target_profile": "ckb",
   "types": [
     {
       "name": "Token",
+      "kind": "Resource",
+      "capabilities": [
+        "store",
+        "create",
+        "consume",
+        "replace",
+        "burn",
+        "relock"
+      ]
+    },
+    {
+      "name": "cellscript::fungible_token::Token",
       "kind": "Resource",
       "capabilities": [
         "store",
@@ -98,7 +110,7 @@
       "create_set": [
         "grant"
       ],
-      "estimated_cycles": 672
+      "estimated_cycles": 680
     },
     {
       "name": "claim_vested",
@@ -136,7 +148,7 @@
         "tokens",
         "updated_grant"
       ],
-      "estimated_cycles": 800
+      "estimated_cycles": 816
     }
   ],
   "artifact_format": "RISC-V assembly"

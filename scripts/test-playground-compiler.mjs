@@ -33,8 +33,9 @@ function accepted(source, edition) {
     if (entrypoint !== "single source") assert.equal(result.error_count, 0, JSON.stringify(result));
     const metadata = entrypoint === "single source" ? result : result.metadata;
     assert.equal(metadata?.module, moduleName, entrypoint);
+    assert.equal(metadata?.edition, "2027", entrypoint);
     assert.equal(metadata?.actions?.length, 1, entrypoint);
-    assert.equal(metadata.metadata_schema_version, 74, entrypoint);
+    assert.equal(metadata.metadata_schema_version, 75, entrypoint);
     actionEffectFacts(metadata.actions[0]);
   }
 }
@@ -53,6 +54,10 @@ function rejected(source, edition, expectedMessage) {
   }
 }
 
+test("unknown editions reject across all browser compile entrypoints", () => {
+  rejected(action("require true"), "2099", /unsupported.*2099.*2027/);
+});
+
 test("distributed compiler version matches generated example provenance", () => {
   const provenance = JSON.parse(readFileSync(new URL("../src/data/provenance.json", import.meta.url), "utf8"));
   const expected = new Set(Object.values(provenance).map((entry) => entry.compilerVersion));
@@ -62,7 +67,7 @@ test("distributed compiler version matches generated example provenance", () => 
 
 test("the shipped pipe cleanup example describes endpoint lifecycle only", () => {
   const source = readFileSync(new URL("../../examples/language/ckb/multi_step_pipeline.cell", import.meta.url), "utf8");
-  for (const edition of ["2026", "2027"]) {
+  for (const edition of ["2027"]) {
     for (const [entrypoint, result] of reports(source, edition)) {
       assert.equal(result.error, undefined, JSON.stringify(result));
       if (entrypoint !== "single source") assert.equal(result.error_count, 0, JSON.stringify(result));
@@ -134,7 +139,7 @@ const retiredFields = [
   ["ckb::type_script(source::input(0))", "args_hash"],
 ];
 
-for (const edition of ["2026", "2027"]) {
+for (const edition of ["2027"]) {
   test(`${edition}: unfinished byte strings and unknown scheduler hints reject`, () => {
     for (const [source, code] of [
       [`module byte_eof\nconst BYTE: [u8; 1] = b"x`, "E1022"],
@@ -247,7 +252,7 @@ test("source labels never acquire verifier or PIPE contracts in distributed meta
     const source = `module ${moduleName}
 fn ${name}(value: u64) -> u64 { return 77 }
 action inspect() -> u64 { verification return ${moduleName}::${name}(5) }`;
-    for (const edition of ["2026", "2027"]) {
+    for (const edition of ["2027"]) {
       accepted(source, edition);
       for (const [entrypoint, result] of reports(source, edition)) {
         const metadata = entrypoint === "single source" ? result : result.metadata;

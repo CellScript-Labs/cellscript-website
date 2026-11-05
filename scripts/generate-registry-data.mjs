@@ -11,10 +11,10 @@ import { parse as parseToml } from "smol-toml";
 import { jsonWithAsciiEscapes } from "./ascii-json.mjs";
 
 const WEBSITE_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), "..");
-const OUT = resolve(WEBSITE_ROOT, "src/data/registry-packages.json");
+const OUT = resolve(WEBSITE_ROOT, process.env.CELLSCRIPT_REGISTRY_OUTPUT || "src/data/registry-packages.json");
 const SKIP_DIRS = new Set([".git", ".astro", ".cell", "dist", "node_modules", "target"]);
 const REGISTRY_SCHEMA_VERSION = 1;
-const CELLSCRIPT_EDITION = "2026";
+const CELLSCRIPT_EDITION = "2027";
 const REGISTRY_STATUSES = new Set([
   "source_published",
   "indexed_pending",
@@ -257,11 +257,6 @@ function sortJson(value) {
 }
 
 const registryPaths = await findRegistryFiles(REPO_ROOT);
-if (!registryPaths.length) {
-  throw new Error(
-    `no registry.json sources found under ${REPO_ROOT}; refusing to publish or retain a potentially stale ${posixRelative(WEBSITE_ROOT, OUT)}`,
-  );
-}
 const records = registryPaths.map(packageRecord).filter(Boolean).sort((left, right) => left.coordinate.localeCompare(right.coordinate));
 const payload = {
   schema_version: REGISTRY_SCHEMA_VERSION,

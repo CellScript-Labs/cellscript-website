@@ -266,7 +266,7 @@ Mature editor projects are still valuable as **reference clones**
 ### 4.3 Compile trigger (debounced)
 
 ```
-input -> debounce 300ms -> wasm.compile_metadata_json(source, "2026", target) ->
+input -> debounce 300ms -> wasm.compile_metadata_json(source, "2027", target) ->
   parse JSON -> update OUTPUT tabs + PROVENANCE rail + bottom status
 ```
 

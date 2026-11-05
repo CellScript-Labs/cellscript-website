@@ -1,7 +1,7 @@
 let wasmModulePromise;
 let wasmModule;
 const COMPILER_ASSET_VERSION = new URL(self.location.href).searchParams.get("v");
-const CELLSCRIPT_EDITION = "2026";
+const CELLSCRIPT_EDITION = "2027";
 const COMPILER_LOAD_TIMEOUT_MS = 12_000;
 
 const loadCompiler = async () => {

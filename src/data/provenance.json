@@ -5,7 +5,7 @@
     "artifactSizeBytes": 53917,
     "artifactHash": "6b394e6e3cf1b6a1",
     "sourceHash": "3fed105b34f211b6",
-    "compilerVersion": "0.33.0-alpha.1",
+    "compilerVersion": "0.33.0-alpha.2",
     "types": [
       {
         "name": "Token",
@@ -200,10 +200,24 @@
     "artifactSizeBytes": 368974,
     "artifactHash": "e77d5d281d49c5b8",
     "sourceHash": "d19a4ba36eb4bf2e",
-    "compilerVersion": "0.33.0-alpha.1",
+    "compilerVersion": "0.33.0-alpha.2",
     "types": [
       {
         "name": "Token",
+        "kind": "Resource",
+        "capabilities": [
+          "store",
+          "create",
+          "consume",
+          "replace",
+          "burn",
+          "relock"
+        ],
+        "encodedSize": 16,
+        "flowStates": []
+      },
+      {
+        "name": "cellscript::fungible_token::Token",
         "kind": "Resource",
         "capabilities": [
           "store",
@@ -731,10 +745,24 @@
     "artifactSizeBytes": 192190,
     "artifactHash": "7ad3664b960c7828",
     "sourceHash": "e09c1334bb7cfd60",
-    "compilerVersion": "0.33.0-alpha.1",
+    "compilerVersion": "0.33.0-alpha.2",
     "types": [
       {
         "name": "Token",
+        "kind": "Resource",
+        "capabilities": [
+          "store",
+          "create",
+          "consume",
+          "replace",
+          "burn",
+          "relock"
+        ],
+        "encodedSize": 16,
+        "flowStates": []
+      },
+      {
+        "name": "cellscript::fungible_token::Token",
         "kind": "Resource",
         "capabilities": [
           "store",
@@ -1028,13 +1056,27 @@
   "vesting": {
     "module": "cellscript::vesting",
     "target": "ckb",
-    "artifactSizeBytes": 136828,
-    "artifactHash": "edaf4db3029e3304",
+    "artifactSizeBytes": 137620,
+    "artifactHash": "ca12295a3851705b",
     "sourceHash": "a0063283e5752967",
-    "compilerVersion": "0.33.0-alpha.1",
+    "compilerVersion": "0.33.0-alpha.2",
     "types": [
       {
         "name": "Token",
+        "kind": "Resource",
+        "capabilities": [
+          "store",
+          "create",
+          "consume",
+          "replace",
+          "burn",
+          "relock"
+        ],
+        "encodedSize": 16,
+        "flowStates": []
+      },
+      {
+        "name": "cellscript::fungible_token::Token",
         "kind": "Resource",
         "capabilities": [
           "store",
@@ -1150,7 +1192,7 @@
             "binding": "grant"
           }
         ],
-        "estimatedCycles": 672,
+        "estimatedCycles": 680,
         "parallelizable": false
       },
       {
@@ -1201,7 +1243,7 @@
             "binding": "updated_grant"
           }
         ],
-        "estimatedCycles": 800,
+        "estimatedCycles": 816,
         "parallelizable": true
       },
       {
@@ -1252,7 +1294,7 @@
             "binding": "completed_grant"
           }
         ],
-        "estimatedCycles": 652,
+        "estimatedCycles": 668,
         "parallelizable": true
       },
       {
@@ -1309,7 +1351,7 @@
             "binding": "admin_tokens"
           }
         ],
-        "estimatedCycles": 948,
+        "estimatedCycles": 956,
         "parallelizable": false
       }
     ]
