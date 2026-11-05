@@ -28,7 +28,8 @@ function reports(source, edition) {
 }
 
 function accepted(source, edition) {
-  for (const [entrypoint, result] of reports(source, edition)) {
+  const results = reports(source, edition);
+  for (const [entrypoint, result] of results) {
     assert.equal(result.error, undefined, `${entrypoint}: ${JSON.stringify(result)}`);
     if (entrypoint !== "single source") assert.equal(result.error_count, 0, JSON.stringify(result));
     const metadata = entrypoint === "single source" ? result : result.metadata;
@@ -38,10 +39,12 @@ function accepted(source, edition) {
     assert.equal(metadata.metadata_schema_version, 75, entrypoint);
     actionEffectFacts(metadata.actions[0]);
   }
+  return results;
 }
 
 function rejected(source, edition, expectedMessage) {
-  for (const [entrypoint, result] of reports(source, edition)) {
+  const results = reports(source, edition);
+  for (const [entrypoint, result] of results) {
     const message = entrypoint === "single source"
       ? result.error
       : result.diagnostics?.filter((item) => item.severity === "error").map((item) => item.message).join("\n");
@@ -52,6 +55,7 @@ function rejected(source, edition, expectedMessage) {
     assert.equal(typeof message, "string", `${entrypoint}: compilation unexpectedly succeeded`);
     assert.match(message, expectedMessage, entrypoint);
   }
+  return results;
 }
 
 test("unknown editions reject across all browser compile entrypoints", () => {
@@ -158,8 +162,7 @@ for (const edition of ["2027"]) {
   });
   test(`${edition}: bare named spawn is rejected before browser metadata`, () => {
     const source = action('spawn("hash_checker")');
-    rejected(source, edition, /manifest-bound CellDep spawn/);
-    for (const [entrypoint, result] of reports(source, edition)) {
+    for (const [entrypoint, result] of rejected(source, edition, /manifest-bound CellDep spawn/)) {
       if (entrypoint !== "single source") {
         assert.ok(result.diagnostics.some((item) => item.code === "E1021"), JSON.stringify(result));
       }
@@ -253,8 +256,7 @@ test("source labels never acquire verifier or PIPE contracts in distributed meta
 fn ${name}(value: u64) -> u64 { return 77 }
 action inspect() -> u64 { verification return ${moduleName}::${name}(5) }`;
     for (const edition of ["2027"]) {
-      accepted(source, edition);
-      for (const [entrypoint, result] of reports(source, edition)) {
+      for (const [entrypoint, result] of accepted(source, edition)) {
         const metadata = entrypoint === "single source" ? result : result.metadata;
         const facts = actionEffectFacts(metadata.actions[0]);
         assert.deepEqual(facts.context_reads, [], name);

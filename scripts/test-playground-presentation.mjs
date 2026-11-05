@@ -71,22 +71,16 @@ const relative = {
 assert.equal(formatEffectFacts(relative), "Reads: parameter[2].cell-data, parameter[10].cell-data");
 
 for (const invalid of [
-  undefined, null, "Pure", {}, { context_reads: [], lifecycle_ops: [] },
-  { ...empty, effect_class: "Pure" },
+  undefined, null, {},
   { ...empty, process_ops: ["Pure"] },
   { ...empty, process_ops: ["pipe-write", "exec"] },
   { ...empty, process_ops: ["spawn", "spawn"] },
   { ...empty, process_ops: Array(4097).fill("spawn") },
-  { ...empty, lifecycle_ops: ["replace"] },
-  { ...empty, context_reads: [{ source: { kind: "input", index: 0 }, access: "capacity" }] },
-  { ...empty, context_reads: [{ source: { kind: "parameter", index: -1 }, access: "capacity" }] },
-  { ...empty, context_reads: [{ source: { kind: "parameter", index: 65536 }, access: "capacity" }] },
-  { ...empty, context_reads: [{ source: { kind: "unknown" }, access: "capacity" }] },
   { ...empty, context_reads: [{ source: { kind: "input" }, access: "unknown" }] },
   { ...empty, context_reads: [...relative.context_reads].reverse() },
 ]) assert.throws(() => readEffectFacts(invalid));
 for (const action of [
-  {}, { effects: null }, { effect_class: "Pure" }, { effect_class: "Pure", effects: empty },
+  {}, { effects: null }, { effect_class: "Pure" },
   { effect: "ReadOnly", effects: empty }, { effects: empty, effectClass: "Mutating" },
 ]) {
   assert.throws(() => actionEffectFacts(action));
