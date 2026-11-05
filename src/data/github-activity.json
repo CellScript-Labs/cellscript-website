@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "tag": "v0.33.0-alpha.2",
+      "name": "CellScript 0.33.0-alpha.2",
+      "date": "2026-11-05",
+      "body": "## Included changes\r\n\r\n- Structured type identity migration checkpoint (#96): the parser retains\r\n  `Type::Applied` applications and unsign\u2026",
+      "url": "https://github.com/CellScript-Labs/CellScript/releases/tag/v0.33.0-alpha.2"
+    },
+    {
       "tag": "v0.33.0-alpha.1",
       "name": "CellScript 0.33.0-alpha.1",
       "date": "2026-10-28",
@@ -13,50 +20,43 @@
       "date": "2026-10-01",
       "body": "# CellScript 0.31.0\n\nRelease date: 2026-10-01. The maintainer explicitly authorized direct publication\nand waived the pending independent r\u2026",
       "url": "https://github.com/CellScript-Labs/CellScript/releases/tag/v0.31.0"
-    },
-    {
-      "tag": "v0.30.0",
-      "name": "CellScript 0.30.0",
-      "date": "2026-09-23",
-      "body": "# CellScript 0.30.0\n\n0.30 brings the unpublished 0.26 and 0.26b work into the next stable release\nafter 0.25. It covers bounded Cell lifecy\u2026",
-      "url": "https://github.com/CellScript-Labs/CellScript/releases/tag/v0.30.0"
     }
   ],
   "commits": [
     {
-      "sha": "5fd4c46",
-      "message": "Publish 0.31 with the maintainer-authorized evidence exception",
-      "author": "Arthur",
-      "date": "2026-10-01",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/5fd4c4690512b3df4cd5a46d64194d7d4d3b9491"
+      "sha": "54eb222",
+      "message": "Prepare v0.33.0-alpha.2 publication after v194 correction",
+      "author": "yosei-tsukifune",
+      "date": "2026-11-05",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/54eb2220a58f2ebcb62995491c8470527a188250"
     },
     {
-      "sha": "6c111a3",
-      "message": "Bind business and runtime-view evidence to the 0.31 package version",
-      "author": "Arthur",
-      "date": "2026-10-01",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/6c111a30a9a9ddfb50dadbd12b8f2572647a7563"
+      "sha": "719c9d1",
+      "message": "Admit narrow integer literals in Vec extend_from_slice sources",
+      "author": "yosei-tsukifune",
+      "date": "2026-11-05",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/719c9d1173090d13e4840191d47aacdd2dce2b6a"
     },
     {
-      "sha": "b479237",
-      "message": "Repin the bundled package graph with the 0.31 compiler",
-      "author": "Arthur",
-      "date": "2026-10-01",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/b4792373669c1b4523f49cef9bb480358174ec26"
+      "sha": "bfc2e90",
+      "message": "Track v193 acceptance submodules and refresh the workspace layout",
+      "author": "yosei-tsukifune",
+      "date": "2026-11-05",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/bfc2e90ece2d746d8ff85c3363b2696910612bd6"
     },
     {
-      "sha": "9e9775d",
-      "message": "Refresh 0.31 artifact identities and exact NovaSeal measurements",
-      "author": "Arthur",
-      "date": "2026-10-01",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/9e9775d6828988eee3ed4969cf2cb402c6629c86"
+      "sha": "3dfaa08",
+      "message": "Restore schema vector field byte-length storage through the retained span ABI",
+      "author": "yosei-tsukifune",
+      "date": "2026-11-05",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/3dfaa08685f4cd4fa4228391c44fd366c6b6d2f4"
     },
     {
-      "sha": "c5eef5c",
-      "message": "Prepare the 0.31 release candidate with audit corrections",
-      "author": "Arthur",
-      "date": "2026-10-01",
-      "url": "https://github.com/CellScript-Labs/CellScript/commit/c5eef5cbaddb78fe1773cdde016cf7d81c0c23ae"
+      "sha": "c50266a",
+      "message": "Deliver v193 acceptance closeout with recipe rebind and root-caused stateful gap",
+      "author": "yosei-tsukifune",
+      "date": "2026-11-04",
+      "url": "https://github.com/CellScript-Labs/CellScript/commit/c50266adc236bb0b14a6388a8430e19645448908"
     }
   ]
 }
