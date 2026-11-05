@@ -16,6 +16,7 @@ import { dirname, relative, resolve, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 import { spawnSync } from "node:child_process";
 import { jsonWithAsciiEscapes } from "./ascii-json.mjs";
+import { actionEffectFacts } from "../src/lib/effect-facts.mjs";
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
 const CELLC = resolve(REPO, "target/release/cellc");
@@ -92,7 +93,7 @@ function buildProvenanceView(metadata, typeNames) {
     const params = new Map((action.params || []).map((param) => [param.name, param.ty]));
     return {
       name: action.name ?? null,
-      effectClass: action.effect_class ?? null,
+      effects: actionEffectFacts(action),
       consume: simplifySet(action.consume_set, params, typeNames),
       create: simplifySet(action.create_set, params, typeNames),
       estimatedCycles: action.estimated_cycles ?? null,
@@ -149,7 +150,7 @@ function generatePipelineFragments(tempDirectory) {
     module: metadata.module ?? null,
     artifact_format: metadata.artifact_format ?? null,
     types: (metadata.types || []).slice(0, 3).map((type) => ({ name: type.name ?? null, kind: type.kind ?? null })),
-    actions: (metadata.actions || []).slice(0, 3).map((action) => ({ name: action.name ?? null, effect: action.effect_class ?? null })),
+    actions: (metadata.actions || []).slice(0, 3).map((action) => ({ name: action.name ?? null, effects: actionEffectFacts(action) })),
   };
   const metadataJson = JSON.stringify(metaExcerpt, null, 2);
 
@@ -186,7 +187,7 @@ function generateAssuranceExcerpt() {
     })),
     actions: (metadata.actions || []).slice(0, 3).map((action) => ({
       name: action.name ?? null,
-      effect_class: action.effect_class ?? null,
+      effects: actionEffectFacts(action),
       consume_set: (action.consume_set || []).map((entry) => entry.binding ?? "?"),
       create_set: (action.create_set || []).map((entry) => entry.binding ?? "?"),
       estimated_cycles: action.estimated_cycles ?? null,

@@ -133,3 +133,10 @@ else
   echo "  budget: OVER ${WASM_GZIP_BUDGET_KIB} KiB gzip — review included code paths"
   exit 1
 fi
+
+# The page, worker URLs and distribution checks share this content identity.
+# Generate it from the actual canonical output; do not hand-bump a release label
+# or keep a second hash in the browser worker.
+WASM_SHA256="$(sha256sum "$OUT/cellscript_wasm_bg.wasm" | cut -d ' ' -f 1)"
+printf '{\n  "schema": "cellscript-browser-compiler-v1",\n  "sha256": "%s",\n  "raw_bytes": %s,\n  "gzip_bytes": %s\n}\n' \
+  "$WASM_SHA256" "$RAW" "$GZIP" > "$REPO/website/src/data/compiler-artifact.json"

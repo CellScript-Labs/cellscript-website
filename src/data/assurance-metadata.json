@@ -1,5 +1,5 @@
 {
-  "metadata_schema_version": 72,
+  "metadata_schema_version": 74,
   "module": "cellscript::vesting",
   "target_profile": "ckb",
   "types": [
@@ -37,7 +37,20 @@
   "actions": [
     {
       "name": "create_vesting_config",
-      "effect_class": "Creating",
+      "effects": {
+        "context_reads": [
+          {
+            "source": {
+              "kind": "output"
+            },
+            "access": "cell-data"
+          }
+        ],
+        "lifecycle_ops": [
+          "create"
+        ],
+        "process_ops": []
+      },
       "consume_set": [],
       "create_set": [
         "config"
@@ -46,7 +59,39 @@
     },
     {
       "name": "grant_vesting",
-      "effect_class": "Mutating",
+      "effects": {
+        "context_reads": [
+          {
+            "source": {
+              "kind": "cell-dep"
+            },
+            "access": "cell-data"
+          },
+          {
+            "source": {
+              "kind": "header-dep"
+            },
+            "access": "header"
+          },
+          {
+            "source": {
+              "kind": "input"
+            },
+            "access": "cell-data"
+          },
+          {
+            "source": {
+              "kind": "output"
+            },
+            "access": "cell-data"
+          }
+        ],
+        "lifecycle_ops": [
+          "consume",
+          "create"
+        ],
+        "process_ops": []
+      },
       "consume_set": [
         "tokens"
       ],
@@ -57,7 +102,33 @@
     },
     {
       "name": "claim_vested",
-      "effect_class": "Mutating",
+      "effects": {
+        "context_reads": [
+          {
+            "source": {
+              "kind": "header-dep"
+            },
+            "access": "header"
+          },
+          {
+            "source": {
+              "kind": "input"
+            },
+            "access": "cell-data"
+          },
+          {
+            "source": {
+              "kind": "output"
+            },
+            "access": "cell-data"
+          }
+        ],
+        "lifecycle_ops": [
+          "consume",
+          "create"
+        ],
+        "process_ops": []
+      },
       "consume_set": [
         "grant"
       ],

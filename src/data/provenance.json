@@ -36,7 +36,27 @@
     "actions": [
       {
         "name": "mint_with_authority",
-        "effectClass": "Mutating",
+        "effects": {
+          "context_reads": [
+            {
+              "source": {
+                "kind": "input"
+              },
+              "access": "cell-data"
+            },
+            {
+              "source": {
+                "kind": "output"
+              },
+              "access": "cell-data"
+            }
+          ],
+          "lifecycle_ops": [
+            "consume",
+            "create"
+          ],
+          "process_ops": []
+        },
         "consume": [
           {
             "op": "input",
@@ -61,7 +81,27 @@
       },
       {
         "name": "transfer_token",
-        "effectClass": "Mutating",
+        "effects": {
+          "context_reads": [
+            {
+              "source": {
+                "kind": "input"
+              },
+              "access": "cell-data"
+            },
+            {
+              "source": {
+                "kind": "output"
+              },
+              "access": "cell-data"
+            }
+          ],
+          "lifecycle_ops": [
+            "consume",
+            "create"
+          ],
+          "process_ops": []
+        },
         "consume": [
           {
             "op": "consume",
@@ -81,7 +121,21 @@
       },
       {
         "name": "burn",
-        "effectClass": "Destroying",
+        "effects": {
+          "context_reads": [
+            {
+              "source": {
+                "kind": "input"
+              },
+              "access": "cell-data"
+            }
+          ],
+          "lifecycle_ops": [
+            "consume",
+            "destroy"
+          ],
+          "process_ops": []
+        },
         "consume": [
           {
             "op": "destroy",
@@ -95,7 +149,27 @@
       },
       {
         "name": "merge",
-        "effectClass": "Mutating",
+        "effects": {
+          "context_reads": [
+            {
+              "source": {
+                "kind": "input"
+              },
+              "access": "cell-data"
+            },
+            {
+              "source": {
+                "kind": "output"
+              },
+              "access": "cell-data"
+            }
+          ],
+          "lifecycle_ops": [
+            "consume",
+            "create"
+          ],
+          "process_ops": []
+        },
         "consume": [
           {
             "op": "consume",
@@ -123,8 +197,8 @@
   "nft": {
     "module": "cellscript::nft",
     "target": "ckb",
-    "artifactSizeBytes": 352503,
-    "artifactHash": "d252a7f86c7e9ce8",
+    "artifactSizeBytes": 368974,
+    "artifactHash": "e77d5d281d49c5b8",
     "sourceHash": "d19a4ba36eb4bf2e",
     "compilerVersion": "0.33.0-alpha.1",
     "types": [
@@ -201,7 +275,20 @@
     "actions": [
       {
         "name": "create_collection",
-        "effectClass": "Creating",
+        "effects": {
+          "context_reads": [
+            {
+              "source": {
+                "kind": "output"
+              },
+              "access": "cell-data"
+            }
+          ],
+          "lifecycle_ops": [
+            "create"
+          ],
+          "process_ops": []
+        },
         "consume": [],
         "create": [
           {
@@ -215,7 +302,33 @@
       },
       {
         "name": "mint",
-        "effectClass": "Mutating",
+        "effects": {
+          "context_reads": [
+            {
+              "source": {
+                "kind": "input"
+              },
+              "access": "cell-data"
+            },
+            {
+              "source": {
+                "kind": "input"
+              },
+              "access": "type-script"
+            },
+            {
+              "source": {
+                "kind": "output"
+              },
+              "access": "cell-data"
+            }
+          ],
+          "lifecycle_ops": [
+            "consume",
+            "create"
+          ],
+          "process_ops": []
+        },
         "consume": [
           {
             "op": "input",
@@ -240,7 +353,27 @@
       },
       {
         "name": "transfer",
-        "effectClass": "Mutating",
+        "effects": {
+          "context_reads": [
+            {
+              "source": {
+                "kind": "input"
+              },
+              "access": "cell-data"
+            },
+            {
+              "source": {
+                "kind": "output"
+              },
+              "access": "cell-data"
+            }
+          ],
+          "lifecycle_ops": [
+            "consume",
+            "create"
+          ],
+          "process_ops": []
+        },
         "consume": [
           {
             "op": "input",
@@ -260,7 +393,32 @@
       },
       {
         "name": "create_listing",
-        "effectClass": "Creating",
+        "effects": {
+          "context_reads": [
+            {
+              "source": {
+                "kind": "cell-dep"
+              },
+              "access": "cell-data"
+            },
+            {
+              "source": {
+                "kind": "header-dep"
+              },
+              "access": "header"
+            },
+            {
+              "source": {
+                "kind": "output"
+              },
+              "access": "cell-data"
+            }
+          ],
+          "lifecycle_ops": [
+            "create"
+          ],
+          "process_ops": []
+        },
         "consume": [],
         "create": [
           {
@@ -274,7 +432,21 @@
       },
       {
         "name": "cancel_listing",
-        "effectClass": "Destroying",
+        "effects": {
+          "context_reads": [
+            {
+              "source": {
+                "kind": "input"
+              },
+              "access": "cell-data"
+            }
+          ],
+          "lifecycle_ops": [
+            "consume",
+            "destroy"
+          ],
+          "process_ops": []
+        },
         "consume": [
           {
             "op": "destroy",
@@ -288,7 +460,28 @@
       },
       {
         "name": "buy_from_listing",
-        "effectClass": "Mutating",
+        "effects": {
+          "context_reads": [
+            {
+              "source": {
+                "kind": "input"
+              },
+              "access": "cell-data"
+            },
+            {
+              "source": {
+                "kind": "output"
+              },
+              "access": "cell-data"
+            }
+          ],
+          "lifecycle_ops": [
+            "consume",
+            "create",
+            "destroy"
+          ],
+          "process_ops": []
+        },
         "consume": [
           {
             "op": "input",
@@ -333,7 +526,26 @@
       },
       {
         "name": "create_offer",
-        "effectClass": "Creating",
+        "effects": {
+          "context_reads": [
+            {
+              "source": {
+                "kind": "header-dep"
+              },
+              "access": "header"
+            },
+            {
+              "source": {
+                "kind": "output"
+              },
+              "access": "cell-data"
+            }
+          ],
+          "lifecycle_ops": [
+            "create"
+          ],
+          "process_ops": []
+        },
         "consume": [],
         "create": [
           {
@@ -347,7 +559,34 @@
       },
       {
         "name": "accept_offer",
-        "effectClass": "Mutating",
+        "effects": {
+          "context_reads": [
+            {
+              "source": {
+                "kind": "header-dep"
+              },
+              "access": "header"
+            },
+            {
+              "source": {
+                "kind": "input"
+              },
+              "access": "cell-data"
+            },
+            {
+              "source": {
+                "kind": "output"
+              },
+              "access": "cell-data"
+            }
+          ],
+          "lifecycle_ops": [
+            "consume",
+            "create",
+            "destroy"
+          ],
+          "process_ops": []
+        },
         "consume": [
           {
             "op": "input",
@@ -392,7 +631,21 @@
       },
       {
         "name": "burn",
-        "effectClass": "Destroying",
+        "effects": {
+          "context_reads": [
+            {
+              "source": {
+                "kind": "input"
+              },
+              "access": "cell-data"
+            }
+          ],
+          "lifecycle_ops": [
+            "consume",
+            "destroy"
+          ],
+          "process_ops": []
+        },
         "consume": [
           {
             "op": "destroy",
@@ -406,7 +659,33 @@
       },
       {
         "name": "batch_mint",
-        "effectClass": "Mutating",
+        "effects": {
+          "context_reads": [
+            {
+              "source": {
+                "kind": "input"
+              },
+              "access": "cell-data"
+            },
+            {
+              "source": {
+                "kind": "input"
+              },
+              "access": "type-script"
+            },
+            {
+              "source": {
+                "kind": "output"
+              },
+              "access": "cell-data"
+            }
+          ],
+          "lifecycle_ops": [
+            "consume",
+            "create"
+          ],
+          "process_ops": []
+        },
         "consume": [
           {
             "op": "input",
@@ -449,8 +728,8 @@
   "amm": {
     "module": "cellscript::amm_pool",
     "target": "ckb",
-    "artifactSizeBytes": 195460,
-    "artifactHash": "116cca9da27f5a5a",
+    "artifactSizeBytes": 192190,
+    "artifactHash": "7ad3664b960c7828",
     "sourceHash": "e09c1334bb7cfd60",
     "compilerVersion": "0.33.0-alpha.1",
     "types": [
@@ -494,7 +773,39 @@
     "actions": [
       {
         "name": "seed_pool",
-        "effectClass": "Mutating",
+        "effects": {
+          "context_reads": [
+            {
+              "source": {
+                "kind": "input"
+              },
+              "access": "cell-data"
+            },
+            {
+              "source": {
+                "kind": "input"
+              },
+              "access": "type-script"
+            },
+            {
+              "source": {
+                "kind": "output"
+              },
+              "access": "cell-data"
+            },
+            {
+              "source": {
+                "kind": "output"
+              },
+              "access": "type-script"
+            }
+          ],
+          "lifecycle_ops": [
+            "consume",
+            "create"
+          ],
+          "process_ops": []
+        },
         "consume": [
           {
             "op": "consume",
@@ -524,7 +835,39 @@
       },
       {
         "name": "swap_a_for_b",
-        "effectClass": "Mutating",
+        "effects": {
+          "context_reads": [
+            {
+              "source": {
+                "kind": "input"
+              },
+              "access": "cell-data"
+            },
+            {
+              "source": {
+                "kind": "input"
+              },
+              "access": "type-script"
+            },
+            {
+              "source": {
+                "kind": "output"
+              },
+              "access": "cell-data"
+            },
+            {
+              "source": {
+                "kind": "output"
+              },
+              "access": "type-script"
+            }
+          ],
+          "lifecycle_ops": [
+            "consume",
+            "create"
+          ],
+          "process_ops": []
+        },
         "consume": [
           {
             "op": "input",
@@ -554,7 +897,33 @@
       },
       {
         "name": "add_liquidity",
-        "effectClass": "Mutating",
+        "effects": {
+          "context_reads": [
+            {
+              "source": {
+                "kind": "input"
+              },
+              "access": "cell-data"
+            },
+            {
+              "source": {
+                "kind": "input"
+              },
+              "access": "type-script"
+            },
+            {
+              "source": {
+                "kind": "output"
+              },
+              "access": "cell-data"
+            }
+          ],
+          "lifecycle_ops": [
+            "consume",
+            "create"
+          ],
+          "process_ops": []
+        },
         "consume": [
           {
             "op": "input",
@@ -589,7 +958,39 @@
       },
       {
         "name": "remove_liquidity",
-        "effectClass": "Mutating",
+        "effects": {
+          "context_reads": [
+            {
+              "source": {
+                "kind": "input"
+              },
+              "access": "cell-data"
+            },
+            {
+              "source": {
+                "kind": "input"
+              },
+              "access": "type-script"
+            },
+            {
+              "source": {
+                "kind": "output"
+              },
+              "access": "cell-data"
+            },
+            {
+              "source": {
+                "kind": "output"
+              },
+              "access": "type-script"
+            }
+          ],
+          "lifecycle_ops": [
+            "consume",
+            "create"
+          ],
+          "process_ops": []
+        },
         "consume": [
           {
             "op": "input",
@@ -675,7 +1076,20 @@
     "actions": [
       {
         "name": "create_vesting_config",
-        "effectClass": "Creating",
+        "effects": {
+          "context_reads": [
+            {
+              "source": {
+                "kind": "output"
+              },
+              "access": "cell-data"
+            }
+          ],
+          "lifecycle_ops": [
+            "create"
+          ],
+          "process_ops": []
+        },
         "consume": [],
         "create": [
           {
@@ -689,7 +1103,39 @@
       },
       {
         "name": "grant_vesting",
-        "effectClass": "Mutating",
+        "effects": {
+          "context_reads": [
+            {
+              "source": {
+                "kind": "cell-dep"
+              },
+              "access": "cell-data"
+            },
+            {
+              "source": {
+                "kind": "header-dep"
+              },
+              "access": "header"
+            },
+            {
+              "source": {
+                "kind": "input"
+              },
+              "access": "cell-data"
+            },
+            {
+              "source": {
+                "kind": "output"
+              },
+              "access": "cell-data"
+            }
+          ],
+          "lifecycle_ops": [
+            "consume",
+            "create"
+          ],
+          "process_ops": []
+        },
         "consume": [
           {
             "op": "consume",
@@ -709,7 +1155,33 @@
       },
       {
         "name": "claim_vested",
-        "effectClass": "Mutating",
+        "effects": {
+          "context_reads": [
+            {
+              "source": {
+                "kind": "header-dep"
+              },
+              "access": "header"
+            },
+            {
+              "source": {
+                "kind": "input"
+              },
+              "access": "cell-data"
+            },
+            {
+              "source": {
+                "kind": "output"
+              },
+              "access": "cell-data"
+            }
+          ],
+          "lifecycle_ops": [
+            "consume",
+            "create"
+          ],
+          "process_ops": []
+        },
         "consume": [
           {
             "op": "consume",
@@ -734,7 +1206,33 @@
       },
       {
         "name": "claim_fully_vested",
-        "effectClass": "Mutating",
+        "effects": {
+          "context_reads": [
+            {
+              "source": {
+                "kind": "header-dep"
+              },
+              "access": "header"
+            },
+            {
+              "source": {
+                "kind": "input"
+              },
+              "access": "cell-data"
+            },
+            {
+              "source": {
+                "kind": "output"
+              },
+              "access": "cell-data"
+            }
+          ],
+          "lifecycle_ops": [
+            "consume",
+            "create"
+          ],
+          "process_ops": []
+        },
         "consume": [
           {
             "op": "consume",
@@ -759,7 +1257,39 @@
       },
       {
         "name": "revoke_grant",
-        "effectClass": "Mutating",
+        "effects": {
+          "context_reads": [
+            {
+              "source": {
+                "kind": "cell-dep"
+              },
+              "access": "cell-data"
+            },
+            {
+              "source": {
+                "kind": "header-dep"
+              },
+              "access": "header"
+            },
+            {
+              "source": {
+                "kind": "input"
+              },
+              "access": "cell-data"
+            },
+            {
+              "source": {
+                "kind": "output"
+              },
+              "access": "cell-data"
+            }
+          ],
+          "lifecycle_ops": [
+            "consume",
+            "create"
+          ],
+          "process_ops": []
+        },
         "consume": [
           {
             "op": "consume",

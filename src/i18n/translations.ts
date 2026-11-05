@@ -125,7 +125,7 @@ export const translations = {
       noTypes: "No types.",
       noMetadata: "No metadata — fix errors to compile.",
       noFlowTitle: "No Cell transitions in this entry",
-      noFlowBody: "Pure helpers and lock-only entries may compile without consuming or creating Cells.",
+      noFlowBody: "Functions and Lock entries may compile without consuming or creating Cells.",
       line: "line",
       lineAria: "Line {n}",
       sourceLevel: "source",
@@ -293,8 +293,8 @@ export const translations = {
           summary: "A small lock example that hashes witness data and compares it with an expected value.",
         },
         multiStepPipeline: {
-          title: "Spawn pipeline",
-          summary: "Advanced example for pipe descriptors and delegated verifier communication. The main lesson is cleanup on every exit path.",
+          title: "Pipe cleanup",
+          summary: "Creates and closes both pipe endpoints with explicit status checks. It does not spawn a child or transfer data; see the separate delegation example for child transport.",
         },
         witnessSource: {
           title: "Witness source",
@@ -310,11 +310,10 @@ export const translations = {
         },
       },
       effects: {
-        Creating: "creates",
-        Mutating: "mutates",
-        Destroying: "destroys",
-        ReadOnly: "read-only",
-        Pure: "pure",
+        reads: "Reads",
+        lifecycle: "Cell operations",
+        process: "Process",
+        empty: "No external operations",
       },
     },
     navRail: {
@@ -1320,7 +1319,7 @@ export const translations = {
       noTypes: "无类型。",
       noMetadata: "无元数据 — 请先修正错误。",
       noFlowTitle: "当前入口没有 Cell 状态转换",
-      noFlowBody: "纯函数或仅锁脚本入口可能不会消耗或创建 Cell，但仍然可以正常编译。",
+      noFlowBody: "函数或 Lock 入口可能不会消耗或创建 Cell，但仍然可以正常编译。",
       line: "行",
       lineAria: "第 {n} 行",
       sourceLevel: "源码级",
@@ -1488,8 +1487,8 @@ export const translations = {
           summary: "一个小型锁脚本示例：对见证数据做哈希，再与期望值比较。",
         },
         multiStepPipeline: {
-          title: "Spawn 管道",
-          summary: "高级示例：管道描述符和委托验证器通信。主要学习点是每条退出路径都要清理资源。",
+          title: "管道资源清理",
+          summary: "创建管道、关闭两端并检查返回状态，不启动子进程或传输数据。实际子进程传输请参阅独立的委托验证示例。",
         },
         witnessSource: {
           title: "见证数据来源",
@@ -1505,11 +1504,10 @@ export const translations = {
         },
       },
       effects: {
-        Creating: "创建",
-        Mutating: "修改",
-        Destroying: "销毁",
-        ReadOnly: "只读",
-        Pure: "纯计算",
+        reads: "读取",
+        lifecycle: "Cell 操作",
+        process: "进程",
+        empty: "无外部操作",
       },
     },
     navRail: {

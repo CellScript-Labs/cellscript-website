@@ -9,8 +9,7 @@
  */
 
 import provenance from "../data/provenance.json";
-
-export type EffectClass = "Pure" | "Mutating" | "Creating" | "Destroying" | string;
+import { combineEffectFacts, formatEffectFacts, type EffectFacts } from "./effect-facts.mjs";
 
 export interface ProvenanceEntry {
   op: string;
@@ -28,7 +27,7 @@ export interface ProvenanceType {
 
 export interface ProvenanceAction {
   name: string;
-  effectClass: EffectClass;
+  effects: EffectFacts;
   consume: ProvenanceEntry[];
   create: ProvenanceEntry[];
   estimatedCycles: number | null;
@@ -66,16 +65,9 @@ export function provenanceForExample(exampleId: string): ProvenanceView | null {
   return prefixMatch ? provenanceByExample[prefixMatch] : null;
 }
 
-/** Distinct effect classes in an example, e.g. ["Pure", "Mutating"]. */
-export function distinctEffects(view: ProvenanceView): EffectClass[] {
-  const seen = new Set<EffectClass>();
-  for (const action of view.actions) seen.add(action.effectClass);
-  return [...seen];
-}
-
-/** "Pure / Mutating" — effects joined with a slash for the hero indicator. */
+/** Preserve all three dimensions when summarizing a multi-action example. */
 export function effectsSummary(view: ProvenanceView): string {
-  return distinctEffects(view).join(" / ") || "—";
+  return formatEffectFacts(combineEffectFacts(view.actions.map((action) => action.effects)));
 }
 
 /** Bytes -> "8.2 KB" (human-readable artifact size). */

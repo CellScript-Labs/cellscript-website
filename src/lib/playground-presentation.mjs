@@ -1,3 +1,5 @@
+import { actionEffectFacts } from "./effect-facts.mjs";
+
 const asArray = (value) => Array.isArray(value) ? value : [];
 
 const normaliseCellRef = (value, index, fallback = "Cell") => {
@@ -32,7 +34,7 @@ const runtimeFeatures = (action) => {
 
 export const deriveCellFlow = (data) => asArray(data?.actions).map((action) => ({
   name: String(action?.name || "action"),
-  effect: String(action?.effect_class || "Pure"),
+  effects: actionEffectFacts(action),
   inputs: normaliseSet(action, "consume_set"),
   outputs: normaliseSet(action, "create_set"),
   mutations: normaliseSet(action, "mutate_set"),
