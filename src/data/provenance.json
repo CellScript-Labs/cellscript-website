@@ -2,8 +2,8 @@
   "token": {
     "module": "cellscript::fungible_token",
     "target": "ckb",
-    "artifactSizeBytes": 53917,
-    "artifactHash": "6b394e6e3cf1b6a1",
+    "artifactSizeBytes": 53940,
+    "artifactHash": "446ff4d27df7b79b",
     "sourceHash": "3fed105b34f211b6",
     "compilerVersion": "0.33.0-alpha.2",
     "types": [
@@ -197,8 +197,8 @@
   "nft": {
     "module": "cellscript::nft",
     "target": "ckb",
-    "artifactSizeBytes": 368974,
-    "artifactHash": "e77d5d281d49c5b8",
+    "artifactSizeBytes": 369131,
+    "artifactHash": "d0d86f99be30457b",
     "sourceHash": "d19a4ba36eb4bf2e",
     "compilerVersion": "0.33.0-alpha.2",
     "types": [
@@ -742,8 +742,8 @@
   "amm": {
     "module": "cellscript::amm_pool",
     "target": "ckb",
-    "artifactSizeBytes": 192190,
-    "artifactHash": "7ad3664b960c7828",
+    "artifactSizeBytes": 192243,
+    "artifactHash": "39f360437f26b540",
     "sourceHash": "e09c1334bb7cfd60",
     "compilerVersion": "0.33.0-alpha.2",
     "types": [
@@ -1056,8 +1056,8 @@
   "vesting": {
     "module": "cellscript::vesting",
     "target": "ckb",
-    "artifactSizeBytes": 137620,
-    "artifactHash": "ca12295a3851705b",
+    "artifactSizeBytes": 137187,
+    "artifactHash": "473b7f1752c165dd",
     "sourceHash": "a0063283e5752967",
     "compilerVersion": "0.33.0-alpha.2",
     "types": [

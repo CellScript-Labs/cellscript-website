@@ -17,14 +17,14 @@ const escapeHtml = (value: string) =>
 const tokenGroups = {
   keyword: new Set([
     "module", "use", "has", "action", "lock", "fn", "verification", "const",
-    "struct", "enum", "invariant",
+    "struct", "enum", "invariant", "type_script", "lock_script",
   ]),
   cellKind: new Set(["resource", "shared", "receipt", "flow"]),
   cellEffect: new Set([
     "consume", "create", "destroy", "preserve", "create_unique",
     "replace_unique", "destroy_unique", "destroy_instance",
     "destroy_singleton_type", "claim", "settle",
-    "launch", "read_ref", "burn_amount",
+    "launch", "read_ref", "burn_amount", "replace", "pool", "retire", "fresh",
   ]),
   assertion: new Set([
     "assert_invariant", "assert_sum", "assert_conserved", "assert_delta",
@@ -33,11 +33,11 @@ const tokenGroups = {
   control: new Set([
     "if", "else", "for", "in", "while", "match", "return", "let",
     "mut", "ref", "transition", "read", "protected", "witness",
-    "lock_args", "as", "from", "by",
+    "lock_args", "as", "from", "by", "on",
   ]),
   builtin: new Set([
     "u8", "u16", "u32", "i32", "u64", "u128", "usize", "isize",
-    "bool", "Address", "Hash",
+    "bool", "Address", "Hash", "ScriptHash",
     "String", "Vec", "env", "std", "self", "true", "false", "source",
     "witness", "ckb", "identity", "field", "script_args", "ckb_type_id",
     "singleton_type", "type_id", "identity_field", "with_lock",
@@ -50,7 +50,11 @@ const tokenGroups = {
     "hash_pair", "explicit_entry", "lock_group", "type_group",
     "selected_cells", "group", "transaction", "group_input",
     "group_inputs", "group_output", "group_outputs", "inputs",
-    "outputs", "cell_dep", "cell_deps",
+    "outputs", "cell_dep", "cell_deps", "group_witness", "current_script",
+    "capacity", "same", "except", "exact", "exact_hash", "conserve",
+    "pooled", "declared", "builder_computed", "cardinality", "one",
+    "absence", "discarded", "absent", "released", "audit",
+    "expected_evidence", "external_policy",
     "header_dep", "header_deps", "trigger", "scope", "reads",
   ]),
   capability: new Set([

@@ -36,7 +36,7 @@ function accepted(source, edition) {
     assert.equal(metadata?.module, moduleName, entrypoint);
     assert.equal(metadata?.edition, "2027", entrypoint);
     assert.equal(metadata?.actions?.length, 1, entrypoint);
-    assert.equal(metadata.metadata_schema_version, 75, entrypoint);
+    assert.equal(metadata.metadata_schema_version, 76, entrypoint);
     actionEffectFacts(metadata.actions[0]);
   }
   return results;
@@ -266,4 +266,66 @@ action inspect() -> u64 { verification return ${moduleName}::${name}(5) }`;
       }
     }
   }
+});
+
+
+const groupSuccessor = `module ${moduleName}
+resource Token has store, replace, relock { amount: u64 }
+type_script TokenPolicy on type_group<Token> {
+    action retain(
+        input before: Token from group_input[0],
+        witness recipient: ScriptHash from group_witness.input_type,
+        output after: Token from group_output[0],
+    ) {
+        let observed = before.amount
+        require observed > 0
+        replace before -> after {
+            data = same except { }
+            lock = exact_hash(recipient)
+            type_script = same
+            capacity = same
+        }
+    }
+}`;
+
+test("distributed compiler accepts the unified group action and successor grammar", () => {
+  accepted(groupSuccessor, "2027");
+});
+
+test("distributed compiler rejects retired group condition and relation spellings", () => {
+  for (const [source, diagnostic] of [
+    [groupSuccessor.replace("action retain(", "entry retain("), /action|entry/],
+    [groupSuccessor.replace("require observed > 0", "verify { enforce observed > 0 }"), /verify|enforce|statement|expected/],
+    [groupSuccessor.replace("type_script = same", "identity = same"), /identity|type_script/],
+    [groupSuccessor.replace("lock = exact_hash", "lock_script = exact_hash"), /lock_script|lock/],
+    [groupSuccessor.replace("capacity = same", "capacity = same\ncardinality = one_to_one"), /cardinality/],
+  ]) rejected(source, "2027", diagnostic);
+});
+
+test("distributed successor checks keep Type Script, Lock and capacity explicit", () => {
+  for (const treatment of ["type_script = same", "capacity = same", "lock = exact_hash(recipient)"]) {
+    rejected(groupSuccessor.replace(treatment, ""), "2027", /missing|must state/);
+  }
+  rejected(groupSuccessor.replace("recipient: ScriptHash", "recipient: Address"), "2027", /ScriptHash/);
+});
+
+test("distributed Lock group uses the ordinary lock and require grammar", () => {
+  const source = `module ${moduleName}
+resource Wallet has store { amount: u64 }
+lock_script WalletPolicy on lock_group {
+    lock permit(protected wallet: Wallet from group_input[0]) {
+        let amount = wallet.amount
+        if amount > 0 { require amount == 7 } else { require false }
+    }
+}`;
+  for (const [entrypoint, result] of reports(source, "2027")) {
+    assert.equal(result.error, undefined, `${entrypoint}: ${JSON.stringify(result)}`);
+    if (entrypoint !== "single source") assert.equal(result.error_count, 0, JSON.stringify(result));
+    const metadata = entrypoint === "single source" ? result : result.metadata;
+    assert.equal(metadata.metadata_schema_version, 76, entrypoint);
+    assert.equal(metadata.module, moduleName, entrypoint);
+    assert.equal(metadata.metadata_scope, "cellscript-browser-summary-v1", entrypoint);
+    assert.deepEqual(metadata.actions, [], entrypoint);
+  }
+  rejected(source.replace("wallet.amount", "wallet.absent"), "2027", /absent|unknown field/);
 });
