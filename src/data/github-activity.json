@@ -4,7 +4,7 @@
       "tag": "v0.33.0-alpha.2",
       "name": "CellScript 0.33.0-alpha.2",
       "date": "2026-11-05",
-      "body": "## Included changes\r\n\r\n- Structured type identity migration checkpoint (#96): the parser retains\r\n  `Type::Applied` applications and unsign\u2026",
+      "body": "# CellScript 0.33.0-alpha.2\n\nEdition 2027 is the sole source-language contract across the native compiler,\npackages, language services and\u2026",
       "url": "https://github.com/CellScript-Labs/CellScript/releases/tag/v0.33.0-alpha.2"
     },
     {
