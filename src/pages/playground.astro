@@ -17,7 +17,7 @@
  * uses .cell and Cell.toml-backed .zip packages instead of playground JSON.
  */
 import "../styles/global.css";
-import { playgroundExamples, exampleFullSources, exampleGroups } from "../data/site";
+import { playgroundExamples, exampleFullSources, exampleWorkspaces, exampleGroups } from "../data/site";
 import { translations } from "../i18n/translations";
 import SiteHeader from "../components/SiteHeader.astro";
 import SitePreferencesBootstrap from "../components/SitePreferencesBootstrap.astro";
@@ -347,6 +347,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
       </section>
     </div>
 
+    <script is:inline type="application/json" data-example-workspaces set:html={JSON.stringify(exampleWorkspaces)} />
     <script is:inline type="application/json" data-example-sources set:html={JSON.stringify(exampleFullSources)} />
     <script is:inline type="application/json" data-example-meta set:html={JSON.stringify(playgroundExampleMeta)} />
 
@@ -448,6 +449,9 @@ if (ungroupedPlaygroundExamples.length > 0) {
       // ---- Example sources (inline so no extra fetch needed) ----
       const exampleSources: Record<string, string> = JSON.parse(
         document.querySelector<HTMLScriptElement>("[data-example-sources]")?.textContent ?? "{}",
+      );
+      const exampleWorkspaces: Record<string, WorkspaceFile[]> = JSON.parse(
+        document.querySelector<HTMLScriptElement>("[data-example-workspaces]")?.textContent ?? "{}",
       );
       const exampleMeta: Array<{ id: string; label: string; file: string }> = JSON.parse(
         document.querySelector<HTMLScriptElement>("[data-example-meta]")?.textContent ?? "[]",
@@ -972,11 +976,8 @@ if (ungroupedPlaygroundExamples.length > 0) {
         }
       };
 
-      const makeExampleWorkspace = (id: string): WorkspaceFile[] => [{
-        path: normalizeWorkspacePath(exampleFileById.get(id) ?? `${id}.cell`),
-        source: exampleSources[id] ?? "",
-        role: "entry",
-      }];
+      const makeExampleWorkspace = (id: string): WorkspaceFile[] =>
+        (exampleWorkspaces[id] ?? []).map((file) => ({ ...file }));
 
       const currentFile = () => workspaceFiles.find((file) => file.path === activePath) ?? workspaceFiles[0];
 
@@ -1113,11 +1114,10 @@ if (ungroupedPlaygroundExamples.length > 0) {
         persistSession();
       };
 
-      const makeScratchSource = (index: number) => `module playground::scratch_${index}
+      const makeScratchSource = (index: number) => `module playground::scratch_${index};
 
 action inspect() -> u64 {
-    verification
-        ${index}
+    ${index}
 }
 `;
 
@@ -1333,8 +1333,14 @@ source_roots = ["src"]
       const summariseError = (message: string): string =>
         message.length > 80 ? `${message.slice(0, 77)}...` : message;
 
-      const sourceMatchesExample = (id: string | null | undefined, src = textarea?.value ?? ""): boolean =>
-        workspaceFiles.length === 1 && !!id && exampleSources[id] !== undefined && exampleSources[id] === src;
+      const sourceMatchesExample = (id: string | null | undefined): boolean => {
+        if (!id || !exampleWorkspaces[id]) return false;
+        syncActiveFileFromEditor();
+        const expected = exampleWorkspaces[id];
+        return workspaceFiles.length === expected.length && expected.every((file) =>
+          workspaceFiles.some((actual) => actual.path === file.path && actual.source === file.source &&
+            (actual.path === entryPath) === (file.role === "entry")));
+      };
 
       const selectMobileView = (target: string) => {
         if (!pgMain || !["source", "output", "rail"].includes(target)) return;

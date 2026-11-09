@@ -8,9 +8,15 @@ RUN apt-get update \
 
 RUN rustup target add wasm32-unknown-unknown
 
-RUN curl --fail --location --retry 3 \
-        --output /tmp/wasm-pack.tar.gz \
-        https://github.com/wasm-bindgen/wasm-pack/releases/download/v0.13.1/wasm-pack-v0.13.1-x86_64-unknown-linux-musl.tar.gz \
+# Both download routes are official release assets. The fallback avoids stale
+# browser-download errors; SHA-256 pins the archive and rejects JSON/error bodies.
+RUN (curl --fail --location --retry 3 --connect-timeout 20 --max-time 180 \
+         --output /tmp/wasm-pack.tar.gz \
+         https://github.com/wasm-bindgen/wasm-pack/releases/download/v0.13.1/wasm-pack-v0.13.1-x86_64-unknown-linux-musl.tar.gz \
+      || curl --fail --location --retry 3 --connect-timeout 20 --max-time 180 \
+         --header "Accept: application/octet-stream" \
+         --output /tmp/wasm-pack.tar.gz \
+         "https://api.github.com/repos/wasm-bindgen/wasm-pack/releases/assets/202650101?download=1") \
     && printf '%s  %s\n' \
         c539d91ccab2591a7e975bcf82c82e1911b03335c80aa83d67ad25ed2ad06539 \
         /tmp/wasm-pack.tar.gz \
@@ -23,9 +29,13 @@ RUN curl --fail --location --retry 3 \
         /tmp/wasm-pack.tar.gz \
         /tmp/wasm-pack-v0.13.1-x86_64-unknown-linux-musl
 
-RUN curl --fail --location --retry 3 \
-        --output /tmp/wasm-bindgen.tar.gz \
-        https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.121/wasm-bindgen-0.2.121-x86_64-unknown-linux-musl.tar.gz \
+RUN (curl --fail --location --retry 3 --connect-timeout 20 --max-time 180 \
+         --output /tmp/wasm-bindgen.tar.gz \
+         https://github.com/wasm-bindgen/wasm-bindgen/releases/download/0.2.121/wasm-bindgen-0.2.121-x86_64-unknown-linux-musl.tar.gz \
+      || curl --fail --location --retry 3 --connect-timeout 20 --max-time 180 \
+         --header "Accept: application/octet-stream" \
+         --output /tmp/wasm-bindgen.tar.gz \
+         "https://api.github.com/repos/wasm-bindgen/wasm-bindgen/releases/assets/413968029?download=1") \
     && printf '%s  %s\n' \
         3039f38f65fe237b640cf06a140c919ca8d717ec5012146d145d3f27bb4d6b28 \
         /tmp/wasm-bindgen.tar.gz \
@@ -41,9 +51,13 @@ RUN curl --fail --location --retry 3 \
         /tmp/wasm-bindgen.tar.gz \
         /tmp/wasm-bindgen-0.2.121-x86_64-unknown-linux-musl
 
-RUN curl --fail --location --retry 3 \
-        --output /tmp/binaryen.tar.gz \
-        https://github.com/WebAssembly/binaryen/releases/download/version_131/binaryen-version_131-x86_64-linux.tar.gz \
+RUN (curl --fail --location --retry 3 --connect-timeout 20 --max-time 180 \
+         --output /tmp/binaryen.tar.gz \
+         https://github.com/WebAssembly/binaryen/releases/download/version_131/binaryen-version_131-x86_64-linux.tar.gz \
+      || curl --fail --location --retry 3 --connect-timeout 20 --max-time 180 \
+         --header "Accept: application/octet-stream" \
+         --output /tmp/binaryen.tar.gz \
+         "https://api.github.com/repos/WebAssembly/binaryen/releases/assets/478310450?download=1") \
     && printf '%s  %s\n' \
         b5bf1f0eaf17c63ee588ff7a5954dc8f6ce2c26989051c66f24dfe9ece3e46db \
         /tmp/binaryen.tar.gz \

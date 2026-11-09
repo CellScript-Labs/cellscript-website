@@ -2,6 +2,7 @@ let wasmModulePromise;
 let wasmModule;
 const COMPILER_ASSET_VERSION = new URL(self.location.href).searchParams.get("v");
 const CELLSCRIPT_EDITION = "2027";
+const SOURCE_SEMANTICS = "cellscript-source-semantics-2027-0.33-authoring-v3";
 const COMPILER_LOAD_TIMEOUT_MS = 12_000;
 
 const loadCompiler = async () => {
@@ -24,7 +25,20 @@ const loadCompiler = async () => {
           signal: controller.signal,
         });
         if (!response.ok) throw new Error(`compiler download failed with HTTP ${response.status}`);
-        await mod.default({ module_or_path: response });
+        const bytes = await response.arrayBuffer();
+        const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes));
+        const actualHash = Array.from(digest, (byte) => byte.toString(16).padStart(2, "0")).join("");
+        if (actualHash !== COMPILER_ASSET_VERSION) {
+          throw Object.assign(new Error("compiler asset does not match the selected SHA-256"), { code: "compiler_asset_integrity_mismatch" });
+        }
+        await mod.default({ module_or_path: bytes });
+        const contract = typeof mod.source_language_contract_json === "function"
+          ? JSON.parse(mod.source_language_contract_json()) : null;
+        if (contract?.schema !== "cellscript-source-language-contract-v1"
+            || contract.edition !== CELLSCRIPT_EDITION || contract.source_semantics !== SOURCE_SEMANTICS
+            || contract.identifier_unicode_version !== "17.0.0") {
+          throw Object.assign(new Error(`compiler source contract mismatch; rebuild the playground compiler for ${SOURCE_SEMANTICS}`), { code: "compiler_source_contract_mismatch" });
+        }
         wasmModule = mod;
         return mod;
       } catch (error) {

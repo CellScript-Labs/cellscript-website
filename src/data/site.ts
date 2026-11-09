@@ -24,59 +24,6 @@ export const links = {
   wiki: "https://github.com/CellScript-Labs/CellScript/wiki",
 };
 
-/**
- * Minimal type definitions used to keep quick-start examples self-contained.
- * The browser playground can compile multi-source workspaces, but home cards
- * and one-click examples still open a single standalone entry file.
- */
-const TOKEN_TYPE_INLINE = `resource Token has store, create, consume, replace, burn, relock {
-    amount: u64,
-    symbol: [u8; 8],
-}`;
-
-const FUNGIBLE_TOKEN_TYPES_INLINE = `${TOKEN_TYPE_INLINE}
-
-resource MintAuthority has store, create, replace {
-    token_symbol: [u8; 8],
-    max_supply: u64,
-    minted: u64,
-}`;
-
-const AMM_POOL_TYPES_INLINE = `receipt LPReceipt has store, create, consume {
-    pool_id: Hash,
-    lp_amount: u64,
-    provider: Address,
-}
-
-shared Pool has store, create, replace {
-    token_a_symbol: [u8; 8],
-    token_b_symbol: [u8; 8],
-    reserve_a: u64,
-    reserve_b: u64,
-    total_lp: u64,
-    fee_rate_bps: u16,
-}`;
-
-/**
- * Make an example source self-contained for single-file playground
- * compilation. The source files themselves remain unchanged; this is
- * only the browser presentation copy.
- */
-const makeStandalone = (source: string): string =>
-  source
-    .replace(
-      /^use cellscript::fungible_token::Token\s*$/m,
-      TOKEN_TYPE_INLINE,
-    )
-    .replace(
-      /^use cellscript::fungible_token::\{\s*Token,\s*MintAuthority\s*\}\s*$/m,
-      FUNGIBLE_TOKEN_TYPES_INLINE,
-    )
-    .replace(
-      /^use cellscript::amm_pool::\{\s*Pool,\s*LPReceipt\s*\}\s*$/m,
-      AMM_POOL_TYPES_INLINE,
-    );
-
 export const playgroundExamples = [
   { id: "token", label: "Fungible token", file: "examples/token.cell" },
   { id: "nft", label: "NFT collection", file: "examples/nft.cell" },
@@ -185,7 +132,7 @@ const annotateForPlayground = (id: string, source: string): string => {
 };
 
 const readExampleSource = (id: string, file: string): string =>
-  annotateForPlayground(id, makeStandalone(readFileSync(resolve(repoRoot, file), "utf-8")));
+  annotateForPlayground(id, readFileSync(resolve(repoRoot, file), "utf-8"));
 
 /**
  * Full compilable source for each playground example, read from examples/
@@ -196,117 +143,35 @@ export const exampleFullSources = Object.fromEntries(
   playgroundExamples.map((example) => [example.id, readExampleSource(example.id, example.file)]),
 ) as Record<string, string>;
 
-export const heroExamples = [
-  {
-    id: "token",
-    file: "token.cell",
-    command: "cellc examples/token.cell --target-profile ckb",
-    lines: [
-      "module cellscript::fungible_token",
-      "// ... invariant and MintAuthority omitted",
-      "resource Token has store, create, consume, replace, burn, relock {",
-      "    amount: u64,",
-      "    symbol: [u8; 8],",
-      "}",
-      "",
-      "action transfer_token(token: Token, to: Address) -> next_token: Token {",
-      "    verification",
-      "        consume token",
-      "        create next_token = Token { amount: token.amount, symbol: token.symbol } with_lock(to)",
-      "}",
-      "",
-      "action burn(token: Token) {",
-      "    verification",
-      "        require token.amount > 0, \"cannot burn zero\"",
-      "        destroy token",
-      "}",
-    ],
-  },
-  {
-    id: "nft",
-    file: "nft.cell",
-    command: "cellc examples/nft.cell --target-profile ckb",
-    lines: [
-      "module cellscript::nft",
-      "// ... constants and Metadata struct omitted",
-      "resource NFT has store, create, consume, replace, burn, relock, read_ref {",
-      "    token_id: u64,",
-      "    owner: Address,",
-      "    metadata_hash: Hash,",
-      "    royalty_recipient: Address,",
-      "    royalty_bps: u16,",
-      "}",
-      "",
-      "// ... listing and offer receipts omitted",
-      "action transfer(nft_before: NFT, to: Address) -> nft_after: NFT {",
-      "    transition nft_before -> nft_after",
-      "    verification",
-      "        require nft_before.owner != to, \"Cannot transfer to self\"",
-      "        preserve nft_after from nft_before {",
-      "            token_id",
-      "            metadata_hash",
-      "            royalty_recipient",
-      "            royalty_bps",
-      "        }",
-      "        require nft_after.owner == to",
-      "}",
-    ],
-  },
-  {
-    id: "amm",
-    file: "amm_pool.cell",
-    command: "cellc examples/amm_pool.cell --target-profile ckb --json",
-    lines: [
-      "module cellscript::amm_pool",
-      "use cellscript::fungible_token::Token",
-      "// ... LPReceipt omitted",
-      "shared Pool has store, create, replace {",
-      "    token_a_symbol: [u8; 8],",
-      "    token_b_symbol: [u8; 8],",
-      "    reserve_a: u64,",
-      "    reserve_b: u64,",
-      "    total_lp: u64,",
-      "    fee_rate_bps: u16,",
-      "}",
-      "",
-      "action swap_a_for_b(pool_before: Pool, input: Token, min_output: u64, to: Address) -> (pool_after: Pool, token_out: Token) {",
-      "    transition pool_before -> pool_after",
-      "    verification",
-      "        require input.symbol == pool_before.token_a_symbol, \"wrong input token\"",
-      "        let fee = input.amount * pool_before.fee_rate_bps as u64 / 10000",
-      "        let net_input = input.amount - fee",
-      "        let amount_out = pool_before.reserve_b * net_input / (pool_before.reserve_a + net_input)",
-      "        // ... preserve, require, consume, create omitted",
-      "        require amount_out >= min_output, \"slippage exceeded\"",
-      "}",
-    ],
-  },
-  {
-    id: "vesting",
-    file: "vesting.cell",
-    command: "cellc constraints examples/vesting.cell --target-profile ckb",
-    lines: [
-      "module cellscript::vesting",
-      "use cellscript::fungible_token::Token",
-      "// ... VestingConfig and VestingGrant fields omitted",
-      "flow VestingGrant.state {",
-      "    initial Active;",
-      "    terminal FullyClaimed;",
-      "    Active -> Active;",
-      "    Active -> FullyClaimed;",
-      "}",
-      "",
-      "action claim_vested(grant: VestingGrant) -> (tokens: Token, updated_grant: VestingGrant) {",
-      "    verification",
-      "        let now = env::current_timepoint()",
-      "        require now >= grant.cliff_timepoint, \"cliff not reached\"",
-      "        // ... vesting arithmetic omitted",
-      "        consume grant",
-      "        create tokens = Token { amount: claimable, symbol: grant.token_symbol } with_lock(grant.beneficiary)",
-      "}",
-    ],
-  },
-] as const;
+// Every example keeps its original module/import identity. Dependencies are
+// real source files, not copies of type declarations rewritten into the entry.
+const exampleDependencies: Record<string, readonly string[]> = {
+  nft: ["examples/token.cell"],
+  amm: ["examples/token.cell"],
+  vesting: ["examples/token.cell"],
+  launch: ["examples/token.cell", "examples/amm_pool.cell"],
+  timelock: ["examples/token.cell"],
+};
+
+export const exampleWorkspaces = Object.fromEntries(playgroundExamples.map((example) => [
+  example.id,
+  [
+    { path: example.file, source: exampleFullSources[example.id], role: "entry" as const },
+    ...(exampleDependencies[example.id] ?? []).map((path) => ({
+      path, source: readFileSync(resolve(repoRoot, path), "utf-8"), role: "memory" as const,
+    })),
+  ],
+]));
+
+// Landing-page previews are excerpts of the same current sources as the
+// playground. Omitted lines are labelled; no second hand-written grammar.
+export const heroExamples = [playgroundExamples[0], playgroundExamples[1], playgroundExamples[2], playgroundExamples[3]].map((example) => ({
+  id: example.id,
+  file: example.file.split("/").at(-1)!,
+  command: `cellc metadata ${example.file} --target-profile ckb --json`,
+  lines: [...readFileSync(resolve(repoRoot, example.file), "utf-8").trimEnd().split("\n").slice(0, 38),
+    "// ... remaining source is available in the playground"],
+}));
 
 export const modelCards = [
   {
@@ -331,13 +196,13 @@ export const modelCards = [
     id: "action",
     name: "action",
     source: "examples/vesting.cell",
-    code: "// examples/vesting.cell\naction claim_vested(grant: VestingGrant) -> (tokens: Token, updated_grant: VestingGrant) {\n    verification\n        // ... timepoint checks and vesting arithmetic omitted\n        consume grant\n        create updated_grant = VestingGrant { state: VestingState::Active, /* ... */ } with_lock(grant.beneficiary)\n}",
+    code: "// examples/vesting.cell\naction claim_vested(grant: VestingGrant) -> (tokens: Token, updated_grant: VestingGrant) {\n        // ... timepoint checks and vesting arithmetic omitted\n        consume grant;\n        create updated_grant = VestingGrant { state: VestingState::Active, /* ... */ } with_lock(grant.beneficiary)\n}",
   },
   {
     id: "lock",
     name: "lock",
     source: "examples/language/core/canonical_style.cell",
-    code: "// examples/language/core/canonical_style.cell\nlock vault_owner(protected vault: Vault, lock_args owner: Address, witness claimed_owner: Address) -> bool {\n    let input = source::group_input(0)\n    let witness_lock = witness::lock_exact32(input)\n    // ... digest and ownership checks omitted\n}",
+    code: "// examples/language/core/canonical_style.cell\nlock vault_owner(protected vault: Vault, lock_args owner: Address, witness claimed_owner: Address) -> bool {\n    let input = source::group_input(0);\n    let witness_lock = witness::lock_exact32(input);\n    // ... digest and ownership checks omitted\n}",
   },
   {
     id: "flow",
@@ -349,7 +214,7 @@ export const modelCards = [
     id: "invariant",
     name: "invariant",
     source: "examples/language/verification/scoped_invariant.cell",
-    code: "// examples/language/verification/scoped_invariant.cell\ninvariant token_amount_conservation {\n    trigger: type_group\n    scope: group\n    reads: group_inputs<Token>.amount, group_outputs<Token>.amount\n    assert_sum(group_outputs<Token>.amount) == assert_sum(group_inputs<Token>.amount)\n}",
+    code: "// examples/language/verification/scoped_invariant.cell\ninvariant token_amount_conservation {\n    trigger: type_group;\n    scope: group;\n    reads: group_inputs<Token>.amount, group_outputs<Token>.amount;\n    assert_sum(group_outputs<Token>.amount) == assert_sum(group_inputs<Token>.amount);\n}",
   },
   {
     id: "structEnum",
@@ -361,7 +226,7 @@ export const modelCards = [
     id: "identity",
     name: "identity",
     source: "examples/language/ownership/identity_lifecycle.cell",
-    code: "// examples/language/ownership/identity_lifecycle.cell\naction mint_unique_nft(recipient: Address, tid: u64) -> UniqueNFT\nwhere\n    create_unique<UniqueNFT>(identity = field(token_id)) { token_id: tid, owner: recipient } with_lock(recipient)",
+    code: "// examples/language/ownership/identity_lifecycle.cell\naction mint_unique_nft(recipient: Address, tid: u64) -> UniqueNFT {\n    create_unique::<UniqueNFT>(identity = field(token_id)) { token_id: tid, owner: recipient } with_lock(recipient)\n}",
   },
 ] as const;
 

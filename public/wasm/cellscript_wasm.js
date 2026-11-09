@@ -106,6 +106,23 @@ export function compile_metadata_json_sources(sources_json, entry_path, edition,
 }
 
 /**
+ * Query the actual compiled source grammar without native review records.
+ * @returns {string}
+ */
+export function source_language_contract_json() {
+    let deferred1_0;
+    let deferred1_1;
+    try {
+        const ret = wasm.source_language_contract_json();
+        deferred1_0 = ret[0];
+        deferred1_1 = ret[1];
+        return getStringFromWasm0(ret[0], ret[1]);
+    } finally {
+        wasm.__wbindgen_free(deferred1_0, deferred1_1, 1);
+    }
+}
+
+/**
  * Return the compiler version string (e.g. "0.17.0").
  * @returns {string}
  */

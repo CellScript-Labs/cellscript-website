@@ -40,6 +40,8 @@ if [[ "${CELLSCRIPT_WASM_CANONICAL_CONTAINER:-0}" != "1" ]]; then
   fi
   docker build \
     "${DOCKER_NETWORK_ARGS[@]}" \
+    --build-arg HTTP_PROXY --build-arg HTTPS_PROXY --build-arg ALL_PROXY --build-arg NO_PROXY \
+    --build-arg http_proxy --build-arg https_proxy --build-arg all_proxy --build-arg no_proxy \
     --platform linux/amd64 \
     --tag "$IMAGE" \
     --file "$REPO/website/scripts/wasm-builder.Dockerfile" \

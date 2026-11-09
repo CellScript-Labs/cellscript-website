@@ -28,6 +28,44 @@ The static architecture is intentional. Most pages are generated from committed 
 The playground compiles Edition 2027. Every compile API validates the source
 edition before compiling.
 
+## Compiler And Source Contract
+
+The current playground uses
+`cellscript-source-semantics-2027-0.33-authoring-v3`: explicit semicolons,
+comma-separated lists, `new Type { ... }` values and `function::<Type>(...)`
+calls. Old source spellings require migration. Example workspaces include
+their actual imported files; the site does not rewrite them into standalone
+contracts or invent replacement schemas.
+
+Update the native compiler, editor extension and browser assets together.
+`cellc language-contract --json`, LSP initialization and the WASM
+`source_language_contract_json` export identify the source semantics and
+Unicode 17.0.0 tables independently of the Cargo release number. The worker
+checks the downloaded WASM against `src/data/compiler-artifact.json`'s SHA-256
+and checks the source contract before compiling. A mismatched asset produces
+an explicit load error.
+
+The canonical bundle is metadata-only, built with the `wasm` feature. Browser
+semantic language services are a separate optional `language-service`
+profile; their absence from this bundle is intentional. Native ProofPlan,
+typed-semantic and verified-artifact records remain outside the bounded
+browser summary. The gzip budget remains 1500 KiB.
+
+From the parent CellScript checkout, rebuild with
+`website/scripts/build-wasm.sh`. This uses the pinned Linux/amd64 Docker
+toolchain; host-installed older wasm-pack/wasm-bindgen binaries are not the
+canonical build. Rust remains pinned to 1.97.1. If a configured download proxy
+listens on host loopback on Linux, the supported
+`CELLSCRIPT_WASM_DOCKER_NETWORK=host` setting makes it reachable without
+changing tool versions or archive checksums.
+
+Focused source-tooling checks are `npm run test:playground-compiler`,
+`npm run test:playground-session`, `npm run test:playground-presentation`,
+`npm run test:playground-focus`, `npx astro check` and `npx astro build`.
+`npm run build` chains the full `build:ci` workflow. Regenerate committed
+compiler-derived cards with `CELLSCRIPT_COMPILER=target/debug/cellc npm run
+data:regen` after building the matching native compiler in the parent checkout.
+
 ## Run It Locally
 
 ```bash

@@ -16,7 +16,7 @@ const escapeHtml = (value: string) =>
 
 const tokenGroups = {
   keyword: new Set([
-    "module", "use", "has", "action", "lock", "fn", "verification", "const",
+    "module", "use", "has", "action", "lock", "fn", "new", "const",
     "struct", "enum", "invariant", "type_script", "lock_script",
   ]),
   cellKind: new Set(["resource", "shared", "receipt", "flow"]),
@@ -33,7 +33,7 @@ const tokenGroups = {
   control: new Set([
     "if", "else", "for", "in", "while", "match", "return", "let",
     "mut", "ref", "transition", "read", "protected", "witness",
-    "lock_args", "as", "from", "by", "on",
+    "lock_args", "as", "from", "by", "on", "break", "continue", "label",
   ]),
   builtin: new Set([
     "u8", "u16", "u32", "i32", "u64", "u128", "usize", "isize",
@@ -76,15 +76,16 @@ const isCommentToken = (token: string): boolean =>
   token.startsWith("//") || token.startsWith("/*");
 
 const isStringToken = (token: string): boolean =>
-  token.startsWith("\"") || token.startsWith("'") || token.startsWith("b\"");
+  token.startsWith("\"") || token.startsWith("b\"");
 
 export const classifyCellToken = (token: string, context?: HighlightContext): string => {
   if (isCommentToken(token)) return "comment";
   if (isStringToken(token)) return "string";
-  if (/^(?:0x[0-9a-fA-F]+|\d+)$/.test(token)) return "number";
+  if (/^(?:0x[0-9a-fA-F](?:_?[0-9a-fA-F])*|[0-9](?:_?[0-9])*)$/.test(token)) return "number";
   if (token === "->" || token === "=>") return "arrow";
+  if (token === "::") return "punctuation";
   if (/^[{}()[\]#;:,.]$/.test(token)) return "punctuation";
-  if (/^[<>+\-*/%=&|!]$/.test(token) || ["==", "!=", "<=", ">=", "&&", "||"].includes(token))
+  if (/^[<>+\-*/%=&|!]$/.test(token) || ["==", "!=", "<=", ">=", "&&", "||", "<<", ">>", "+=", "^"].includes(token))
     return "operator";
   if (token.includes("::")) {
     const root = token.split("::")[0] ?? "";
@@ -103,10 +104,10 @@ export const classifyCellToken = (token: string, context?: HighlightContext): st
 };
 
 const isIdentifierStart = (char: string | undefined): boolean =>
-  !!char && /[A-Za-z_]/.test(char);
+  !!char && /[\p{XID_Start}_]/u.test(char);
 
 const isIdentifierPart = (char: string | undefined): boolean =>
-  !!char && /[A-Za-z0-9_]/.test(char);
+  !!char && /\p{XID_Continue}/u.test(char);
 
 const isHexDigit = (char: string | undefined): boolean =>
   !!char && /[0-9a-fA-F]/.test(char);
@@ -145,36 +146,33 @@ const readBlockComment = (source: string, start: number): string => {
 
 const readIdentifierToken = (source: string, start: number): string => {
   let cursor = start;
-  while (isIdentifierPart(source[cursor])) cursor += 1;
+  while (isIdentifierPart(String.fromCodePoint(source.codePointAt(cursor) ?? 0))) cursor += String.fromCodePoint(source.codePointAt(cursor)!).length;
   while (source.startsWith("::", cursor) && isIdentifierStart(source[cursor + 2])) {
     cursor += 2;
-    while (isIdentifierPart(source[cursor])) cursor += 1;
+    while (isIdentifierPart(String.fromCodePoint(source.codePointAt(cursor) ?? 0))) cursor += String.fromCodePoint(source.codePointAt(cursor)!).length;
   }
   return source.slice(start, cursor);
 };
 
 const readToken = (source: string, start: number): string | undefined => {
-  const char = source[start];
+  const char = String.fromCodePoint(source.codePointAt(start) ?? 0);
   if (source.startsWith("//", start)) {
     const lineEnd = source.indexOf("\n", start);
     return source.slice(start, lineEnd === -1 ? source.length : lineEnd);
   }
   if (source.startsWith("/*", start)) return readBlockComment(source, start);
   if (source.startsWith("b\"", start)) return readQuotedToken(source, start, start + 1);
-  if (char === "\"" || char === "'") return readQuotedToken(source, start, start);
+  if (char === "\"") return readQuotedToken(source, start, start);
 
-  for (const operator of ["->", "=>", "==", "!=", "<=", ">=", "&&", "||"]) {
+  for (const operator of ["->", "=>", "::", "==", "!=", "<=", ">=", "&&", "||", "<<", ">>", "+="]) {
     if (source.startsWith(operator, start)) return operator;
   }
 
-  if (source.startsWith("0x", start) && isHexDigit(source[start + 2])) {
-    let cursor = start + 2;
-    while (isHexDigit(source[cursor])) cursor += 1;
-    return source.slice(start, cursor);
-  }
-  if (/[0-9]/.test(char ?? "")) {
+  if (/[0-9]/.test(char)) {
     let cursor = start;
-    while (/[0-9]/.test(source[cursor] ?? "")) cursor += 1;
+    while (isIdentifierPart(String.fromCodePoint(source.codePointAt(cursor) ?? 0))) {
+      cursor += String.fromCodePoint(source.codePointAt(cursor)!).length;
+    }
     return source.slice(start, cursor);
   }
   if (isIdentifierStart(char)) return readIdentifierToken(source, start);
@@ -201,8 +199,9 @@ export const renderLine = (line: string, context: HighlightContext = { inCapabil
   while (cursor < line.length) {
     const token = readToken(line, cursor);
     if (!token) {
-      rendered += escapeHtml(line[cursor] ?? "");
-      cursor += 1;
+      const character = String.fromCodePoint(line.codePointAt(cursor)!);
+      rendered += escapeHtml(character);
+      cursor += character.length;
       continue;
     }
     const tokenClass = classifyCellToken(token, context);

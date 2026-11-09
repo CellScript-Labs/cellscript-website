@@ -41,6 +41,11 @@ export function compile_metadata_json_diagnostics(source: string, edition: strin
 export function compile_metadata_json_sources(sources_json: string, entry_path: string, edition: string, target?: string | null): string;
 
 /**
+ * Query the actual compiled source grammar without native review records.
+ */
+export function source_language_contract_json(): string;
+
+/**
  * Return the compiler version string (e.g. "0.17.0").
  */
 export function version(): string;
@@ -52,6 +57,7 @@ export interface InitOutput {
     readonly compile_metadata_json: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
     readonly compile_metadata_json_diagnostics: (a: number, b: number, c: number, d: number, e: number, f: number) => [number, number];
     readonly compile_metadata_json_sources: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number) => [number, number];
+    readonly source_language_contract_json: () => [number, number];
     readonly version: () => [number, number];
     readonly __wbindgen_externrefs: WebAssembly.Table;
     readonly __wbindgen_malloc: (a: number, b: number) => number;

@@ -19,7 +19,7 @@ import { jsonWithAsciiEscapes } from "./ascii-json.mjs";
 import { actionEffectFacts } from "../src/lib/effect-facts.mjs";
 
 const REPO = resolve(dirname(fileURLToPath(import.meta.url)), "../..");
-const CELLC = resolve(REPO, "target/release/cellc");
+const CELLC = resolve(REPO, process.env.CELLSCRIPT_COMPILER || "target/release/cellc");
 const EXAMPLES = resolve(REPO, "examples");
 const DATA_DIR = resolve(REPO, "website/src/data");
 const PROVENANCE_OUT = resolve(DATA_DIR, "provenance.json");
@@ -204,6 +204,12 @@ function generateAssuranceExcerpt() {
 if (!existsSync(CELLC)) {
   console.error(`error: ${CELLC} not found. Run \`cargo build --release --bin cellc\` first.`);
   process.exit(1);
+}
+
+const sourceContract = JSON.parse(run(CELLC, ["language-contract", "--json"]));
+if (sourceContract.schema !== "cellscript-source-language-contract-v1"
+    || sourceContract.source_semantics !== "cellscript-source-semantics-2027-0.33-authoring-v3") {
+  throw new Error("website data requires the current authoring-v3 compiler; set CELLSCRIPT_COMPILER to a fresh cellc build");
 }
 
 mkdirSync(DATA_DIR, { recursive: true });
