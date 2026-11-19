@@ -1,6 +1,13 @@
 {
   "releases": [
     {
+      "tag": "v0.33.0",
+      "name": "CellScript 0.33.0",
+      "date": "2026-11-19",
+      "body": "# CellScript 0.33.0\n\nRelease date: 2026-11-19. This is the stable 0.33 publication of the line\nintroduced by [0.33.0-alpha.1](https://githu\u2026",
+      "url": "https://github.com/CellScript-Labs/CellScript/releases/tag/v0.33.0"
+    },
+    {
       "tag": "v0.33.0-alpha.2",
       "name": "CellScript 0.33.0-alpha.2",
       "date": "2026-11-05",
@@ -13,13 +20,6 @@
       "date": "2026-10-28",
       "body": "# CellScript 0.33.0-alpha.1\n\nRelease date: 2026-10-28. This is the first 0.33 alpha. The maintainer authorized\npublication after compiler i\u2026",
       "url": "https://github.com/CellScript-Labs/CellScript/releases/tag/v0.33.0-alpha.1"
-    },
-    {
-      "tag": "v0.31.0",
-      "name": "CellScript 0.31.0",
-      "date": "2026-10-01",
-      "body": "# CellScript 0.31.0\n\nRelease date: 2026-10-01. The maintainer explicitly authorized direct publication\nand waived the pending independent r\u2026",
-      "url": "https://github.com/CellScript-Labs/CellScript/releases/tag/v0.31.0"
     }
   ],
   "commits": [
