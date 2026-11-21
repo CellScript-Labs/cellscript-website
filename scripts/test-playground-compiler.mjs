@@ -74,6 +74,17 @@ test("unknown editions reject across all browser compile entrypoints", () => {
   rejected(action("require true"), "2099", /unsupported.*2099.*2027/);
 });
 
+test("distributed nested specializations resolve qualified phantom arguments", () => {
+  const source = readFileSync(new URL("../../tests/fixtures/nested_qualified_arguments.cell", import.meta.url), "utf8");
+  for (const [entrypoint, result] of reports(source, "2027")) {
+    assert.equal(result.error, undefined, `${entrypoint}: ${JSON.stringify(result)}`);
+    if (entrypoint !== "single source") assert.equal(result.error_count, 0, JSON.stringify(result));
+    const metadata = entrypoint === "single source" ? result : result.metadata;
+    assert.equal(metadata.module, "nested_qualified_arguments");
+  }
+  rejected(source.replace("Envelope<nested_qualified_arguments::Value>", "Envelope<Other>"), "2027", /type mismatch/);
+});
+
 test("distributed compiler version matches generated example provenance", () => {
   const provenance = JSON.parse(readFileSync(new URL("../src/data/provenance.json", import.meta.url), "utf8"));
   const expected = new Set(Object.values(provenance).map((entry) => entry.compilerVersion));
