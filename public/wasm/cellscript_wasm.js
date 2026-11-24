@@ -76,8 +76,8 @@ export function compile_metadata_json_diagnostics(source, edition, target) {
  * Compile a virtual multi-file source set and return metadata diagnostics.
  *
  * `sources_json` must be a JSON array of `{ path, source, role? }` objects.
- * `entry_path` selects the source that should produce metadata. This is an
- * additive API; the single-source functions remain stable.
+ * `entry_path` selects the source that should produce metadata. The virtual
+ * root may include a `Cell.toml` with the selected Type group declaration.
  * @param {string} sources_json
  * @param {string} entry_path
  * @param {string} edition

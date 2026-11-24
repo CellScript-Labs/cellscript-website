@@ -60,11 +60,11 @@ function rejected(source, edition, expectedMessage) {
   return results;
 }
 
-test("distributed source contract matches authoring v6 and Unicode tables", () => {
+test("distributed source contract matches authoring v7 and Unicode tables", () => {
   const contract = JSON.parse(source_language_contract_json());
   assert.equal(contract.schema, "cellscript-source-language-contract-v1");
   assert.equal(contract.edition, "2027");
-  assert.equal(contract.source_semantics, "cellscript-source-semantics-2027-0.33-authoring-v6");
+  assert.equal(contract.source_semantics, "cellscript-source-semantics-2027-0.33-authoring-v7");
   assert.equal(contract.identifier_unicode_version, "17.0.0");
   assert.equal(contract.max_source_bytes, 1048576);
   assert.equal(contract.compiler_version, version());
@@ -294,7 +294,7 @@ action inspect() -> u64 { return ${moduleName}::${name}(5); }`;
 
 const groupSuccessor = `module ${moduleName};
 resource Token has store, replace, relock { amount: u64 }
-type_script retain(
+action retain(
         input before: Token,
         witness recipient: ScriptHash,
         output after: Token,
@@ -310,12 +310,50 @@ type_script retain(
     }`;
 
 test("distributed compiler accepts the unified group action and successor grammar", () => {
+  const manifest = `[package]
+name = "browser-group"
+version = "0.1.0"
+edition = "2027"
+
+[[artifacts]]
+name = "retain"
+context = { kind = "type-group" }
+bindings = "group-relative"
+coverage = "fixed-group"
+layout = "Token"
+dispatch = "single-entry"
+action = "retain"
+`;
+  const result = JSON.parse(compile_metadata_json_sources(
+    JSON.stringify([{ path: "main.cell", source: groupSuccessor }, { path: "Cell.toml", source: manifest }]),
+    "main.cell", "2027", undefined,
+  ));
+  assert.equal(result.error_count, 0, JSON.stringify(result));
+  assert.equal(result.metadata.actions[0].name, "retain");
+  const manualManifest = manifest
+    .replace('bindings = "group-relative"', 'bindings = "transaction-absolute"')
+    .replace('coverage = "fixed-group"', 'coverage = "action-defined"')
+    .replace('layout = "Token"\n', "");
+  const manual = JSON.parse(compile_metadata_json_sources(
+    JSON.stringify([{ path: "main.cell", source: groupSuccessor }, { path: "Cell.toml", source: manualManifest }]),
+    "main.cell", "2027", undefined,
+  ));
+  assert.equal(manual.error_count, 0, JSON.stringify(manual));
+  assert.equal(manual.metadata.actions[0].name, "retain");
+  const exampleSource = (path) => readFileSync(new URL(`../../examples/semantic-foundation-2027/${path}`, import.meta.url), "utf8");
+  const packaged = JSON.parse(compile_metadata_json_sources(
+    JSON.stringify(["src/main.cell", "Cell.toml"].map((path) => ({ path, source: exampleSource(path) }))),
+    "src/main.cell", "2027", undefined,
+  ));
+  assert.equal(packaged.error_count, 0, JSON.stringify(packaged));
+  assert.equal(packaged.metadata.actions[0].name, "transfer");
   accepted(groupSuccessor, "2027");
 });
 
 test("distributed compiler rejects retired group condition and relation spellings", () => {
   for (const [source, diagnostic] of [
-    [groupSuccessor.replace("input before: Token,", "entry before: Token,"), /action|entry/],
+    [groupSuccessor.replace("action retain(", "type_script retain("), /type_script|unexpected/],
+    [groupSuccessor.replace("input before: Token,", "entry before: Token,"), /expected ':'|unsupported.*entry/],
     [groupSuccessor.replace("require observed > 0;", "verify { enforce observed > 0 }"), /verify|enforce|statement|expected/],
     [groupSuccessor.replace("type_script = same;", "identity = same;"), /identity|type_script/],
     [groupSuccessor.replace("lock = exact_hash", "lock_script = exact_hash"), /lock_script|lock/],

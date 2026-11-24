@@ -35,6 +35,13 @@ assert.equal(normalisePlaygroundSession({ ...snapshot, version: 2 }), null);
 assert.equal(normalisePlaygroundSession({ ...snapshot, files: [] }), null);
 assert.equal(normalisePlaygroundSession({ ...snapshot, files: [{ path: "a.cell", source: "x" }, { path: "a.cell", source: "y" }] }), null);
 assert.equal(normalisePlaygroundSession({ ...snapshot, files: [{ path: "a.cell", source: "x".repeat(20) }] }, { maxBytes: 8 }), null);
+const manifest = { path: "Cell.toml", source: "[package]\nedition = \"2027\"", role: "memory" };
+const packaged = normalisePlaygroundSession({
+  ...snapshot, files: [manifest, ...snapshot.files], activePath: "Cell.toml", entryPath: "Cell.toml",
+});
+assert.equal(packaged.entryPath, "src/main.cell");
+assert.equal(packaged.activePath, "Cell.toml");
+assert.deepEqual(packaged.files[0], manifest);
 
 const storage = new MemoryStorage();
 const states = [];

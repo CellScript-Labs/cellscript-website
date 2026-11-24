@@ -350,7 +350,8 @@ expectContains("registry submit", registrySubmitHtml, 'form="registry-submit-for
 expectContains("registry submit", registrySubmitHtml, 'data-publish-step data-state="locked" aria-labelledby="registry-publish-heading" hidden');
 
 expectContains("playground bundle", jsText, expectedWasmSha256);
-expectContains("playground bundle", jsText, 'cellscript_version = "0.31.0"');
+expectContains("playground bundle", jsText, 'cellscript_version = ">=0.33.0-alpha.2"');
+expectContains("playground bundle", jsText, 'edition = "2027"');
 expectNotContains("playground bundle", jsText, 'cellscript_version = "0.20.0-rc.1"');
 expectContains("playground worker", playgroundWorker, 'new URL(self.location.href).searchParams.get("v")');
 expectContains("playground worker", playgroundWorker, "compiler_asset_identity_required");
@@ -363,6 +364,7 @@ expectContains("playground", playgroundHtml, 'data-output-panel="flow"');
 expectContains("playground", playgroundHtml, "data-inspector");
 expectContains("playground", playgroundHtml, "data-output-stale");
 expectContains("playground", playgroundHtml, "data-guide");
+expectNotContains("playground", playgroundHtml, "data-example-sources");
 expectContains("playground session bundle", jsText, "cellscript-playground-session-v1");
 expectContains("playground guide bundle", jsText, "cellscript-playground-guide-v1");
 expectContains("playground worker recovery bundle", jsText, "retryCompiler");

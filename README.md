@@ -31,13 +31,16 @@ edition before compiling.
 ## Compiler And Source Contract
 
 The current playground uses
-`cellscript-source-semantics-2027-0.33-authoring-v6`: explicit semicolons,
+`cellscript-source-semantics-2027-0.33-authoring-v7`: explicit semicolons,
 comma-separated lists, `new Type { ... }` values and `function::<Type>(...)`
 calls. Old source spellings require migration. Example workspaces include
 their actual imported files; the site does not rewrite them into standalone
 contracts or invent replacement schemas.
 
 Update the native compiler, editor extension and browser assets together.
+To inspect a fixed Type group action in the playground, import its `.cell`
+source with `Cell.toml`, or import the package as a ZIP. The playground
+compiles the source with the artifact context from that manifest.
 `cellc language-contract --json`, LSP initialization and the WASM
 `source_language_contract_json` export identify the source semantics and
 Unicode 17.0.0 tables independently of the Cargo release number. The worker

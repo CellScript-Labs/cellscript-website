@@ -24,9 +24,11 @@ export const normalisePlaygroundSession = (
   const paths = new Set(files.map((file) => file.path));
   if (paths.size !== files.length) return null;
   const activePath = paths.has(value.activePath) ? value.activePath : files[0].path;
-  const entryPath = paths.has(value.entryPath)
+  const sourceFiles = files.filter((file) => file.path !== "Cell.toml");
+  if (sourceFiles.length === 0) return null;
+  const entryPath = sourceFiles.some((file) => file.path === value.entryPath)
     ? value.entryPath
-    : (files.find((file) => file.role === "entry")?.path ?? activePath);
+    : (sourceFiles.find((file) => file.role === "entry")?.path ?? (activePath === "Cell.toml" ? sourceFiles[0].path : activePath));
   return {
     format: "cellscript-playground-session-v1",
     version: 1,

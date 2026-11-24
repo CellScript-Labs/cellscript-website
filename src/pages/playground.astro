@@ -348,7 +348,6 @@ if (ungroupedPlaygroundExamples.length > 0) {
     </div>
 
     <script is:inline type="application/json" data-example-workspaces set:html={JSON.stringify(exampleWorkspaces)} />
-    <script is:inline type="application/json" data-example-sources set:html={JSON.stringify(exampleFullSources)} />
     <script is:inline type="application/json" data-example-meta set:html={JSON.stringify(playgroundExampleMeta)} />
 
     <script>
@@ -427,6 +426,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
         role?: string;
       };
 
+      const manifestPath = "Cell.toml";
       const compilerAssetVersion = compilerArtifact.sha256;
       const workerUrl = new URL(`/playground-worker.js?v=${compilerAssetVersion}`, window.location.href);
       const previousPlaygroundAbort = (window as any).__cellscriptPlaygroundAbort as AbortController | undefined;
@@ -446,10 +446,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
       };
       let workerReady = false;
 
-      // ---- Example sources (inline so no extra fetch needed) ----
-      const exampleSources: Record<string, string> = JSON.parse(
-        document.querySelector<HTMLScriptElement>("[data-example-sources]")?.textContent ?? "{}",
-      );
+      // ---- Example workspaces (inline so no extra fetch needed) ----
       const exampleWorkspaces: Record<string, WorkspaceFile[]> = JSON.parse(
         document.querySelector<HTMLScriptElement>("[data-example-workspaces]")?.textContent ?? "{}",
       );
@@ -871,7 +868,8 @@ if (ungroupedPlaygroundExamples.length > 0) {
         // Pad so the last line's highlight extends to the textarea height.
         if (highlight) {
           highlight.innerHTML =
-            (source.length > LARGE_SOURCE_HIGHLIGHT_LIMIT ? escapeHtml(source) : renderSource(source)) + "\n";
+            (activePath === manifestPath || source.length > LARGE_SOURCE_HIGHLIGHT_LIMIT
+              ? escapeHtml(source) : renderSource(source)) + "\n";
         }
         if (gutter) {
           const lineCount = source.split("\n").length;
@@ -947,6 +945,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
 
       const normalizeWorkspacePath = (raw: string, fallback = "main.cell") => {
         const path = normalizePortablePath(raw, fallback);
+        if (path.toLowerCase() === "cell.toml") return manifestPath;
         return path.toLowerCase().endsWith(".cell") ? path : `${path}.cell`;
       };
 
@@ -1004,7 +1003,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
         }
         if (setEntryBtn && setEntryLabel) {
           const isEntry = !!activePath && activePath === entryPath;
-          setEntryBtn.disabled = isEntry;
+          setEntryBtn.disabled = isEntry || activePath === manifestPath;
           const label = isEntry ? pg("entryReady") : pg("setEntry");
           setEntryBtn.setAttribute("aria-label", label);
           setEntryBtn.title = label;
@@ -1015,16 +1014,18 @@ if (ungroupedPlaygroundExamples.length > 0) {
       const renderFileTree = () => {
         if (!fileTree) return;
         const deleteIcon = deleteFileIconTemplate?.innerHTML.trim() ?? "";
+        const sourceCount = workspaceFiles.filter((file) => file.path !== manifestPath).length;
         fileTree.innerHTML = workspaceFiles.map((file) => {
           const active = file.path === activePath;
           const entry = file.path === entryPath;
+          const onlySource = file.path !== manifestPath && sourceCount === 1;
           const deleteLabel = fmt(pg("deleteFile"), { file: file.path });
           return `<div class="pg-file-row${active ? " active" : ""}${entry ? " is-entry" : ""}">
             <button type="button" role="option" class="pg-file-item" aria-selected="${active}" data-file-path="${escapeAttr(file.path)}">
               <span class="pg-file-name">${escapeHtml(file.path)}</span>
               ${entry ? `<span class="pg-file-entry">${escapeHtml(pg("entry"))}</span>` : ""}
             </button>
-            <button type="button" class="pg-file-delete" data-delete-file="${escapeAttr(file.path)}" aria-label="${escapeAttr(deleteLabel)}" title="${escapeAttr(deleteLabel)}"${workspaceFiles.length <= 1 ? " disabled" : ""}>
+            <button type="button" class="pg-file-delete" data-delete-file="${escapeAttr(file.path)}" aria-label="${escapeAttr(deleteLabel)}" title="${escapeAttr(deleteLabel)}"${onlySource ? " disabled" : ""}>
               ${deleteIcon}
             </button>
           </div>`;
@@ -1034,20 +1035,23 @@ if (ungroupedPlaygroundExamples.length > 0) {
 
       const setWorkspace = (files: WorkspaceFile[], nextActivePath?: string, nextEntryPath?: string) => {
         const usedPaths = new Set<string>();
-        workspaceFiles = files.map((file, index) => ({
-          path: uniqueWorkspacePath(normalizeWorkspacePath(file.path, `source_${index + 1}.cell`), usedPaths),
-          source: file.source ?? "",
-          role: file.role,
-        }));
-        ensureWorkspaceLimits(workspaceFiles);
-        const firstPath = workspaceFiles[0]?.path ?? "main.cell";
+        const nextFiles = files.map((file, index) => {
+          const path = normalizeWorkspacePath(file.path, `source_${index + 1}.cell`);
+          if (path === manifestPath && usedPaths.has(path)) throw new Error(pg("workspaceJsonInvalid"));
+          return { path: uniqueWorkspacePath(path, usedPaths), source: file.source ?? "", role: file.role };
+        });
+        const sourceFiles = nextFiles.filter((file) => file.path !== manifestPath);
+        const firstPath = sourceFiles[0]?.path;
+        if (!firstPath) throw new Error(pg("workspaceNoCellFiles"));
+        ensureWorkspaceLimits(nextFiles);
+        workspaceFiles = nextFiles;
         const requestedActivePath = nextActivePath ? normalizeWorkspacePath(nextActivePath) : "";
         const requestedEntryPath = nextEntryPath ? normalizeWorkspacePath(nextEntryPath) : "";
-        const roleEntryPath = workspaceFiles.find((file) => file.role === "entry")?.path ?? "";
+        const roleEntryPath = sourceFiles.find((file) => file.role === "entry")?.path;
         activePath = requestedActivePath && workspaceFiles.some((file) => file.path === requestedActivePath) ? requestedActivePath : firstPath;
-        entryPath = requestedEntryPath && workspaceFiles.some((file) => file.path === requestedEntryPath)
+        entryPath = sourceFiles.some((file) => file.path === requestedEntryPath)
           ? requestedEntryPath
-          : (roleEntryPath || activePath);
+          : (roleEntryPath ?? (activePath === manifestPath ? firstPath : activePath));
         workspaceFiles.forEach((file) => {
           file.role = file.path === entryPath ? "entry" : "memory";
         });
@@ -1061,7 +1065,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
       };
 
       const markWorkspaceEntry = (path = activePath) => {
-        if (!workspaceFiles.some((file) => file.path === path)) return;
+        if (path === manifestPath || !workspaceFiles.some((file) => file.path === path)) return;
         syncActiveFileFromEditor();
         entryPath = path;
         workspaceFiles.forEach((file) => {
@@ -1075,7 +1079,8 @@ if (ungroupedPlaygroundExamples.length > 0) {
 
       const deleteWorkspaceFile = (path: string) => {
         if (!workspaceFiles.some((file) => file.path === path)) return;
-        if (workspaceFiles.length <= 1) {
+        const survivingSource = workspaceFiles.find((file) => file.path !== manifestPath && file.path !== path);
+        if (!survivingSource) {
           if (status) status.textContent = pg("deleteLastFile");
           return;
         }
@@ -1086,7 +1091,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
           activePath = workspaceFiles[Math.min(deleteIndex, workspaceFiles.length - 1)]?.path ?? workspaceFiles[0]?.path ?? "";
           if (textarea) textarea.value = currentFile()?.source ?? "";
         }
-        if (entryPath === path) entryPath = activePath || workspaceFiles[0]?.path || "";
+        if (entryPath === path) entryPath = activePath === manifestPath ? survivingSource.path : activePath || survivingSource.path;
         workspaceFiles.forEach((file) => {
           file.role = file.path === entryPath ? "entry" : "memory";
         });
@@ -1102,7 +1107,7 @@ if (ungroupedPlaygroundExamples.length > 0) {
         if (!workspaceFiles.some((file) => file.path === path)) return;
         syncActiveFileFromEditor();
         activePath = path;
-        if (setEntry) entryPath = path;
+        if (setEntry && path !== manifestPath) entryPath = path;
         workspaceFiles.forEach((file) => {
           file.role = file.path === entryPath ? "entry" : "memory";
         });
@@ -1154,14 +1159,15 @@ action inspect() -> u64 {
       const buildCellToml = (entry: string) => `[package]
 name = "playground"
 version = "0.1.0"
-cellscript_version = "0.31.0"
+cellscript_version = ">=0.33.0-alpha.2"
+edition = "2027"
 entry = "${entry.replace(/"/g, "")}"
 source_roots = ["src"]
 `;
 
       const parseCellTomlEntry = (text: string) => {
         const match = text.match(/^\s*entry\s*=\s*["']([^"']+)["']/m);
-        return match?.[1] ? normalizeWorkspacePath(match[1]) : "";
+        return normalizeWorkspacePath(match?.[1] ?? "src/main.cell");
       };
 
       const resolveImportedEntry = (files: WorkspaceFile[], requestedEntry?: string) => {
@@ -1202,8 +1208,9 @@ source_roots = ["src"]
         }
         const usedZipPaths = new Set<string>();
         const zipEntries: Record<string, Uint8Array> = {};
+        const hasManifest = payload.files.some((file) => file.path === manifestPath);
         const exportedFiles = payload.files.map((file) => {
-          const zipPath = toZipSourcePath(file.path, usedZipPaths);
+          const zipPath = hasManifest ? file.path : toZipSourcePath(file.path, usedZipPaths);
           zipEntries[zipPath] = strToU8(file.source);
           return { originalPath: file.path, zipPath };
         });
@@ -1211,7 +1218,7 @@ source_roots = ["src"]
           exportedFiles.find((file) => file.originalPath === payload.entryPath)?.zipPath ??
           exportedFiles[0]?.zipPath ??
           "src/main.cell";
-        zipEntries["Cell.toml"] = strToU8(buildCellToml(entryZipPath));
+        if (!hasManifest) zipEntries[manifestPath] = strToU8(buildCellToml(entryZipPath));
         const zipBytes = zipSync(zipEntries, { level: 9 });
         downloadBlob(new Blob([zipBytes], { type: "application/zip" }), "cellscript-playground-project.zip");
         if (status) status.textContent = pg("workspaceExported");
@@ -1226,7 +1233,7 @@ source_roots = ["src"]
           source: String(file.source ?? file.content ?? ""),
           role: file.role,
         }));
-        const entry = resolveImportedEntry(files, String(parsed.entryPath || files.find((file: WorkspaceFile) => file.role === "entry")?.path || files[0]?.path || ""));
+        const entry = resolveImportedEntry(files.filter((file: WorkspaceFile) => file.path !== manifestPath), String(parsed.entryPath || ""));
         return { files, entry };
       };
 
@@ -1242,7 +1249,7 @@ source_roots = ["src"]
           zipPaths.some((path) => path.toLowerCase().endsWith("/cell.toml"))
             ? `${firstSegments[0]}/`
             : "";
-        let manifestEntry = "";
+        let manifestSource: string | undefined;
         const imported: WorkspaceFile[] = [];
         Object.entries(unzipped).forEach(([rawPath, bytes]) => {
           const normalizedPath = normalizePortablePath(rawPath, "");
@@ -1251,8 +1258,8 @@ source_roots = ["src"]
             : normalizedPath;
           if (!path || path.endsWith("/")) return;
           if (path.split("/").some((part) => part.startsWith(".") || part === "__MACOSX")) return;
-          if (path.toLowerCase() === "cell.toml" || path.toLowerCase().endsWith("/cell.toml")) {
-            manifestEntry = parseCellTomlEntry(strFromU8(bytes));
+          if (path.toLowerCase() === "cell.toml") {
+            manifestSource = strFromU8(bytes);
             return;
           }
           if (!path.toLowerCase().endsWith(".cell")) return;
@@ -1262,7 +1269,8 @@ source_roots = ["src"]
           });
         });
         if (!imported.length) throw new Error(pg("workspaceNoCellFiles"));
-        const entry = resolveImportedEntry(imported, manifestEntry);
+        const entry = resolveImportedEntry(imported, manifestSource === undefined ? "" : parseCellTomlEntry(manifestSource));
+        if (manifestSource !== undefined) imported.push({ path: manifestPath, source: manifestSource });
         return { files: imported, entry };
       };
 
@@ -1271,7 +1279,8 @@ source_roots = ["src"]
           const path = normalizePortablePath((file as any).webkitRelativePath || file.name, "");
           return path.toLowerCase() === "cell.toml" || path.toLowerCase().endsWith("/cell.toml");
         });
-        const manifestEntry = manifest ? parseCellTomlEntry(await manifest.text()) : "";
+        const manifestSource = manifest ? await manifest.text() : undefined;
+        const manifestEntry = manifestSource === undefined ? "" : parseCellTomlEntry(manifestSource);
         const cellFiles = files.filter((file) => {
           const path = normalizePortablePath((file as any).webkitRelativePath || file.name, "");
           return path.toLowerCase().endsWith(".cell");
@@ -1282,6 +1291,7 @@ source_roots = ["src"]
           source: await file.text(),
         })));
         const entry = resolveImportedEntry(imported, manifestEntry || imported[0]?.path);
+        if (manifestSource !== undefined) imported.push({ path: manifestPath, source: manifestSource });
         return { files: imported, entry };
       };
 
@@ -1692,7 +1702,7 @@ source_roots = ["src"]
       document.addEventListener("astro:before-swap", cleanupPlayground, { once: true, signal });
 
       const requestLanguage = (intent: LanguageIntent) => {
-        if (!workerReady || !textarea) return;
+        if (!workerReady || !textarea || activePath === manifestPath) return;
         syncActiveFileFromEditor();
         const position = offsetToLspPosition(textarea.value, textarea.selectionStart);
         const id = ++languageRequestId;
@@ -2674,8 +2684,7 @@ source_roots = ["src"]
       exampleButtons.forEach((btn) => {
         btn.addEventListener("click", () => {
           const id = btn.dataset.exampleId ?? "";
-          const src = exampleSources[id];
-          if (src !== undefined) {
+          if (Object.hasOwn(exampleWorkspaces, id)) {
             const path = normalizeWorkspacePath(exampleFileById.get(id) ?? `${id}.cell`);
             setWorkspace(makeExampleWorkspace(id), path, path);
             updateExampleLesson(id);
@@ -2688,9 +2697,9 @@ source_roots = ["src"]
       const params = new URLSearchParams(window.location.search);
       const paramExample = params.get("example");
       const initialWorkspaceExample =
-        paramExample && exampleSources[paramExample] !== undefined
+        paramExample && Object.hasOwn(exampleWorkspaces, paramExample)
           ? paramExample
-          : (exampleMeta[0]?.id ?? Object.keys(exampleSources)[0] ?? "token");
+          : (exampleMeta[0]?.id ?? Object.keys(exampleWorkspaces)[0] ?? "token");
       const initialWorkspacePath = normalizeWorkspacePath(exampleFileById.get(initialWorkspaceExample) ?? `${initialWorkspaceExample}.cell`);
       const restoredSession = paramExample ? null : readPlaygroundSession(window.localStorage, sessionLimits);
       sessionHydrated = true;
