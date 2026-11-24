@@ -60,11 +60,11 @@ function rejected(source, edition, expectedMessage) {
   return results;
 }
 
-test("distributed source contract matches authoring v3 and Unicode tables", () => {
+test("distributed source contract matches authoring v5 and Unicode tables", () => {
   const contract = JSON.parse(source_language_contract_json());
   assert.equal(contract.schema, "cellscript-source-language-contract-v1");
   assert.equal(contract.edition, "2027");
-  assert.equal(contract.source_semantics, "cellscript-source-semantics-2027-0.33-authoring-v3");
+  assert.equal(contract.source_semantics, "cellscript-source-semantics-2027-0.33-authoring-v5");
   assert.equal(contract.identifier_unicode_version, "17.0.0");
   assert.equal(contract.max_source_bytes, 1048576);
   assert.equal(contract.compiler_version, version());
@@ -294,7 +294,7 @@ action inspect() -> u64 { return ${moduleName}::${name}(5); }`;
 
 const groupSuccessor = `module ${moduleName};
 resource Token has store, replace, relock { amount: u64 }
-type_script TokenPolicy on type_group<Token> {
+type_script TokenPolicy {
     action retain(
         input before: Token from group_input[0],
         witness recipient: ScriptHash from group_witness.input_type,
@@ -335,7 +335,7 @@ test("distributed successor checks keep Type Script, Lock and capacity explicit"
 test("distributed Lock group uses the ordinary lock and require grammar", () => {
   const source = `module ${moduleName};
 resource Wallet has store { amount: u64 }
-lock_script WalletPolicy on lock_group {
+lock_script WalletPolicy {
     lock permit(protected wallet: Wallet from group_input[0]) {
         let amount = wallet.amount;
         if amount > 0 { require amount == 7; } else { require false; }
