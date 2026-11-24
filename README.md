@@ -31,7 +31,7 @@ edition before compiling.
 ## Compiler And Source Contract
 
 The current playground uses
-`cellscript-source-semantics-2027-0.33-authoring-v5`: explicit semicolons,
+`cellscript-source-semantics-2027-0.33-authoring-v6`: explicit semicolons,
 comma-separated lists, `new Type { ... }` values and `function::<Type>(...)`
 calls. Old source spellings require migration. Example workspaces include
 their actual imported files; the site does not rewrite them into standalone
