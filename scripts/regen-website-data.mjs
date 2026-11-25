@@ -208,8 +208,8 @@ if (!existsSync(CELLC)) {
 
 const sourceContract = JSON.parse(run(CELLC, ["language-contract", "--json"]));
 if (sourceContract.schema !== "cellscript-source-language-contract-v1"
-    || sourceContract.source_semantics !== "cellscript-source-semantics-2027-0.33-authoring-v7") {
-  throw new Error("website data requires the current authoring-v7 compiler; set CELLSCRIPT_COMPILER to a fresh cellc build");
+    || sourceContract.source_semantics !== "cellscript-source-semantics-2027-0.33-authoring-v8") {
+  throw new Error("website data requires the current authoring-v8 compiler; set CELLSCRIPT_COMPILER to a fresh cellc build");
 }
 
 mkdirSync(DATA_DIR, { recursive: true });

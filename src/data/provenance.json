@@ -4,7 +4,7 @@
     "target": "ckb",
     "artifactSizeBytes": 53940,
     "artifactHash": "446ff4d27df7b79b",
-    "sourceHash": "af1ff047a9e30af6",
+    "sourceHash": "6f37febaa0954edf",
     "compilerVersion": "0.33.0-alpha.2",
     "types": [
       {
@@ -197,9 +197,9 @@
   "nft": {
     "module": "cellscript::nft",
     "target": "ckb",
-    "artifactSizeBytes": 369131,
-    "artifactHash": "d0d86f99be30457b",
-    "sourceHash": "8eb4c0b61d48f52e",
+    "artifactSizeBytes": 369137,
+    "artifactHash": "ccaf3dcd1a227ad9",
+    "sourceHash": "16e515caaa0b4324",
     "compilerVersion": "0.33.0-alpha.2",
     "types": [
       {
@@ -744,7 +744,7 @@
     "target": "ckb",
     "artifactSizeBytes": 192243,
     "artifactHash": "39f360437f26b540",
-    "sourceHash": "2653c4525317e253",
+    "sourceHash": "3a6e3f2f34a1cbda",
     "compilerVersion": "0.33.0-alpha.2",
     "types": [
       {
@@ -1058,7 +1058,7 @@
     "target": "ckb",
     "artifactSizeBytes": 137187,
     "artifactHash": "473b7f1752c165dd",
-    "sourceHash": "8449fe28c3ae7efd",
+    "sourceHash": "4e63bc280a3137dd",
     "compilerVersion": "0.33.0-alpha.2",
     "types": [
       {

@@ -60,11 +60,11 @@ function rejected(source, edition, expectedMessage) {
   return results;
 }
 
-test("distributed source contract matches authoring v7 and Unicode tables", () => {
+test("distributed source contract matches authoring v8 and Unicode tables", () => {
   const contract = JSON.parse(source_language_contract_json());
   assert.equal(contract.schema, "cellscript-source-language-contract-v1");
   assert.equal(contract.edition, "2027");
-  assert.equal(contract.source_semantics, "cellscript-source-semantics-2027-0.33-authoring-v7");
+  assert.equal(contract.source_semantics, "cellscript-source-semantics-2027-0.33-authoring-v8");
   assert.equal(contract.identifier_unicode_version, "17.0.0");
   assert.equal(contract.max_source_bytes, 1048576);
   assert.equal(contract.compiler_version, version());
