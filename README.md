@@ -31,9 +31,11 @@ edition before compiling.
 ## Compiler And Source Contract
 
 The current playground uses
-`cellscript-source-semantics-2027-0.33-authoring-v8`: explicit semicolons,
+`cellscript-source-semantics-2027-0.33-authoring-v9`: explicit entry-source
+prefixes, inline named Cell output ports, braced validity, statement semicolons,
 comma-separated lists, `new Type { ... }` values and `function::<Type>(...)`
-calls. Old source spellings require migration. Example workspaces include
+calls. Ordinary `lock` declarations are selected by explicit Lock artifacts.
+Old source spellings require migration. Example workspaces include
 their actual imported files; the site does not rewrite them into standalone
 contracts or invent replacement schemas.
 
