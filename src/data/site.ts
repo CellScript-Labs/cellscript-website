@@ -168,67 +168,10 @@ export const exampleWorkspaces = Object.fromEntries(playgroundExamples.map((exam
 export const heroExamples = [playgroundExamples[0], playgroundExamples[1], playgroundExamples[2], playgroundExamples[3]].map((example) => ({
   id: example.id,
   file: example.file.split("/").at(-1)!,
-  command: `cellc metadata ${example.file} --target-profile ckb --json`,
+  command: `cellc metadata ${example.file} --target-profile ckb`,
   lines: [...readFileSync(resolve(repoRoot, example.file), "utf-8").trimEnd().split("\n").slice(0, 38),
     "// ... remaining source is available in the playground"],
 }));
-
-export const modelCards = [
-  {
-    id: "resource",
-    name: "resource",
-    source: "examples/token.cell",
-    code: "// examples/token.cell\nresource Token has store, create, consume, replace, burn, relock {\n    amount: u64,\n    symbol: [u8; 8],\n}",
-  },
-  {
-    id: "shared",
-    name: "shared",
-    source: "examples/amm_pool.cell",
-    code: "// examples/amm_pool.cell\nshared Pool has store, create, replace {\n    token_a_symbol: [u8; 8],\n    token_b_symbol: [u8; 8],\n    // ... reserves, LP supply, fee rate omitted\n}",
-  },
-  {
-    id: "receipt",
-    name: "receipt",
-    source: "examples/nft.cell",
-    code: "// examples/nft.cell\nreceipt Listing has create, consume, burn {\n    token_id: u64,\n    seller: Address,\n    price: u64,\n    // ... created_at and state omitted\n}",
-  },
-  {
-    id: "action",
-    name: "action",
-    source: "examples/vesting.cell",
-    code: "// examples/vesting.cell\naction claim_vested(grant: VestingGrant) -> (tokens: Token, updated_grant: VestingGrant) {\n        // ... timepoint checks and vesting arithmetic omitted\n        consume grant;\n        create updated_grant = VestingGrant { state: VestingState::Active, /* ... */ } with_lock(grant.beneficiary)\n}",
-  },
-  {
-    id: "lock",
-    name: "lock",
-    source: "examples/language/core/canonical_style.cell",
-    code: "// examples/language/core/canonical_style.cell\nlock vault_owner(protected vault: Vault, lock_args owner: Address, witness claimed_owner: Address) -> bool {\n    let input = source::group_input(0);\n    let witness_lock = witness::lock_exact32(input);\n    // ... digest and ownership checks omitted\n}",
-  },
-  {
-    id: "flow",
-    name: "flow",
-    source: "examples/vesting.cell",
-    code: "// examples/vesting.cell\nflow VestingGrant.state {\n    initial Active;\n    terminal FullyClaimed;\n    Active -> Active;\n    Active -> FullyClaimed;\n}",
-  },
-  {
-    id: "invariant",
-    name: "invariant",
-    source: "examples/language/verification/scoped_invariant.cell",
-    code: "// examples/language/verification/scoped_invariant.cell\ninvariant token_amount_conservation {\n    trigger: type_group;\n    scope: group;\n    reads: group_inputs<Token>.amount, group_outputs<Token>.amount;\n    assert_sum(group_outputs<Token>.amount) == assert_sum(group_inputs<Token>.amount);\n}",
-  },
-  {
-    id: "structEnum",
-    name: "struct / enum",
-    source: "examples/nft.cell",
-    code: "// examples/nft.cell\nstruct Metadata {\n    name: String,\n    description: String,\n    image_uri: String,\n    attributes: Vec<(String, String)>,\n}",
-  },
-  {
-    id: "identity",
-    name: "identity",
-    source: "examples/language/ownership/identity_lifecycle.cell",
-    code: "// examples/language/ownership/identity_lifecycle.cell\naction mint_unique_nft(recipient: Address, tid: u64) -> UniqueNFT {\n    create_unique::<UniqueNFT>(identity = field(token_id)) { token_id: tid, owner: recipient } with_lock(recipient)\n}",
-  },
-] as const;
 
 export const tools = [
   {

@@ -2,7 +2,7 @@ let wasmModulePromise;
 let wasmModule;
 const COMPILER_ASSET_VERSION = new URL(self.location.href).searchParams.get("v");
 const CELLSCRIPT_EDITION = "2027";
-const SOURCE_SEMANTICS = "cellscript-source-semantics-2027-0.33-authoring-v8";
+const SOURCE_SEMANTICS = "cellscript-source-semantics-2027-0.33-authoring-v9";
 const COMPILER_LOAD_TIMEOUT_MS = 12_000;
 
 const loadCompiler = async () => {

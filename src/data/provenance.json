@@ -2,9 +2,9 @@
   "token": {
     "module": "cellscript::fungible_token",
     "target": "ckb",
-    "artifactSizeBytes": 53940,
-    "artifactHash": "446ff4d27df7b79b",
-    "sourceHash": "6f37febaa0954edf",
+    "artifactSizeBytes": 53979,
+    "artifactHash": "ae57a9ad6afafea5",
+    "sourceHash": "4bcc0ab3e6b64e98",
     "compilerVersion": "0.33.0-alpha.2",
     "types": [
       {
@@ -197,9 +197,9 @@
   "nft": {
     "module": "cellscript::nft",
     "target": "ckb",
-    "artifactSizeBytes": 369137,
-    "artifactHash": "ccaf3dcd1a227ad9",
-    "sourceHash": "16e515caaa0b4324",
+    "artifactSizeBytes": 369425,
+    "artifactHash": "f305cea839863c83",
+    "sourceHash": "0635be65fbc5a627",
     "compilerVersion": "0.33.0-alpha.2",
     "types": [
       {
@@ -744,7 +744,7 @@
     "target": "ckb",
     "artifactSizeBytes": 192243,
     "artifactHash": "39f360437f26b540",
-    "sourceHash": "3a6e3f2f34a1cbda",
+    "sourceHash": "7077cf28eed3e259",
     "compilerVersion": "0.33.0-alpha.2",
     "types": [
       {
@@ -1058,7 +1058,7 @@
     "target": "ckb",
     "artifactSizeBytes": 137187,
     "artifactHash": "473b7f1752c165dd",
-    "sourceHash": "4e63bc280a3137dd",
+    "sourceHash": "540310beead8bf23",
     "compilerVersion": "0.33.0-alpha.2",
     "types": [
       {

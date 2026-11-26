@@ -1,4 +1,5 @@
 import assert from "node:assert/strict";
+import { webcrypto } from "node:crypto";
 import { readFileSync } from "node:fs";
 import test from "node:test";
 import ts from "typescript";
@@ -38,7 +39,7 @@ function accepted(source, edition) {
     assert.equal(metadata?.module, moduleName, entrypoint);
     assert.equal(metadata?.edition, "2027", entrypoint);
     assert.equal(metadata?.actions?.length, 1, entrypoint);
-    assert.equal(metadata.metadata_schema_version, 76, entrypoint);
+    assert.equal(metadata.metadata_schema_version, 79, entrypoint);
     actionEffectFacts(metadata.actions[0]);
   }
   return results;
@@ -60,14 +61,102 @@ function rejected(source, edition, expectedMessage) {
   return results;
 }
 
-test("distributed source contract matches authoring v8 and Unicode tables", () => {
+test("distributed source contract matches authoring v9 and Unicode tables", () => {
   const contract = JSON.parse(source_language_contract_json());
   assert.equal(contract.schema, "cellscript-source-language-contract-v1");
   assert.equal(contract.edition, "2027");
-  assert.equal(contract.source_semantics, "cellscript-source-semantics-2027-0.33-authoring-v8");
+  assert.equal(contract.source_semantics, "cellscript-source-semantics-2027-0.33-authoring-v9");
   assert.equal(contract.identifier_unicode_version, "17.0.0");
   assert.equal(contract.max_source_bytes, 1048576);
   assert.equal(contract.compiler_version, version());
+});
+
+test("actual playground worker loads the distributed compiler and compiles an explicit-source entry", async () => {
+  const bytes = readFileSync(new URL("../public/wasm/cellscript_wasm_bg.wasm", import.meta.url));
+  const artifact = JSON.parse(readFileSync(new URL("../src/data/compiler-artifact.json", import.meta.url), "utf8"));
+  const workerSource = readFileSync(new URL("../public/playground-worker.js", import.meta.url), "utf8");
+  const browserImport = "/wasm/cellscript_wasm.js";
+  assert.equal(workerSource.split(browserImport).length, 2, "one actual browser module import is expected");
+  // Adapt only the browser's absolute module URL for Node. The real worker,
+  // distributed glue/WASM, asset integrity and contract handshake all execute.
+  const source = workerSource.replace(browserImport, new URL("../public/wasm/cellscript_wasm.js", import.meta.url).href);
+  let handler;
+  let result;
+  const self = {
+    location: { href: `https://cellscript.test/playground-worker.js?v=${artifact.sha256}` },
+    addEventListener(type, callback) { assert.equal(type, "message"); handler = callback; },
+    postMessage(message) { result = message; },
+  };
+  const fetch = async (url) => {
+    assert.equal(url, `/wasm/cellscript_wasm_bg.wasm?v=${artifact.sha256}`);
+    return new Response(bytes);
+  };
+  new Function("self", "fetch", "crypto", source)(self, fetch, webcrypto);
+  assert.equal(typeof handler, "function");
+  await handler({ data: {
+    id: 17, type: "compile",
+    source: "module worker_contract; action verify(witness value: u64) { require value > 0; }",
+  } });
+  assert.equal(result?.type, "result", JSON.stringify(result));
+  assert.equal(result.id, 17);
+  assert.equal(result.payload.error_count, 0, JSON.stringify(result));
+  assert.equal(result.payload.metadata.module, "worker_contract");
+  assert.equal(result.payload.metadata.metadata_schema_version, 79);
+});
+
+test("distributed v9 compiler executes the shared native authoring corpus", () => {
+  const positive = [
+    "branch-fresh", "branch-retire", "branch-pool", "branch-pool-many",
+    "branch-continue-retire", "branch-retire-consume", "branch-fresh-kernel",
+    "branch-unique-retire", "receipt-claim-kernel", "settle-kernel",
+    "branch-claim-fresh", "kernel-group-successor", "declared-identity",
+    "absolute-fresh", "absolute-pool", "collection-stack-capacity", "named-unsigned-bounds",
+    "aggregate-u128-conservation", "delimited-validity", "mutable-values-and-readonly-views",
+  ];
+  for (const name of positive) {
+    const source = readFileSync(new URL(`../../tests/fixtures/authoring/${name}.cell`, import.meta.url), "utf8");
+    // Test-only JSON supplies the same explicit artifact context as the native
+    // fixture runner. No CellScript declaration or policy is reparsed here.
+    const context = source.split("\n").find((line) => line.startsWith("// test-artifact: "));
+    const inputs = [{ path: "main.cell", source }];
+    if (context) {
+      const { entry, layout } = JSON.parse(context.slice("// test-artifact: ".length));
+      inputs.push({ path: "Cell.toml", source: `[package]
+name = "shared-authoring"
+version = "0.1.0"
+edition = "2027"
+cellscript_version = ">=0.33.0-alpha.1"
+[[artifacts]]
+name = "shared-authoring"
+context = { kind = "type-group" }
+bindings = "group-relative"
+coverage = "fixed-group"
+layout = ${JSON.stringify(layout)}
+dispatch = "single-entry"
+entry = ${JSON.stringify(entry)}
+` });
+    }
+    const result = JSON.parse(compile_metadata_json_sources(JSON.stringify(inputs), "main.cell", "2027", undefined));
+    assert.equal(result.error_count, 0, `${name}: ${JSON.stringify(result)}`);
+    assert.ok(result.metadata, name);
+    assert.equal(result.metadata.metadata_schema_version, 79, name);
+    assert.equal(result.metadata.metadata_scope, "cellscript-browser-summary-v1", name);
+  }
+  for (const [name, message] of [
+    ["flow-edge-terminator-reject", /semicolon|`;`|end with/],
+    ["postfix-entry-source-reject", /E1032|prefix|postfix/],
+    ["implicit-entry-source-reject", /E1032|explicit.*source|explicit.*provenance/],
+    ["named-arrow-output-reject", /named Cell outputs|output name: Type/],
+    ["fresh-identity-conflict-reject", /fresh rejected|identity/],
+    ["named-unsigned-bound-overflow-reject", /exceeds its declared scalar type/],
+    ["branch-entry-policy-reject", /every accepting path.*exactly once/],
+    ["reserved-mutable-reference-reject", /references are reserved/],
+    ["reserved-launch-reject", /launch is reserved/],
+    ["unbraced-validity-reject", /validity requires an explicit braced region/],
+  ]) {
+    const source = readFileSync(new URL(`../../tests/syntax_combo/seeds/${name}.cell`, import.meta.url), "utf8");
+    rejected(source, "2027", message);
+  }
 });
 
 test("unknown editions reject across all browser compile entrypoints", () => {
@@ -322,7 +411,7 @@ bindings = "group-relative"
 coverage = "fixed-group"
 layout = "Token"
 dispatch = "single-entry"
-action = "retain"
+entry = "retain"
 `;
   const result = JSON.parse(compile_metadata_json_sources(
     JSON.stringify([{ path: "main.cell", source: groupSuccessor }, { path: "Cell.toml", source: manifest }]),
@@ -371,7 +460,7 @@ test("distributed successor checks keep Type Script, Lock and capacity explicit"
 test("distributed Lock group uses the ordinary lock and require grammar", () => {
   const source = `module ${moduleName};
 resource Wallet has store { amount: u64 }
-lock_script permit(protected wallet: Wallet) {
+lock permit(protected wallet: Wallet) {
         let amount = wallet.amount;
         if amount > 0 { require amount == 7; } else { require false; }
         true
@@ -380,12 +469,38 @@ lock_script permit(protected wallet: Wallet) {
     assert.equal(result.error, undefined, `${entrypoint}: ${JSON.stringify(result)}`);
     if (entrypoint !== "single source") assert.equal(result.error_count, 0, JSON.stringify(result));
     const metadata = entrypoint === "single source" ? result : result.metadata;
-    assert.equal(metadata.metadata_schema_version, 76, entrypoint);
+    assert.equal(metadata.metadata_schema_version, 79, entrypoint);
     assert.equal(metadata.module, moduleName, entrypoint);
     assert.equal(metadata.metadata_scope, "cellscript-browser-summary-v1", entrypoint);
     assert.deepEqual(metadata.actions, [], entrypoint);
   }
   rejected(source.replace("wallet.amount", "wallet.absent"), "2027", /absent|unknown field/);
+  rejected(source.replace("lock permit", "lock_script permit"), "2027", /E1032|declaration was removed/);
+
+  // The same source fixture is checked by the native Lock artifact owners.
+  // Select the group explicitly; a declaration alone supplies no group proof.
+  const shared = readFileSync(new URL("../../tests/fixtures/authoring/lock-artifact.cell", import.meta.url), "utf8");
+  const manifest = `[package]
+name = "browser-lock"
+version = "0.1.0"
+edition = "2027"
+cellscript_version = ">=0.33.0-alpha.1"
+
+[[artifacts]]
+name = "vault-lock"
+context = { kind = "lock-group" }
+bindings = "group-relative"
+coverage = "authorization-only"
+dispatch = "single-entry"
+entry = "unlock"
+`;
+  const selected = JSON.parse(compile_metadata_json_sources(
+    JSON.stringify([{ path: "main.cell", source: shared }, { path: "Cell.toml", source: manifest }]),
+    "main.cell", "2027", undefined,
+  ));
+  assert.equal(selected.error_count, 0, JSON.stringify(selected));
+  assert.equal(selected.metadata.module, "lock_artifacts");
+  assert.deepEqual(selected.metadata.actions, []);
 });
 
 // Exercise the UI's real source workspaces; TypeScript stripping is test setup.
