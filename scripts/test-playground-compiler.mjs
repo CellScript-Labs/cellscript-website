@@ -159,6 +159,15 @@ entry = ${JSON.stringify(entry)}
   }
 });
 
+test("distributed builtin numeric-bound errors retain E2111", () => {
+  const source = readFileSync(new URL("../../tests/fixtures/authoring/builtin-type-bound-reject.cell", import.meta.url), "utf8");
+  for (const [entrypoint, result] of rejected(source, "2027", /unsigned integer literal or constant name/)) {
+    if (entrypoint !== "single source") {
+      assert.ok(result.diagnostics.some((diagnostic) => diagnostic.code === "E2111"), `${entrypoint}: ${JSON.stringify(result)}`);
+    }
+  }
+});
+
 test("unknown editions reject across all browser compile entrypoints", () => {
   rejected(action("require true"), "2099", /unsupported.*2099.*2027/);
 });
