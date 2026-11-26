@@ -114,7 +114,7 @@ test("distributed v9 compiler executes the shared native authoring corpus", () =
     "aggregate-u128-conservation", "delimited-validity", "mutable-values-and-readonly-views",
   ];
   for (const name of positive) {
-    const source = readFileSync(new URL(`../../tests/fixtures/authoring/${name}.cell`, import.meta.url), "utf8");
+    const source = readFileSync(new URL(`../../tests/syntax_combo/authoring/${name}.cell`, import.meta.url), "utf8");
     // Test-only JSON supplies the same explicit artifact context as the native
     // fixture runner. No CellScript declaration or policy is reparsed here.
     const context = source.split("\n").find((line) => line.startsWith("// test-artifact: "));
@@ -160,7 +160,7 @@ entry = ${JSON.stringify(entry)}
 });
 
 test("distributed builtin numeric-bound errors retain E2111", () => {
-  const source = readFileSync(new URL("../../tests/fixtures/authoring/builtin-type-bound-reject.cell", import.meta.url), "utf8");
+  const source = readFileSync(new URL("../../tests/syntax_combo/seeds/builtin-type-bound-reject.cell", import.meta.url), "utf8");
   for (const [entrypoint, result] of rejected(source, "2027", /unsigned integer literal or constant name/)) {
     if (entrypoint !== "single source") {
       assert.ok(result.diagnostics.some((diagnostic) => diagnostic.code === "E2111"), `${entrypoint}: ${JSON.stringify(result)}`);
@@ -488,7 +488,7 @@ lock permit(protected wallet: Wallet) {
 
   // The same source fixture is checked by the native Lock artifact owners.
   // Select the group explicitly; a declaration alone supplies no group proof.
-  const shared = readFileSync(new URL("../../tests/fixtures/authoring/lock-artifact.cell", import.meta.url), "utf8");
+  const shared = readFileSync(new URL("../../tests/syntax_combo/authoring/lock-artifact.cell", import.meta.url), "utf8");
   const manifest = `[package]
 name = "browser-lock"
 version = "0.1.0"
